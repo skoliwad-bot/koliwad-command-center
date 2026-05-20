@@ -75,7 +75,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'JetBrai
 .page.on{display:block;}
 @keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
 .ph{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px;}
-.pt{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:#f4faf4;font-style:italic;}
+.pt{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:#f4faf4;letter-spacing:1px;text-transform:uppercase;}
 .ps{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#8aaa8a;margin-top:2px;}
 .pact{display:flex;gap:8px;align-items:center;}
 
@@ -91,7 +91,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'JetBrai
 .row:hover{background:rgba(255,255,255,.02);}
 .row.hi{border-left:2px solid var(--red);background:rgba(208,64,64,.04);}
 .row.mi{border-left:2px solid var(--amb);}
-.rtl{flex:1;font-size:13px;font-weight:600;color:#f0f7f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Libre Baskerville',serif;}
+.rtl{flex:1;font-size:13px;font-weight:600;color:#f0f7f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .rsb{font-size:9px;color:#8aaa8a;white-space:nowrap;}
 .empty{padding:12px 16px;font-size:11px;color:#8aaa8a;font-style:italic;}
 
@@ -624,7 +624,7 @@ localStorage.setItem = function(key, value) {
           <!-- HEADER -->
           <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px;">
             <div>
-              <div style="font-family:'Playfair Display',serif;font-size:24px;font-style:italic;color:#eef4ee;">Portfolio</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:#f4faf4;letter-spacing:1px;text-transform:uppercase;">Portfolio</div>
               <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#6a886a;margin-top:2px;">Version A — Mixed ETF + Futures (Conservative) · Target 20-22%/yr · thinkorswim</div>
             </div>
             <div style="display:flex;gap:8px;">
@@ -1563,14 +1563,14 @@ function rCal(){
   el('calLbl').textContent=SM[ws.getMonth()]+' '+ws.getDate()+' – '+SM[we.getMonth()]+' '+we.getDate()+', '+we.getFullYear();
   const days=[];for(let i=0;i<7;i++){const d=new Date(ws);d.setDate(ws.getDate()+i);days.push(d);}
   // Week view
-  el('calW').innerHTML='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--brd)">'
+  el('calW').innerHTML='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;background:#2e352e">'
     +days.map(d=>'<div style="background:var(--surf);padding:7px;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:'+(sameD(d,today)?'var(--red)':'var(--mut)')+';text-align:center">'+['SUN','MON','TUE','WED','THU','FRI','SAT'][d.getDay()]+'</div>').join('')
     +days.map(d=>{
       const isT=sameD(d,today);
       const evts=[...(S.cal||[]).filter(e=>{if(!e.dd)return false;try{return sameD(new Date(e.dd.length===10?e.dd+'T12:00:00':e.dd),d);}catch(x){return false;}}),
                   ...(S.tickets||[]).filter(e=>e.event_date&&sameD(new Date(e.event_date+'T12:00:00'),d))];
       return'<div style="background:var(--surf);min-height:100px;padding:8px;'+(isT?'background:rgba(208,64,64,0.04)':'')+'">'
-        +'<div style="font-size:12px;font-weight:700;color:'+(isT?'var(--red)':'var(--mut)')+';margin-bottom:5px">'+d.getDate()+'</div>'
+        +'<div style="font-size:14px;font-weight:700;color:'+(isT?'#e05050':'#c8d8c8')+';margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #1e221e">'+d.getDate()+'</div>'
         +evts.slice(0,4).map(e=>'<div style="font-size:9px;padding:2px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:2px solid;border-color:'+(e.src==='Calendar'?'var(--blu)':e.event_name?'var(--orn)':'var(--red)')+';background:'+(e.src==='Calendar'?'rgba(74,122,184,0.1)':e.event_name?'rgba(192,112,48,0.1)':'rgba(208,64,64,0.1)')+'">'+esc((e.title||e.event_name||'').substring(0,18))+'</div>').join('')
         +(evts.length>4?'<div style="font-size:8px;color:var(--mut)">+'+(evts.length-4)+' more</div>':'')
         +'</div>';

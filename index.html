@@ -1192,7 +1192,7 @@ async function fTasks(){
       const sig=[],nl=(t.notes||'').toLowerCase();
       MKW.forEach(k=>{if(nl.includes(k)) sig.push('nm');});
       SKW.forEach(k=>{if(nl.includes(k)) sig.push('ns');});
-      items.push({id:t.id,title:t.title,detail:t.notes||'',dd:due?isoD(due):'',dr:due,da,src:'Tasks',sig});
+      items.push({id:t.id,title:t.title,detail:t.notes||'',dd:due?isoD(due):'',dr:due,da,src:'Tasks',sig,category:autoCategory(t.title)});
     }
   }
   return items;
@@ -1218,6 +1218,17 @@ items.push({id:e.id,title:e.summary||'(untitled)',detail:e.description||'',dd:dd
     }
   }
   return items;
+}
+
+
+function autoCategory(title) {
+  const t = (title||'').toLowerCase();
+  if(/ticket|stub|dodger|laker|angel|clipper|concert|event|venue|seat|omaha|game|stub/i.test(t)) return 'Tickets';
+  if(/knight|baseball|kyrin|kylo|tryout|practice|field|pitch|hit|bat|team|coach|tourna|league|fee.*sport|sport.*fee/i.test(t)) return 'Baseball';
+  if(/money|bank|heloc|invest|finance|tax|irs|cpa|budget|loan|mortgage|insurance|bill|pay|fee|cost|expense|tesla|car|auto|receipt|reimbur|schwab|tiaa|sgov/i.test(t)) return 'Money';
+  if(/throwzone|business|llc|mbk|contract|client|revenue|invoice|vendor|lease|license|permit/i.test(t)) return 'Business';
+  if(/kyrin|kylo|kyleigh|dance|kid|child|school|nanny|family|parent|address|will|estate|personal|doctor|health|medical|dentist|appoint/i.test(t)) return 'Personal';
+  return '';
 }
 
 function moscow(item){
@@ -1335,13 +1346,25 @@ function rTasks(){
   if(S.tc!=='all') items=items.filter(t=>t.category===S.tc);
   const e=el('taskList');
   if(!items.length){e.innerHTML='<div class="empty">No tasks — sync or add manually</div>';return;}
-  e.innerHTML=items.map(t=>'<div class="row"><div class="chk'+(t.status==='Done'?' dn':'')+'" onclick="toggleT(\''+t.id+'\')"></div>'
+  e.innerHTML=items.map(t=>'<div class="row">'
+    +'<div class="chk'+(t.status==='Done'?' dn':'')+'" onclick="toggleT(\''+t.id+'\')"></div>'
     +'<span class="b '+(t.m==='Must'?'bm':t.m==='Should'?'bs':'bc')+'">'+t.m+'</span>'
     +'<span class="rtl"'+(t.status==='Done'?' style="text-decoration:line-through;opacity:.4"':'')+'>'+esc(t.title)+'</span>'
-    +'<div style="display:flex;gap:6px;align-items:center;flex-shrink:0">'+(t.category?'<span class="rsb">'+t.category+'</span>':'')+(t.dd?'<span class="rsb">'+fd(t.dd)+'</span>':'')+'</div></div>').join('');
+    +'<div style="display:flex;gap:6px;align-items:center;flex-shrink:0">'
+    +'<select onchange="setCat(\''+t.id+'\',this.value)" style="font-size:9px;background:#1a1e1a;border:1px solid #2e352e;color:'+(t.category?'#c49030':'#4a5e4a')+';padding:2px 6px;font-family:JetBrains Mono,monospace;cursor:pointer;outline:none;">'
+    +'<option value="">— cat</option>'
+    +['Money','Tickets','Baseball','Business','Personal'].map(c=>'<option value="'+c+'"'+(t.category===c?' selected':'')+'>'+c+'</option>').join('')
+    +'</select>'
+    +(t.dd?'<span class="rsb">'+fd(t.dd)+'</span>':'')
+    +'</div></div>').join('');
 }
 function setTF(f,e){S.tf=f;document.querySelectorAll('#tflt .fp').forEach(b=>{if(['active','done','all'].includes(b.textContent.toLowerCase()))b.classList.remove('on');});e.classList.add('on');rTasks();}
 function setTC(c,e){S.tc=c;document.querySelectorAll('#tflt .fp.cat').forEach(b=>b.classList.remove('on'));e.classList.add('on');rTasks();}
+function setCat(id, cat){
+  const t=S.tasks.find(x=>(x.id===id||x._id===id));
+  if(t){t.category=cat;localStorage.setItem('kcc_tasks',JSON.stringify(S.tasks));rTasks();}
+}
+
 function toggleT(id){const t=S.tasks.find(x=>(x.id===id||x._id===id));if(t){t.status=t.status==='Done'?'Not Started':'Done';localStorage.setItem('kcc_tasks',JSON.stringify(S.tasks));rTasks();rToday();}}
 
 // ── ALERTS PAGE ──────────────────────────────────────────────

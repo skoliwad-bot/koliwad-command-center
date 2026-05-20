@@ -1174,7 +1174,7 @@ async function fInboxCount(){
     // Get total count of all emails in INBOX label
     const r=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/labels/INBOX',{headers:{Authorization:'Bearer '+AT}});
     const d=await r.json();
-    return d.messagesTotal||0;
+    return d.threadsTotal||0; // threads match what Gmail inbox shows
   }catch(e){return 0;}
 }
 

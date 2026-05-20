@@ -1348,7 +1348,7 @@ function rTasks(){
   if(!items.length){e.innerHTML='<div class="empty">No tasks — sync or add manually</div>';return;}
   e.innerHTML=items.map(t=>'<div class="row">'
     +'<div class="chk'+(t.status==='Done'?' dn':'')+'" onclick="toggleT(\''+t.id+'\')"></div>'
-    +'<span class="b '+(t.m==='Must'?'bm':t.m==='Should'?'bs':'bc')+'">'+t.m+'</span>'
+    +'<span class="b '+(t.m==='Must'?'bm':t.m==='Should'?'bs':'bc')+'" onclick="setPriority(\''+t.id+'\')" style="cursor:pointer" title="Click to cycle priority">'+t.m+'</span>'
     +'<span class="rtl"'+(t.status==='Done'?' style="text-decoration:line-through;opacity:.4"':'')+'>'+esc(t.title)+'</span>'
     +'<div style="display:flex;gap:6px;align-items:center;flex-shrink:0">'
     +'<select onchange="setCat(\''+t.id+'\',this.value)" style="font-size:9px;background:#1a1e1a;border:1px solid #2e352e;color:'+(t.category?'#c49030':'#4a5e4a')+';padding:2px 6px;font-family:JetBrains Mono,monospace;cursor:pointer;outline:none;">'
@@ -1360,6 +1360,16 @@ function rTasks(){
 }
 function setTF(f,e){S.tf=f;document.querySelectorAll('#tflt .fp').forEach(b=>{if(['active','done','all'].includes(b.textContent.toLowerCase()))b.classList.remove('on');});e.classList.add('on');rTasks();}
 function setTC(c,e){S.tc=c;document.querySelectorAll('#tflt .fp.cat').forEach(b=>b.classList.remove('on'));e.classList.add('on');rTasks();}
+function setPriority(id){
+  const t=S.tasks.find(x=>(x.id===id||x._id===id));
+  if(!t) return;
+  const cycle={Must:'Should',Should:'Could',"Could":"Won't","Won't":'Must'};
+  t.m=cycle[t.m]||'Should';
+  t._override=true;
+  localStorage.setItem('kcc_tasks',JSON.stringify(S.tasks));
+  rTasks();
+}
+
 function setCat(id, cat){
   const t=S.tasks.find(x=>(x.id===id||x._id===id));
   if(t){t.category=cat;localStorage.setItem('kcc_tasks',JSON.stringify(S.tasks));rTasks();}

@@ -400,8 +400,11 @@ localStorage.setItem = function(key, value) {
       <div class="ndiv"></div>
       <span class="nslbl">Business</span>
       <div class="ni"    id="n-tickets"  onclick="nav('tickets')"> <span class="ico">🎟</span><span class="nlbl">Tickets</span>  <span class="nbadge r" id="nb-tk">0</span></div>
-      <div class="ni"    id="n-business" onclick="nav('business')"><span class="ico">🏢</span><span class="nlbl">Business</span></div>
-      <div class="ni"    id="n-exec"     onclick="nav('exec')">    <span class="ico">📊</span><span class="nlbl">Exec Summary</span></div>
+      <div class="ni"    id="n-business"   onclick="nav('business')">  <span class="ico">🏢</span><span class="nlbl">Business</span></div>
+      <div class="ni"    id="n-exec"       onclick="nav('exec')">      <span class="ico">📊</span><span class="nlbl">Exec Summary</span></div>
+      <div class="ndiv"></div>
+      <span class="nslbl">Investments</span>
+      <div class="ni"    id="n-portfolio"  onclick="nav('portfolio')"> <span class="ico">📈</span><span class="nlbl">Portfolio</span></div>
       <div class="sbft" id="sbft">—</div>
     </div>
 
@@ -604,7 +607,183 @@ localStorage.setItem = function(key, value) {
         </div>
       </div>
 
-    </div><!-- /content -->
+    
+      <!-- PORTFOLIO PAGE -->
+      <div class="page" id="p-portfolio">
+        <div style="padding:22px 26px;">
+
+          <!-- HEADER -->
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px;">
+            <div>
+              <div style="font-family:'Playfair Display',serif;font-size:24px;font-style:italic;color:#eef4ee;">Portfolio</div>
+              <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#6a886a;margin-top:2px;">Version A — Mixed ETF + Futures (Conservative) · Target 20-22%/yr · thinkorswim</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button onclick="om('tradeLog')" style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border:1px solid #2e352e;background:transparent;color:#6a886a;cursor:pointer;">+ Trade Log</button>
+              <button onclick="om('portfolio')" style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;background:#d04040;border:1px solid #d04040;color:white;cursor:pointer;">Update Balances</button>
+            </div>
+          </div>
+
+          <!-- TOP STATS -->
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;">
+            <div style="border:1px solid #252a25;background:#141714;padding:14px 16px;">
+              <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#6a886a;display:block;">Portfolio Value</span>
+              <span id="pf-value" style="font-size:22px;font-weight:700;display:block;margin-top:4px;color:#eef4ee;">—</span>
+            </div>
+            <div style="border:1px solid #252a25;background:#141714;padding:14px 16px;">
+              <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#6a886a;display:block;">High Watermark</span>
+              <span id="pf-hwm" style="font-size:22px;font-weight:700;display:block;margin-top:4px;color:#4a9c5c;">—</span>
+            </div>
+            <div style="border:1px solid #252a25;background:#141714;padding:14px 16px;">
+              <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#6a886a;display:block;">Drawdown</span>
+              <span id="pf-dd" style="font-size:22px;font-weight:700;display:block;margin-top:4px;">—</span>
+              <span id="pf-dd-status" style="font-size:9px;display:block;margin-top:2px;color:#6a886a;">Max 20% hard cap</span>
+            </div>
+            <div style="border:1px solid #252a25;background:#141714;padding:14px 16px;">
+              <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#6a886a;display:block;">Cash Buffer</span>
+              <span id="pf-cash" style="font-size:22px;font-weight:700;display:block;margin-top:4px;">—</span>
+              <span style="font-size:9px;color:#6a886a;display:block;margin-top:2px;">Min 2% required</span>
+            </div>
+            <div style="border:1px solid #252a25;background:#141714;padding:14px 16px;">
+              <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#6a886a;display:block;">YTD Return</span>
+              <span id="pf-ytd" style="font-size:22px;font-weight:700;display:block;margin-top:4px;">—</span>
+              <span style="font-size:9px;color:#6a886a;display:block;margin-top:2px;">Target: 20-22%</span>
+            </div>
+          </div>
+
+          <!-- GTC STATUS BANNER -->
+          <div id="gtc-banner" style="border:1px solid #c49030;background:rgba(196,144,48,0.08);padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#c49030;">⚠ GTC ORDER CHECK — EVERY TUESDAY 11AM</span>
+              <span style="font-size:10px;color:#9a8060;">Confirm all 3 GTCs active in TOS Working Orders tab</span>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <div id="gtc1" style="font-size:9px;font-weight:700;padding:3px 10px;border:1px solid #4a5e4a;color:#4a5e4a;cursor:pointer;" onclick="toggleGTC(1)">Put 50% BTC —</div>
+              <div id="gtc2" style="font-size:9px;font-weight:700;padding:3px 10px;border:1px solid #4a5e4a;color:#4a5e4a;cursor:pointer;" onclick="toggleGTC(2)">Put 200% BTC —</div>
+              <div id="gtc3" style="font-size:9px;font-weight:700;padding:3px 10px;border:1px solid #4a5e4a;color:#4a5e4a;cursor:pointer;" onclick="toggleGTC(3)">Hedge 300% STC —</div>
+            </div>
+          </div>
+
+          <!-- 5 LEGS -->
+          <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6a886a;margin-bottom:8px;">5-LEG ALLOCATION</div>
+          <div style="border:1px solid #252a25;margin-bottom:16px;">
+            <!-- Headers -->
+            <div style="display:grid;grid-template-columns:30px 2fr 1fr 1fr 1fr 1fr 1fr;padding:8px 16px;border-bottom:1px solid #252a25;background:#0f110f;">
+              <span style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#4a5e4a;">#</span>
+              <span style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#4a5e4a;">Leg / Instrument</span>
+              <span style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#4a5e4a;text-align:right;">Target %</span>
+              <span style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#4a5e4a;text-align:right;">Current $</span>
+              <span style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#4a5e4a;text-align:right;">Current %</span>
+              <span style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#4a5e4a;text-align:right;">P&L</span>
+              <span style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#4a5e4a;text-align:right;">Status</span>
+            </div>
+            <!-- Leg 1 -->
+            <div style="display:grid;grid-template-columns:30px 2fr 1fr 1fr 1fr 1fr 1fr;padding:12px 16px;border-bottom:1px solid #1a1e1a;align-items:center;">
+              <span style="font-size:11px;font-weight:700;color:#4a7ab8;">1</span>
+              <div><div style="font-size:13px;font-weight:600;color:#eef4ee;font-family:'Libre Baskerville',serif;">MES Core Long</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">/MES Futures · 0.9x S&P · Quarterly roll</div></div>
+              <span style="font-size:13px;font-weight:700;color:#6a886a;text-align:right;display:block;">10%</span>
+              <span id="l1-val" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
+              <span id="l1-pct" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
+              <span id="l1-pnl" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
+              <span id="l1-st" style="font-size:9px;font-weight:700;padding:2px 8px;text-align:right;display:block;">—</span>
+            </div>
+            <!-- Leg 2 -->
+            <div style="display:grid;grid-template-columns:30px 2fr 1fr 1fr 1fr 1fr 1fr;padding:12px 16px;border-bottom:1px solid #1a1e1a;align-items:center;">
+              <span style="font-size:11px;font-weight:700;color:#d04040;">2</span>
+              <div><div style="font-size:13px;font-weight:600;color:#eef4ee;font-family:'Libre Baskerville',serif;">Short Puts (CSP)</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">SPX puts · Delta -0.12 · 38 DTE · 1st Tuesday/mo</div></div>
+              <span style="font-size:13px;font-weight:700;color:#6a886a;text-align:right;display:block;">25%</span>
+              <span id="l2-val" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
+              <span id="l2-pct" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
+              <span id="l2-pnl" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
+              <span id="l2-st" style="font-size:9px;font-weight:700;padding:2px 8px;text-align:right;display:block;">—</span>
+            </div>
+            <!-- Leg 3 -->
+            <div style="display:grid;grid-template-columns:30px 2fr 1fr 1fr 1fr 1fr 1fr;padding:12px 16px;border-bottom:1px solid #1a1e1a;align-items:center;">
+              <span style="font-size:11px;font-weight:700;color:#c49030;">3</span>
+              <div><div style="font-size:13px;font-weight:600;color:#eef4ee;font-family:'Libre Baskerville',serif;">Trend / Momentum</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">MTUM 10% + DBMF 5% · Quarterly rebalance</div></div>
+              <span style="font-size:13px;font-weight:700;color:#6a886a;text-align:right;display:block;">15%</span>
+              <span id="l3-val" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
+              <span id="l3-pct" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
+              <span id="l3-pnl" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
+              <span id="l3-st" style="font-size:9px;font-weight:700;padding:2px 8px;text-align:right;display:block;">—</span>
+            </div>
+            <!-- Leg 4 -->
+            <div style="display:grid;grid-template-columns:30px 2fr 1fr 1fr 1fr 1fr 1fr;padding:12px 16px;border-bottom:1px solid #1a1e1a;align-items:center;">
+              <span style="font-size:11px;font-weight:700;color:#4a9c5c;">4</span>
+              <div><div style="font-size:13px;font-weight:600;color:#eef4ee;font-family:'Libre Baskerville',serif;">Yield — SGOV</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">iShares 0-3M T-Bill ETF · ~5% yield · Put collateral</div></div>
+              <span style="font-size:13px;font-weight:700;color:#6a886a;text-align:right;display:block;">40%</span>
+              <span id="l4-val" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
+              <span id="l4-pct" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
+              <span id="l4-pnl" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
+              <span id="l4-st" style="font-size:9px;font-weight:700;padding:2px 8px;text-align:right;display:block;">—</span>
+            </div>
+            <!-- Leg 5 -->
+            <div style="display:grid;grid-template-columns:30px 2fr 1fr 1fr 1fr 1fr 1fr;padding:12px 16px;align-items:center;">
+              <span style="font-size:11px;font-weight:700;color:#7a5cb8;">5</span>
+              <div><div style="font-size:13px;font-weight:600;color:#eef4ee;font-family:'Libre Baskerville',serif;">Tail Hedge</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">SPX put spreads · 75 DTE · -8%/-18% strikes · 1st Wed/qtr</div></div>
+              <span style="font-size:13px;font-weight:700;color:#6a886a;text-align:right;display:block;">10%</span>
+              <span id="l5-val" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
+              <span id="l5-pct" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
+              <span id="l5-pnl" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
+              <span id="l5-st" style="font-size:9px;font-weight:700;padding:2px 8px;text-align:right;display:block;">—</span>
+            </div>
+          </div>
+
+          <!-- ACTIONS + TRADE LOG -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+
+            <!-- This Week's Actions -->
+            <div style="border:1px solid #252a25;background:#141714;">
+              <div style="padding:9px 16px;border-bottom:1px solid #252a25;display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#d04040;">This Week's Actions</span>
+              </div>
+              <div id="pf-actions">
+                <div style="padding:10px 16px;border-bottom:1px solid #1a1e1a;display:flex;align-items:center;gap:10px;">
+                  <span style="font-size:8px;font-weight:700;padding:2px 7px;background:rgba(196,144,48,0.15);color:#c49030;white-space:nowrap;">WEEKLY</span>
+                  <div style="flex:1"><div style="font-size:12px;color:#eef4ee;font-family:'Libre Baskerville',serif;">Tuesday 11AM — Verify all 3 GTC orders active</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">TOS > Monitor > Working Orders tab</div></div>
+                </div>
+                <div style="padding:10px 16px;border-bottom:1px solid #1a1e1a;display:flex;align-items:center;gap:10px;">
+                  <span style="font-size:8px;font-weight:700;padding:2px 7px;background:rgba(196,144,48,0.15);color:#c49030;white-space:nowrap;">WEEKLY</span>
+                  <div style="flex:1"><div style="font-size:12px;color:#eef4ee;font-family:'Libre Baskerville',serif;">After 4PM — Record closing portfolio value</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">Compare to high watermark. Update if new high.</div></div>
+                </div>
+                <div style="padding:10px 16px;display:flex;align-items:center;gap:10px;">
+                  <span style="font-size:8px;font-weight:700;padding:2px 7px;background:rgba(74,122,184,0.15);color:#4a7ab8;white-space:nowrap;">MONTHLY</span>
+                  <div style="flex:1"><div style="font-size:12px;color:#eef4ee;font-family:'Libre Baskerville',serif;">1st Tuesday — Open new short put if no open position</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">Delta -0.08 to -0.15 · Premium >$1.00 · VIX &lt;35 · No FOMC ±3 days</div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Trade Log -->
+            <div style="border:1px solid #252a25;background:#141714;">
+              <div style="padding:9px 16px;border-bottom:1px solid #252a25;display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#4a9c5c;">Trade Log</span>
+                <button onclick="om('tradeLog')" style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border:1px solid #2e352e;background:transparent;color:#6a886a;cursor:pointer;">+ Entry</button>
+              </div>
+              <div id="pf-tradelog">
+                <div style="padding:12px 16px;font-size:11px;color:#4a5e4a;font-style:italic;">No trade log entries yet. Click "+ Entry" to log a trade.</div>
+              </div>
+            </div>
+
+          </div><!-- /grid -->
+
+          <!-- EXPECTED RETURN REFERENCE -->
+          <div style="margin-top:12px;border:1px solid #252a25;background:#141714;">
+            <div style="padding:9px 16px;border-bottom:1px solid #252a25;">
+              <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6a886a;">Expected Return Reference — Version A Conservative</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);">
+              <div style="padding:12px 16px;border-right:1px solid #1a1e1a;text-align:center;"><div style="font-size:10px;font-weight:700;color:#eef4ee;">Flash Crash</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">S&amp;P -35%</div><div style="font-size:20px;font-weight:700;color:#d04040;margin-top:4px;">~-9%</div></div>
+              <div style="padding:12px 16px;border-right:1px solid #1a1e1a;text-align:center;"><div style="font-size:10px;font-weight:700;color:#eef4ee;">Bear Market</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">S&amp;P -20%</div><div style="font-size:20px;font-weight:700;color:#d04040;margin-top:4px;">~-6%</div></div>
+              <div style="padding:12px 16px;border-right:1px solid #1a1e1a;text-align:center;"><div style="font-size:10px;font-weight:700;color:#eef4ee;">Flat Year</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">S&amp;P 0%</div><div style="font-size:20px;font-weight:700;color:#4a9c5c;margin-top:4px;">~+14%</div></div>
+              <div style="padding:12px 16px;border-right:1px solid #1a1e1a;text-align:center;"><div style="font-size:10px;font-weight:700;color:#eef4ee;">Bull Market</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">S&amp;P +15%</div><div style="font-size:20px;font-weight:700;color:#4a9c5c;margin-top:4px;">~+21%</div></div>
+              <div style="padding:12px 16px;text-align:center;"><div style="font-size:10px;font-weight:700;color:#eef4ee;">Strong Bull</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">S&amp;P +25%</div><div style="font-size:20px;font-weight:700;color:#4a9c5c;margin-top:4px;">~+23%</div></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+</div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /shell -->
 
@@ -871,6 +1050,8 @@ function nav(pg){
   if(pg==='fire') rFire();
   if(pg==='financials') rFin();
   if(pg==='business') rBiz();
+  if(pg==='portfolio'){rPortfolio();// init GTC states
+    [1,2,3].forEach(n=>{if(S.gtc&&S.gtc[n]!==undefined)toggleGTC(n);});}
   if(pg==='exec') rExec();
 }
 
@@ -1421,6 +1602,24 @@ const MCFG={
     {n:'cash',l:'Cash Available ($)',t:'num'},
     {n:'inv',l:'Inventory Value ($)',t:'num'},
   ],def:{},k:'kcc_tb',single:true,arr:'tb'},
+  portfolio:{title:'Update Portfolio Balances',fields:[
+    {n:'value',l:'Portfolio Value ($)',t:'num',req:true},
+    {n:'hwm',l:'High Watermark ($)',t:'num'},
+    {n:'cash_pct',l:'Cash Buffer (%)',t:'num'},
+    {n:'ytd_pct',l:'YTD Return (%)',t:'num'},
+    {n:'l1_val',l:'Leg 1 MES Value ($)',t:'num'},
+    {n:'l2_val',l:'Leg 2 Short Puts Value ($)',t:'num'},
+    {n:'l3_val',l:'Leg 3 MTUM+DBMF Value ($)',t:'num'},
+    {n:'l4_val',l:'Leg 4 SGOV Value ($)',t:'num'},
+    {n:'l5_val',l:'Leg 5 Tail Hedge Value ($)',t:'num'},
+  ],def:{},k:'kcc_portfolio',single:true,arr:'portfolio'},
+  tradeLog:{title:'Log a Trade',fields:[
+    {n:'leg',l:'Leg (1-5)',t:'sel',o:['1 - MES','2 - Short Put','3 - MTUM/DBMF','4 - SGOV','5 - Tail Hedge']},
+    {n:'action',l:'Action',t:'sel',o:['Buy','Sell','Roll','Rebalance','GTC Fill','Assignment']},
+    {n:'instrument',l:'Instrument',t:'text',req:true},
+    {n:'price',l:'Execution Price',t:'num'},
+    {n:'notes',l:'Notes / Trigger Reason',t:'ta'},
+  ],def:{},k:'kcc_tradelogs',arr:'tradelogs'},
   tz:{title:'Throwzone KPIs',fields:[
     {n:'rev',l:'Monthly Revenue ($)',t:'num'},
     {n:'mem',l:'Active Members',t:'num'},
@@ -1446,7 +1645,9 @@ function sm(){
   cfg.fields.forEach(f=>{const e=document.getElementById('mf_'+f.n);if(!e)return;data[f.n]=f.t==='num'?(parseFloat(e.value)||0):e.value;});
   const req=cfg.fields.find(f=>f.req&&!data[f.n]);
   if(req){alert(req.l+' is required');return;}
-  if(cfg.single){S[cfg.arr]=data;localStorage.setItem(cfg.k,JSON.stringify(data));}
+  if(cfg.arr==='tradelogs') data.date=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  if(cfg.single){S[cfg.arr]=data;localStorage.setItem(cfg.k,JSON.stringify(data));
+    if(cfg.arr==='portfolio') rPortfolio();}
   else{if(!S[cfg.arr])S[cfg.arr]=[];S[cfg.arr].push(data);localStorage.setItem(cfg.k,JSON.stringify(S[cfg.arr]));}
   cm(); renderAll();
   if(S.page==='fire') rFire();
@@ -1457,6 +1658,50 @@ function sm(){
 }
 
 // ── HELPERS ──────────────────────────────────────────────────
+function nav_portfolio(){rPortfolio();}
+
+function rPortfolio(){
+  const p=S.portfolio; const logs=S.tradelogs||[];
+  if(!p) return;
+  const pv=p.value||0, hwm=p.hwm||pv;
+  const dd=hwm>0?((pv-hwm)/hwm*100):0;
+  const set=(id,v,c)=>{const el=document.getElementById(id);if(el){el.textContent=v;if(c)el.style.color=c;}};
+  set('pf-value','$'+Number(pv).toLocaleString());
+  set('pf-hwm','$'+Number(hwm).toLocaleString(),'#4a9c5c');
+  const ddEl=document.getElementById('pf-dd');
+  if(ddEl){ddEl.textContent=dd.toFixed(1)+'%';ddEl.style.color=dd<-10?'#d04040':dd<-5?'#c49030':'#4a9c5c';}
+  set('pf-cash',(p.cash_pct||0).toFixed(1)+'%',(p.cash_pct||0)<2?'#d04040':'#4a9c5c');
+  set('pf-ytd',(p.ytd_pct||0)>0?'+'+(p.ytd_pct||0).toFixed(1)+'%':(p.ytd_pct||0).toFixed(1)+'%',(p.ytd_pct||0)>=20?'#4a9c5c':(p.ytd_pct||0)>=10?'#c49030':'#d04040');
+  // Legs
+  const legs=['l1','l2','l3','l4','l5'];
+  const targets=[10,25,15,40,10];
+  legs.forEach((l,i)=>{
+    const v=p[l+'_val']||0, t=targets[i], cp=pv>0?(v/pv*100):0;
+    const drift=Math.abs(cp-t);
+    set(l+'-val','$'+Number(v).toLocaleString());
+    set(l+'-pct',cp.toFixed(1)+'%',drift>3?'#c49030':'#4a9c5c');
+    set(l+'-st',drift>3?'REBALANCE':'ON TARGET',drift>3?'#c49030':'#4a9c5c');
+  });
+  // Trade log
+  const tlEl=document.getElementById('pf-tradelog');
+  if(tlEl){
+    if(!logs.length){tlEl.innerHTML='<div style="padding:12px 16px;font-size:11px;color:#4a5e4a;font-style:italic;">No trade log entries yet.</div>';return;}
+    tlEl.innerHTML=logs.slice(-8).reverse().map(t=>`<div style="display:grid;grid-template-columns:80px 1fr 1fr;padding:8px 16px;border-bottom:1px solid #1a1e1a;gap:8px;">
+      <span style="font-size:9px;color:#6a886a;">${t.date||new Date().toLocaleDateString()}</span>
+      <div><span style="font-size:9px;font-weight:700;padding:1px 6px;background:rgba(74,122,184,0.15);color:#4a7ab8;margin-right:6px;">${(t.leg||'').split(' ')[0]}</span><span style="font-size:11px;color:#eef4ee;">${esc(t.action||'')} ${esc(t.instrument||'')}</span></div>
+      <span style="font-size:9px;color:#6a886a;">${t.price?'$'+Number(t.price).toLocaleString():''} ${esc(t.notes||'')}</span>
+    </div>`).join('');
+  }
+}
+
+function toggleGTC(n){
+  if(!S.gtc) S.gtc={};
+  S.gtc[n]=!S.gtc[n];
+  localStorage.setItem('kcc_gtc',JSON.stringify(S.gtc));
+  const el=document.getElementById('gtc'+n);
+  if(el){el.style.borderColor=S.gtc[n]?'#4a9c5c':'#d04040';el.style.color=S.gtc[n]?'#4a9c5c':'#d04040';el.style.background=S.gtc[n]?'rgba(74,156,92,0.1)':'rgba(208,64,64,0.1)';}
+}
+
 function openFireLab(){window.open("fire-lab.html","_blank");}
 
 function el(id){return document.getElementById(id);}

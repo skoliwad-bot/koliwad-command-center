@@ -480,8 +480,8 @@ localStorage.setItem = function(key, value) {
         <div class="ph"><div><div class="pt">Calendar</div><div class="ps" id="cal-source-lbl">Synced from Google · all calendars</div></div>
           <div class="pact">
             <div style="display:flex;border:1px solid var(--brd2);overflow:hidden;">
-              <button id="cvw" onclick="setCV('week')" style="padding:5px 14px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:none;background:var(--blu);color:#fff;cursor:pointer;">Week</button>
-              <button id="cva" onclick="setCV('agenda')" style="padding:5px 14px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:none;background:var(--surf);color:var(--mut);cursor:pointer;">Agenda</button>
+              <button id="cvw" onclick="setCV('week')" style="padding:5px 14px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:none;background:var(--surf);color:var(--mut);cursor:pointer;">Week</button>
+              <button id="cva" onclick="setCV('agenda')" style="padding:5px 14px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:none;background:var(--blu);color:#fff;cursor:pointer;">Agenda</button>
             </div>
           </div>
         </div>
@@ -495,8 +495,8 @@ localStorage.setItem = function(key, value) {
             <span style="color:#e8a8a8">● Tasks</span><span style="color:#a8c8e8">● Events</span><span style="color:#e8c890">● Tickets</span>
           </div>
         </div>
-        <div id="calW"></div>
-        <div id="calA" style="display:none"></div>
+        <div id="calW" style="display:none"></div>
+        <div id="calA"></div>
       </div>
 
       <!-- FINANCIALS -->
@@ -959,7 +959,7 @@ let S={
   fchk:    JSON.parse(localStorage.getItem('kcc_fchk')||'{}'),
   fex:     {},
   lastSync:localStorage.getItem('kcc_sync')||null,
-  mode:'cmd', page:'today', tf:'active', tc:'all', af:'Open', cv:'week', co:0,
+  mode:'cmd', page:'today', tf:'active', tc:'all', af:'Open', cv:'agenda', co:0,
 };
 let CFG={id:localStorage.getItem('kcc_cid')||'',claude:localStorage.getItem('kcc_claude')||'',name:localStorage.getItem('kcc_name')||'Sonny'};
 let AT=null, MT=null;
@@ -1587,16 +1587,17 @@ function rCal(){
              ...(S.tickets||[]).filter(t=>t.event_date).map(t=>({...t,dd:t.event_date,_t:'ticket'}))
   ].filter(e=>{const ds=e.dd||''; const d=new Date(ds.length===10?ds+'T12:00:00':ds); return !isNaN(d)&&d>=start&&d<=end;}).sort((a,b)=>new Date(a.dd)-new Date(b.dd));
   const byD={};all.forEach(e=>{if(!byD[e.dd])byD[e.dd]=[];byD[e.dd].push(e);});
-  el('calA').innerHTML=Object.keys(byD).length===0?'<div class="empty">No events in this period</div>':
+  el('calA').innerHTML=Object.keys(byD).length===0?'<div class="empty" style="padding:20px">No events this week — sync to load</div>':
     Object.entries(byD).map(([d,evts])=>{
       const dobj=new Date(d+'T12:00:00'), isT=sameD(dobj,today);
-      return'<div style="margin-bottom:14px">'
-        +'<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:'+(isT?'var(--red)':'var(--mut)')+';padding:7px 0;border-bottom:1px solid var(--brd);margin-bottom:5px">'+(isT?'TODAY — ':'')+DAYS[dobj.getDay()].substring(0,3)+', '+SM[dobj.getMonth()]+' '+dobj.getDate()+'</div>'
-        +evts.map(e=>'<div style="display:flex;align-items:center;gap:10px;padding:7px 12px;border:1px solid var(--brd);background:var(--surf);margin-bottom:3px">'
-          +'<span style="font-size:9px;color:var(--mut);width:50px;flex-shrink:0">'+(e.time||'—')+'</span>'
-          +'<div style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+(e._t==='event'?'var(--blu)':e._t==='ticket'?'var(--orn)':'var(--red)')+'"></div>'
-          +'<span style="flex:1;font-size:12px;color:var(--txt);font-family:Libre Baskerville,serif">'+esc(e.title||e.event_name||'')+'</span>'
-          +'<span style="font-size:9px;color:var(--mut)">'+e._t+'</span></div>').join('')
+      return'<div style="margin-bottom:16px">'
+        +'<div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:'+(isT?'#e05050':'#a0c0a0')+';padding:8px 0;border-bottom:2px solid '+(isT?'#e05050':'#2e352e')+';margin-bottom:6px">'
+        +(isT?'<span style="background:#e05050;color:#fff;padding:2px 8px;margin-right:8px;font-size:9px">TODAY</span>':'')+DAYS[dobj.getDay()]+', '+SM[dobj.getMonth()]+' '+dobj.getDate()+'</div>'
+        +evts.map(e=>'<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid #2e352e;background:#181d18;margin-bottom:4px">'
+          +'<span style="font-size:10px;color:#8aaa8a;width:60px;flex-shrink:0">'+e.time+'</span>'
+          +'<div style="width:3px;height:30px;flex-shrink:0;background:'+(e._t==='event'?'#4a7ab8':e._t==='ticket'?'#c07030':'#d04040')+'"></div>'
+          +'<span style="flex:1;font-size:13px;font-weight:600;color:#f0f7f0">'+esc(e.title||e.event_name||'')+'</span>'
+          +'</div>').join('')
         +'</div>';
     }).join('');
 }

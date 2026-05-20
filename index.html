@@ -479,10 +479,7 @@ localStorage.setItem = function(key, value) {
       <div class="page" id="p-calendar">
         <div class="ph"><div><div class="pt">Calendar</div><div class="ps" id="cal-source-lbl">Synced from Google · all calendars</div></div>
           <div class="pact">
-            <div style="display:flex;border:1px solid var(--brd2);overflow:hidden;">
-              <button id="cvw" onclick="setCV('week')" style="padding:5px 14px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:none;background:var(--surf);color:var(--mut);cursor:pointer;">Week</button>
-              <button id="cva" onclick="setCV('agenda')" style="padding:5px 14px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:none;background:var(--blu);color:#fff;cursor:pointer;">Agenda</button>
-            </div>
+            
           </div>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
@@ -495,7 +492,7 @@ localStorage.setItem = function(key, value) {
             <span style="color:#e8a8a8">● Tasks</span><span style="color:#a8c8e8">● Events</span><span style="color:#e8c890">● Tickets</span>
           </div>
         </div>
-        <div id="calW" style="display:none"></div>
+        
         <div id="calA"></div>
       </div>
 
@@ -1200,16 +1197,16 @@ async function fTasks(){
 
 async function fCal(){
   const items=[],now=new Date(),end=new Date();
-  end.setDate(end.getDate()+35); // 5 weeks ahead
+  end.setDate(end.getDate()+42); // 6 weeks ahead
   const r=await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList',{headers:{Authorization:'Bearer '+AT}});
   const cl=await r.json();
-  const calNames=(cl.items||[]).slice(0,5).map(c=>c.summary||c.id);
+  const calNames=(cl.items||[]).map(c=>c.summary||c.id);
   S.calNames=calNames;
   localStorage.setItem('kcc_calnames',JSON.stringify(calNames));
   const lbl=document.getElementById('cal-source-lbl');
   if(lbl) lbl.textContent='Synced from Google · '+calNames.join(', ');
-  for(const c of(cl.items||[]).slice(0,5)){
-    const er=await fetch('https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(c.id)+'/events?timeMin='+now.toISOString()+'&timeMax='+end.toISOString()+'&singleEvents=true&orderBy=startTime&maxResults=50',{headers:{Authorization:'Bearer '+AT}});
+  for(const c of(cl.items||[])){  // fetch ALL calendars
+    const er=await fetch('https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(c.id)+'/events?timeMin='+now.toISOString()+'&timeMax='+end.toISOString()+'&singleEvents=true&orderBy=startTime&maxResults=100',{headers:{Authorization:'Bearer '+AT}});
     const ed=await er.json();
     for(const e of(ed.items||[])){
       // Fix: all-day events have e.start.date (no time) — parsed as UTC which shifts date in US timezones
@@ -1550,15 +1547,7 @@ function rExec(){
 }
 
 // ── CALENDAR ─────────────────────────────────────────────────
-function setCV(v){
-  el('calW').style.display=v==='week'?'block':'none';
-  el('calA').style.display=v==='agenda'?'block':'none';
-  el('cvw').style.background=v==='week'?'var(--blu)':'var(--surf)';
-  el('cvw').style.color=v==='week'?'#fff':'var(--mut)';
-  el('cva').style.background=v==='agenda'?'var(--blu)':'var(--surf)';
-  el('cva').style.color=v==='agenda'?'#fff':'var(--mut)';
-  S.cv=v;
-}
+function setCV(v){ S.cv='agenda'; }
 function calPrev(){S.co--;rCal();}
 function calNext(){S.co++;rCal();}
 function rCal(){
@@ -1589,7 +1578,9 @@ function rCal(){
   const byD={};all.forEach(e=>{if(!byD[e.dd])byD[e.dd]=[];byD[e.dd].push(e);});
   el('calA').innerHTML=Object.keys(byD).length===0?'<div class="empty" style="padding:20px">No events this week — sync to load</div>':
     Object.entries(byD).map(([d,evts])=>{
-      const dobj=new Date(d+'T12:00:00'), isT=sameD(dobj,today);
+      const dobj=new Date(d+'T12:00:00');
+      const nowCheck=new Date(); nowCheck.setHours(0,0,0,0);
+      const isT=sameD(dobj,nowCheck);
       return'<div style="margin-bottom:16px">'
         +'<div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:'+(isT?'#e05050':'#a0c0a0')+';padding:8px 0;border-bottom:2px solid '+(isT?'#e05050':'#2e352e')+';margin-bottom:6px">'
         +(isT?'<span style="background:#e05050;color:#fff;padding:2px 8px;margin-right:8px;font-size:9px">TODAY</span>':'')+DAYS[dobj.getDay()]+', '+SM[dobj.getMonth()]+' '+dobj.getDate()+'</div>'

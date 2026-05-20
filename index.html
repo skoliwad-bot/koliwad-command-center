@@ -1,0 +1,1866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Koliwad Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=JetBrains+Mono:wght@400;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0b0d0b;--surf:#161916;--surf2:#1c211c;--brd:#252a25;--brd2:#303830;
+  --txt:#edf4ed;--txt2:#b8d0b8;--mut:#6a886a;--mut2:#3a4e3a;
+  --red:#d04040;--rdim:rgba(208,64,64,0.12);--rbrd:rgba(208,64,64,0.4);
+  --grn:#4a9c5c;--gdim:rgba(74,156,92,0.12);--gbrd:rgba(74,156,92,0.4);
+  --amb:#c49030;--adim:rgba(196,144,48,0.12);--abrd:rgba(196,144,48,0.4);
+  --blu:#4a7ab8;--orn:#c07030;
+  --pp:#f5efe0;--pi:#2c2416;--pr:#8b3a2a;--ps:#4a6741;--pa:#b8882a;--prl:#c8bfa8;--pf:#9a8e78;
+}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'JetBrains Mono',monospace;overflow:hidden;}
+
+/* ── SETUP ── */
+#setup{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;}
+#setup.off{display:none;}
+.sc{width:480px;background:var(--surf);border:1px solid var(--brd2);padding:32px;}
+.sc h1{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--red);margin-bottom:4px;}
+.sc h2{font-family:'Playfair Display',serif;font-size:24px;color:var(--txt);margin-bottom:6px;font-style:italic;}
+.sc p{font-size:10px;color:var(--mut);line-height:1.8;margin-bottom:18px;}
+.sf{margin-bottom:12px;}
+.sf label{display:block;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:4px;}
+.sf input{width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;outline:none;}
+.sf input:focus{border-color:var(--red);}
+.sbtn{width:100%;padding:10px;background:var(--red);color:#fff;border:none;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-top:4px;}
+.snote{margin-top:14px;padding-top:12px;border-top:1px solid var(--brd);font-size:8px;color:var(--mut);line-height:1.9;}
+.snote a{color:var(--red);text-decoration:none;}
+
+/* ── SHELL ── */
+#shell{display:none;height:100vh;flex-direction:column;}
+#shell.on{display:flex;}
+
+/* ── TOPBAR ── */
+.top{height:44px;background:#080a08;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;padding:0 18px;flex-shrink:0;}
+.logo{font-size:12px;font-weight:700;color:var(--red);letter-spacing:3px;}
+.mtog{display:flex;border:1px solid var(--brd2);overflow:hidden;}
+.mtog button{padding:6px 18px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border:none;cursor:pointer;background:var(--surf);color:var(--mut);transition:all .15s;}
+.mtog button.cmd{background:var(--red);color:#fff;}
+.mtog button.brf{background:var(--amb);color:#fff;}
+.tr{display:flex;align-items:center;gap:8px;}
+.tst{font-size:8px;color:var(--mut2);}
+.tbtn{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;border:1px solid var(--brd2);background:transparent;color:var(--mut);cursor:pointer;}
+.tbtn:hover{color:var(--grn);border-color:var(--grn);}
+.tbtn.spin{color:var(--amb);border-color:var(--amb);}
+
+/* ── LAYOUT ── */
+.main{display:flex;flex:1;overflow:hidden;}
+.sidebar{width:200px;background:#080a08;border-right:1px solid var(--brd);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
+.sbhdr{padding:14px 16px 10px;border-bottom:1px solid var(--brd);}
+.sbhdr .d{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut2);}
+.sbhdr .n{font-family:'Playfair Display',serif;font-size:16px;color:var(--txt);font-style:italic;margin-top:2px;}
+.nslbl{font-size:7px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#8aaa8a;padding:10px 16px 4px;display:block;}
+.ni{display:flex;flex-direction:row;align-items:center;gap:12px;padding:10px 16px;border-left:3px solid transparent;cursor:pointer;color:var(--mut);transition:all .15s;width:100%;}
+.ni:hover{background:var(--surf2);color:var(--txt2);}
+.ni.on{background:var(--rdim);border-left-color:var(--red);color:var(--txt);}
+.ni.on .ico{color:var(--red);}
+.ico{font-size:15px;width:20px;text-align:center;flex-shrink:0;}
+.nlbl{font-size:13px;font-weight:600;color:inherit;}
+.nbadge{margin-left:auto;font-size:9px;font-weight:700;padding:1px 6px;display:none;}
+.nbadge.r{background:var(--red);color:#fff;}
+.nbadge.a{background:var(--amb);color:#fff;}
+.ndiv{height:1px;background:var(--brd);margin:4px 0;}
+.sbft{padding:10px 16px;border-top:1px solid var(--brd);margin-top:auto;font-size:8px;color:var(--mut2);}
+
+/* ── CONTENT ── */
+.content{flex:1;overflow-y:auto;overflow-x:hidden;}
+.page{display:none;padding:22px 26px;animation:fi .15s ease;}
+.page.on{display:block;}
+@keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+.ph{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px;}
+.pt{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--txt);font-style:italic;}
+.ps{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-top:2px;}
+.pact{display:flex;gap:8px;align-items:center;}
+
+/* ── CARDS ── */
+.card{border:1px solid var(--brd);background:var(--surf);}
+.ch{padding:9px 16px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;}
+.ct{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
+.ct.r{color:var(--red);}.ct.a{color:var(--amb);}.ct.g{color:var(--grn);}.ct.b{color:var(--blu);}.ct.o{color:var(--orn);}.ct.m{color:var(--mut);}
+
+/* ── ROWS ── */
+.row{display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid var(--brd);transition:background .1s;}
+.row:last-child{border-bottom:none;}
+.row:hover{background:rgba(255,255,255,.02);}
+.row.hi{border-left:2px solid var(--red);background:rgba(208,64,64,.04);}
+.row.mi{border-left:2px solid var(--amb);}
+.rtl{flex:1;font-size:13px;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Libre Baskerville',serif;}
+.rsb{font-size:9px;color:var(--mut);white-space:nowrap;}
+.empty{padding:12px 16px;font-size:11px;color:var(--mut);font-style:italic;}
+
+/* ── BADGES ── */
+.b{font-size:8px;font-weight:700;padding:2px 7px;letter-spacing:.5px;flex-shrink:0;white-space:nowrap;}
+.bm{background:var(--red);color:#fff;}.bs{background:var(--amb);color:#fff;}.bc{background:#2d5c3e;color:#8dc89d;}
+.bt{background:#8b1a1a;color:#faa;}.bw{background:#6b3a0a;color:#fd0;}.bl{background:#1a221a;color:var(--mut);}
+.bsl{background:#8b1a1a;color:#faa;}.blo{background:#5a2e00;color:#fd0;}.bbu{background:#4a3a00;color:#ff0;}.bho{background:#1e221e;color:var(--mut);}
+
+/* ── CHECKBOX ── */
+.chk{width:15px;height:15px;border:1.5px solid var(--mut2);flex-shrink:0;cursor:pointer;}
+.chk:hover{border-color:var(--grn);}
+.chk.dn{background:var(--grn);border-color:var(--grn);}
+
+/* ── BUTTONS ── */
+.btn{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;border:1px solid var(--brd2);background:transparent;color:var(--mut);cursor:pointer;}
+.btn:hover{color:var(--txt);border-color:var(--mut);}
+.btn.p{background:var(--red);border-color:var(--red);color:#fff;}
+.btn.p:hover{background:#a03030;}
+
+/* ── GRIDS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+
+/* ── STAT PILLS ── */
+.sp{border:1px solid var(--brd);background:var(--surf);padding:12px 16px;display:flex;align-items:center;gap:12px;}
+.sp.r{border-color:var(--rbrd);background:var(--rdim);}
+.sp.g{border-color:var(--gbrd);background:var(--gdim);}
+.sp.a{border-color:var(--abrd);background:var(--adim);}
+.spi{font-size:20px;line-height:1;}
+.spl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#a8c8a8;display:block;}
+.spv{font-size:24px;font-weight:700;line-height:1.1;display:block;margin-top:2px;color:#edf4ed;}
+.spv.r{color:var(--red);}.spv.g{color:var(--grn);}.spv.a{color:var(--amb);}
+
+/* ── FILTERS ── */
+.flt{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px;}
+.fp{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;border:1px solid var(--brd2);background:transparent;color:var(--mut);cursor:pointer;}
+.fp.on{border-color:var(--txt);color:var(--txt);background:rgba(255,255,255,.04);}
+.fp.cat.on{border-color:var(--amb);color:var(--amb);}
+
+/* ── FIRE PAGE ── */
+.fmc{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--brd);}
+.fmc div{padding:14px 16px;border-right:1px solid var(--brd);}
+.fmc div:last-child{border-right:none;}
+.fml{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block;}
+.fmv{font-size:22px;font-weight:700;display:block;margin-top:4px;}
+.fmv.pos{color:var(--grn);}.fmv.neg{color:var(--red);}.fmv.w{color:var(--txt);}.fmv.b{color:var(--blu);}
+.ftab{display:flex;border:1px solid var(--brd2);overflow:hidden;margin-bottom:12px;width:fit-content;}
+.ftab button{padding:7px 16px;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;border:none;background:var(--surf);color:var(--mut);cursor:pointer;}
+.ftab button.on{background:var(--red);color:#fff;}
+.fprog{height:4px;background:var(--brd2);overflow:hidden;margin-top:6px;}
+.fprogf{height:100%;background:var(--blu);transition:width .4s;}
+.ftask{display:flex;align-items:flex-start;gap:12px;padding:10px 16px;border-bottom:1px solid var(--brd);}
+.ftask:last-child{border-bottom:none;}
+.ftask .fbody{flex:1;}
+.ftask .ftit{font-size:13px;font-weight:600;color:var(--txt);font-family:'Libre Baskerville',serif;}
+.ftask .fdet{font-size:11px;color:var(--mut);margin-top:3px;line-height:1.5;}
+
+/* ── FINANCIALS ── */
+.finbox{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px;}
+.fb{border:1px solid var(--brd);background:var(--surf);padding:14px;}
+.fbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);display:block;}
+.fbv{font-size:20px;font-weight:700;display:block;margin-top:4px;}
+
+/* ── TICKET PAGE ── */
+.tsum{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;}
+.tsb{border:1px solid var(--brd);background:var(--surf);padding:12px 16px;text-align:center;}
+.tsn{font-size:28px;font-weight:700;display:block;}
+.tsl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block;margin-top:2px;}
+
+/* ── MODAL ── */
+.mov{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:flex;align-items:center;justify-content:center;}
+.mov.off{display:none;}
+.mo{background:var(--surf);border:1px solid var(--brd2);padding:26px;width:400px;max-height:85vh;overflow-y:auto;}
+.mo h3{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:18px;}
+.mf{margin-bottom:12px;}
+.mf label{display:block;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:4px;}
+.mf input,.mf select,.mf textarea{width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:8px 10px;font-family:'JetBrains Mono',monospace;font-size:11px;outline:none;}
+.mf input:focus,.mf select:focus{border-color:var(--red);}
+.mf select option{background:var(--surf);}
+.mbtns{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
+
+/* ── BRIEFING ── */
+#brief{display:none;background:#b8ae96;}
+#brief.on{display:block;min-height:100vh;padding:16px;}
+.brnav{display:flex;align-items:center;justify-content:space-between;width:8.5in;margin:0 auto 12px;}
+.brnav button{font-family:'Special Elite',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:9px 20px;border:none;cursor:pointer;}
+.brback{background:#2c2416;color:#f5efe0;}
+.brprint{background:#8b3a2a;color:#fff;}
+.brpg{width:8.5in;min-height:11in;margin:0 auto;background:var(--pp);position:relative;overflow:hidden;box-shadow:0 6px 48px rgba(0,0,0,.3);color:var(--pi);font-family:'Libre Baskerville',Georgia,serif;}
+.brpg::before{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(200,191,168,.35) 27px,rgba(200,191,168,.35) 28px);pointer-events:none;z-index:0;}
+.brpg::after{content:'';position:absolute;top:0;bottom:0;left:.72in;width:2px;background:rgba(180,80,60,.18);z-index:1;}
+.brc{position:relative;z-index:2;padding:.28in .32in .28in .88in;}
+.brm{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:3px double var(--pi);padding-bottom:.08in;margin-bottom:.1in;}
+.brmt{font-family:'Playfair Display',serif;font-size:24pt;font-weight:700;line-height:1;}
+.brmt em{font-style:italic;color:var(--pr);}
+.brmts{font-family:'Special Elite',monospace;font-size:7pt;color:var(--pf);letter-spacing:2px;text-transform:uppercase;margin-top:3px;}
+.brmd{text-align:right;}
+.brdn{font-family:'Playfair Display',serif;font-size:15pt;font-weight:700;color:var(--pr);display:block;line-height:1;}
+.brdd{font-family:'Playfair Display',serif;font-size:32pt;font-weight:700;color:var(--pi);line-height:1;display:block;}
+.brmy{font-size:9pt;color:#5a4e38;}
+.brsb{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--prl);margin-bottom:.1in;}
+.brpp{display:flex;align-items:center;gap:7px;padding:5px 8px;border-right:1px solid var(--prl);}
+.brpp:last-child{border-right:none;}
+.brpp.r{background:rgba(139,58,42,.07);}.brpp.g{background:rgba(74,103,65,.07);}.brpp.a{background:rgba(184,136,42,.07);}
+.bric{font-size:12pt;line-height:1;}
+.brpl{font-family:'Special Elite',monospace;font-size:5.5pt;letter-spacing:1.5px;text-transform:uppercase;color:var(--pf);display:block;}
+.brpv{font-family:'Playfair Display',serif;font-size:12pt;font-weight:700;line-height:1;display:block;}
+.brpv.r{color:var(--pr);}.brpv.g{color:var(--ps);}.brpv.a{color:var(--pa);}
+.brgrd{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.09in;}
+.brcl{padding:.06in .08in;background:rgba(255,255,255,.28);border:1px solid var(--prl);}
+.brs2{grid-column:span 2;}
+.brsl{font-family:'Special Elite',monospace;font-size:6.5pt;letter-spacing:3px;text-transform:uppercase;color:var(--pr);margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.brsl::after{content:'';flex:1;height:1px;background:var(--prl);}
+.brml{list-style:none;margin-top:3px;}
+.brml li{display:flex;align-items:flex-start;gap:7px;padding:4px 0;border-bottom:1px solid rgba(200,191,168,.5);font-size:8.5pt;line-height:1.3;}
+.brml li:last-child{border-bottom:none;}
+.brmn{font-family:'Playfair Display',serif;font-size:13pt;font-weight:700;color:var(--pr);line-height:1;min-width:15px;}
+.brmb{flex:1;}
+.brmt2{font-weight:700;display:block;}
+.brmd2{font-size:7pt;color:var(--pf);font-style:italic;}
+.brmm{display:flex;gap:3px;margin-top:2px;align-items:center;flex-wrap:wrap;}
+.pch{width:12px;height:12px;border:1.5px solid #5a4e38;border-radius:1px;flex-shrink:0;margin-top:2px;}
+.pb{font-family:'Special Elite',monospace;font-size:6pt;padding:1px 4px;white-space:nowrap;flex-shrink:0;}
+.pbM{background:var(--pr);color:#fff;}.pbS{background:var(--pa);color:#fff;}.pbC{background:var(--ps);color:#fff;}
+.brdl{list-style:none;margin-top:3px;}
+.brdl li{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid rgba(200,191,168,.5);font-size:8pt;}
+.brdl li:last-child{border-bottom:none;}
+.brdlt{flex:1;}.brdld{font-family:'Special Elite',monospace;font-size:7pt;color:var(--pf);}
+.brmxg{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:4px;}
+.brmx{background:rgba(255,255,255,.35);border:1px solid var(--prl);border-left:3px solid #c4694f;padding:4px 6px;}
+.brmxl{font-family:'Special Elite',monospace;font-size:6pt;letter-spacing:1px;text-transform:uppercase;color:var(--pf);display:block;}
+.brmxv{font-family:'Playfair Display',serif;font-size:14pt;font-weight:700;color:var(--pi);line-height:1.1;display:block;}
+.brfr{display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid var(--prl);margin-top:5px;}
+.brfc{padding:4px 7px;border-right:1px solid var(--prl);}
+.brfc:last-child{border-right:none;}
+.brfcl{font-family:'Special Elite',monospace;font-size:5.5pt;letter-spacing:1px;text-transform:uppercase;color:var(--pf);}
+.brfcv{font-family:'Playfair Display',serif;font-size:12pt;font-weight:700;line-height:1.1;}
+.brfcv.pos{color:var(--ps);}.brfcv.neg{color:var(--pr);}
+.brcall{list-style:none;margin-top:3px;}
+.brcall li{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid rgba(200,191,168,.5);font-size:8pt;}
+.brcall li:last-child{border-bottom:none;}
+.brcalt{font-family:'Special Elite',monospace;font-size:7pt;color:var(--pf);width:40px;flex-shrink:0;}
+.brhbl{list-style:none;margin-top:3px;}
+.brhbr{display:flex;align-items:center;gap:7px;padding:3px 0;border-bottom:1px solid rgba(200,191,168,.5);font-size:7.5pt;}
+.brhbr:last-child{border-bottom:none;}
+.brhbn{flex:1;}
+.brhbb{display:flex;gap:2px;}
+.hb{width:10px;height:10px;border:1.5px solid var(--prl);}
+.hb.d{background:var(--ps);border-color:var(--ps);}
+.nl{border-bottom:1px solid var(--prl);height:21px;}
+.brft{margin-top:.08in;padding-top:.05in;border-top:2px double var(--pi);display:flex;justify-content:space-between;align-items:center;}
+.brfq{font-family:'Playfair Display',serif;font-style:italic;font-size:7.5pt;color:var(--pf);max-width:4.5in;}
+.brfm{font-family:'Special Elite',monospace;font-size:6.5pt;color:var(--pf);text-align:right;line-height:1.6;}
+.pe{font-style:italic;font-size:8pt;color:var(--pf);padding:4px 0;}
+
+@media print{
+  #shell{display:none!important;}
+  #brief{display:block!important;padding:0;background:none;}
+  .brnav{display:none!important;}
+  .brpg{box-shadow:none;}
+}
+
+.ai-block{border:1px solid #3a2a5a;background:linear-gradient(135deg,#0e0a1a,#160e22);padding:12px 16px;margin-bottom:12px;display:none;}
+.ai-block.visible{display:block;}
+.ai-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.ai-title{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9a78cc;}
+.ai-status{font-size:9px;color:#6a5a8a;font-style:italic;}
+.ai-text{font-size:12px;color:#ddd0f0;line-height:1.7;font-family:Libre Baskerville,serif;}
+.ai-text.loading{color:#6a5a8a;font-style:italic;}
+.aibtn{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border:1px solid #4a3a6a;background:linear-gradient(135deg,#1a1a3a,#2a1a3a);color:#c8a8ff;cursor:pointer;transition:all .15s;}
+.aibtn:hover{border-color:#8a6aaa;color:#e8c8ff;}
+
+</style>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCR31vdNxfSZw1fKIxKvQN9uUQOzp3vUhA",
+  authDomain: "koliwad-command-center.firebaseapp.com",
+  projectId: "koliwad-command-center",
+  storageBucket: "koliwad-command-center.firebasestorage.app",
+  messagingSenderId: "88044447580",
+  appId: "1:88044447580:web:4677014a9fd3967e8b0399"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const DOC = db.collection('users').doc('sonny');
+
+// ── FIREBASE SYNC ─────────────────────────────────────────
+// All KCC keys to persist
+const FB_KEYS = [
+  'kcc_tasks','kcc_alerts','kcc_tickets','kcc_cal',
+  'kcc_fire','kcc_fireg','kcc_firea','kcc_fchk',
+  'kcc_fins','kcc_tb','kcc_tz','kcc_wins','kcc_focuses',
+  'kcc_aitexts','kcc_sync','kcc_name','kcc_cid','kcc_claude',
+  'kcc_firelab_inputs','kcc_firelab_saved'
+];
+
+async function fbSave(key, value) {
+  try {
+    await DOC.set({ [key]: JSON.stringify(value) }, { merge: true });
+  } catch(e) { console.warn('Firebase save failed:', e.message); }
+}
+
+async function fbLoad() {
+  try {
+    const doc = await DOC.get();
+    if (doc.exists) {
+      const data = doc.data();
+      FB_KEYS.forEach(k => {
+        if (data[k] !== undefined) {
+          localStorage.setItem(k, data[k]);
+        }
+      });
+      console.log('Firebase: data loaded');
+      return true;
+    }
+  } catch(e) { console.warn('Firebase load failed:', e.message); }
+  return false;
+}
+
+async function fbSaveAll() {
+  try {
+    const payload = {};
+    FB_KEYS.forEach(k => {
+      const v = localStorage.getItem(k);
+      if (v !== null) payload[k] = v;
+    });
+    await DOC.set(payload, { merge: true });
+    console.log('Firebase: all data saved');
+  } catch(e) { console.warn('Firebase saveAll failed:', e.message); }
+}
+
+// Auto-save to Firebase whenever localStorage changes (after modal saves, sync, etc.)
+const _origSetItem = localStorage.setItem.bind(localStorage);
+localStorage.setItem = function(key, value) {
+  _origSetItem(key, value);
+  if (FB_KEYS.includes(key)) {
+    fbSave(key, JSON.parse(value));
+  }
+};
+</script>
+</head>
+<body>
+
+<!-- SETUP -->
+<div id="setup">
+  <div class="sc">
+    <h1>⬛ Koliwad Command Center</h1>
+    <h2>Family as a Business</h2>
+    <p>Connect Google and Claude AI. Everything stays in your browser — nothing sent externally.</p>
+    <div class="sf"><label>Your Name</label><input id="cn" placeholder="Sonny"/></div>
+    <div class="sf"><label>Google Client ID</label><input id="cg" placeholder="your-id.apps.googleusercontent.com"/></div>
+    <div class="sf"><label>Claude API Key (optional)</label><input id="cc" type="password" placeholder="sk-ant-..."/></div>
+    <button class="sbtn" onclick="doSetup()">Launch →</button>
+    <div class="snote">
+      <b style="color:var(--red)">Google Client ID:</b> console.cloud.google.com → Credentials → OAuth Client ID (Web)<br>
+      Add your Netlify URL as authorized JS origin. Your Client ID: <b>23266946165-ctbq53ec94ersdtilhbmdpieu8681asq.apps.googleusercontent.com</b><br>
+      <b style="color:#9a78cc">Claude API Key:</b> <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys
+    </div>
+  </div>
+</div>
+
+<!-- SHELL -->
+<div id="shell">
+  <div class="top">
+    <div class="logo">⬛ KOLIWAD CC</div>
+    <div class="mtog">
+      <button id="bcmd" onclick="setM('cmd')" class="cmd">⚡ Command</button>
+      <button id="bbrf" onclick="setM('brf')">📄 Briefing</button>
+    </div>
+    <div class="tr">
+      <span class="tst" id="tst">Not synced</span>
+      <button class="tbtn" id="sbtn" onclick="doSync()">↻ Sync</button>
+      <button class="tbtn" onclick="fbSaveAll().then(()=>alert('✅ Saved to cloud — all devices will sync on next load'))" title="Save to cloud">☁</button>
+      <button class="tbtn" onclick="showSetup()">⚙</button>
+    </div>
+  </div>
+  <div class="main">
+    <div class="sidebar">
+      <div class="sbhdr">
+        <span class="d" id="sbd">—</span>
+        <div class="n" id="sbn">Command Center</div>
+      </div>
+      <span class="nslbl">Operations</span>
+      <div class="ni on" id="n-today"    onclick="nav('today')">   <span class="ico">⚡</span><span class="nlbl">Today</span>   <span class="nbadge r" id="nb-t">0</span></div>
+      <div class="ni"    id="n-tasks"    onclick="nav('tasks')">   <span class="ico">✓</span> <span class="nlbl">Tasks</span></div>
+      <div class="ni"    id="n-alerts"   onclick="nav('alerts')">  <span class="ico">🚨</span><span class="nlbl">Alerts</span>  <span class="nbadge a" id="nb-a">0</span></div>
+      <div class="ni"    id="n-calendar" onclick="nav('calendar')"><span class="ico">📅</span><span class="nlbl">Calendar</span></div>
+      <div class="ndiv"></div>
+      <span class="nslbl">Money</span>
+      <div class="ni"    id="n-financials" onclick="nav('financials')"><span class="ico">💰</span><span class="nlbl">Financials</span></div>
+      <div class="ni"    id="n-fire"       onclick="nav('fire')">      <span class="ico">🎯</span><span class="nlbl">FIRE Path</span></div>
+      <div class="ni"    id="n-firelab"    onclick="openFireLab()">   <span class="ico">🔬</span><span class="nlbl">FIRE Lab</span></div>
+      <div class="ndiv"></div>
+      <span class="nslbl">Business</span>
+      <div class="ni"    id="n-tickets"  onclick="nav('tickets')"> <span class="ico">🎟</span><span class="nlbl">Tickets</span>  <span class="nbadge r" id="nb-tk">0</span></div>
+      <div class="ni"    id="n-business" onclick="nav('business')"><span class="ico">🏢</span><span class="nlbl">Business</span></div>
+      <div class="ni"    id="n-exec"     onclick="nav('exec')">    <span class="ico">📊</span><span class="nlbl">Exec Summary</span></div>
+      <div class="sbft" id="sbft">—</div>
+    </div>
+
+    <div class="content">
+
+      <!-- TODAY -->
+      <div class="page on" id="p-today">
+        <div class="ph"><div><div class="pt">Today</div><div class="ps" id="todayDate">—</div></div>
+          <div class="pact"><button class="aibtn" onclick="runAI('today')">✦ AI Brief</button><button class="btn p" onclick="om('task')" style="margin-left:6px">+ Task</button></div></div>
+        <div class="ai-block" id="ai-today">
+          <div class="ai-hdr"><span class="ai-title">✦ AI Morning Brief</span><span class="ai-status" id="ai-today-st">Click "AI Brief" to generate</span></div>
+          <div class="ai-text loading" id="ai-today-tx">Claude will analyze your tasks, alerts, FIRE progress, and calendar to tell you what matters most today and why.</div>
+        </div>
+        <div class="g4">
+          <div class="sp" id="sp1"><span class="spi">🎟</span><div><span class="spl">Ticket Risk</span><span class="spv" id="sv1">0</span></div></div>
+          <div class="sp" id="sp2"><span class="spi">🔥</span><div><span class="spl">High Tasks</span><span class="spv" id="sv2">0</span></div></div>
+          <div class="sp" id="sp3"><span class="spi">🚨</span><div><span class="spl">Open Alerts</span><span class="spv" id="sv3">0</span></div></div>
+          <div class="sp" id="sp4"><span class="spi">🎯</span><div><span class="spl">FIRE Status</span><span class="spv" id="sv4">—</span></div></div>
+        </div>
+        <div class="g2">
+          <div class="card"><div class="ch"><span class="ct r">🔥 Must Do Today</span><span style="font-size:8px;color:var(--mut)">MoSCoW ranked</span></div><div id="t-mit"><div class="empty">↻ Sync to load</div></div></div>
+          <div class="card"><div class="ch"><span class="ct a">🚨 Critical Alerts</span><button class="btn" onclick="om('alert')">+ Add</button></div><div id="t-alerts"><div class="empty" style="color:var(--grn)">✅ No alerts</div></div></div>
+        </div>
+        <div class="g3">
+          <div class="card"><div class="ch"><span class="ct m">📅 Today's Schedule</span></div><div id="t-cal"><div class="empty">↻ Sync</div></div></div>
+          <div class="card"><div class="ch"><span class="ct m">📋 Deadlines</span></div><div id="t-dl"><div class="empty">↻ Sync</div></div></div>
+          <div class="card"><div class="ch"><span class="ct o">🎟 Sell Zone</span></div><div id="t-tk"><div class="empty" style="color:var(--grn)">✅ None needed</div></div></div>
+        </div>
+        <div class="card" style="margin-bottom:12px"><div class="ch"><span class="ct b">🎯 FIRE Snapshot</span><div style="display:flex;gap:8px;align-items:center"><span onclick="nav('fire')" style="font-size:9px;color:var(--mut);cursor:pointer">Details →</span><button onclick="window.open('fire-lab.html','_blank')" style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border:1px solid var(--pur);background:transparent;color:var(--pur);cursor:pointer;">🔬 FIRE Lab</button></div></div><div id="t-fire"><div class="empty">Go to FIRE page to enter numbers →</div></div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="om('task')">+ Task</button><button class="btn" onclick="om('alert')">+ Alert</button><button class="btn" onclick="om('ticket')">+ Ticket</button></div>
+      </div>
+
+      <!-- TASKS -->
+      <div class="page" id="p-tasks">
+        <div class="ph"><div><div class="pt">Tasks</div><div class="ps">MoSCoW prioritized</div></div><button class="btn p" onclick="om('task')">+ Add Task</button></div>
+        <div class="flt" id="tflt">
+          <button class="fp on" onclick="setTF('active',this)">Active</button>
+          <button class="fp" onclick="setTF('done',this)">Done</button>
+          <button class="fp" onclick="setTF('all',this)">All</button>
+          <div style="width:1px;background:var(--brd2);margin:0 4px"></div>
+          <button class="fp cat on" onclick="setTC('all',this)">All</button>
+          <button class="fp cat" onclick="setTC('Money',this)">Money</button>
+          <button class="fp cat" onclick="setTC('Tickets',this)">Tickets</button>
+          <button class="fp cat" onclick="setTC('Baseball',this)">Baseball</button>
+          <button class="fp cat" onclick="setTC('Business',this)">Business</button>
+          <button class="fp cat" onclick="setTC('Personal',this)">Personal</button>
+        </div>
+        <div class="card" id="taskList"><div class="empty">↻ Sync Google Tasks or add manually</div></div>
+      </div>
+
+      <!-- ALERTS -->
+      <div class="page" id="p-alerts">
+        <div class="ph"><div><div class="pt">Alerts</div><div class="ps">Issues requiring action</div></div><button class="btn p" onclick="om('alert')">+ Add Alert</button></div>
+        <div class="flt">
+          <button class="fp on" onclick="setAF('Open',this)">Open</button>
+          <button class="fp" onclick="setAF('Resolved',this)">Resolved</button>
+          <button class="fp" onclick="setAF('all',this)">All</button>
+        </div>
+        <div class="card" id="alertList"><div class="empty" style="color:var(--grn)">✅ No alerts</div></div>
+      </div>
+
+      <!-- CALENDAR -->
+      <div class="page" id="p-calendar">
+        <div class="ph"><div><div class="pt">Calendar</div><div class="ps">Synced from Google</div></div>
+          <div class="pact">
+            <div style="display:flex;border:1px solid var(--brd2);overflow:hidden;">
+              <button id="cvw" onclick="setCV('week')" style="padding:5px 14px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:none;background:var(--blu);color:#fff;cursor:pointer;">Week</button>
+              <button id="cva" onclick="setCV('agenda')" style="padding:5px 14px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:none;background:var(--surf);color:var(--mut);cursor:pointer;">Agenda</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button onclick="calPrev()" style="width:26px;height:26px;border:1px solid var(--brd2);background:transparent;color:var(--mut);cursor:pointer;font-size:14px;">‹</button>
+            <span id="calLbl" style="font-size:14px;font-weight:700;color:var(--txt);min-width:180px;text-align:center;">—</span>
+            <button onclick="calNext()" style="width:26px;height:26px;border:1px solid var(--brd2);background:transparent;color:var(--mut);cursor:pointer;font-size:14px;">›</button>
+          </div>
+          <div style="display:flex;gap:10px;font-size:9px;color:var(--mut);">
+            <span style="color:#e8a8a8">● Tasks</span><span style="color:#a8c8e8">● Events</span><span style="color:#e8c890">● Tickets</span>
+          </div>
+        </div>
+        <div id="calW"></div>
+        <div id="calA" style="display:none"></div>
+      </div>
+
+      <!-- FINANCIALS -->
+      <div class="page" id="p-financials">
+        <div class="ph"><div><div class="pt">Financials</div><div class="ps">Personal money hub</div></div>
+          <div style="display:flex;gap:6px"><button class="aibtn" onclick="runAI('financials')">✦ AI Money Move</button><button class="btn p" onclick="om('fin')">Update Numbers</button></div></div>
+        <div class="ai-block" id="ai-financials">
+          <div class="ai-hdr"><span class="ai-title">✦ AI Weekly Money Recommendation</span><span class="ai-status" id="ai-financials-st">Click "AI Money Move" to generate</span></div>
+          <div class="ai-text loading" id="ai-financials-tx">Claude will analyze your balances, HELOC position, and velocity banking flow to recommend optimal money moves this week.</div>
+        </div>
+        <div class="finbox">
+          <div class="fb"><span class="fbl">Checking Buffer</span><span class="fbv" id="fa1">—</span><span style="font-size:9px;color:var(--mut)">CEFCU</span></div>
+          <div class="fb"><span class="fbl">HELOC Balance</span><span class="fbv" id="fa2" style="color:var(--red)">—</span><span style="font-size:9px;color:var(--mut)">True balance</span></div>
+          <div class="fb"><span class="fbl">Knight Account</span><span class="fbv" id="fa3">—</span><span style="font-size:9px;color:var(--mut)">Separate</span></div>
+          <div class="fb"><span class="fbl">Savings</span><span class="fbv" id="fa4" style="color:var(--grn)">—</span><span style="font-size:9px;color:var(--mut)">CEFCU</span></div>
+        </div>
+        <div class="g2">
+          <div class="card"><div class="ch"><span class="ct b">Velocity Banking Flow</span></div><div id="velBody"><div class="empty">Update numbers to see recommendations</div></div></div>
+          <div class="card"><div class="ch"><span class="ct a">Obligations</span><button class="btn" onclick="om('alert')">+ Add</button></div><div id="obligBody"><div class="empty">No obligations flagged</div></div></div>
+        </div>
+      </div>
+
+      <!-- FIRE -->
+      <div class="page" id="p-fire">
+        <div class="ph"><div><div class="pt">FIRE Path</div><div class="ps">Financial Independence · Base · Keep Paulette · Jun 2026</div></div>
+          <div style="display:flex;gap:6px"><button class="aibtn" onclick="runAI('firepath')">✦ AI Insights</button><button class="btn" onclick="window.open('fire-lab.html','_blank')" style="border-color:#7a5cb8;color:#7a5cb8">🔬 FIRE Lab</button><button class="btn p" onclick="om('fire')">Update Metrics</button></div></div>
+        <div class="ai-block" id="ai-firepath">
+          <div class="ai-hdr"><span class="ai-title">✦ AI FIRE Analysis</span><span class="ai-status" id="ai-firepath-st">Click "AI Insights" to generate</span></div>
+          <div class="ai-text loading" id="ai-firepath-tx">Claude will analyze your current trajectory, phase progress, income gap, and Throwzone timeline to flag risks and opportunities.</div>
+        </div>
+        <div class="g4" style="margin-bottom:16px">
+          <div class="sp" id="fsp1"><span class="spi">💰</span><div><span class="spl">Monthly Need</span><span class="spv" id="fsv1">—</span></div></div>
+          <div class="sp" id="fsp2"><span class="spi">📈</span><div><span class="spl">Current Income</span><span class="spv g" id="fsv2">—</span></div></div>
+          <div class="sp" id="fsp3"><span class="spi">📊</span><div><span class="spl">Monthly Gap</span><span class="spv" id="fsv3">—</span></div></div>
+          <div class="sp" id="fsp4"><span class="spi">🎯</span><div><span class="spl">FIRE Status</span><span class="spv" id="fsv4">—</span></div></div>
+        </div>
+        <div class="card" style="margin-bottom:12px">
+          <div class="ch"><span class="ct b">Progress to Goal</span><span id="fpct" style="font-size:11px;font-weight:700;color:var(--blu)">0%</span></div>
+          <div style="padding:12px 16px">
+            <div class="fprog"><div class="fprogf" id="fbar" style="width:0%"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mut);margin-top:6px"><span id="frr">$0/yr run rate</span><span id="ftg">Goal: —</span></div>
+          </div>
+        </div>
+        <div class="ftab">
+          <button id="ftb1" onclick="setFT('phases')" class="on">Phases</button>
+          <button id="ftb2" onclick="setFT('actions')">Actions</button>
+          <button id="ftb3" onclick="setFT('goals')">Goals</button>
+        </div>
+        <div id="fv-phases"></div>
+        <div id="fv-actions" style="display:none"><div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn p" onclick="om('fireAction')">+ Add Action</button></div><div id="fActList"></div></div>
+        <div id="fv-goals" style="display:none"><div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn" onclick="om('fireGoal')">Update Goals</button></div><div id="fGoalBody"></div></div>
+      </div>
+
+      <!-- TICKETS -->
+      <div class="page" id="p-tickets">
+        <div class="ph"><div><div class="pt">Tickets</div><div class="ps">Sell zone + business financials</div></div>
+          <div style="display:flex;gap:6px"><button class="aibtn" onclick="runAI('tickets')">✦ AI Allocation</button><button class="btn p" onclick="om('ticket')">+ Add Item</button></div></div>
+        <div class="ai-block" id="ai-tickets">
+          <div class="ai-hdr"><span class="ai-title">✦ AI Ticket Allocation</span><span class="ai-status" id="ai-tickets-st">Click "AI Allocation" to generate</span></div>
+          <div class="ai-text loading" id="ai-tickets-tx">Claude will analyze your platform balances, upcoming events, and inventory to recommend optimal capital allocation.</div>
+        </div>
+        <div class="tsum">
+          <div class="tsb"><span class="tsn" id="ts1" style="color:var(--red)">0</span><span class="tsl">Sell Now</span></div>
+          <div class="tsb"><span class="tsn" id="ts2" style="color:var(--amb)">0</span><span class="tsl">Lower Price</span></div>
+          <div class="tsb"><span class="tsn" id="ts3" style="color:var(--mut)">0</span><span class="tsl">Hold / Bundle</span></div>
+        </div>
+        <div class="g2">
+          <div class="card"><div class="ch"><span class="ct o">Sell Zone</span></div><div id="tickList"><div class="empty">No items — add one →</div></div></div>
+          <div class="card">
+            <div class="ch"><span class="ct b">Business Financials</span><button class="btn" onclick="om('tickbiz')">Update</button></div>
+            <div class="row"><div style="flex:1"><div class="rtl">StubHub Balance</div></div><span id="tb1" style="font-size:14px;font-weight:700;color:var(--mut)">—</span></div>
+            <div class="row"><div style="flex:1"><div class="rtl">Ticketmaster Balance</div></div><span id="tb2" style="font-size:14px;font-weight:700;color:var(--mut)">—</span></div>
+            <div class="row"><div style="flex:1"><div class="rtl">Cash Available</div></div><span id="tb3" style="font-size:14px;font-weight:700;color:var(--grn)">—</span></div>
+            <div class="row"><div style="flex:1"><div class="rtl">Inventory Value</div></div><span id="tb4" style="font-size:14px;font-weight:700;color:var(--amb)">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BUSINESS -->
+      <div class="page" id="p-business">
+        <div class="ph"><div><div class="pt">Business</div><div class="ps">Throwzone + future ventures</div></div></div>
+        <div class="g2">
+          <div class="card">
+            <div class="ch"><span class="ct o">⚾ Throwzone</span><button class="btn" onclick="om('tz')">Update KPIs</button></div>
+            <div class="row"><div style="flex:1"><div class="rtl">Monthly Revenue</div></div><span id="tz1" style="font-size:14px;font-weight:700;color:var(--grn)">—</span></div>
+            <div class="row"><div style="flex:1"><div class="rtl">Active Members</div></div><span id="tz2" style="font-size:14px;font-weight:700;color:var(--txt)">—</span></div>
+            <div class="row"><div style="flex:1"><div class="rtl">Capacity Utilization</div></div><span id="tz3" style="font-size:14px;font-weight:700;color:var(--amb)">—</span></div>
+            <div class="row"><div style="flex:1"><div class="rtl">Pasadena Status</div></div><span id="tz4" style="font-size:12px;font-weight:700;color:var(--mut)">—</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="border:1px dashed var(--brd2);padding:32px;text-align:center;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center"><div style="font-size:28px;margin-bottom:10px">🚧</div><div style="color:var(--mut);font-size:13px;font-weight:600">Future Business #2</div></div>
+            <div style="border:1px dashed var(--brd2);padding:32px;text-align:center;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center"><div style="font-size:28px;margin-bottom:10px">🚧</div><div style="color:var(--mut);font-size:13px;font-weight:600">Future Business #3</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXEC -->
+      <div class="page" id="p-exec">
+        <div class="ph"><div><div class="pt">Exec Summary</div><div class="ps" id="execMon">—</div></div>
+          <div style="display:flex;gap:6px">
+            <button class="aibtn" onclick="runAI('exec')">✦ Generate with AI</button>
+            <button class="btn" id="dlBtn" onclick="downloadDocx()" style="display:none">⬇ Download .docx</button>
+          </div></div>
+        <div class="ai-block" id="ai-exec">
+          <div class="ai-hdr"><span class="ai-title">✦ AI Executive Summary</span><span class="ai-status" id="ai-exec-st">Click "Generate with AI" to write your monthly summary</span></div>
+          <div class="ai-text loading" id="ai-exec-tx">Claude will synthesize your Tasks, Financials, FIRE progress, Ticket business, and Throwzone KPIs into a concise executive summary — the kind you'd present to a board.</div>
+        </div>
+        <div class="g4" style="margin-bottom:16px">
+          <div style="border:1px solid var(--brd);background:var(--surf);padding:12px 16px"><span style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--mut);display:block">Tasks Done</span><span id="ek1" style="font-size:22px;font-weight:700;display:block;margin-top:3px">—</span></div>
+          <div style="border:1px solid var(--brd);background:var(--surf);padding:12px 16px"><span style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--mut);display:block">Alerts Resolved</span><span id="ek2" style="font-size:22px;font-weight:700;display:block;margin-top:3px">—</span></div>
+          <div style="border:1px solid var(--brd);background:var(--surf);padding:12px 16px"><span style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--mut);display:block">FIRE Progress</span><span id="ek3" style="font-size:22px;font-weight:700;display:block;margin-top:3px">—</span></div>
+          <div style="border:1px solid var(--brd);background:var(--surf);padding:12px 16px"><span style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--mut);display:block">Net Position</span><span id="ek4" style="font-size:22px;font-weight:700;display:block;margin-top:3px">—</span></div>
+        </div>
+        <div class="g2">
+          <div class="card"><div class="ch"><span class="ct g">Wins This Month</span></div><div style="padding:14px 16px;font-size:12px;color:var(--mut);font-style:italic">Track wins by adding completed tasks and resolved alerts</div></div>
+          <div class="card"><div class="ch"><span class="ct a">Focus Next Month</span></div><div style="padding:14px 16px;font-size:12px;color:var(--mut);font-style:italic">Set focus by adding High-priority tasks for next month</div></div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- BRIEFING -->
+<div id="brief">
+  <div class="brnav">
+    <button class="brback" onclick="setM('cmd')">← Back to Command</button>
+    <button class="brprint" onclick="window.print()">⎙ Print / Save PDF</button>
+  </div>
+  <div class="brpg">
+    <div class="brc">
+      <div class="brm">
+        <div><div class="brmt">Koliwad <em>Command</em> Center</div><div class="brmts">Morning Briefing · MoSCoW Prioritized · <span id="bgen">—</span></div></div>
+        <div class="brmd"><span class="brdn" id="bdn">—</span><span class="brdd" id="bdd">—</span><span class="brmy" id="bmy">—</span></div>
+      </div>
+      <div class="brsb">
+        <div class="brpp" id="bpp1"><span class="bric">🎟</span><div><span class="brpl">Ticket Risk</span><span class="brpv" id="bpv1">—</span></div></div>
+        <div class="brpp" id="bpp2"><span class="bric">🔥</span><div><span class="brpl">High Tasks</span><span class="brpv" id="bpv2">—</span></div></div>
+        <div class="brpp" id="bpp3"><span class="bric">🚨</span><div><span class="brpl">Open Alerts</span><span class="brpv" id="bpv3">—</span></div></div>
+        <div class="brpp" id="bpp4"><span class="bric">🎯</span><div><span class="brpl">FIRE Status</span><span class="brpv" id="bpv4">—</span></div></div>
+      </div>
+      <div class="brgrd">
+        <div class="brcl brs2"><div class="brsl">Most Important Tasks — MoSCoW Ranked</div><ul class="brml" id="bMIT"><li><span class="pe">Sync to populate</span></li></ul></div>
+        <div class="brcl"><div class="brsl">Key Deadlines</div><ul class="brdl" id="bDL"><li><span class="pe">Awaiting sync</span></li></ul></div>
+        <div class="brcl">
+          <div class="brsl">Metrics & FIRE</div>
+          <div class="brmxg">
+            <div class="brmx"><span class="brmxl">Must Items</span><span class="brmxv" id="bm1">—</span></div>
+            <div class="brmx"><span class="brmxl">Open Alerts</span><span class="brmxv" id="bm2">—</span></div>
+            <div class="brmx"><span class="brmxl">Ticket Risk</span><span class="brmxv" id="bm3">—</span></div>
+            <div class="brmx"><span class="brmxl">FIRE Gap/mo</span><span class="brmxv" id="bm4" style="font-size:10pt">—</span></div>
+          </div>
+          <div class="brfr">
+            <div class="brfc"><div class="brfcl">Need</div><div class="brfcv" id="bf1">—</div></div>
+            <div class="brfc"><div class="brfcl">Income</div><div class="brfcv pos" id="bf2">—</div></div>
+            <div class="brfc"><div class="brfcl">Gap</div><div class="brfcv" id="bf3">—</div></div>
+          </div>
+        </div>
+        <div class="brcl"><div class="brsl">Today's Schedule</div><ul class="brcall" id="bCAL"><li><span class="pe">Sync calendar</span></li></ul></div>
+        <div class="brcl">
+          <div class="brsl">Habit Tracker</div>
+          <ul class="brhbl">
+            <li class="brhbr"><div class="pch"></div><span class="brhbn">Morning pages</span><div class="brhbb"><div class="hb d"></div><div class="hb d"></div><div class="hb d"></div><div class="hb d"></div><div class="hb d"></div><div class="hb"></div><div class="hb"></div></div></li>
+            <li class="brhbr"><div class="pch"></div><span class="brhbn">Walk / move</span><div class="brhbb"><div class="hb d"></div><div class="hb d"></div><div class="hb d"></div><div class="hb d"></div><div class="hb"></div><div class="hb"></div><div class="hb"></div></div></li>
+            <li class="brhbr"><div class="pch"></div><span class="brhbn">Read (20 min)</span><div class="brhbb"><div class="hb d"></div><div class="hb d"></div><div class="hb"></div><div class="hb"></div><div class="hb"></div><div class="hb"></div><div class="hb"></div></div></li>
+            <li class="brhbr"><div class="pch"></div><span class="brhbn">No screens 10pm</span><div class="brhbb"><div class="hb d"></div><div class="hb"></div><div class="hb"></div><div class="hb"></div><div class="hb"></div><div class="hb"></div><div class="hb"></div></div></li>
+            <li class="brhbr"><div class="pch"></div><span class="brhbn">Vitamins / 2L</span><div class="brhbb"><div class="hb d"></div><div class="hb d"></div><div class="hb d"></div><div class="hb d"></div><div class="hb d"></div><div class="hb"></div><div class="hb"></div></div></li>
+          </ul>
+        </div>
+        <div class="brcl"><div class="brsl">Notes & Scratch</div><div class="nl"></div><div class="nl"></div><div class="nl"></div><div class="nl"></div><div class="nl"></div><div class="nl"></div><div class="nl"></div><div class="nl"></div></div>
+        <div class="brcl" style="background:rgba(139,58,42,.05);border-color:rgba(139,58,42,.22)">
+          <div class="brsl" style="color:var(--pr)">Today's Intention</div>
+          <div style="font-family:'Playfair Display',serif;font-style:italic;font-size:8.5pt;color:#5a4e38;margin-top:4px;line-height:1.5">What would make today a success?</div>
+          <div class="nl" style="margin-top:8px"></div><div class="nl" style="margin-top:3px"></div>
+          <div style="font-family:'Playfair Display',serif;font-style:italic;font-size:8.5pt;color:#5a4e38;margin-top:8px">One thing to let go of:</div>
+          <div class="nl" style="margin-top:5px"></div>
+        </div>
+        <div class="brcl brs2">
+          <div class="brsl">Capture & Brain Dump</div>
+          <div class="nl"></div><div class="nl"></div><div class="nl"></div><div class="nl"></div><div class="nl"></div>
+          <div style="margin-top:7px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div><div style="font-family:'Special Elite',monospace;font-size:6pt;letter-spacing:2px;text-transform:uppercase;color:var(--pr);margin-bottom:3px">Waiting On</div><div class="nl"></div><div class="nl" style="margin-top:2px"></div><div class="nl" style="margin-top:2px"></div></div>
+            <div><div style="font-family:'Special Elite',monospace;font-size:6pt;letter-spacing:2px;text-transform:uppercase;color:var(--pr);margin-bottom:3px">Tomorrow's Setup</div><div class="nl"></div><div class="nl" style="margin-top:2px"></div><div class="nl" style="margin-top:2px"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="brft">
+        <div class="brfq">"The secret of getting ahead is getting started." — Mark Twain</div>
+        <div class="brfm"><span id="bfd">—</span><br>Koliwad Command Center · Family as a Business</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="mov off" id="mov">
+  <div class="mo">
+    <h3 id="mTitle">Add</h3>
+    <div id="mFields"></div>
+    <div class="mbtns"><button class="btn" onclick="cm()">Cancel</button><button class="btn p" onclick="sm()">Save</button></div>
+  </div>
+</div>
+
+<script>
+// ── CONSTANTS ────────────────────────────────────────────────
+const MKW=['urgent','asap','eod','end of day','deadline','action required','due today','overdue','critical','time sensitive'];
+const SKW=['follow up','follow-up','reminder','please review','waiting on','your input','needed by','this week'];
+const SCOPES='https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/tasks.readonly https://www.googleapis.com/auth/calendar.readonly';
+const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const SM=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// ── FIRE PHASES ──────────────────────────────────────────────
+const FP=[
+  {id:'pre',n:'00',t:'Before You Leave JPL',c:'#b05010',d:'Final tasks before last day',tasks:[
+    {id:'p1',t:'Transfer personal cell number off JPL plan',d:'Port your number to a personal carrier BEFORE your last day. JPL-issued numbers can be reclaimed. Everything 2FA is tied to this number.',tag:'critical'},
+    {id:'p2',t:'Pay for / finalize Regalis',d:'Settle any outstanding payment or contract for Regalis before separation. Confirm status and close or transfer the account.',tag:'critical'},
+    {id:'p3',t:'Set Throwzone T2 date and finalize',d:'Lock in launch/transition date while you still have stability. Finalize lease, equipment, and opening timeline.',tag:'critical'},
+    {id:'p4',t:'Finish backroom / outstanding JPL work',d:'Complete any deliverables with integrity. Handoff documentation. Clean exits prevent awkward follow-ups.',tag:'asap'},
+    {id:'p5',t:'Set quotes for remainder of JPL projects',d:'Get estimates locked in for any work continuing after you leave. Clean handoff with no ambiguity.',tag:'asap'},
+    {id:'p6',t:'Evaluate all expenses and subscriptions / apps',d:'Audit every recurring charge: Adobe, software, memberships. Cancel anything tied to JPL email or no longer needed. Budget impact adds up fast.',tag:'asap'},
+    {id:'p7',t:'Set Paulette up for rent — finalize tenant and lease',d:'Lease signed, first/last month secured, move-in date confirmed before you leave. Rental income is in your FIRE model from Month 1. Delay = $6,500/mo lost.',tag:'critical'},
+    {id:'p8',t:'Set end-of-May financial baseline — record all balances',d:'Pull exact balances: HF, TIAA, HELOC, checking, savings, Knight. This is your Day 1 FIRE starting point. Every projection runs from this snapshot.',tag:'critical'},
+    {id:'p9',t:'Clear personal items from JPL office',d:'Box everything before your last week. Personal documents, awards, equipment you own. Do not leave this for your final day.',tag:'asap'},
+    {id:'p10',t:'Clean out JPL files and email — export everything you need',d:'Download contacts, key documents to personal drive, export calendar. You lose access permanently on separation day. JPL IT locks accounts same day.',tag:'critical'},
+    {id:'p11',t:'Set up home office before Day 1',d:'Dedicated workspace, monitor, desk, reliable internet. You are running two businesses from home. Set it up before you leave JPL so you are not improvising at launch.',tag:'asap'},
+  ]},
+  {id:'med',n:'01',t:'Medical Leave Setup',c:'#d04040',d:'New doctor → FMLA → leave approved',tasks:[
+    {id:'m1',t:'Research new primary care physicians in-network',d:'Check JPL/Caltech health plan before you leave.',tag:'critical'},
+    {id:'m2',t:'Schedule new patient appointment with new PCP',d:'Book immediately — 4-6 week waits common.',tag:'critical'},
+    {id:'m3',t:'Request full medical records transfer',d:'Depression, anxiety, migraine notes + prescriptions.',tag:'critical'},
+    {id:'m4',t:'Get formal diagnosis documentation from new PCP',d:'Written documentation supporting FMLA.',tag:'critical'},
+    {id:'m5',t:'Obtain and submit FMLA paperwork to JPL HR',d:'WH-380-E form. Submit 30 days before leave.',tag:'critical'},
+    {id:'m6',t:'Set up 2FA backup codes before IT lockout',d:'Screenshot/print all backup codes now.',tag:'critical'},
+  ]},
+  {id:'jpl',n:'02',t:'JPL Benefits & Financial Prep',c:'#c49030',d:'Maximize benefits before separation',tasks:[
+    {id:'j1',t:'Document all accrued PTO hours',d:'Screenshot HR portal weekly. CA requires full payout.',tag:'critical'},
+    {id:'j2',t:'Confirm TIAA balance and rollover details',d:'Verify ~$420K balance, confirm rollover account.',tag:'critical'},
+    {id:'j3',t:'File SDI within 49-day window',d:'EDD SDI pays ~60-70% wages up to $1,620/wk.',tag:'critical'},
+    {id:'j4',t:'Research COBRA vs Covered CA vs ACA',d:'Price COBRA first (102% of premium). Compare Covered CA.',tag:'asap'},
+    {id:'j5',t:'Enroll in health insurance before JPL coverage ends',d:'Must enroll 14 days before end. Zero gap.',tag:'critical'},
+  ]},
+  {id:'sep',n:'03',t:'JPL Separation',c:'#6d28d9',d:'Clean exit — legal, financial, strategic',tasks:[
+    {id:'s1',t:'Consult employment attorney before resigning',d:'$300-500. SDI eligibility, severance, PTO rights.',tag:'asap'},
+    {id:'s2',t:'Submit formal resignation letter',d:'Simple: "I am resigning effective [date]." No reasons.',tag:'when'},
+    {id:'s3',t:'Verify final paycheck includes all PTO',d:'CA Labor Code 227.3 requires full payout.',tag:'critical'},
+    {id:'s4',t:'Initiate TIAA direct rollover within 60 days',d:'DIRECT rollover only — no distribution. Call 800-842-2252.',tag:'critical'},
+    {id:'s5',t:'Update all financial accounts post-separation',d:'Banks, IRS, SSA, EDD. Switch to personal email.',tag:'asap'},
+  ]},
+  {id:'biz',n:'04',t:'Business Launch',c:'#4a7ab8',d:'Throwzone + tickets → $17,500/mo',tasks:[
+    {id:'b1',t:'Set up dedicated business bank account',d:'Mercury or Relay — fee-free, built for small business.',tag:'critical'},
+    {id:'b2',t:'Engage CPA for self-employed + FIRE clients',d:'$1,500-3,000/yr. S-Corp timing, FIRE drawdown, CA rules.',tag:'critical'},
+    {id:'b3',t:'Set aside 30% of every deposit → tax savings',d:'Auto-transfer same day. Quarterly taxes: Apr/Jun/Sep/Jan.',tag:'critical'},
+    {id:'b4',t:'Throwzone Santa Clarita operational by Month 2',d:'Opening, staffing, initial marketing.',tag:'critical'},
+    {id:'b5',t:'Month 3 checkpoint: revenue trajectory',d:'By Sep 2026 — if trending $10K not $17.5K, adjust now.',tag:'asap'},
+    {id:'b6',t:'Pasadena location decision by Month 6',d:'Go/no-go based on SC data. Worth ±6 months on FIRE.',tag:'asap'},
+    {id:'b7',t:'Month 6: $17.5K/mo for 2+ consecutive months',d:'Two months at target before treating as reliable.',tag:'when'},
+    {id:'b8',t:'Formalize ticket business structure',d:'LLC, accounting, inventory tracking.',tag:'asap'},
+  ]},
+  {id:'inv',n:'05',t:'Investments & FIRE Execution',c:'#4a9c5c',d:'Deploy capital, hit the number',tasks:[
+    {id:'i1',t:'Open solo 401(k) for business income',d:'Up to $69,000/yr contribution. Far better than SEP-IRA.',tag:'asap'},
+    {id:'i2',t:'TIAA rollover invested and allocated',d:'70% equities / 20% bonds / 10% alternatives.',tag:'critical'},
+    {id:'i3',t:'HELOC velocity banking strategy',d:'Deploy surplus to HELOC, rebuild checking, repeat.',tag:'asap'},
+    {id:'i4',t:'Month 12 FIRE checkpoint',d:'$17.5K/mo x6 months — set the date.',tag:'when'},
+    {id:'i5',t:'Paulette plan finalized',d:'Income, healthcare, timeline documented.',tag:'when'},
+    {id:'i6',t:'FIRE declaration',d:'12 months confirmed, TIAA deployed, health covered.',tag:'later'},
+  ]},
+];
+const TC={critical:'#d04040',asap:'#c49030',when:'#4a7ab8',later:'#4a5e4a'};
+const TL={critical:'CRITICAL',asap:'ASAP',when:'WHEN READY',later:'LATER'};
+
+// ── STATE ────────────────────────────────────────────────────
+let S={
+  tasks:   JSON.parse(localStorage.getItem('kcc_tasks')||'[]'),
+  alerts:  JSON.parse(localStorage.getItem('kcc_alerts')||'[]'),
+  tickets: JSON.parse(localStorage.getItem('kcc_tickets')||'[]'),
+  cal:     JSON.parse(localStorage.getItem('kcc_cal')||'[]'),
+  fire:    JSON.parse(localStorage.getItem('kcc_fire')||'null'),
+  fireg:   JSON.parse(localStorage.getItem('kcc_fireg')||'null'),
+  firea:   JSON.parse(localStorage.getItem('kcc_firea')||'[]'),
+  fins:    JSON.parse(localStorage.getItem('kcc_fins')||'null'),
+  tb:      JSON.parse(localStorage.getItem('kcc_tb')||'null'),
+  tz:      JSON.parse(localStorage.getItem('kcc_tz')||'null'),
+  fchk:    JSON.parse(localStorage.getItem('kcc_fchk')||'{}'),
+  fex:     {},
+  lastSync:localStorage.getItem('kcc_sync')||null,
+  mode:'cmd', page:'today', tf:'active', tc:'all', af:'Open', cv:'week', co:0,
+};
+let CFG={id:localStorage.getItem('kcc_cid')||'',claude:localStorage.getItem('kcc_claude')||'',name:localStorage.getItem('kcc_name')||'Sonny'};
+let AT=null, MT=null;
+
+// ── INIT ─────────────────────────────────────────────────────
+window.addEventListener('load',()=>{
+  setDates();
+  if(!CFG.id){
+    document.getElementById('setup').classList.remove('off');
+  } else {
+    launch();
+  }
+});
+
+function doSetup(){
+  const n=document.getElementById('cn').value.trim();
+  const g=document.getElementById('cg').value.trim();
+  const c=document.getElementById('cc').value.trim();
+  if(!g){alert('Google Client ID required');return;}
+  CFG.name=n||'Sonny'; CFG.id=g; CFG.claude=c;
+  localStorage.setItem('kcc_name',CFG.name);
+  localStorage.setItem('kcc_cid',g);
+  if(c) localStorage.setItem('kcc_claude',c);
+  launch();
+}
+
+function showSetup(){
+  document.getElementById('cn').value=CFG.name;
+  document.getElementById('cg').value=CFG.id;
+  document.getElementById('cc').value=CFG.claude;
+  document.getElementById('setup').classList.remove('off');
+}
+
+async function launch(){
+  document.getElementById('setup').classList.add('off');
+  document.getElementById('shell').classList.add('on');
+  // Try to load from Firebase first (syncs data across devices)
+  const fbLoaded = await fbLoad();
+  if(fbLoaded){
+    // Reload state from localStorage after Firebase populated it
+    S.tasks    = JSON.parse(localStorage.getItem('kcc_tasks')||'[]');
+    S.alerts   = JSON.parse(localStorage.getItem('kcc_alerts')||'[]');
+    S.tickets  = JSON.parse(localStorage.getItem('kcc_tickets')||'[]');
+    S.cal      = JSON.parse(localStorage.getItem('kcc_cal')||'[]');
+    S.fire     = JSON.parse(localStorage.getItem('kcc_fire')||'null');
+    S.fireg    = JSON.parse(localStorage.getItem('kcc_fireg')||'null');
+    S.firea    = JSON.parse(localStorage.getItem('kcc_firea')||'[]');
+    S.fchk     = JSON.parse(localStorage.getItem('kcc_fchk')||'{}');
+    S.fins     = JSON.parse(localStorage.getItem('kcc_fins')||'null');
+    S.tb       = JSON.parse(localStorage.getItem('kcc_tb')||'null');
+    S.tz       = JSON.parse(localStorage.getItem('kcc_tz')||'null');
+    S.lastSync = localStorage.getItem('kcc_sync')||null;
+  }
+  setM('cmd');
+  renderAll();
+  loadGSI();
+  // Also add a "Cloud Save" button behavior to sync button
+  el('sbtn').title = 'Sync Google + save to cloud';
+}
+
+// ── DATES ────────────────────────────────────────────────────
+function setDates(){
+  const n=new Date();
+  el('sbd').textContent=SM[n.getMonth()].toUpperCase()+' '+n.getDate()+', '+n.getFullYear();
+  el('sbn').textContent='Koliwad Hub';
+  el('todayDate').textContent=DAYS[n.getDay()]+', '+SM[n.getMonth()]+' '+n.getDate()+' '+n.getFullYear();
+  el('bdn').textContent=DAYS[n.getDay()];
+  el('bdd').textContent=n.getDate();
+  el('bmy').textContent=MONS[n.getMonth()]+' '+n.getFullYear();
+  el('bfd').textContent=MONS[n.getMonth()]+' '+n.getDate()+', '+n.getFullYear();
+  el('bgen').textContent=S.lastSync?'Synced '+new Date(S.lastSync).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'Not synced';
+  el('execMon').textContent=MONS[n.getMonth()]+' '+n.getFullYear()+' Executive Summary';
+  if(S.lastSync){const t=new Date(S.lastSync).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});el('tst').textContent='Synced '+t;el('sbft').textContent='Last sync: '+t;}
+}
+
+// ── MODE ─────────────────────────────────────────────────────
+function setM(m){
+  S.mode=m;
+  const isC=m==='cmd';
+  document.getElementById('shell').classList.toggle('on',isC);
+  document.getElementById('brief').classList.toggle('on',!isC);
+  el('bcmd').className=isC?'cmd':'';
+  el('bbrf').className=!isC?'brf':'';
+  if(!isC) renderBrief();
+}
+
+// ── NAV ──────────────────────────────────────────────────────
+function nav(pg){
+  S.page=pg;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  const pe=document.getElementById('p-'+pg), ne=document.getElementById('n-'+pg);
+  if(pe) pe.classList.add('on');
+  if(ne) ne.classList.add('on');
+  if(pg==='calendar') rCal();
+  if(pg==='fire') rFire();
+  if(pg==='financials') rFin();
+  if(pg==='business') rBiz();
+  if(pg==='exec') rExec();
+}
+
+// ── GOOGLE API ───────────────────────────────────────────────
+function loadGSI(){
+  if(document.getElementById('gsi')) return;
+  const s=document.createElement('script');
+  s.id='gsi'; s.src='https://accounts.google.com/gsi/client';
+  s.onload=()=>{
+    window._tc=google.accounts.oauth2.initTokenClient({
+      client_id:CFG.id, scope:SCOPES,
+      callback:(r)=>{ if(!r.error){AT=r.access_token;fetchAll();}else{setSY('Error: '+r.error,false);} }
+    });
+  };
+  document.head.appendChild(s);
+}
+
+function doSync(){
+  if(!CFG.id){showSetup();return;}
+  if(!window._tc){loadGSI();setTimeout(doSync,1500);return;}
+  setSY('Authorizing…',true);
+  window._tc.requestAccessToken({prompt:AT?'':'consent'});
+}
+
+function setSY(msg,spin){
+  el('tst').textContent=msg;
+  el('sbtn').textContent=spin?'↻ Syncing…':'↻ Sync';
+  el('sbtn').classList.toggle('spin',spin);
+}
+
+// ── FETCH ────────────────────────────────────────────────────
+async function fetchAll(){
+  setSY('Syncing…',true);
+  try{
+    const[gm,tk,cv]=await Promise.all([fGmail(),fTasks(),fCal()]);
+    const scored=[...gm,...tk,...cv].map(moscow);
+    scored.sort((a,b)=>{
+      const o={Must:0,Should:1,Could:2,"Won't":3};
+      const d=(o[a.m]??3)-(o[b.m]??3);
+      if(d) return d;
+      if(a.dr&&b.dr) return new Date(a.dr)-new Date(b.dr);
+      return a.dr?-1:b.dr?1:0;
+    });
+    S.tasks=scored.filter(i=>i.m==='Must'||i.m==='Should').slice(0,15);
+    S.cal=cv;
+    S.lastSync=new Date().toISOString();
+    localStorage.setItem('kcc_tasks',JSON.stringify(S.tasks));
+    localStorage.setItem('kcc_cal',JSON.stringify(S.cal));
+    localStorage.setItem('kcc_sync',S.lastSync);
+    renderAll();
+    const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    setSY('✓ Synced '+t,false);
+    el('sbft').textContent='Last sync: '+t;
+    el('bgen').textContent='Synced '+t;
+    // Save everything to Firebase so other devices get the update
+    fbSaveAll();
+  }catch(e){setSY('Error: '+e.message,false);}
+}
+
+async function fGmail(){
+  const items=[],seen=new Set();
+  const g=async u=>{const r=await fetch(u,{headers:{Authorization:'Bearer '+AT}});return r.json();};
+  const[q1,q2]=await Promise.all([
+    g('https://gmail.googleapis.com/gmail/v1/users/me/messages?q=is:starred+is:unread&maxResults=20'),
+    g('https://gmail.googleapis.com/gmail/v1/users/me/messages?q=is:unread+older_than:1d&maxResults=20'),
+  ]);
+  const ids=[...new Set([...(q1.messages||[]),...(q2.messages||[])].map(m=>m.id))].slice(0,15);
+  await Promise.all(ids.map(async id=>{
+    if(seen.has(id)) return; seen.add(id);
+    const m=await g('https://gmail.googleapis.com/gmail/v1/users/me/messages/'+id+'?format=metadata&metadataHeaders=Subject&metadataHeaders=From');
+    const h=m.payload?.headers||[];
+    const sub=h.find(x=>x.name==='Subject')?.value||'(no subject)';
+    const from=h.find(x=>x.name==='From')?.value||'';
+    const sig=[];
+    const sl=sub.toLowerCase();
+    MKW.forEach(k=>{if(sl.includes(k)) sig.push('sm');});
+    SKW.forEach(k=>{if(sl.includes(k)) sig.push('ss');});
+    if(m.labelIds?.includes('STARRED')) sig.push('st');
+    if((Date.now()-parseInt(m.internalDate))/3600000>24) sig.push('ou');
+    items.push({id,title:sub,detail:'From: '+from,dd:'',dr:null,da:99,src:'Gmail',sig});
+  }));
+  return items;
+}
+
+async function fTasks(){
+  const items=[],now=new Date();
+  const r=await fetch('https://tasks.googleapis.com/tasks/v1/users/@me/lists',{headers:{Authorization:'Bearer '+AT}});
+  const ls=await r.json();
+  for(const l of(ls.items||[])){
+    const tr=await fetch('https://tasks.googleapis.com/tasks/v1/lists/'+l.id+'/tasks?showCompleted=false&showHidden=false&maxResults=100',{headers:{Authorization:'Bearer '+AT}});
+    const td=await tr.json();
+    for(const t of(td.items||[])){
+      if(t.status==='completed'||t.deleted) continue;
+      const due=t.due?new Date(t.due):null;
+      const da=due?Math.ceil((due-now)/86400000):99;
+      const sig=[],nl=(t.notes||'').toLowerCase();
+      MKW.forEach(k=>{if(nl.includes(k)) sig.push('nm');});
+      SKW.forEach(k=>{if(nl.includes(k)) sig.push('ns');});
+      items.push({id:t.id,title:t.title,detail:t.notes||'',dd:due?isoD(due):'',dr:due,da,src:'Tasks',sig});
+    }
+  }
+  return items;
+}
+
+async function fCal(){
+  const items=[],now=new Date(),end=new Date();
+  end.setDate(end.getDate()+35); // 5 weeks ahead
+  const r=await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList',{headers:{Authorization:'Bearer '+AT}});
+  const cl=await r.json();
+  for(const c of(cl.items||[]).slice(0,5)){
+    const er=await fetch('https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(c.id)+'/events?timeMin='+now.toISOString()+'&timeMax='+end.toISOString()+'&singleEvents=true&orderBy=startTime&maxResults=50',{headers:{Authorization:'Bearer '+AT}});
+    const ed=await er.json();
+    for(const e of(ed.items||[])){
+      // Fix: all-day events have e.start.date (no time) — parsed as UTC which shifts date in US timezones
+// Use the date string directly for all-day; parse dateTime normally for timed events
+const isAllDay = !e.start?.dateTime;
+const rawDate = isAllDay ? e.start?.date : e.start?.dateTime;
+const s = isAllDay ? new Date(rawDate+'T12:00:00') : new Date(rawDate);
+const ddStr = isAllDay ? rawDate : isoD(s);
+const da=Math.ceil((s-now)/86400000);
+items.push({id:e.id,title:e.summary||'(untitled)',detail:e.description||'',dd:ddStr,dr:s,da,isToday:sameD(s,now),time:isAllDay?'All day':s.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),src:'Calendar',sig:[]});
+    }
+  }
+  return items;
+}
+
+function moscow(item){
+  let sc=0; const sig=item.sig||[], da=item.da;
+  if(da<=0)sc+=45;else if(da<=1)sc+=38;else if(da<=3)sc+=22;else if(da<=7)sc+=12;
+  if(sig.includes('st')) sc+=18;
+  if(sig.includes('ou')) sc+=12;
+  if(sig.includes('sm')) sc+=22;
+  if(sig.includes('nm')) sc+=18;
+  if(sig.includes('ss')) sc+=10;
+  if(sig.includes('ns')) sc+=8;
+  const tl=(item.title||'').toLowerCase();
+  MKW.forEach(k=>{if(tl.includes(k)) sc+=18;});
+  SKW.forEach(k=>{if(tl.includes(k)) sc+=9;});
+  return{...item,m:sc>=35?'Must':sc>=15?'Should':sc>=5?'Could':"Won't",sc};
+}
+
+// ── RENDER ALL ───────────────────────────────────────────────
+function renderAll(){
+  rToday(); rTasks(); rAlerts(); rTickets(); rBadges();
+  if(S.page==='fire') rFire();
+  if(S.page==='financials') rFin();
+  if(S.page==='business') rBiz();
+  if(S.page==='exec') rExec();
+}
+
+function rBadges(){
+  const ht=(S.tasks||[]).filter(t=>t.m==='Must'&&t.status!=='Done').length;
+  const oa=(S.alerts||[]).filter(a=>a.status==='Open').length;
+  const ot=(S.tickets||[]).filter(t=>t.status!=='Resolved').length;
+  nbadge('nb-t',ht); nbadge('nb-a',oa); nbadge('nb-tk',ot);
+}
+
+function nbadge(id,v){
+  const e=el(id); if(e){e.textContent=v;e.style.display=v>0?'':'none';}
+}
+
+// ── TODAY ────────────────────────────────────────────────────
+function rToday(){
+  const tasks=S.tasks||[],alerts=S.alerts||[],tickets=S.tickets||[],cal=S.cal||[],fire=S.fire;
+  const oa=alerts.filter(a=>a.status==='Open');
+  const ht=tasks.filter(t=>t.m==='Must');
+  const ot=tickets.filter(t=>t.status!=='Resolved');
+  const gap=fire?(fire.inc-fire.need):null, gn=gap!==null&&gap<0;
+  pill('sp1','sv1',ot.length,ot.length>0?'r':'g');
+  pill('sp2','sv2',ht.length,ht.length>0?'r':'g');
+  pill('sp3','sv3',oa.length,oa.length>0?'a':'g');
+  pill('sp4','sv4',gap===null?'—':gn?'OFF TRACK':'ON TRACK',gap===null?'':gn?'r':'g');
+  // MIT
+  // Merge synced tasks + unchecked FIRE Path Critical/ASAP items into one ranked list
+  const fireMIT=[];
+  FP.forEach(ph=>{ph.tasks.forEach(t=>{
+    if(!S.fchk[t.id]&&(t.tag==='critical'||t.tag==='asap')){
+      fireMIT.push({id:t.id,title:t.t,m:t.tag==='critical'?'Must':'Should',_fire:true,_ph:ph.t.split('·').slice(-1)[0].trim()});
+    }
+  });});
+  const mit=[...tasks.filter(t=>t.status!=='Done').slice(0,3),...fireMIT.slice(0,3)].slice(0,6);
+  el('t-mit').innerHTML=mit.length===0?'<div class="empty" style="color:var(--grn)">\u2705 No high-priority tasks</div>':
+    mit.map(function(t){
+      var chk=t._fire
+        ?'<div class="chk'+(S.fchk[t.id]?' dn':'')+'" onclick="togFC(\'' +t.id+ '\')"></div>'
+        :'<div class="chk'+(t.status==='Done'?' dn':'')+'" onclick="toggleT(\'' +t.id+ '\')"></div>';
+      var badge='<span class="b '+(t.m==='Must'?'bm':'bs')+'">'+t.m+'</span>';
+      var title='<span class="rtl">'+esc(t.title)+'</span>';
+      var sub='<span class="rsb">'+(t._fire?'\uD83C\uDFAF '+t._ph:t.src+(t.dd?' \u00B7 '+fd(t.dd):''))+'</span>';
+      return '<div class="row">'+chk+badge+title+sub+'</div>';
+    }).join('');
+  // Alerts
+  el('t-alerts').innerHTML=oa.length===0?'<div class="empty" style="color:var(--grn)">✅ No alerts</div>':
+    oa.slice(0,4).map(a=>'<div class="row '+(a.sev==='High'?'hi':a.sev==='Medium'?'mi':'')+'">'
+      +'<span class="b '+(a.sev==='High'?'bm':a.sev==='Medium'?'bs':'bc')+'">'+a.sev+'</span>'
+      +'<div style="flex:1;min-width:0"><div class="rtl">'+esc(a.title)+'</div>'+(a.action?'<div class="rsb" style="white-space:normal;margin-top:1px">'+esc(a.action)+'</div>':'')+'</div>'
+      +'<button class="btn" onclick="resA(\''+a.id+'\')">Resolve</button></div>').join('');
+  // Cal today
+  const tc=cal.filter(e=>e.isToday);
+  el('t-cal').innerHTML=tc.length===0?'<div class="empty">No events today</div>':
+    tc.map(e=>'<div class="row"><span class="rsb" style="width:50px;flex-shrink:0">'+e.time+'</span><span class="rtl">'+esc(e.title)+'</span></div>').join('');
+  // Deadlines
+  const td0=new Date(); td0.setHours(0,0,0,0);
+  const dls=tasks.filter(t=>t.dd).sort((a,b)=>new Date(a.dd)-new Date(b.dd)).slice(0,5);
+  el('t-dl').innerHTML=dls.length===0?'<div class="empty">No upcoming deadlines</div>':
+    dls.map(t=>{const diff=Math.ceil((new Date(t.dd)-td0)/86400000);
+      return'<div class="row"><span class="b '+(diff<=0?'bt':diff<=1?'bw':'bl')+'">'+(diff<=0?'TODAY':diff===1?'TMW':fd(t.dd))+'</span><span class="rtl">'+esc(t.title)+'</span></div>';
+    }).join('');
+  // Tickets
+  el('t-tk').innerHTML=ot.length===0?'<div class="empty" style="color:var(--grn)">✅ No actions needed</div>':
+    ot.slice(0,4).map(t=>{
+      const[bc,bl]=t.da<=2?['bsl','SELL NOW']:t.da<=5?['blo','LOWER']:['bho','HOLD'];
+      return'<div class="row"><div style="flex:1;min-width:0"><div class="rtl">'+esc(t.event_name||t.title||'')+'</div></div><span class="b '+bc+'">'+bl+'</span></div>';
+    }).join('');
+  // FIRE
+  if(!fire){
+    el('t-fire').innerHTML='<div class="empty">Go to 🎯 FIRE page to enter your numbers →</div>';
+  } else {
+    const gv=fire.inc-fire.need, gn2=gv<0;
+    el('t-fire').innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--brd)">'
+      +'<div style="padding:12px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Monthly Need</span><span style="font-size:20px;font-weight:700;display:block;margin-top:3px">'+f$(fire.need)+'</span></div>'
+      +'<div style="padding:12px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Income</span><span style="font-size:20px;font-weight:700;color:var(--grn);display:block;margin-top:3px">'+f$(fire.inc)+'</span></div>'
+      +'<div style="padding:12px 16px"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Gap</span><span style="font-size:20px;font-weight:700;color:'+(gn2?'var(--red)':'var(--grn)')+';display:block;margin-top:3px">'+(gn2?'-$'+Math.abs(gv).toLocaleString():'$'+gv.toLocaleString())+'</span></div>'
+      +'</div><div style="padding:8px 16px"><span style="font-size:9px;font-weight:700;letter-spacing:2px;color:'+(gn2?'var(--red)':'var(--grn)');+'">'+  (gn2?'⚠ OFF TRACK':'✓ ON TRACK')+'</span></div>';
+  }
+}
+
+// ── TASKS PAGE ───────────────────────────────────────────────
+function rTasks(){
+  let items=S.tasks||[];
+  if(S.tf==='active') items=items.filter(t=>t.status!=='Done');
+  else if(S.tf==='done') items=items.filter(t=>t.status==='Done');
+  if(S.tc!=='all') items=items.filter(t=>t.category===S.tc);
+  const e=el('taskList');
+  if(!items.length){e.innerHTML='<div class="empty">No tasks — sync or add manually</div>';return;}
+  e.innerHTML=items.map(t=>'<div class="row"><div class="chk'+(t.status==='Done'?' dn':'')+'" onclick="toggleT(\''+t.id+'\')"></div>'
+    +'<span class="b '+(t.m==='Must'?'bm':t.m==='Should'?'bs':'bc')+'">'+t.m+'</span>'
+    +'<span class="rtl"'+(t.status==='Done'?' style="text-decoration:line-through;opacity:.4"':'')+'>'+esc(t.title)+'</span>'
+    +'<div style="display:flex;gap:6px;align-items:center;flex-shrink:0">'+(t.category?'<span class="rsb">'+t.category+'</span>':'')+(t.dd?'<span class="rsb">'+fd(t.dd)+'</span>':'')+'</div></div>').join('');
+}
+function setTF(f,e){S.tf=f;document.querySelectorAll('#tflt .fp').forEach(b=>{if(['active','done','all'].includes(b.textContent.toLowerCase()))b.classList.remove('on');});e.classList.add('on');rTasks();}
+function setTC(c,e){S.tc=c;document.querySelectorAll('#tflt .fp.cat').forEach(b=>b.classList.remove('on'));e.classList.add('on');rTasks();}
+function toggleT(id){const t=S.tasks.find(x=>(x.id===id||x._id===id));if(t){t.status=t.status==='Done'?'Not Started':'Done';localStorage.setItem('kcc_tasks',JSON.stringify(S.tasks));rTasks();rToday();}}
+
+// ── ALERTS PAGE ──────────────────────────────────────────────
+function rAlerts(){
+  let items=S.alerts||[];
+  if(S.af!=='all') items=items.filter(a=>a.status===S.af);
+  items.sort((a,b)=>({High:0,Medium:1,Low:2}[a.sev]??2)-({High:0,Medium:1,Low:2}[b.sev]??2));
+  const e=el('alertList');
+  if(!items.length){e.innerHTML='<div class="empty" style="color:var(--grn)">✅ No alerts</div>';return;}
+  e.innerHTML=items.map(a=>'<div class="row '+(a.sev==='High'?'hi':a.sev==='Medium'?'mi':'')+'">'
+    +'<span class="b '+(a.sev==='High'?'bm':a.sev==='Medium'?'bs':'bc')+'">'+(a.sev||'?')+'</span>'
+    +'<div style="flex:1;min-width:0"><div class="rtl">'+esc(a.title)+'</div>'+(a.action?'<div class="rsb" style="white-space:normal;margin-top:2px">'+esc(a.action)+'</div>':'')+'</div>'
+    +'<span class="rsb">'+(a.type||'')+'</span>'
+    +(a.status==='Open'?'<button class="btn" onclick="resA(\''+a.id+'\')">Resolve</button>':'<span class="b" style="background:#1e221e;color:var(--grn)">✓</span>')
+    +'</div>').join('');
+}
+function setAF(f,e){S.af=f;document.querySelectorAll('#p-alerts .fp').forEach(b=>b.classList.remove('on'));e.classList.add('on');rAlerts();}
+function resA(id){const a=S.alerts.find(x=>x.id===id);if(a){a.status='Resolved';localStorage.setItem('kcc_alerts',JSON.stringify(S.alerts));rAlerts();rToday();rBadges();}}
+
+// ── TICKETS PAGE ─────────────────────────────────────────────
+function rTickets(){
+  const items=S.tickets||[], open=items.filter(t=>t.status!=='Resolved');
+  el('ts1').textContent=open.filter(t=>t.da<=2||t.suggested_action==='Sell Now').length;
+  el('ts2').textContent=open.filter(t=>(t.da>2&&t.da<=5)||t.suggested_action==='Lower Price').length;
+  el('ts3').textContent=open.filter(t=>t.da>5||t.suggested_action==='Hold'||t.suggested_action==='Bundle').length;
+  const e=el('tickList');
+  if(!items.length){e.innerHTML='<div class="empty">No items — add one →</div>';return;}
+  e.innerHTML=items.map(t=>{
+    const ac=t.suggested_action||(t.da<=2?'Sell Now':t.da<=5?'Lower Price':'Hold');
+    const[bc,bl]={'Sell Now':['bsl','SELL NOW'],'Lower Price':['blo','LOWER PRICE'],'Bundle':['bbu','BUNDLE'],'Hold':['bho','HOLD']}[ac]||['bho','HOLD'];
+    return'<div class="row"><div style="flex:1;min-width:0"><div class="rtl">'+esc(t.event_name||t.title||'')+'</div><div style="display:flex;gap:8px;margin-top:2px">'+(t.event_date?'<span class="rsb">'+fd(t.event_date)+'</span>':'')+(t.quantity?'<span class="rsb" style="color:var(--orn)">'+t.quantity+' tickets</span>':'')+'</div></div>'
+      +'<span class="b '+bc+'">'+bl+'</span>'
+      +(t.status!=='Resolved'?'<button class="btn" onclick="resTk(\''+t.id+'\')">Resolve</button>':'<span class="b" style="background:#1e221e;color:var(--grn)">✓</span>')
+      +'</div>';
+  }).join('');
+  const tb=S.tb;
+  if(tb){el('tb1').textContent=f$(tb.sh);el('tb2').textContent=f$(tb.tm);el('tb3').textContent=f$(tb.cash);el('tb4').textContent=f$(tb.inv);}
+}
+function resTk(id){const t=S.tickets.find(x=>x.id===id);if(t){t.status='Resolved';localStorage.setItem('kcc_tickets',JSON.stringify(S.tickets));rTickets();rToday();rBadges();}}
+
+// ── FINANCIALS ───────────────────────────────────────────────
+function rFin(){
+  const f=S.fins;
+  if(f){
+    el('fa1').textContent=f$(f.chk);
+    el('fa2').textContent=f.heloc?'-'+f$(f.heloc):'—';
+    el('fa3').textContent=f$(f.knight);
+    el('fa4').textContent=f$(f.sav);
+    if(f.heloc&&f.chk){
+      const sur=(f.chk||0)-(f.tgt||5000);
+      const rec=sur>0?'Sweep $'+sur.toLocaleString()+' → HELOC paydown':'Maintain current checking buffer';
+      el('velBody').innerHTML='<div class="row"><span class="rtl">Checking target</span><span class="rsb">'+f$(f.tgt||5000)+'</span></div>'
+        +'<div class="row"><span class="rtl">Current surplus</span><span class="rsb" style="color:'+(sur>0?'var(--grn)':'var(--amb)')+'">'+(sur>0?'+':'')+f$(sur)+'</span></div>'
+        +'<div class="row"><span class="rtl">Recommendation</span><span style="font-size:11px;color:var(--grn);flex:1;text-align:right">'+rec+'</span></div>';
+    }
+  }
+  const obs=S.alerts.filter(a=>a.type==='Cash'&&a.status==='Open');
+  el('obligBody').innerHTML=obs.length===0?'<div class="empty">No financial obligations flagged</div>':
+    obs.map(o=>'<div class="row"><div style="flex:1"><div class="rtl">'+esc(o.title)+'</div></div><span class="b '+(o.sev==='High'?'bm':'bs')+'">'+o.sev+'</span></div>').join('');
+}
+
+// ── FIRE PAGE ────────────────────────────────────────────────
+function rFire(){
+  const fire=S.fire, goals=S.fireg;
+  if(fire){
+    const gap=fire.inc-fire.need, gn=gap<0;
+    el('fsv1').textContent=f$(fire.need);
+    el('fsv2').textContent=f$(fire.inc);
+    el('fsv3').textContent=(gn?'-$':'$')+Math.abs(gap).toLocaleString();
+    el('fsv3').style.color=gn?'var(--red)':'var(--grn)';
+    el('fsv4').textContent=gn?'OFF TRACK':'ON TRACK';
+    el('fsv4').style.color=gn?'var(--red)':'var(--grn)';
+    pill('fsp3','fsv3',(gn?'-$':'$')+Math.abs(gap).toLocaleString(),gn?'r':'g',true);
+    pill('fsp4','fsv4',gn?'OFF TRACK':'ON TRACK',gn?'r':'g',true);
+  }
+  if(goals){
+    const p=Math.min(100,goals.pct||0);
+    el('fpct').textContent=p+'%';
+    el('fbar').style.width=p+'%';
+    el('frr').textContent='$'+Number(goals.rr||0).toLocaleString()+'/yr run rate';
+    el('ftg').textContent='Target: $'+Number(goals.target||0).toLocaleString();
+  }
+  rFirePhases();
+}
+
+function setFT(t){
+  ['phases','actions','goals'].forEach(v=>{
+    const vd=el('fv-'+v), btn=el('ftb'+(v==='phases'?1:v==='actions'?2:3));
+    if(vd) vd.style.display=v===t?'block':'none';
+    if(btn){btn.classList.toggle('on',v===t);}
+  });
+  if(t==='actions') rFireActions();
+  if(t==='goals') rFireGoals();
+}
+
+function rFirePhases(){
+  const e=el('fv-phases'); if(!e) return;
+  e.innerHTML=FP.map(ph=>{
+    const tot=ph.tasks.length, done=ph.tasks.filter(t=>S.fchk[t.id]).length;
+    const pct=Math.round(done/tot*100), open=S.fex[ph.id]!==false;
+    const tasks=ph.tasks.map(t=>{
+      const isDone=!!S.fchk[t.id], tc=TC[t.tag]||'#4a5e4a', tl=TL[t.tag]||t.tag;
+      return'<div style="display:flex;align-items:flex-start;gap:12px;padding:10px 16px;border-bottom:1px solid #1a1e1a;background:'+(isDone?'rgba(74,156,92,0.03)':'transparent')+'">'
+        +'<div onclick="togFC(\''+t.id+'\')" style="width:16px;height:16px;border:1.5px solid '+(isDone?'#4a9c5c':'#4a5e4a')+';flex-shrink:0;margin-top:2px;cursor:pointer;background:'+(isDone?'#4a9c5c':'transparent')+'"></div>'
+        +'<div style="flex:1"><div style="font-size:13px;font-weight:600;color:'+(isDone?'#4a5e4a':'#eef4ee')+';font-family:Libre Baskerville,serif;'+(isDone?'text-decoration:line-through;':'')+'">'+t.t+'</div>'
+        +'<div style="font-size:11px;color:#4a5e4a;margin-top:3px;line-height:1.5;">'+t.d+'</div></div>'
+        +'<span style="font-size:8px;font-weight:700;padding:2px 7px;letter-spacing:1px;white-space:nowrap;border:1px solid '+(isDone?'#252a25':tc)+';color:'+(isDone?'#4a5e4a':tc)+'">'+(isDone?'DONE':tl)+'</span></div>';
+    }).join('');
+    return'<div style="border:1px solid #252a25;margin-bottom:10px;">'
+      +'<div onclick="togFP(\''+ph.id+'\')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;background:#141714;">'
+      +'<div style="display:flex;align-items:center;gap:12px;">'
+      +'<span style="font-size:9px;font-weight:700;padding:2px 8px;background:rgba(255,255,255,0.05);color:'+ph.c+'">'+ph.n+'</span>'
+      +'<span style="font-size:14px;font-weight:700;color:'+ph.c+'">'+ph.t+'</span>'
+      +'<span style="font-size:10px;color:#4a5e4a">'+ph.d+'</span></div>'
+      +'<div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">'
+      +'<span style="font-size:10px;font-family:JetBrains Mono,monospace;color:#7a967a">'+done+'/'+tot+' '+pct+'%</span>'
+      +'<span style="color:#4a5e4a;font-size:12px">'+(open?'▼':'▶')+'</span></div></div>'
+      +'<div style="height:3px;background:#1e221e"><div style="height:100%;background:'+ph.c+';width:'+pct+'%;transition:width .3s"></div></div>'
+      +'<div id="fp-'+ph.id+'" style="display:'+(open?'block':'none')+'">'+tasks+'</div></div>';
+  }).join('');
+}
+
+function togFP(id){S.fex[id]=S.fex[id]===false?true:false;rFirePhases();}
+function togFC(id){S.fchk[id]=!S.fchk[id];localStorage.setItem('kcc_fchk',JSON.stringify(S.fchk));rFirePhases();}
+
+function rFireActions(){
+  const actions=S.firea||[], e=el('fActList');
+  if(!e) return;
+  const open=actions.filter(a=>a.status!=='Done'), done=actions.filter(a=>a.status==='Done');
+  if(!actions.length){e.innerHTML='<div class="empty">No strategic actions yet.</div>';return;}
+  e.innerHTML=[...open.map(a=>'<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border:1px solid #252a25;background:#141714;margin-bottom:6px;">'
+    +'<div onclick="togFA(\''+a.id+'\')" style="width:15px;height:15px;border:1.5px solid #4a5e4a;cursor:pointer;flex-shrink:0;"></div>'
+    +'<span style="flex:1;font-size:13px;color:#eef4ee;font-family:Libre Baskerville,serif;">'+esc(a.title)+'</span>'
+    +'<span style="font-size:8px;font-weight:700;padding:2px 7px;background:'+(a.priority==='High'?'rgba(208,64,64,0.15)':'rgba(196,144,48,0.15)')+';color:'+(a.priority==='High'?'#d04040':'#c49030')+'">'+((a.priority||'').toUpperCase())+'</span></div>'),
+    done.length?'<div style="padding:8px 16px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#2a342a;margin-top:8px">Completed</div>':'',
+    ...done.map(a=>'<div style="display:flex;align-items:center;gap:12px;padding:8px 16px;opacity:.4"><div style="width:15px;height:15px;background:#4a9c5c;flex-shrink:0"></div><span style="font-size:12px;color:#7a967a;text-decoration:line-through">'+esc(a.title)+'</span></div>')
+  ].join('');
+}
+function togFA(id){const a=S.firea.find(x=>x.id===id);if(a){a.status=a.status==='Done'?'Open':'Done';localStorage.setItem('kcc_firea',JSON.stringify(S.firea));rFireActions();}}
+
+function rFireGoals(){
+  const g=S.fireg, e=el('fGoalBody');
+  if(!e) return;
+  if(!g){e.innerHTML='<div class="empty">No goals set yet.</div>';return;}
+  const p=Math.min(100,g.pct||0);
+  e.innerHTML='<div style="border:1px solid #252a25;background:#141714;padding:16px">'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:14px">'
+    +'<div><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Target Annual</span><span style="font-size:22px;font-weight:700;font-family:JetBrains Mono,monospace;display:block;margin-top:4px">'+f$(g.target)+'</span></div>'
+    +'<div><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Run Rate</span><span style="font-size:22px;font-weight:700;font-family:JetBrains Mono,monospace;color:var(--blu);display:block;margin-top:4px">'+f$(g.rr)+'</span></div>'
+    +'<div><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">% to Goal</span><span style="font-size:22px;font-weight:700;font-family:JetBrains Mono,monospace;color:var(--grn);display:block;margin-top:4px">'+p+'%</span></div></div>'
+    +'<div class="fprog"><div class="fprogf" style="width:'+p+'%"></div></div>'
+    +'<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mut);margin-top:6px"><span>'+f$(g.rr)+'/yr now</span><span>Goal: '+f$(g.target)+'/yr</span></div></div>';
+}
+
+// ── BUSINESS ─────────────────────────────────────────────────
+function rBiz(){
+  const z=S.tz;
+  if(z){el('tz1').textContent=f$(z.rev);el('tz2').textContent=z.mem||'—';el('tz3').textContent=z.cap?z.cap+'%':'—';el('tz4').textContent=z.pas||'—';}
+}
+
+// ── EXEC ─────────────────────────────────────────────────────
+function rExec(){
+  el('ek1').textContent=(S.tasks||[]).filter(t=>t.status==='Done').length;
+  el('ek2').textContent=(S.alerts||[]).filter(a=>a.status==='Resolved').length;
+  el('ek3').textContent=S.fireg?S.fireg.pct+'%':'—';
+  const f=S.fins;
+  if(f){const net=(f.chk||0)+(f.sav||0)+(f.knight||0)-(f.heloc||0);el('ek4').textContent=f$(net);el('ek4').style.color=net>=0?'var(--grn)':'var(--red)';}
+}
+
+// ── CALENDAR ─────────────────────────────────────────────────
+function setCV(v){
+  el('calW').style.display=v==='week'?'block':'none';
+  el('calA').style.display=v==='agenda'?'block':'none';
+  el('cvw').style.background=v==='week'?'var(--blu)':'var(--surf)';
+  el('cvw').style.color=v==='week'?'#fff':'var(--mut)';
+  el('cva').style.background=v==='agenda'?'var(--blu)':'var(--surf)';
+  el('cva').style.color=v==='agenda'?'#fff':'var(--mut)';
+  S.cv=v;
+}
+function calPrev(){S.co--;rCal();}
+function calNext(){S.co++;rCal();}
+function rCal(){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const ws=new Date(today); ws.setDate(today.getDate()-today.getDay()+(S.co*7));
+  const we=new Date(ws); we.setDate(ws.getDate()+6);
+  el('calLbl').textContent=SM[ws.getMonth()]+' '+ws.getDate()+' – '+SM[we.getMonth()]+' '+we.getDate()+', '+we.getFullYear();
+  const days=[];for(let i=0;i<7;i++){const d=new Date(ws);d.setDate(ws.getDate()+i);days.push(d);}
+  // Week view
+  el('calW').innerHTML='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--brd)">'
+    +days.map(d=>'<div style="background:var(--surf);padding:7px;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:'+(sameD(d,today)?'var(--red)':'var(--mut)')+';text-align:center">'+['SUN','MON','TUE','WED','THU','FRI','SAT'][d.getDay()]+'</div>').join('')
+    +days.map(d=>{
+      const isT=sameD(d,today);
+      const evts=[...(S.cal||[]).filter(e=>{if(!e.dd)return false;try{return sameD(new Date(e.dd.length===10?e.dd+'T12:00:00':e.dd),d);}catch(x){return false;}}),
+                  ...(S.tickets||[]).filter(e=>e.event_date&&sameD(new Date(e.event_date+'T12:00:00'),d))];
+      return'<div style="background:var(--surf);min-height:100px;padding:8px;'+(isT?'background:rgba(208,64,64,0.04)':'')+'">'
+        +'<div style="font-size:12px;font-weight:700;color:'+(isT?'var(--red)':'var(--mut)')+';margin-bottom:5px">'+d.getDate()+'</div>'
+        +evts.slice(0,4).map(e=>'<div style="font-size:9px;padding:2px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:2px solid;border-color:'+(e.src==='Calendar'?'var(--blu)':e.event_name?'var(--orn)':'var(--red)')+';background:'+(e.src==='Calendar'?'rgba(74,122,184,0.1)':e.event_name?'rgba(192,112,48,0.1)':'rgba(208,64,64,0.1)')+'">'+esc((e.title||e.event_name||'').substring(0,18))+'</div>').join('')
+        +(evts.length>4?'<div style="font-size:8px;color:var(--mut)">+'+(evts.length-4)+' more</div>':'')
+        +'</div>';
+    }).join('')+'</div>';
+  // Agenda
+  const start=new Date(today); start.setDate(today.getDate()+S.co*7);
+  const end=new Date(start); end.setDate(start.getDate()+13);
+  const all=[...(S.cal||[]).map(e=>({...e,_t:'event'})),
+             ...(S.tickets||[]).filter(t=>t.event_date).map(t=>({...t,dd:t.event_date,_t:'ticket'}))
+  ].filter(e=>{const ds=e.dd||''; const d=new Date(ds.length===10?ds+'T12:00:00':ds); return !isNaN(d)&&d>=start&&d<=end;}).sort((a,b)=>new Date(a.dd)-new Date(b.dd));
+  const byD={};all.forEach(e=>{if(!byD[e.dd])byD[e.dd]=[];byD[e.dd].push(e);});
+  el('calA').innerHTML=Object.keys(byD).length===0?'<div class="empty">No events in this period</div>':
+    Object.entries(byD).map(([d,evts])=>{
+      const dobj=new Date(d+'T12:00:00'), isT=sameD(dobj,today);
+      return'<div style="margin-bottom:14px">'
+        +'<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:'+(isT?'var(--red)':'var(--mut)')+';padding:7px 0;border-bottom:1px solid var(--brd);margin-bottom:5px">'+(isT?'TODAY — ':'')+DAYS[dobj.getDay()].substring(0,3)+', '+SM[dobj.getMonth()]+' '+dobj.getDate()+'</div>'
+        +evts.map(e=>'<div style="display:flex;align-items:center;gap:10px;padding:7px 12px;border:1px solid var(--brd);background:var(--surf);margin-bottom:3px">'
+          +'<span style="font-size:9px;color:var(--mut);width:50px;flex-shrink:0">'+(e.time||'—')+'</span>'
+          +'<div style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+(e._t==='event'?'var(--blu)':e._t==='ticket'?'var(--orn)':'var(--red)')+'"></div>'
+          +'<span style="flex:1;font-size:12px;color:var(--txt);font-family:Libre Baskerville,serif">'+esc(e.title||e.event_name||'')+'</span>'
+          +'<span style="font-size:9px;color:var(--mut)">'+e._t+'</span></div>').join('')
+        +'</div>';
+    }).join('');
+}
+
+// ── BRIEFING ─────────────────────────────────────────────────
+function renderBrief(){
+  const tasks=S.tasks||[],alerts=S.alerts||[],tickets=S.tickets||[],cal=S.cal||[],fire=S.fire;
+  const oa=alerts.filter(a=>a.status==='Open');
+  const ot=tickets.filter(t=>t.status!=='Resolved');
+  const ht=tasks.filter(t=>t.m==='Must');
+  const gap=fire?(fire.inc-fire.need):null, gn=gap!==null&&gap<0;
+  brp('bpp1','bpv1',ot.length,ot.length>0?'r':'g');
+  brp('bpp2','bpv2',ht.length,ht.length>0?'r':'g');
+  brp('bpp3','bpv3',oa.length,oa.length>0?'a':'g');
+  brp('bpp4','bpv4',gap===null?'—':gn?'OFF TRACK':'ON TRACK',gap===null?'':gn?'r':'g');
+  const mit=tasks.slice(0,5);
+  el('bMIT').innerHTML=mit.length===0?'<li><span class="pe">✅ No pending tasks</span></li>':
+    mit.map((t,i)=>'<li><span class="brmn">'+(i+1)+'</span><div class="brmb"><span class="brmt2">'+esc(t.title)+'</span>'
+      +(t.detail?'<span class="brmd2">'+esc(t.detail.substring(0,50))+'</span>':'')
+      +'<div class="brmm"><span class="pb pb'+t.m.charAt(0)+'">'+t.m+'</span><span style="font-size:6.5pt;color:var(--pf)">'+t.src+'</span>'
+      +(t.dd?'<span style="font-size:6.5pt;color:var(--pf)">due '+fd(t.dd)+'</span>':'')+'</div></div><div class="pch"></div></li>').join('');
+  const td0=new Date(); td0.setHours(0,0,0,0);
+  const dls=tasks.filter(t=>t.dd).sort((a,b)=>new Date(a.dd)-new Date(b.dd)).slice(0,7);
+  el('bDL').innerHTML=dls.length===0?'<li><span class="pe">No deadlines</span></li>':
+    dls.map(t=>{const diff=Math.ceil((new Date(t.dd)-td0)/86400000);
+      return'<li><span class="pb pb'+(diff<=0?'M':diff<=2?'S':'C')+'">'+(diff<=0?'TODAY':diff===1?'TMW':fd(t.dd))+'</span><span class="brdlt">'+esc(t.title)+'</span><span class="brdld">'+fd(t.dd)+'</span></li>';
+    }).join('');
+  const mc=ht.length;
+  stel('bm1',mc,'font-size:14pt;color:'+(mc>0?'var(--pr)':'var(--ps)'));
+  stel('bm2',oa.length,'font-size:14pt;color:'+(oa.length>0?'var(--pa)':'var(--ps)'));
+  stel('bm3',ot.length,'font-size:14pt;color:'+(ot.length>0?'var(--pr)':'var(--ps)'));
+  if(gap!==null) stel('bm4',(gn?'-$':'$')+Math.abs(gap).toLocaleString(),'font-size:10pt;color:'+(gn?'var(--pr)':'var(--ps)'));
+  if(fire){
+    el('bf1').textContent=f$(fire.need);
+    el('bf2').textContent=f$(fire.inc);
+    const ge=el('bf3'); ge.textContent=gap!==null?(gn?'-$'+Math.abs(gap).toLocaleString():'$'+gap.toLocaleString()):'—';
+    ge.className='brfcv '+(gn?'neg':'pos');
+  }
+  const tc=cal.filter(e=>e.isToday);
+  el('bCAL').innerHTML=tc.length===0?'<li><span class="pe">No events today</span></li>':
+    tc.map(e=>'<li><span class="brcalt">'+e.time+'</span><span>'+esc(e.title)+'</span></li>').join('');
+}
+function rBrief(){renderBrief();}
+
+// ── MODALS ───────────────────────────────────────────────────
+const MCFG={
+  task:{title:'Add Task',fields:[
+    {n:'title',l:'Title',t:'text',req:true},
+    {n:'category',l:'Category',t:'sel',o:['Money','Tickets','Baseball','Business','Personal']},
+    {n:'priority',l:'Priority',t:'sel',o:['High','Medium','Low']},
+    {n:'due_date',l:'Due Date',t:'date'},
+  ],def:{priority:'High',status:'Not Started'},k:'kcc_tasks',arr:'tasks'},
+  alert:{title:'Add Alert',fields:[
+    {n:'title',l:'Title',t:'text',req:true},
+    {n:'type',l:'Type',t:'sel',o:['Cash','Tickets','Risk','Business']},
+    {n:'sev',l:'Severity',t:'sel',o:['High','Medium','Low']},
+    {n:'action',l:'Action Needed',t:'ta'},
+  ],def:{sev:'High',status:'Open'},k:'kcc_alerts',arr:'alerts'},
+  ticket:{title:'Add Ticket Risk',fields:[
+    {n:'event_name',l:'Event Name',t:'text',req:true},
+    {n:'event_date',l:'Event Date',t:'date'},
+    {n:'quantity',l:'Quantity',t:'num'},
+    {n:'suggested_action',l:'Action',t:'sel',o:['Sell Now','Lower Price','Bundle','Hold']},
+  ],def:{status:'Open',suggested_action:'Hold'},k:'kcc_tickets',arr:'tickets'},
+  fire:{title:'Update FIRE Metrics',fields:[
+    {n:'need',l:'Monthly Need ($)',t:'num',req:true},
+    {n:'inc',l:'Current Monthly Income ($)',t:'num',req:true},
+  ],def:{},k:'kcc_fire',single:true,arr:'fire'},
+  fireGoal:{title:'FIRE Goals',fields:[
+    {n:'target',l:'Target Annual Income ($)',t:'num',req:true},
+    {n:'rr',l:'Current Run Rate ($/yr)',t:'num'},
+    {n:'pct',l:'% to Goal',t:'num'},
+  ],def:{},k:'kcc_fireg',single:true,arr:'fireg'},
+  fireAction:{title:'Add FIRE Action',fields:[
+    {n:'title',l:'Action Title',t:'text',req:true},
+    {n:'priority',l:'Priority',t:'sel',o:['High','Medium']},
+    {n:'status',l:'Status',t:'sel',o:['Open','In Progress','Done']},
+  ],def:{priority:'High',status:'Open'},k:'kcc_firea',arr:'firea'},
+  fin:{title:'Update Financials',fields:[
+    {n:'chk',l:'Checking Balance ($)',t:'num'},
+    {n:'tgt',l:'Checking Target/Buffer ($)',t:'num'},
+    {n:'heloc',l:'HELOC Balance ($)',t:'num'},
+    {n:'knight',l:'Knight Account ($)',t:'num'},
+    {n:'sav',l:'Savings ($)',t:'num'},
+  ],def:{},k:'kcc_fins',single:true,arr:'fins'},
+  tickbiz:{title:'Ticket Business Financials',fields:[
+    {n:'sh',l:'StubHub Balance ($)',t:'num'},
+    {n:'tm',l:'Ticketmaster Balance ($)',t:'num'},
+    {n:'cash',l:'Cash Available ($)',t:'num'},
+    {n:'inv',l:'Inventory Value ($)',t:'num'},
+  ],def:{},k:'kcc_tb',single:true,arr:'tb'},
+  tz:{title:'Throwzone KPIs',fields:[
+    {n:'rev',l:'Monthly Revenue ($)',t:'num'},
+    {n:'mem',l:'Active Members',t:'num'},
+    {n:'cap',l:'Capacity (%)',t:'num'},
+    {n:'pas',l:'Pasadena Status',t:'text'},
+  ],def:{},k:'kcc_tz',single:true,arr:'tz'},
+};
+
+function om(type){
+  MT=type; const cfg=MCFG[type]; if(!cfg) return;
+  el('mTitle').textContent=cfg.title;
+  el('mFields').innerHTML=cfg.fields.map(f=>'<div class="mf"><label>'+f.l+(f.req?' *':'')+'</label>'
+    +(f.t==='sel'?'<select id="mf_'+f.n+'"><option value="">—</option>'+f.o.map(o=>'<option value="'+o+'"'+(cfg.def[f.n]===o?' selected':'')+'>'+o+'</option>').join('')+'</select>'
+    :f.t==='ta'?'<textarea id="mf_'+f.n+'" rows="2" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:8px 10px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;resize:none"></textarea>'
+    :'<input type="'+(f.t==='num'?'number':f.t==='date'?'date':'text')+'" id="mf_'+f.n+'" placeholder="'+f.l+'" />')
+    +'</div>').join('');
+  el('mov').classList.remove('off');
+}
+function cm(){el('mov').classList.add('off');MT=null;}
+function sm(){
+  const cfg=MCFG[MT]; if(!cfg) return;
+  const data={...cfg.def, id:'id_'+Date.now()};
+  cfg.fields.forEach(f=>{const e=document.getElementById('mf_'+f.n);if(!e)return;data[f.n]=f.t==='num'?(parseFloat(e.value)||0):e.value;});
+  const req=cfg.fields.find(f=>f.req&&!data[f.n]);
+  if(req){alert(req.l+' is required');return;}
+  if(cfg.single){S[cfg.arr]=data;localStorage.setItem(cfg.k,JSON.stringify(data));}
+  else{if(!S[cfg.arr])S[cfg.arr]=[];S[cfg.arr].push(data);localStorage.setItem(cfg.k,JSON.stringify(S[cfg.arr]));}
+  cm(); renderAll();
+  if(S.page==='fire') rFire();
+  if(S.page==='financials') rFin();
+  if(S.page==='business') rBiz();
+  // Save to Firebase so other devices sync
+  fbSaveAll();
+}
+
+// ── HELPERS ──────────────────────────────────────────────────
+function openFireLab(){window.open("fire-lab.html","_blank");}
+
+function el(id){return document.getElementById(id);}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function f$(n){return n!=null?'$'+Number(n).toLocaleString():'—';}
+function isoD(d){return d.toISOString().split('T')[0];}
+function sameD(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
+function fd(s){if(!s)return'';const d=new Date(s+(s.length===10?'T12:00:00':''));return SM[d.getMonth()]+' '+d.getDate();}
+function pill(pid,vid,val,color,skipEl){
+  const ve=el(vid);if(ve){if(!skipEl)ve.textContent=val;ve.className='spv'+(color?' '+color:'');}
+  const pe=el(pid);if(pe) pe.className='sp'+(color?' '+color:'');
+}
+function brp(pid,vid,val,color){
+  const ve=el(vid);if(ve){ve.textContent=val;ve.className='brpv'+(color?' '+color:'');}
+  const pe=el(pid);if(pe) pe.className='brpp'+(color?' '+color:'');
+}
+function stel(id,val,style){const e=el(id);if(e){e.textContent=val;if(style)e.style.cssText=style;}}
+</script>
+</body>
+</html>
+<script>
+// ══ AI ENGINE ════════════════════════════════════════════════
+
+function setAIBlock(section, text, status, show) {
+  const block = el('ai-'+section);
+  const tx    = el('ai-'+section+'-tx');
+  const st    = el('ai-'+section+'-st');
+  if(block) block.classList.toggle('visible', show!==false);
+  if(tx){ tx.textContent = text; tx.classList.remove('loading'); }
+  if(st) st.textContent = status||'';
+}
+
+function buildPrompt(section) {
+  const tasks  = S.tasks||[];
+  const alerts = S.alerts||[];
+  const fire   = S.fire;
+  const fins   = S.fins;
+  const tb     = S.tb;
+  const tz     = S.tz;
+  const goals  = S.fireg;
+  const cal    = S.cal||[];
+  const now    = new Date();
+  const fchk   = S.fchk||{};
+
+  const taskSum  = tasks.slice(0,8).map(t=>`- ${t.title} [${t.m}] due:${t.dd||'none'} src:${t.src}`).join('\n');
+  const alertSum = alerts.filter(a=>a.status==='Open').map(a=>`- ${a.title} [${a.sev}]`).join('\n');
+  const fireSum  = fire ? `Monthly need: $${fire.need}, Income: $${fire.inc}, Gap: $${fire.inc-fire.need}` : 'No FIRE data entered';
+  const goalSum  = goals ? `Target: $${goals.target}/yr, Run rate: $${goals.rr}/yr, ${goals.pct}% to goal` : 'No goals set';
+  const finSum   = fins ? `Checking: $${fins.chk}, HELOC: $${fins.heloc}, Knight: $${fins.knight}, Savings: $${fins.sav}, Target buffer: $${fins.tgt||5000}` : 'No financial data';
+  const tbSum    = tb ? `StubHub: $${tb.sh}, TM: $${tb.tm}, Cash: $${tb.cash}, Inventory: $${tb.inv}` : 'No ticket biz data';
+  const tzSum    = tz ? `Revenue: $${tz.rev}, Members: ${tz.mem}, Capacity: ${tz.cap}%` : 'No Throwzone data';
+  const calToday = cal.filter(e=>e.isToday).map(e=>e.title+' at '+e.time).join(', ')||'Nothing scheduled';
+
+  // Count FIRE phase progress
+  const firePhaseNames = ['Medical Leave Setup','JPL Benefits','JPL Separation','Business Launch','FIRE Execution'];
+  const fireIDs = ['m1','m2','m3','m4','m5','m6','j1','j2','j3','j4','j5','s1','s2','s3','s4','s5','b1','b2','b3','b4','b5','b6','b7','b8','i1','i2','i3','i4','i5','i6'];
+  const doneCount = fireIDs.filter(id=>fchk[id]).length;
+
+  const prompts = {
+    today: `You are the AI advisor for Sonny Koliwad's personal command center. Today is ${DAYS[now.getDay()]}, ${MONS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}.
+
+TASKS (MoSCoW ranked):
+${taskSum||'No tasks synced'}
+
+OPEN ALERTS:
+${alertSum||'None'}
+
+FIRE STATUS: ${fireSum}
+CALENDAR TODAY: ${calToday}
+
+Write a 3-4 sentence morning brief: (1) the 1-2 most critical things to act on today and why, (2) any risk or tension to watch, (3) one sharp actionable recommendation. Be direct and specific. No fluff or generic advice.`,
+
+    firepath: `You are the FIRE advisor for Sonny Koliwad. Analyze FIRE trajectory and provide strategic insight.
+
+FIRE METRICS: ${fireSum}
+GOALS: ${goalSum}
+FINANCIALS: ${finSum}
+THROWZONE: ${tzSum}
+FIRE PATH PROGRESS: ${doneCount}/${fireIDs.length} tasks complete across 5 phases
+
+Provide 4-5 sentences: (1) on track or off track and by how much in dollars and months, (2) single biggest lever to accelerate timeline, (3) one specific risk that could derail the plan, (4) concrete action this week. Use specific numbers. Be a trusted advisor, not a cheerleader.`,
+
+    tickets: `You are the ticket business advisor for Sonny Koliwad.
+
+TICKET BUSINESS FINANCIALS: ${tbSum}
+OPEN TICKET RISK ITEMS: ${(S.tickets||[]).filter(t=>t.status!=='Resolved').map(t=>`${t.event_name||t.title} in ${t.da}d qty:${t.quantity||'?'}`).join(', ')||'None'}
+
+Analyze the current ticket business position and recommend optimal capital allocation in 3-4 sentences. Be specific: what to pay down, what to hold in reserve, what events to prioritize selling today. If data is missing, say what you need.`,
+
+    financials: `You are the personal finance advisor for Sonny Koliwad using velocity banking strategy.
+
+CURRENT BALANCES: ${finSum}
+FIRE GAP: ${fire ? '$'+Math.abs(fire.inc-fire.need)+' '+(fire.inc>=fire.need?'surplus':'deficit')+'/mo' : 'Unknown'}
+
+Recommend the optimal money moves for this week in 3-4 sentences. Be specific about amounts and sequencing — which account to pull from, how much to sweep to HELOC, what threshold to maintain in checking. Reference velocity banking principles.`,
+
+    exec: `You are writing the monthly executive summary for Sonny Koliwad's Family as a Business hub — ${MONS[now.getMonth()]} ${now.getFullYear()}.
+
+DATA:
+- Tasks completed this month: ${tasks.filter(t=>t.status==='Done').length} of ${tasks.length}
+- Alerts resolved: ${alerts.filter(a=>a.status==='Resolved').length} of ${alerts.length}
+- FIRE: ${fireSum}
+- FIRE Goals: ${goalSum}
+- Financials: ${finSum}
+- Throwzone: ${tzSum}
+- Ticket Business: ${tbSum}
+- FIRE Path: ${doneCount}/${fireIDs.length} tasks complete
+
+Write a 6-8 sentence executive summary in the style of a CEO monthly board update. Cover: (1) overall health and momentum, (2) biggest win this month, (3) biggest risk, (4) FIRE trajectory and any change vs last month, (5) Throwzone status, (6) strategic priority for next month. Use specific dollar amounts. Be honest about gaps.`
+  };
+
+  return prompts[section] || 'Summarize the current situation.';
+}
+
+async function runAI(section) {
+  const key = CFG.claude || localStorage.getItem('kcc_claude');
+  if(!key) {
+    alert('Add your Claude API key in ⚙ Setup to use AI features.\n\nGet one at console.anthropic.com → API Keys');
+    return;
+  }
+
+  // Show block in loading state
+  const block = el('ai-'+section);
+  const tx    = el('ai-'+section+'-tx');
+  const st    = el('ai-'+section+'-st');
+  if(block) block.classList.add('visible');
+  if(tx){ tx.textContent='Analyzing your data…'; tx.classList.add('loading'); }
+  if(st) st.textContent='✦ Thinking…';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 600,
+        messages: [{ role: 'user', content: buildPrompt(section) }]
+      })
+    });
+
+    const data = await res.json();
+    if(data.error) throw new Error(data.error.message);
+    const text = data.content[0].text;
+
+    if(tx){ tx.textContent=text; tx.classList.remove('loading'); }
+    if(st) st.textContent='✦ Generated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+
+    // Save AI texts for briefing
+    const saved = JSON.parse(localStorage.getItem('kcc_aitexts')||'{}');
+    saved[section] = text;
+    localStorage.setItem('kcc_aitexts', JSON.stringify(saved));
+
+    // If exec, show download button and store for docx
+    if(section==='exec') {
+      const dlBtn = el('dlBtn');
+      if(dlBtn) dlBtn.style.display='';
+      window._execAIText = text;
+    }
+
+  } catch(e) {
+    if(tx){ tx.textContent='Error: '+e.message+'. Check your API key in ⚙ Setup.'; tx.classList.remove('loading'); }
+    if(st) st.textContent='Error';
+  }
+}
+
+// ══ EXEC SUMMARY .DOCX GENERATOR ════════════════════════════
+
+function downloadDocx() {
+  const now     = new Date();
+  const month   = MONS[now.getMonth()]+' '+now.getFullYear();
+  const fire    = S.fire;
+  const fins    = S.fins;
+  const tb      = S.tb;
+  const tz      = S.tz;
+  const goals   = S.fireg;
+  const tasks   = S.tasks||[];
+  const alerts  = S.alerts||[];
+  const tickets = S.tickets||[];
+  const aiText  = window._execAIText || 'Generate the AI summary first by clicking "Generate with AI".';
+
+  const gap     = fire ? (fire.inc - fire.need) : null;
+  const gapNeg  = gap !== null && gap < 0;
+
+  // Build HTML that mimics the JPL exec summary style
+  const docHTML = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: Arial, sans-serif; font-size: 11pt; margin: 0.6in; color: #000; }
+  .header-bar { background: #1A1F1A; color: white; padding: 10px 14px; margin-bottom: 8px; }
+  .header-bar h1 { font-size: 14pt; font-weight: bold; margin: 0 0 2px 0; }
+  .header-bar p  { font-size: 9pt; color: #ccc; margin: 0; }
+  .alert-banner { border: 1.5px solid #E6A817; background: #FFF3CD; padding: 8px 12px; margin-bottom: 10px; display: flex; gap: 10px; }
+  .alert-icon { font-size: 16pt; }
+  .alert-text strong { color: #7B4F00; }
+  .alert-text p { font-size: 9pt; color: #7B4F00; margin: 2px 0 0 0; }
+  .section-bar { background: #2D4A2D; color: white; font-weight: bold; font-size: 10pt; letter-spacing: 1px; padding: 5px 10px; margin: 10px 0 0 0; text-transform: uppercase; }
+  .section-bar.inv { background: #1A2D4A; }
+  .section-bar.dark { background: #333; }
+  .metrics-row { display: grid; gap: 0; border: 1px solid #ccc; margin-bottom: 0; }
+  .metrics-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .metrics-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .metric-box { padding: 8px 10px; border-right: 1px solid #ccc; text-align: center; }
+  .metric-box:last-child { border-right: none; }
+  .metric-num { font-size: 18pt; font-weight: bold; margin: 2px 0; }
+  .metric-lbl { font-size: 8pt; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+  .metric-sub { font-size: 8pt; color: #888; margin-top: 2px; }
+  .green  { color: #1F5C1F; background: #F0F7F0; }
+  .red    { color: #8B1A1A; background: #FFF0F0; }
+  .blue   { color: #1A2D4A; background: #F0F4FF; }
+  .amber  { color: #8B4500; background: #FFF5E0; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid #ccc; margin-bottom: 0; }
+  .col-box { padding: 8px 12px; border-right: 1px solid #ccc; }
+  .col-box:last-child { border-right: none; }
+  .col-title { font-weight: bold; font-size: 10pt; margin-bottom: 4px; }
+  .col-body  { font-size: 9pt; color: #444; line-height: 1.5; }
+  .col-rec   { font-weight: bold; font-size: 9pt; color: #8B4500; margin-top: 6px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; border: 1px solid #333; margin-bottom: 0; }
+  .decision-box { padding: 10px 12px; border-right: 1px solid #333; }
+  .decision-box:last-child { border-right: none; }
+  .decision-title { font-weight: bold; font-size: 11pt; margin-bottom: 5px; }
+  .decision-body  { font-size: 9pt; color: #444; line-height: 1.5; margin-bottom: 6px; }
+  .decision-rec   { font-weight: bold; font-size: 9pt; color: #8B4500; border-top: 1px solid #eee; padding-top: 5px; }
+  .ai-section { border: 1px solid #3a2a5a; background: #f8f4ff; padding: 10px 14px; margin-top: 10px; }
+  .ai-section-title { font-size: 8pt; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; color: #5a3a8a; margin-bottom: 6px; }
+  .ai-section-body { font-size: 10pt; color: #2a1a4a; line-height: 1.7; font-style: italic; }
+  .spacer { height: 8px; }
+  .breakdown-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid #ccc; border-top: none; }
+  .breakdown-col { padding: 6px 10px; border-right: 1px solid #ccc; }
+  .breakdown-col:last-child { border-right: none; }
+  .breakdown-header { background: #2D4A2D; color: white; font-weight: bold; font-size: 9pt; padding: 4px 10px; border: 1px solid #ccc; border-bottom: none; display: grid; grid-template-columns: 1fr 1fr; }
+  .breakdown-header.red-hdr { background: #5A1A1A; }
+  .breakdown-item { font-size: 9pt; padding: 3px 0; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; }
+  .breakdown-item:last-child { border-bottom: none; }
+  .breakdown-val { font-weight: bold; }
+  .green-val { color: #1F5C1F; }
+  .red-val   { color: #8B1A1A; }
+</style>
+</head>
+<body>
+
+<div class="header-bar">
+  <h1>KOLIWAD COMMAND CENTER — ${month}</h1>
+  <p>Personal Financial Status &nbsp;·&nbsp; Executive Summary &nbsp;·&nbsp; Generated ${now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})}</p>
+</div>
+
+${!fire ? `<div class="alert-banner"><span class="alert-icon">⚠</span><div class="alert-text"><strong>No FIRE data entered</strong><p>Enter your monthly need and income on the FIRE Path page to populate financial metrics.</p></div></div>` : ''}
+
+${alerts.filter(a=>a.status==='Open' && a.sev==='High').length > 0 ? `
+<div class="alert-banner">
+  <span class="alert-icon">⚠</span>
+  <div class="alert-text">
+    <strong>High-Severity Alerts Require Action</strong>
+    <p>${alerts.filter(a=>a.status==='Open' && a.sev==='High').map(a=>a.title).join(' · ')}</p>
+  </div>
+</div>` : ''}
+
+<!-- CASH FLOW SECTION -->
+<div class="section-bar">CASH FLOW &nbsp;·&nbsp; ${month}</div>
+<div class="metrics-row metrics-4">
+  <div class="metric-box ${gap!==null&&!gapNeg?'green':gap!==null&&gapNeg?'red':''}">
+    <div class="metric-lbl">Total Income</div>
+    <div class="metric-num">${fire ? f$(fire.inc) : '—'}</div>
+    <div class="metric-sub">this month</div>
+  </div>
+  <div class="metric-box red">
+    <div class="metric-lbl">Total Expenses</div>
+    <div class="metric-num">${fins ? f$((fins.heloc ? fins.heloc*0.065/12 : 0) + (fire ? fire.need : 0)) : '—'}</div>
+    <div class="metric-sub">spend + HELOC int</div>
+  </div>
+  <div class="metric-box ${gapNeg?'red':'green'}">
+    <div class="metric-lbl">Cash Flow</div>
+    <div class="metric-num">${gap!==null ? (gapNeg?'-':'+') + f$(Math.abs(gap)) : '—'}</div>
+    <div class="metric-sub">${gapNeg?'deficit — draw from HF':'surplus — sweep to HELOC'}</div>
+  </div>
+  <div class="metric-box amber">
+    <div class="metric-lbl">HELOC Balance</div>
+    <div class="metric-num">${fins ? f$(fins.heloc) : '—'}</div>
+    <div class="metric-sub">@ 6.5% = ${fins ? f$(Math.round(fins.heloc*0.065/12))+'/mo' : '—'}</div>
+  </div>
+</div>
+
+<div class="spacer"></div>
+
+<!-- INCOME / EXPENSE BREAKDOWN -->
+<div class="breakdown-header">
+  <span>INCOME BREAKDOWN</span>
+  <span class="red-hdr" style="padding-left:10px">EXPENSE BREAKDOWN</span>
+</div>
+<div class="breakdown-row">
+  <div class="breakdown-col">
+    <div class="breakdown-item"><span>Business (Throwzone / Tickets)</span><span class="breakdown-val green-val">${tz && tz.rev ? f$(tz.rev) : '—'}</span></div>
+    <div class="breakdown-item"><span>Rental Income (Vineta)</span><span class="breakdown-val green-val">${fins ? '(see FIRE Lab)' : '—'}</span></div>
+    <div class="breakdown-item"><span>Gift Income</span><span class="breakdown-val green-val">$8,000</span></div>
+    <div class="breakdown-item"><span>Other / SDI / PTO</span><span class="breakdown-val">—</span></div>
+  </div>
+  <div class="breakdown-col">
+    <div class="breakdown-item"><span>Monthly Spend</span><span class="breakdown-val red-val">${fire ? f$(fire.need) : '—'}</span></div>
+    <div class="breakdown-item"><span>HELOC Interest</span><span class="breakdown-val red-val">${fins && fins.heloc ? f$(Math.round(fins.heloc*0.065/12)) : '—'}</span></div>
+    <div class="breakdown-item"><span>Checking Balance</span><span class="breakdown-val">${fins ? f$(fins.chk) : '—'}</span></div>
+    <div class="breakdown-item"><span>Savings Balance</span><span class="breakdown-val">${fins ? f$(fins.sav) : '—'}</span></div>
+  </div>
+</div>
+
+<div class="spacer"></div>
+
+<!-- INVESTMENTS & FIRE SECTION -->
+<div class="section-bar inv">INVESTMENTS & FIRE &nbsp;·&nbsp; ${month}</div>
+<div class="metrics-row metrics-4">
+  <div class="metric-box blue">
+    <div class="metric-lbl">HF Balance</div>
+    <div class="metric-num">${fins ? f$(fins.knight) : '—'}</div>
+    <div class="metric-sub">12% ROI target</div>
+  </div>
+  <div class="metric-box blue">
+    <div class="metric-lbl">TIAA Balance</div>
+    <div class="metric-num">$420K+</div>
+    <div class="metric-sub">transfer Mo.13</div>
+  </div>
+  <div class="metric-box ${goals && goals.pct >= 80 ? 'green' : goals && goals.pct >= 50 ? 'amber' : 'red'}">
+    <div class="metric-lbl">FIRE %</div>
+    <div class="metric-num">${goals ? goals.pct+'%' : '—'}</div>
+    <div class="metric-sub">passive / expenses</div>
+  </div>
+  <div class="metric-box blue">
+    <div class="metric-lbl">Net Worth Est.</div>
+    <div class="metric-num">${fins ? f$((fins.chk||0)+(fins.sav||0)+(fins.knight||0)-(fins.heloc||0)) : '—'}</div>
+    <div class="metric-sub">liquid − HELOC</div>
+  </div>
+</div>
+
+<div class="spacer"></div>
+
+<!-- BUSINESS SECTION -->
+<div class="section-bar" style="background:#2D3A6A">BUSINESS &nbsp;·&nbsp; ${month}</div>
+<div class="metrics-row metrics-3">
+  <div class="metric-box blue">
+    <div class="metric-lbl">Throwzone Revenue</div>
+    <div class="metric-num">${tz && tz.rev ? f$(tz.rev) : '—'}</div>
+    <div class="metric-sub">target: $17,500/mo</div>
+  </div>
+  <div class="metric-box blue">
+    <div class="metric-lbl">Active Members</div>
+    <div class="metric-num">${tz && tz.mem ? tz.mem : '—'}</div>
+    <div class="metric-sub">Capacity: ${tz && tz.cap ? tz.cap+'%' : '—'}</div>
+  </div>
+  <div class="metric-box ${tickets.filter(t=>t.status!=='Resolved').length > 0 ? 'amber' : ''}">
+    <div class="metric-lbl">Ticket Risk Items</div>
+    <div class="metric-num">${tickets.filter(t=>t.status!=='Resolved').length}</div>
+    <div class="metric-sub">open items</div>
+  </div>
+</div>
+
+<div class="spacer"></div>
+
+<!-- KEY DECISIONS -->
+<div class="section-bar dark">KEY DECISIONS — ${month}</div>
+<div class="three-col">
+  <div class="decision-box">
+    <div class="decision-title">Cash Flow Action</div>
+    <div class="decision-body">${gap!==null ? (gapNeg ? 'Deficit of '+f$(Math.abs(gap))+'/mo — draw from HF or reduce spend? Primary lever: business income not yet active.' : 'Surplus of '+f$(gap)+'/mo available. Sweep to HELOC at 6.5% or build cash buffer?') : 'Enter FIRE metrics to see cash flow action item.'}</div>
+    <div class="decision-rec">${gapNeg ? 'Action: Identify spend cuts or accelerate business launch' : gap!==null ? 'Recommend: Sweep '+f$(gap)+' → HELOC paydown' : '—'}</div>
+  </div>
+  <div class="decision-box">
+    <div class="decision-title">FIRE Trajectory</div>
+    <div class="decision-body">${goals ? goals.pct+'% of goal. Run rate '+f$(goals.rr)+'/yr vs target '+f$(goals.target)+'/yr. Throwzone must reach $17.5K/mo by Month 7 (Dec 2026) for Base Case to hold.' : 'Set FIRE goals on the FIRE Path page.'}</div>
+    <div class="decision-rec">${goals && goals.pct < 50 ? 'Risk: Behind pace — accelerate business or reduce spend' : goals ? 'On pace — maintain current trajectory' : '—'}</div>
+  </div>
+  <div class="decision-box">
+    <div class="decision-title">FY27 / Next Month</div>
+    <div class="decision-body">Open alerts: ${alerts.filter(a=>a.status==='Open').length}. Tasks completed: ${tasks.filter(t=>t.status==='Done').length}/${tasks.length}. Pasadena location decision: ${tz && tz.pas ? tz.pas : 'pending'}.</div>
+    <div class="decision-rec">Priority: ${tasks.filter(t=>t.m==='Must'&&t.status!=='Done').slice(0,1).map(t=>t.title)[0] || 'Sync tasks to see top priority'}</div>
+  </div>
+</div>
+
+<div class="spacer"></div>
+
+<!-- AI EXECUTIVE NARRATIVE -->
+<div class="ai-section">
+  <div class="ai-section-title">✦ AI Executive Narrative — ${month}</div>
+  <div class="ai-section-body">${aiText.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</div>
+</div>
+
+<div style="margin-top:16px;font-size:8pt;color:#999;text-align:right;border-top:1px solid #eee;padding-top:6px;">
+  Koliwad Command Center · Family as a Business · Generated ${now.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'})}
+</div>
+
+</body>
+</html>`;
+
+  // Convert HTML to blob and trigger download via data URL
+  const blob = new Blob([docHTML], { type: 'text/html' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'Koliwad_Exec_Summary_' + MONS[now.getMonth()].substring(0,3) + '_' + now.getFullYear() + '.html';
+  a.click();
+  URL.revokeObjectURL(url);
+
+  // Also open print dialog hint
+  setTimeout(() => {
+    alert('File downloaded!\n\nTo convert to .docx or PDF:\n• Open the downloaded .html file in Word → Save As .docx\n• Or open in Chrome → Print → Save as PDF');
+  }, 500);
+}
+
+function f$(n){ return n!=null?'$'+Number(n).toLocaleString():'—'; }
+</script>
+</body>
+</html>

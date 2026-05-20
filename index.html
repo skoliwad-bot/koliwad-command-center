@@ -272,17 +272,21 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'JetBrai
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCR31vdNxfSZw1fKIxKvQN9uUQOzp3vUhA",
-  authDomain: "koliwad-command-center.firebaseapp.com",
-  projectId: "koliwad-command-center",
-  storageBucket: "koliwad-command-center.firebasestorage.app",
-  messagingSenderId: "88044447580",
-  appId: "1:88044447580:web:4677014a9fd3967e8b0399"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const DOC = db.collection('users').doc('sonny');
+// Firebase — wrapped so any failure never blocks the app
+let db = null, DOC = null;
+try {
+  const firebaseConfig = {
+    apiKey: "AIzaSyCR31vdNxfSZw1fKIxKvQN9uUQOzp3vUhA",
+    authDomain: "koliwad-command-center.firebaseapp.com",
+    projectId: "koliwad-command-center",
+    storageBucket: "koliwad-command-center.firebasestorage.app",
+    messagingSenderId: "88044447580",
+    appId: "1:88044447580:web:4677014a9fd3967e8b0399"
+  };
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  DOC = db.collection('users').doc('sonny');
+} catch(e) { console.warn('Firebase init failed — running offline:', e.message); }
 
 // ── FIREBASE SYNC ─────────────────────────────────────────
 // All KCC keys to persist
@@ -295,12 +299,14 @@ const FB_KEYS = [
 ];
 
 async function fbSave(key, value) {
+  if(!DOC) return;
   try {
     await DOC.set({ [key]: JSON.stringify(value) }, { merge: true });
   } catch(e) { console.warn('Firebase save failed:', e.message); }
 }
 
 async function fbLoad() {
+  if(!DOC) return false;
   try {
     const doc = await DOC.get();
     if (doc.exists) {
@@ -318,6 +324,7 @@ async function fbLoad() {
 }
 
 async function fbSaveAll() {
+  if(!DOC) return;
   try {
     const payload = {};
     FB_KEYS.forEach(k => {
@@ -329,13 +336,13 @@ async function fbSaveAll() {
   } catch(e) { console.warn('Firebase saveAll failed:', e.message); }
 }
 
-// Auto-save to Firebase whenever localStorage changes (after modal saves, sync, etc.)
+// Auto-save to Firebase whenever localStorage changes
 const _origSetItem = localStorage.setItem.bind(localStorage);
 localStorage.setItem = function(key, value) {
   _origSetItem(key, value);
-  if (FB_KEYS.includes(key)) {
-    fbSave(key, JSON.parse(value));
-  }
+  try {
+    if (DOC && FB_KEYS.includes(key)) fbSave(key, JSON.parse(value));
+  } catch(e) {}
 };
 </script>
 </head>

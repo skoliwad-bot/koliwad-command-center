@@ -798,31 +798,32 @@ function showSetup(){
   document.getElementById('setup').classList.remove('off');
 }
 
-async function launch(){
+function launch(){
   document.getElementById('setup').classList.add('off');
   document.getElementById('shell').classList.add('on');
-  // Try to load from Firebase first (syncs data across devices)
-  const fbLoaded = await fbLoad();
-  if(fbLoaded){
-    // Reload state from localStorage after Firebase populated it
-    S.tasks    = JSON.parse(localStorage.getItem('kcc_tasks')||'[]');
-    S.alerts   = JSON.parse(localStorage.getItem('kcc_alerts')||'[]');
-    S.tickets  = JSON.parse(localStorage.getItem('kcc_tickets')||'[]');
-    S.cal      = JSON.parse(localStorage.getItem('kcc_cal')||'[]');
-    S.fire     = JSON.parse(localStorage.getItem('kcc_fire')||'null');
-    S.fireg    = JSON.parse(localStorage.getItem('kcc_fireg')||'null');
-    S.firea    = JSON.parse(localStorage.getItem('kcc_firea')||'[]');
-    S.fchk     = JSON.parse(localStorage.getItem('kcc_fchk')||'{}');
-    S.fins     = JSON.parse(localStorage.getItem('kcc_fins')||'null');
-    S.tb       = JSON.parse(localStorage.getItem('kcc_tb')||'null');
-    S.tz       = JSON.parse(localStorage.getItem('kcc_tz')||'null');
-    S.lastSync = localStorage.getItem('kcc_sync')||null;
-  }
   setM('cmd');
   renderAll();
   loadGSI();
-  // Also add a "Cloud Save" button behavior to sync button
-  el('sbtn').title = 'Sync Google + save to cloud';
+  // Try Firebase in background — never blocks launch
+  try {
+    fbLoad().then(loaded => {
+      if(loaded){
+        S.tasks    = JSON.parse(localStorage.getItem('kcc_tasks')||'[]');
+        S.alerts   = JSON.parse(localStorage.getItem('kcc_alerts')||'[]');
+        S.tickets  = JSON.parse(localStorage.getItem('kcc_tickets')||'[]');
+        S.cal      = JSON.parse(localStorage.getItem('kcc_cal')||'[]');
+        S.fire     = JSON.parse(localStorage.getItem('kcc_fire')||'null');
+        S.fireg    = JSON.parse(localStorage.getItem('kcc_fireg')||'null');
+        S.firea    = JSON.parse(localStorage.getItem('kcc_firea')||'[]');
+        S.fchk     = JSON.parse(localStorage.getItem('kcc_fchk')||'{}');
+        S.fins     = JSON.parse(localStorage.getItem('kcc_fins')||'null');
+        S.tb       = JSON.parse(localStorage.getItem('kcc_tb')||'null');
+        S.tz       = JSON.parse(localStorage.getItem('kcc_tz')||'null');
+        S.lastSync = localStorage.getItem('kcc_sync')||null;
+        renderAll();
+      }
+    }).catch(e => console.warn('Firebase background load failed:', e));
+  } catch(e) { console.warn('Firebase init error:', e); }
 }
 
 // ── DATES ────────────────────────────────────────────────────

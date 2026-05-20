@@ -1558,48 +1558,60 @@ function calPrev(){S.co--;rCal();}
 function calNext(){S.co++;rCal();}
 function rCal(){
   const today=new Date(); today.setHours(0,0,0,0);
-  const ws=new Date(today); ws.setDate(today.getDate()-today.getDay()+(S.co*7));
-  const we=new Date(ws); we.setDate(ws.getDate()+6);
-  el('calLbl').textContent=SM[ws.getMonth()]+' '+ws.getDate()+' – '+SM[we.getMonth()]+' '+we.getDate()+', '+we.getFullYear();
-  const days=[];for(let i=0;i<7;i++){const d=new Date(ws);d.setDate(ws.getDate()+i);days.push(d);}
-  // Week view
-  el('calW').innerHTML='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;background:#2e352e">'
-    +days.map(d=>'<div style="background:var(--surf);padding:7px;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:'+(sameD(d,today)?'var(--red)':'var(--mut)')+';text-align:center">'+['SUN','MON','TUE','WED','THU','FRI','SAT'][d.getDay()]+'</div>').join('')
-    +days.map(d=>{
-      const isT=sameD(d,today);
-      const evts=[...(S.cal||[]).filter(e=>{if(!e.dd)return false;try{return sameD(new Date(e.dd.length===10?e.dd+'T12:00:00':e.dd),d);}catch(x){return false;}}),
-                  ...(S.tickets||[]).filter(e=>e.event_date&&sameD(new Date(e.event_date+'T12:00:00'),d))];
-      return'<div style="background:var(--surf);min-height:200px;padding:10px;'+(isT?'background:rgba(208,64,64,0.04)':'')+'">'
-        +'<div style="font-size:14px;font-weight:700;color:'+(isT?'#e05050':'#c8d8c8')+';margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #1e221e">'+d.getDate()+'</div>'
-        +evts.map(e=>'<div style="font-size:9px;padding:2px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:2px solid;border-color:'+(e.src==='Calendar'?'var(--blu)':e.event_name?'var(--orn)':'var(--red)')+';background:'+(e.src==='Calendar'?'rgba(74,122,184,0.1)':e.event_name?'rgba(192,112,48,0.1)':'rgba(208,64,64,0.1)')+'">'+esc((e.title||e.event_name||'').substring(0,18))+'</div>').join('')
-        ''
-        +'</div>';
-    }).join('')+'</div>';
-  // Agenda
-  const start=new Date(today); start.setDate(today.getDate()+S.co*7);
+
+  // Update label - show 2 week range from today
+  const rangeEnd=new Date(today); rangeEnd.setDate(today.getDate()+13+(S.co*14));
+  const rangeStart=new Date(today); rangeStart.setDate(today.getDate()+(S.co*14));
+  el('calLbl').textContent=SM[rangeStart.getMonth()]+' '+rangeStart.getDate()+' – '+SM[rangeEnd.getMonth()]+' '+rangeEnd.getDate()+', '+rangeEnd.getFullYear();
+
+  // Build agenda - always show from today (or offset)
+  const start=new Date(today); start.setDate(today.getDate()+(S.co*14));
   const end=new Date(start); end.setDate(start.getDate()+13);
-  const all=[...(S.cal||[]).map(e=>({...e,_t:'event'})),
-             ...(S.tickets||[]).filter(t=>t.event_date).map(t=>({...t,dd:t.event_date,_t:'ticket'}))
-  ].filter(e=>{const ds=e.dd||''; const d=new Date(ds.length===10?ds+'T12:00:00':ds); return !isNaN(d)&&d>=start&&d<=end;}).sort((a,b)=>new Date(a.dd)-new Date(b.dd));
-  const byD={};all.forEach(e=>{if(!byD[e.dd])byD[e.dd]=[];byD[e.dd].push(e);});
-  el('calA').innerHTML=Object.keys(byD).length===0?'<div class="empty" style="padding:20px">No events this week — sync to load</div>':
-    Object.entries(byD).map(([d,evts])=>{
-      const dobj=new Date(d+'T12:00:00');
-      const nowCheck=new Date(); nowCheck.setHours(0,0,0,0);
-      const isT=sameD(dobj,nowCheck);
-      return'<div style="margin-bottom:16px">'
-        +'<div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:'+(isT?'#e05050':'#a0c0a0')+';padding:8px 0;border-bottom:2px solid '+(isT?'#e05050':'#2e352e')+';margin-bottom:6px">'
-        +(isT?'<span style="background:#e05050;color:#fff;padding:2px 8px;margin-right:8px;font-size:9px">TODAY</span>':'')+DAYS[dobj.getDay()]+', '+SM[dobj.getMonth()]+' '+dobj.getDate()+'</div>'
-        +evts.map(e=>'<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid #2e352e;background:#181d18;margin-bottom:4px">'
-          +'<span style="font-size:10px;color:#8aaa8a;width:60px;flex-shrink:0">'+e.time+'</span>'
-          +'<div style="width:3px;height:30px;flex-shrink:0;background:'+(e._t==='event'?'#4a7ab8':e._t==='ticket'?'#c07030':'#d04040')+'"></div>'
-          +'<span style="flex:1;font-size:13px;font-weight:600;color:#f0f7f0">'+esc(e.title||e.event_name||'')+'</span>'
-          +'</div>').join('')
-        +'</div>';
-    }).join('');
+
+  const cal=S.cal||[];
+  const tickets=S.tickets||[];
+
+  const all=[
+    ...cal.map(e=>({...e,_t:'event'})),
+    ...tickets.filter(t=>t.event_date).map(t=>({...t,dd:t.event_date,_t:'ticket'}))
+  ].filter(e=>{
+    if(!e.dd) return false;
+    try{
+      const ds=e.dd||'';
+      const d=new Date(ds.length===10?ds+'T12:00:00':ds);
+      return !isNaN(d)&&d>=start&&d<=end;
+    }catch(x){return false;}
+  }).sort((a,b)=>new Date(a.dd)-new Date(b.dd));
+
+  const byD={};
+  all.forEach(e=>{if(!byD[e.dd])byD[e.dd]=[];byD[e.dd].push(e);});
+
+  const el_=document.getElementById('calA');
+  if(!el_) return;
+
+  if(!Object.keys(byD).length){
+    el_.innerHTML='<div class="empty" style="padding:20px">No events in the next 2 weeks — try syncing again</div>';
+    return;
+  }
+
+  el_.innerHTML=Object.entries(byD).map(([d,evts])=>{
+    const dobj=new Date(d+'T12:00:00');
+    const nowCheck=new Date(); nowCheck.setHours(0,0,0,0);
+    const isT=sameD(dobj,nowCheck);
+    return '<div style="margin-bottom:16px">'
+      +'<div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:'+(isT?'#e05050':'#a0c0a0')+';padding:8px 0;border-bottom:2px solid '+(isT?'#e05050':'#2e352e')+';margin-bottom:6px">'
+      +(isT?'<span style="background:#e05050;color:#fff;padding:2px 8px;margin-right:8px;font-size:9px">TODAY</span>':'')
+      +DAYS[dobj.getDay()]+', '+SM[dobj.getMonth()]+' '+dobj.getDate()+'</div>'
+      +evts.map(e=>'<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid #2e352e;background:#181d18;margin-bottom:4px">'
+        +'<span style="font-size:10px;color:#8aaa8a;width:65px;flex-shrink:0;font-family:JetBrains Mono,monospace">'+(e.time||'All day')+'</span>'
+        +'<div style="width:3px;min-height:30px;flex-shrink:0;background:'+(e._t==='event'?'#4a7ab8':e._t==='ticket'?'#c07030':'#d04040')+'"></div>'
+        +'<span style="flex:1;font-size:13px;font-weight:600;color:#f0f7f0">'+esc(e.title||e.event_name||'')+'</span>'
+        +'</div>').join('')
+      +'</div>';
+  }).join('');
 }
 
-// ── BRIEFING ─────────────────────────────────────────────────
+
 function renderBrief(){
   const tasks=S.tasks||[],alerts=S.alerts||[],tickets=S.tickets||[],cal=S.cal||[],fire=S.fire;
   const oa=alerts.filter(a=>a.status==='Open');

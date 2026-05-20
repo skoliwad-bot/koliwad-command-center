@@ -433,6 +433,15 @@ localStorage.setItem = function(key, value) {
           <div class="card"><div class="ch"><span class="ct m">📋 Deadlines</span></div><div id="t-dl"><div class="empty">↻ Sync</div></div></div>
           <div class="card"><div class="ch"><span class="ct o">🎟 Sell Zone</span></div><div id="t-tk"><div class="empty" style="color:var(--grn)">✅ None needed</div></div></div>
         </div>
+        <!-- URGENT EMAILS -->
+        <div class="card" style="margin-bottom:12px" id="emails-card">
+          <div class="ch">
+            <span class="ct b">📧 Urgent Emails</span>
+            <span id="inbox-count-lbl" style="font-size:9px;color:#6a886a;"></span>
+          </div>
+          <div id="t-emails"><div class="empty">↻ Sync to load urgent emails</div></div>
+        </div>
+
         <div class="card" style="margin-bottom:12px"><div class="ch"><span class="ct b">🎯 FIRE Snapshot</span><div style="display:flex;gap:8px;align-items:center"><span onclick="nav('fire')" style="font-size:9px;color:var(--mut);cursor:pointer">Details →</span><button onclick="window.open('fire-lab.html','_blank')" style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border:1px solid var(--pur);background:transparent;color:var(--pur);cursor:pointer;">🔬 FIRE Lab</button></div></div><div id="t-fire"><div class="empty">Go to FIRE page to enter numbers →</div></div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="om('task')">+ Task</button><button class="btn" onclick="om('alert')">+ Alert</button><button class="btn" onclick="om('ticket')">+ Ticket</button></div>
       </div>
@@ -1086,17 +1095,41 @@ function setSY(msg,spin){
 async function fetchAll(){
   setSY('Syncing…',true);
   try{
-    const[gm,tk,cv]=await Promise.all([fGmail(),fTasks(),fCal()]);
-    const scored=[...gm,...tk,...cv].map(moscow);
-    scored.sort((a,b)=>{
+    const[gm,tk,cv,inboxTotal]=await Promise.all([fGmail(),fTasks(),fCal(),fInboxCount()]);
+    // Tasks = Google Tasks only — no Gmail, no Calendar
+    const scoredTasks=tk.map(moscow);
+    scoredTasks.sort((a,b)=>{
       const o={Must:0,Should:1,Could:2,"Won't":3};
       const d=(o[a.m]??3)-(o[b.m]??3);
       if(d) return d;
       if(a.dr&&b.dr) return new Date(a.dr)-new Date(b.dr);
       return a.dr?-1:b.dr?1:0;
     });
-    S.tasks=scored.filter(i=>i.m==='Must'||i.m==='Should').slice(0,15);
-    S.cal=cv;
+    S.tasks  = scoredTasks.filter(i=>i.m==='Must'||i.m==='Should').slice(0,15);
+    S.emails = gm.map(moscow).filter(i=>i.m==='Must'||i.m==='Should').slice(0,8);
+    S.cal    = cv;
+    S.inboxCount = inboxTotal;
+    localStorage.setItem('kcc_emails', JSON.stringify(S.emails));
+    localStorage.setItem('kcc_inbox', inboxTotal);
+    // Auto-alert if total inbox over 70
+    if(inboxTotal > 70) {
+      const existing = (S.alerts||[]).find(a=>a._inboxAlert && a.status==='Open');
+      if(!existing) {
+        const al = {
+          id:'inbox_'+Date.now(), _inboxAlert:true,
+          title:'Inbox at '+inboxTotal+' total emails — needs triage',
+          type:'Risk', sev:'Medium',
+          action:'Archive, delete or process emails to get below 70',
+          status:'Open'
+        };
+        S.alerts = [...(S.alerts||[]), al];
+        localStorage.setItem('kcc_alerts', JSON.stringify(S.alerts));
+      }
+    } else {
+      // Auto-resolve inbox alert if count drops below 70
+      S.alerts = (S.alerts||[]).map(a=>a._inboxAlert?{...a,status:'Resolved'}:a);
+      localStorage.setItem('kcc_alerts', JSON.stringify(S.alerts));
+    }
     S.lastSync=new Date().toISOString();
     localStorage.setItem('kcc_tasks',JSON.stringify(S.tasks));
     localStorage.setItem('kcc_cal',JSON.stringify(S.cal));
@@ -1134,6 +1167,15 @@ async function fGmail(){
     items.push({id,title:sub,detail:'From: '+from,dd:'',dr:null,da:99,src:'Gmail',sig});
   }));
   return items;
+}
+
+async function fInboxCount(){
+  try{
+    // Get total count of all emails in INBOX label
+    const r=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/labels/INBOX',{headers:{Authorization:'Bearer '+AT}});
+    const d=await r.json();
+    return d.messagesTotal||0;
+  }catch(e){return 0;}
 }
 
 async function fTasks(){
@@ -1266,6 +1308,12 @@ function rToday(){
       const[bc,bl]=t.da<=2?['bsl','SELL NOW']:t.da<=5?['blo','LOWER']:['bho','HOLD'];
       return'<div class="row"><div style="flex:1;min-width:0"><div class="rtl">'+esc(t.event_name||t.title||'')+'</div></div><span class="b '+bc+'">'+bl+'</span></div>';
     }).join('');
+  // Urgent emails
+  const emails=S.emails||[];
+  const inboxLbl=el('inbox-count-lbl');
+  if(inboxLbl){inboxLbl.textContent=S.inboxCount>0?'Inbox: '+S.inboxCount+' total'+(S.inboxCount>70?' ⚠ OVER 70':''):'';inboxLbl.style.color=S.inboxCount>70?'#d04040':'#8aaa8a';}
+  const emEl=el('t-emails');
+  if(emEl)emEl.innerHTML=emails.length===0?'<div class="empty">No urgent emails</div>':emails.map(e=>'<div class="row"><span class="b '+(e.m==='Must'?'bm':'bs')+'">'+e.m+'</span><span class="rtl">'+esc(e.title)+'</span><span class="rsb">Gmail</span></div>').join('');
   // FIRE
   if(!fire){
     el('t-fire').innerHTML='<div class="empty">Go to 🎯 FIRE page to enter your numbers →</div>';

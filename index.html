@@ -667,119 +667,68 @@ localStorage.setItem = function(key, value) {
 
       <!-- TICKETS -->
       <div class="page" id="p-tickets">
-        <div style="padding:0 0 22px 0;">
+  <div class="ph">
+    <div><div class="pt">Tickets</div><div class="ps" id="tk-status">Ticket business hub</div></div>
+    <div style="display:flex;gap:8px;">
+      <button class="aibtn" onclick="runAI('tickets')">✦ AI Analysis</button>
+      <label style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border:1px solid var(--grn);color:var(--grn);cursor:pointer;">⬆ Import Excel<input type="file" accept=".xlsx" onchange="importTicketExcel(event)" style="display:none"></label>
+      <button class="btn p" onclick="om('ticket')">+ Add</button>
+    </div>
+  </div>
 
-          <!-- HEADER -->
-          <div class="ph" style="margin-bottom:16px;">
-            <div>
-              <div class="pt">Tickets</div>
-              <div class="ps" id="tk-import-status">Ticket business · Import spreadsheet to populate</div>
-            </div>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <button class="aibtn" onclick="runAI('tickets')">✦ AI Analysis</button>
-              <label style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border:1px solid #4a9c5c;color:#4a9c5c;cursor:pointer;">
-                ⬆ Import Ticket Excel
-                <input type="file" accept=".xlsx,.xls" onchange="importTicketExcel(event)" style="display:none">
-              </label>
-              <button class="btn p" onclick="om('ticket')">+ Add Item</button>
-            </div>
-          </div>
+  <div class="ai-block" id="ai-tickets">
+    <div class="ai-hdr"><span class="ai-title">✦ AI Ticket Analysis</span><span class="ai-thinking" id="ai-tickets-st">Click to generate</span></div>
+    <div class="ai-text loading" id="ai-tickets-tx">Claude will analyze your ticket P&L, upcoming events, and card balances.</div>
+  </div>
 
-          <!-- AI BLOCK -->
-          <div class="ai-block" id="ai-tickets" style="margin-bottom:16px;">
-            <div class="ai-hdr">
-              <span class="ai-title">✦ AI Ticket & Payment Analysis</span>
-              <span class="ai-thinking" id="ai-tickets-st">Click "AI Analysis" to generate</span>
-            </div>
-            <div class="ai-text loading" id="ai-tickets-tx">Claude will analyze your ticket P&L, upcoming events, credit card balances, and obligations to recommend this week's payment priority and capital allocation.</div>
-          </div>
+  <!-- METRICS -->
+  <div id="tk-metrics" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;"></div>
 
-          <!-- EMPTY STATE -->
-          <div id="tk-empty" style="text-align:center;padding:60px 20px;border:1px solid var(--brd);">
-            <div style="font-size:36px;margin-bottom:12px;">🎟</div>
-            <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--txt);margin-bottom:8px;">No Data Imported</div>
-            <div style="font-size:12px;color:var(--mut);margin-bottom:20px;">Import your Ticket_Hub spreadsheet to see metrics, upcoming events, and CC balances</div>
-            <label style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:10px 24px;border:1px solid var(--grn);color:var(--grn);cursor:pointer;display:inline-block;">
-              ⬆ Import Ticket Excel
-              <input type="file" accept=".xlsx,.xls" onchange="importTicketExcel(event)" style="display:none">
-            </label>
-          </div>
+  <!-- HIGH RISK -->
+  <div id="tk-risk" style="display:none;border:1px solid var(--red);background:rgba(224,80,80,0.08);padding:12px 16px;margin-bottom:16px;">
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:8px;">⚠ HIGH RISK — Unsold events within 7 days</div>
+    <div id="tk-risk-list"></div>
+  </div>
 
-          <!-- MAIN CONTENT -->
-          <div id="tk-content" style="display:none;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
 
-            <!-- KEY METRICS -->
-            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;" id="tk-pills"></div>
+    <!-- UPCOMING -->
+    <div style="border:1px solid var(--brd);background:var(--surf);">
+      <div class="ch"><span class="ct ct-b">📅 Upcoming Events (30 days)</span><span id="tk-up-count" style="font-size:9px;color:var(--mut)"></span></div>
+      <div id="tk-upcoming" style="max-height:340px;overflow-y:auto;"><div class="empty">Import spreadsheet to populate</div></div>
+    </div>
 
-            <!-- HIGH RISK ALERT -->
-            <div id="tk-risk-banner" style="display:none;border:1px solid var(--red);background:rgba(224,80,80,0.08);padding:10px 16px;margin-bottom:16px;">
-              <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);">⚠ HIGH RISK — Events in next 7 days with unsold tickets</span>
-              <div id="tk-risk-list" style="margin-top:8px;"></div>
-            </div>
-
-            <!-- TWO COL: UPCOMING + CC -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
-
-              <!-- UPCOMING EVENTS -->
-              <div style="border:1px solid var(--brd);background:var(--surf);">
-                <div style="padding:9px 16px;border-bottom:1px solid var(--brd);background:#080a08;display:flex;align-items:center;justify-content:space-between;">
-                  <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--blu);">📅 Upcoming Events (Next 30 Days)</span>
-                  <span id="tk-upcoming-count" style="font-size:9px;color:var(--mut);">—</span>
-                </div>
-                <div id="tk-upcoming" style="max-height:320px;overflow-y:auto;">
-                  <div class="empty">Import to see upcoming events</div>
-                </div>
-              </div>
-
-              <!-- CREDIT CARDS & OBLIGATIONS -->
-              <div style="border:1px solid var(--brd);background:var(--surf);">
-                <div style="padding:9px 16px;border-bottom:1px solid var(--brd);background:#080a08;display:flex;align-items:center;justify-content:space-between;">
-                  <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);">💳 Business Cards & Obligations</span>
-                  <span id="tk-cc-total" style="font-size:11px;font-weight:700;color:var(--red);">—</span>
-                </div>
-                <div id="tk-cc-content">
-                  <div class="empty">Enter card balances below then import</div>
-                </div>
-                <!-- CC Manual entry - collapsible -->
-                <div style="padding:10px 16px;border-top:1px solid var(--brd);background:#0a0c0a;">
-                  <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:10px;">UPDATE BALANCES MANUALLY</div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-<div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Cap One Biz Balance</label><input type="number" id="tk-cap1-bal" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
-<div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Cap One Min Due</label><input type="number" id="tk-cap1-min" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
-<div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Amex Biz (MBK) Balance</label><input type="number" id="tk-amexbiz-bal" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
-<div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Amex Biz Min Due</label><input type="number" id="tk-amexbiz-min" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
-<div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Amex Lena Balance</label><input type="number" id="tk-amexlena-bal" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
-<div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Amex Lena Min Due</label><input type="number" id="tk-amexlena-min" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
-<div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Wells Fargo CC Balance</label><input type="number" id="tk-wfcc-bal" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
-<div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Wells Fargo CC Min Due</label><input type="number" id="tk-wfcc-min" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
-<div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Amex LOC Balance</label><input type="number" id="tk-amexloc-bal" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
-<div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Amex LOC Limit</label><input type="number" id="tk-amexloc-lim" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
-<div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Randy Dang Owed ($)</label><input type="number" id="tk-dang-bal" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
-                  </div>
-                  <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                    <div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Cap One Due Date</label><input type="text" id="tk-cap1-due" placeholder="Jun 1" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
-                    <div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Amex Biz Due Date</label><input type="text" id="tk-amexbiz-due" placeholder="Jun 1" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
-                    <div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Amex Lena Due Date</label><input type="text" id="tk-amexlena-due" placeholder="Jun 1" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
-                    <div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Randy Dang Notes</label><input type="text" id="tk-dang-note" placeholder="context..." style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
-                  </div>
-                  <button onclick="saveTKCards()" style="margin-top:10px;width:100%;padding:7px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:var(--red);border:none;color:white;cursor:pointer;">💾 Save Card Balances</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- FULL TICKET LOG SAMPLE -->
-            <div style="border:1px solid var(--brd);background:var(--surf);">
-              <div style="padding:9px 16px;border-bottom:1px solid var(--brd);background:#080a08;">
-                <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--amb);">📋 Recent Activity (Last 20 Rows)</span>
-              </div>
-              <div id="tk-log" style="overflow-x:auto;">
-                <div class="empty">Import to see ticket log</div>
-              </div>
-            </div>
-
-          </div>
+    <!-- CARDS -->
+    <div style="border:1px solid var(--brd);background:var(--surf);">
+      <div class="ch"><span class="ct ct-r">💳 Business Cards & Obligations</span><span id="tk-cc-total" style="font-size:11px;font-weight:700;color:var(--red)"></span></div>
+      <div id="tk-cards-display"></div>
+      <!-- Manual entry -->
+      <div style="padding:12px 16px;border-top:1px solid var(--brd);background:#0a0c0a;">
+        <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:10px;">UPDATE BALANCES</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:10px;">
+          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Cap One Biz Balance</div><input id="tk-c1b" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
+          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Cap One Min Due</div><input id="tk-c1m" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
+          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Amex Biz (MBK) Balance</div><input id="tk-c2b" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
+          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Amex Biz Min Due</div><input id="tk-c2m" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
+          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Amex Lena Balance</div><input id="tk-c3b" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
+          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Amex Lena Min Due</div><input id="tk-c3m" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
+          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Wells Fargo CC Balance</div><input id="tk-c4b" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
+          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Wells Fargo Min Due</div><input id="tk-c4m" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
+          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Amex LOC Balance</div><input id="tk-loc" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
+          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Randy Dang Owed</div><input id="tk-dang" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
         </div>
+        <button onclick="tkSaveCards()" style="margin-top:10px;width:100%;padding:7px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:var(--red);border:none;color:white;cursor:pointer;">💾 Save</button>
       </div>
+    </div>
+  </div>
+
+  <!-- LOG -->
+  <div style="border:1px solid var(--brd);background:var(--surf);">
+    <div class="ch"><span class="ct ct-a">📋 Recent Ticket Activity</span></div>
+    <div id="tk-log" style="overflow-x:auto;"><div class="empty">Import spreadsheet to see activity</div></div>
+  </div>
+
+</div>
 
       <!-- BUSINESS -->
       <div class="page" id="p-business">
@@ -2393,18 +2342,52 @@ function rFin() {
 </script>
 
 <script>
-// ══ TICKET EXCEL IMPORT ══════════════════════════════════════
+// ══ TICKET FUNCTIONS ════════════════════════════════════════
 
 function importTicketExcel(evt) {
   const file = evt.target.files[0];
   if(!file) return;
-  const st = document.getElementById('tk-import-status');
-  if(st) st.textContent = 'Reading ' + file.name + '…';
+  const st = document.getElementById('tk-status');
+  if(st) st.textContent = 'Reading…';
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
       const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
-      parseTicketWorkbook(wb, file.name);
+      
+      // Metrics
+      const tm = wb.Sheets['Ticket Metrics'];
+      const mv = {};
+      if(tm) { XLSX.utils.sheet_to_json(tm,{header:1}).forEach(r=>{ if(r[0]&&r[1]!==undefined) mv[String(r[0]).trim()]=r[1]; }); }
+      
+      // Ticket Log
+      const tl = wb.Sheets['Ticket Log'];
+      const rows = tl ? XLSX.utils.sheet_to_json(tl,{header:1}).slice(1).filter(r=>r[0] instanceof Date) : [];
+      const now = new Date(); now.setHours(0,0,0,0);
+      const d30 = new Date(now); d30.setDate(now.getDate()+30);
+      const d7  = new Date(now); d7.setDate(now.getDate()+7);
+      
+      const upcoming = rows.filter(r=>r[0]>now&&r[0]<=d30&&!['Sold','Void','Canceled'].includes(r[15])).sort((a,b)=>a[0]-b[0]);
+      const highRisk = rows.filter(r=>r[0]>now&&r[0]<=d7&&!['Sold','Void','Canceled'].includes(r[15]));
+      const recent   = rows.filter(r=>r[0]).sort((a,b)=>b[0]-a[0]).slice(0,20);
+      
+      // Store
+      localStorage.setItem('kcc_tkm', JSON.stringify(mv));
+      localStorage.setItem('kcc_tku', JSON.stringify(upcoming.slice(0,60).map(r=>({
+        date:r[0].toLocaleDateString('en-US',{month:'short',day:'numeric'}),
+        event:r[1]||'', opp:r[5]||'', qty:r[7]||0, cost:r[11]||0, status:r[15]||'', risk:r[22]==='Y'
+      }))));
+      localStorage.setItem('kcc_tkr', JSON.stringify(recent.map(r=>({
+        date:r[0] instanceof Date?r[0].toLocaleDateString('en-US',{month:'short',day:'numeric'}):'',
+        event:r[1]||'', opp:r[5]||'', qty:r[7]||0, cost:r[11]||0,
+        card:r[12]||'', status:r[15]||'', pnl:r[19]||0
+      }))));
+      localStorage.setItem('kcc_tkhr', JSON.stringify(highRisk.map(r=>({
+        date:r[0].toLocaleDateString('en-US',{month:'short',day:'numeric'}),
+        event:r[1]||'', opp:r[5]||'', qty:r[7]||0, cost:r[11]||0, status:r[15]||''
+      }))));
+      
+      rTickets();
+      if(st) st.textContent = '✓ ' + file.name + ' · ' + rows.length + ' rows';
     } catch(err) {
       if(st) st.textContent = 'Error: ' + err.message;
       console.error(err);
@@ -2413,238 +2396,158 @@ function importTicketExcel(evt) {
   reader.readAsArrayBuffer(file);
 }
 
-function parseTicketWorkbook(wb, fname) {
-  // ── Ticket Metrics sheet ──
-  const tm = wb.Sheets['Ticket Metrics'];
-  const metrics = {};
-  if(tm) {
-    const rows = XLSX.utils.sheet_to_json(tm, {header:1});
-    rows.forEach(r => { if(r[0] && r[1]!==undefined) metrics[String(r[0]).trim()] = r[1]; });
+function rTickets() {
+  // Restore card inputs
+  const cs = JSON.parse(localStorage.getItem('kcc_tk_cards')||'null');
+  if(cs) {
+    const sv = (id,v) => { const e=document.getElementById(id); if(e&&v) e.value=v; };
+    sv('tk-c1b',cs.c1b); sv('tk-c1m',cs.c1m);
+    sv('tk-c2b',cs.c2b); sv('tk-c2m',cs.c2m);
+    sv('tk-c3b',cs.c3b); sv('tk-c3m',cs.c3m);
+    sv('tk-c4b',cs.c4b); sv('tk-c4m',cs.c4m);
+    sv('tk-loc',cs.loc); sv('tk-dang',cs.dang);
+  }
+  
+  const mv  = JSON.parse(localStorage.getItem('kcc_tkm')||'{}');
+  const up  = JSON.parse(localStorage.getItem('kcc_tku')||'[]');
+  const rec = JSON.parse(localStorage.getItem('kcc_tkr')||'[]');
+  const hr  = JSON.parse(localStorage.getItem('kcc_tkhr')||'[]');
+  const f$  = n => '$'+Math.abs(Math.round(n||0)).toLocaleString();
+  const fc  = n => (n>=0?'+':'-')+f$(n);
+
+  // Metrics pills
+  const mEl = document.getElementById('tk-metrics');
+  if(mEl && Object.keys(mv).length) {
+    const mtd = mv['Ticket Profit MTD']||0;
+    const ytd = mv['Ticket Profit YTD']||0;
+    mEl.innerHTML = [
+      {l:'Profit MTD',  v:fc(mtd), c:mtd>=0?'var(--grn)':'var(--red)'},
+      {l:'Profit YTD',  v:fc(ytd), c:ytd>=0?'var(--grn)':'var(--red)'},
+      {l:'Open Listings',v:mv['Open Listings']||0, c:'var(--blu)'},
+      {l:'High Risk 7d', v:(mv['High Risk Count (next 7d)']||0)+' events', c:(mv['High Risk Count (next 7d)']||0)>0?'var(--red)':'var(--grn)'},
+      {l:'Pending Pmts', v:'$'+(mv['Pending Payments']||0).toLocaleString(), c:(mv['Pending Payments']||0)>0?'var(--amb)':'var(--grn)'},
+    ].map(p=>'<div style="border:1px solid var(--brd);background:var(--surf);padding:12px 16px"><span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);display:block">'+p.l+'</span><span style="font-size:20px;font-weight:700;display:block;margin-top:5px;color:'+p.c+'">'+p.v+'</span></div>').join('');
   }
 
-  // ── Ticket Log sheet ──
-  const tl = wb.Sheets['Ticket Log'];
-  const tlRows = tl ? XLSX.utils.sheet_to_json(tl, {header:1}) : [];
-  // Headers: EventDate,Event,SeasonTix,NotPlayed,Type,Opponent,PurchDate,Qty,Sec,Row,LowSeat,Cost,Card,Platform,Buyer,Status,Reimbursed,ReimbAmt,NetPayment,PnL,PayoutDate,Received,HighRisk
-  const dataRows = tlRows.slice(1).filter(r => r[0] instanceof Date);
-
-  const now = new Date(); now.setHours(0,0,0,0);
-  const in30 = new Date(now); in30.setDate(now.getDate()+30);
-  const in7  = new Date(now); in7.setDate(now.getDate()+7);
-
-  // Upcoming unsold/listed in next 30 days
-  const upcoming = dataRows
-    .filter(r => r[0] > now && r[0] <= in30 && !['Sold','Void','Canceled'].includes(r[15]))
-    .sort((a,b) => a[0]-b[0]);
-
-  // High risk: event within 7 days, not sold
-  const highRisk = dataRows
-    .filter(r => r[0] > now && r[0] <= in7 && !['Sold','Void','Canceled'].includes(r[15]));
-
-  // Recent 20 rows (most recent first)
-  const recent = dataRows.filter(r=>r[0]).sort((a,b)=>b[0]-a[0]).slice(0,20);
-
-  // Save to state
-  S.tkMetrics = metrics;
-  S.tkUpcoming = upcoming;
-  S.tkHighRisk = highRisk;
-  S.tkRecent   = recent;
-  localStorage.setItem('kcc_tk_metrics',  JSON.stringify({
-    profitMTD:    metrics['Ticket Profit MTD']           || 0,
-    profitYTD:    metrics['Ticket Profit YTD']           || 0,
-    profitAllTime:metrics['Ticket Profit  - All Time']   || 0,
-    openListings: metrics['Open Listings']               || 0,
-    notListed:    metrics['Not Listed (have tickets)']   || 0,
-    highRiskCount:metrics['High Risk Count (next 7d)']   || 0,
-    highRiskDol:  metrics['Next 7d Risk $']              || 0,
-    pendingPay:   metrics['Pending Payments']            || 0,
-    qtyPending:   metrics['Qty Pending Payments']        || 0,
-  }));
-  localStorage.setItem('kcc_tk_upcoming', JSON.stringify(
-    upcoming.slice(0,50).map(r=>({
-      date: r[0].toLocaleDateString('en-US',{month:'short',day:'numeric'}),
-      event: r[1]||'', opponent: r[5]||'', qty: r[7]||0,
-      cost: r[11]||0, status: r[15]||'', card: r[12]||'', highRisk: r[22]==='Y'
-    }))
-  ));
-
-  renderTickets();
-  const st = document.getElementById('tk-import-status');
-  if(st) st.textContent = '✓ Imported ' + fname + ' · ' + dataRows.length + ' rows · ' + upcoming.length + ' upcoming';
-}
-
-function renderTickets() {
-  const m = S.tkMetrics || JSON.parse(localStorage.getItem('kcc_tk_metrics')||'{}');
-  if(!m.openListings && !m.profitMTD) return;
-
-  document.getElementById('tk-empty').style.display = 'none';
-  document.getElementById('tk-content').style.display = 'block';
-
-  const f$ = n => (n>=0?'':'-')+'$'+Math.abs(Math.round(n||0)).toLocaleString();
-  const fc = n => (n>=0?'+':'')+f$(n);
-
-  // Pills
-  document.getElementById('tk-pills').innerHTML = [
-    {lbl:'Profit MTD',     val:fc(m.profitMTD||0),    cls:(m.profitMTD||0)>=0?'g':'r'},
-    {lbl:'Profit YTD',     val:fc(m.profitYTD||0),    cls:(m.profitYTD||0)>=0?'g':'r'},
-    {lbl:'Open Listings',  val:m.openListings||'—',   cls:'b'},
-    {lbl:'High Risk (7d)', val:(m.highRiskCount||0)+' events', cls:(m.highRiskCount||0)>0?'r':'g'},
-    {lbl:'Pending Payments',val:'$'+(m.pendingPay||0).toLocaleString(), cls:(m.pendingPay||0)>0?'a':'g'},
-  ].map(p=>`<div style="border:1px solid var(--brd);background:var(--surf);padding:12px 16px;">
-    <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);display:block;">${p.lbl}</span>
-    <span style="font-size:20px;font-weight:700;display:block;margin-top:5px;color:${p.cls==='g'?'var(--grn)':p.cls==='r'?'var(--red)':p.cls==='b'?'var(--blu)':'var(--amb)'}">${p.val}</span>
-  </div>`).join('');
-
-  // High risk banner
-  const hrBanner = document.getElementById('tk-risk-banner');
-  const hrList   = document.getElementById('tk-risk-list');
-  const hr = S.tkHighRisk || [];
-  if(hr.length > 0 && hrBanner && hrList) {
-    hrBanner.style.display = 'block';
-    hrList.innerHTML = hr.map(r=>`<div style="display:flex;gap:10px;align-items:center;padding:4px 0;">
-      <span style="font-size:10px;font-weight:700;color:var(--red)">${r[0].toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>
-      <span style="font-size:11px;color:var(--txt)">${r[1]||''} vs ${r[5]||''}</span>
-      <span style="font-size:9px;color:var(--mut)">qty: ${r[7]||0} · $${(r[11]||0).toLocaleString()} cost · ${r[15]||''}</span>
-    </div>`).join('');
+  // High risk
+  const hrEl = document.getElementById('tk-risk');
+  if(hrEl) {
+    hrEl.style.display = hr.length>0 ? 'block' : 'none';
+    const hrl = document.getElementById('tk-risk-list');
+    if(hrl) hrl.innerHTML = hr.map(r=>'<div style="display:flex;gap:10px;padding:3px 0"><span style="color:var(--red);font-weight:700;font-size:10px;width:50px">'+r.date+'</span><span style="color:var(--txt);font-size:11px">'+esc(r.event)+' vs '+esc(r.opp)+'</span><span style="color:var(--mut);font-size:9px">×'+r.qty+' · $'+r.cost.toLocaleString()+'</span><span style="color:var(--amb);font-size:9px">'+r.status+'</span></div>').join('');
   }
 
-  // Upcoming events
-  const up = S.tkUpcoming || JSON.parse(localStorage.getItem('kcc_tk_upcoming')||'[]');
+  // Upcoming
   const upEl = document.getElementById('tk-upcoming');
-  const upCount = document.getElementById('tk-upcoming-count');
-  if(upCount) upCount.textContent = up.length + ' events';
+  const upC  = document.getElementById('tk-up-count');
+  if(upC) upC.textContent = up.length+' events';
   if(upEl) {
-    if(!up.length) { upEl.innerHTML='<div class="empty" style="color:var(--grn)">No upcoming unsold events</div>'; }
-    else upEl.innerHTML = up.map(r=>{
-      const isRisk = r.highRisk || r.status==='Not Listed';
-      const statusColor = r.status==='Listed'?'var(--grn)':r.status==='Not Listed'?'var(--red)':'var(--amb)';
-      return `<div style="display:flex;align-items:center;gap:8px;padding:7px 14px;border-bottom:1px solid #1e231e;">
-        <span style="font-size:10px;font-weight:700;color:${isRisk?'var(--red)':'var(--blu)'};width:48px;flex-shrink:0">${r.date}</span>
-        <span style="flex:1;font-size:11px;font-weight:600;color:var(--txt)">${esc(r.event)} ${r.opponent?'vs '+esc(r.opponent):''}</span>
-        <span style="font-size:9px;color:var(--mut)">×${r.qty}</span>
-        <span style="font-size:9px;font-weight:700;padding:1px 6px;background:${statusColor+'22'};color:${statusColor}">${r.status}</span>
-        <span style="font-size:11px;font-weight:700;color:var(--amb)">$${(r.cost||0).toLocaleString()}</span>
-      </div>`;
-    }).join('');
+    upEl.innerHTML = up.length===0
+      ? '<div class="empty">No upcoming unsold events in next 30 days</div>'
+      : up.map(r=>{
+          const sc = r.status==='Listed'?'var(--grn)':r.status==='Not Listed'?'var(--red)':'var(--amb)';
+          return '<div style="display:flex;align-items:center;gap:8px;padding:7px 14px;border-bottom:1px solid #1e231e">'
+            +'<span style="font-size:10px;font-weight:700;color:'+sc+';width:50px;flex-shrink:0">'+r.date+'</span>'
+            +'<span style="flex:1;font-size:11px;font-weight:600;color:var(--txt)">'+esc(r.event)+(r.opp?' vs '+esc(r.opp):'')+'</span>'
+            +'<span style="font-size:9px;color:var(--mut)">×'+r.qty+'</span>'
+            +'<span style="font-size:9px;font-weight:700;padding:1px 6px;background:'+sc+'22;color:'+sc+'">'+r.status+'</span>'
+            +'<span style="font-size:11px;font-weight:700;color:var(--amb)">$'+r.cost.toLocaleString()+'</span>'
+            +'</div>';
+        }).join('');
   }
 
   // Recent log
   const logEl = document.getElementById('tk-log');
-  if(logEl && S.tkRecent && S.tkRecent.length) {
-    logEl.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:10px;">'
-      + '<thead><tr style="background:#0d0f0d">'
-      + ['Date','Event','Opp','Qty','Cost','Card','Status','PnL'].map(h=>`<th style="padding:6px 10px;text-align:${h==='PnL'||h==='Cost'?'right':'left'};font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b0ccb0;border-bottom:2px solid var(--brd)">${h}</th>`).join('')
-      + '</tr></thead><tbody>'
-      + S.tkRecent.map(r=>{
-          const pnl = r[19]||0;
-          return `<tr style="border-bottom:1px solid #1e231e;">
-            <td style="padding:6px 10px;color:var(--mut)">${r[0] instanceof Date ? r[0].toLocaleDateString('en-US',{month:'short',day:'numeric'}) : ''}</td>
-            <td style="padding:6px 10px;font-weight:600;color:var(--txt)">${esc(r[1]||'')}</td>
-            <td style="padding:6px 10px;color:var(--txt2)">${esc(r[5]||'')}</td>
-            <td style="padding:6px 10px;color:var(--mut2)">${r[7]||''}</td>
-            <td style="padding:6px 10px;text-align:right;color:var(--mut)">$${(r[11]||0).toLocaleString()}</td>
-            <td style="padding:6px 10px;color:var(--mut2)">${esc(r[12]||'')}</td>
-            <td style="padding:6px 10px;font-weight:600;color:${r[15]==='Sold'?'var(--grn)':r[15]==='Listed'?'var(--blu)':'var(--red)'}">${r[15]||''}</td>
-            <td style="padding:6px 10px;text-align:right;font-weight:700;color:${pnl>=0?'var(--grn)':'var(--red)'}">${pnl!==0?(pnl>=0?'+':'')+f$(pnl):''}</td>
-          </tr>`;
+  if(logEl && rec.length) {
+    logEl.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:11px">'
+      +'<thead><tr style="background:#0d0f0d">'
+      +['Date','Event','Opp','Qty','Cost','Card','Status','PnL'].map(h=>'<th style="padding:6px 10px;text-align:'+(h==='PnL'||h==='Cost'?'right':'left')+';font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b0ccb0;border-bottom:2px solid var(--brd)">'+h+'</th>').join('')
+      +'</tr></thead><tbody>'
+      +rec.map(r=>{
+          const pc=r.pnl>=0?'var(--grn)':'var(--red)';
+          return '<tr style="border-bottom:1px solid #1e231e">'
+            +'<td style="padding:6px 10px;color:var(--mut)">'+r.date+'</td>'
+            +'<td style="padding:6px 10px;font-weight:600;color:var(--txt)">'+esc(r.event)+'</td>'
+            +'<td style="padding:6px 10px;color:var(--txt2)">'+esc(r.opp)+'</td>'
+            +'<td style="padding:6px 10px;color:var(--mut2)">'+r.qty+'</td>'
+            +'<td style="padding:6px 10px;text-align:right;color:var(--mut)">$'+r.cost.toLocaleString()+'</td>'
+            +'<td style="padding:6px 10px;color:var(--mut2)">'+esc(r.card)+'</td>'
+            +'<td style="padding:6px 10px;font-weight:600;color:'+(r.status==='Sold'?'var(--grn)':r.status==='Listed'?'var(--blu)':'var(--red)')+'">'+r.status+'</td>'
+            +'<td style="padding:6px 10px;text-align:right;font-weight:700;color:'+pc+'">'+(r.pnl!==0?(r.pnl>=0?'+':'')+f$(r.pnl):'')+'</td>'
+            +'</tr>';
         }).join('')
-      + '</tbody></table>';
+      +'</tbody></table>';
   }
 
-  // Update CC section
-  updateTKCards();
+  tkUpdateCards();
 }
 
-// ── TICKET CARD BALANCES ──────────────────────────────────────
-function updateTKCards() {
-  const g = id => parseFloat(document.getElementById('tk-'+id)?.value)||0;
-  const gs = id => document.getElementById('tk-'+id)?.value||'';
-
-  const cards = [
-    {name:'Cap One Business',   bal:g('cap1-bal'),   min:g('cap1-min'),   due:gs('cap1-due'),   lim:10000},
-    {name:'Amex Business (MBK)',bal:g('amexbiz-bal'), min:g('amexbiz-min'),due:gs('amexbiz-due'),lim:15000},
-    {name:'Amex (Lena)',        bal:g('amexlena-bal'),min:g('amexlena-min'),due:gs('amexlena-due'),lim:10000},
-    {name:'Wells Fargo CC',     bal:g('wfcc-bal'),    min:g('wfcc-min'),   due:'',               lim:5000},
-  ];
-  const amexLoc = {bal:g('amexloc-bal'), lim:g('amexloc-lim')||50000};
-  const dang    = {amt:g('dang-bal'), notes:gs('dang-note')};
-
-  const totalCC  = cards.reduce((s,c)=>s+c.bal,0);
-  const totalMin = cards.reduce((s,c)=>s+c.min,0);
-  const totalObl = dang.amt;
+function tkUpdateCards() {
+  const g = id => parseFloat(document.getElementById(id)?.value)||0;
+  const c1b=g('tk-c1b'), c1m=g('tk-c1m');
+  const c2b=g('tk-c2b'), c2m=g('tk-c2m');
+  const c3b=g('tk-c3b'), c3m=g('tk-c3m');
+  const c4b=g('tk-c4b'), c4m=g('tk-c4m');
+  const loc=g('tk-loc'), dang=g('tk-dang');
+  const total = c1b+c2b+c3b+c4b+loc+dang;
+  const minTotal = c1m+c2m+c3m+c4m;
 
   const lbl = document.getElementById('tk-cc-total');
-  if(lbl) lbl.textContent = totalCC+totalObl > 0 ? '-$'+Math.round(totalCC+totalObl).toLocaleString()+' total' : '$0';
+  if(lbl) lbl.textContent = total>0 ? '-$'+Math.round(total).toLocaleString() : '$0';
 
-  const el = document.getElementById('tk-cc-content');
+  const el = document.getElementById('tk-cards-display');
   if(!el) return;
 
-  const f$ = n => n ? '$'+Math.round(n).toLocaleString() : '—';
+  const f$ = n => n>0 ? '-$'+Math.round(n).toLocaleString() : '$0';
+  const cards = [
+    {n:'Cap One Business',    b:c1b, m:c1m},
+    {n:'Amex Business (MBK)', b:c2b, m:c2m},
+    {n:'Amex (Lena)',          b:c3b, m:c3m},
+    {n:'Wells Fargo CC',       b:c4b, m:c4m},
+  ];
 
-  let html = '';
-
-  // Cards table
-  html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px;">';
-  html += '<thead><tr style="background:#0d0f0d">';
-  ['Card','Balance','Min Due','Due'].forEach(h => {
-    html += `<th style="padding:7px 10px;text-align:${h==='Card'?'left':'right'};font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b0ccb0;border-bottom:2px solid var(--brd)">${h}</th>`;
-  });
-  html += '</tr></thead><tbody>';
+  let h = '<table style="width:100%;border-collapse:collapse;font-size:11px">';
+  h += '<thead><tr style="background:#0d0f0d">';
+  h += '<th style="padding:7px 12px;text-align:left;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b0ccb0;border-bottom:2px solid var(--brd)">Card</th>';
+  h += '<th style="padding:7px 12px;text-align:right;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b0ccb0;border-bottom:2px solid var(--brd)">Balance</th>';
+  h += '<th style="padding:7px 12px;text-align:right;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b0ccb0;border-bottom:2px solid var(--brd)">Min Due</th>';
+  h += '</tr></thead><tbody>';
   cards.forEach(c => {
-    const util = c.lim > 0 ? Math.round(c.bal/c.lim*100) : 0;
-    html += `<tr style="border-bottom:1px solid #1e231e">
-      <td style="padding:8px 10px;font-weight:600;color:var(--txt)">${c.name}</td>
-      <td style="padding:8px 10px;text-align:right;font-weight:700;color:${c.bal>0?'var(--red)':'var(--grn)'}">${c.bal>0?'-'+f$(c.bal):'$0'}<span style="font-size:8px;color:var(--mut2);margin-left:4px">${util>0?util+'%':''}</span></td>
-      <td style="padding:8px 10px;text-align:right;color:${c.min>0?'var(--amb)':'var(--mut2)'}">${c.min>0?f$(c.min):'—'}</td>
-      <td style="padding:8px 10px;text-align:right;color:var(--mut)">${c.due||'—'}</td>
-    </tr>`;
+    h += '<tr style="border-bottom:1px solid #1e231e">'
+      +'<td style="padding:8px 12px;font-weight:600;color:var(--txt)">'+c.n+'</td>'
+      +'<td style="padding:8px 12px;text-align:right;font-weight:700;color:'+(c.b>0?'var(--red)':'var(--grn)')+'">'+f$(c.b)+'</td>'
+      +'<td style="padding:8px 12px;text-align:right;color:'+(c.m>0?'var(--amb)':'var(--mut2)')+'">'+( c.m>0?'$'+c.m.toLocaleString():'—')+'</td>'
+      +'</tr>';
   });
-  // Total
-  html += `<tr style="background:#0d0f0d;border-top:2px solid var(--brd)">
-    <td style="padding:8px 10px;font-weight:700;color:var(--txt)">TOTAL CC</td>
-    <td style="padding:8px 10px;text-align:right;font-weight:700;color:var(--red)">${totalCC>0?'-'+f$(totalCC):'$0'}</td>
-    <td style="padding:8px 10px;text-align:right;font-weight:700;color:var(--amb)">${totalMin>0?f$(totalMin):'—'}</td>
-    <td></td>
-  </tr>`;
-  html += '</tbody></table></div>';
+  h += '<tr style="background:#0d0f0d;border-top:2px solid var(--brd)">'
+    +'<td style="padding:8px 12px;font-weight:700;color:var(--txt)">TOTAL CC</td>'
+    +'<td style="padding:8px 12px;text-align:right;font-weight:700;color:var(--red)">'+(c1b+c2b+c3b+c4b>0?'-$'+(c1b+c2b+c3b+c4b).toLocaleString():'$0')+'</td>'
+    +'<td style="padding:8px 12px;text-align:right;font-weight:700;color:var(--amb)">'+(minTotal>0?'$'+minTotal.toLocaleString():'—')+'</td>'
+    +'</tr>';
+  h += '</tbody></table>';
 
-  // Amex LOC
-  if(amexLoc.bal > 0 || amexLoc.lim > 0) {
-    html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-top:1px solid var(--brd);background:#0a0c0a;">
-      <span style="font-size:11px;font-weight:600;color:var(--txt)">Amex Business LOC</span>
-      <div style="text-align:right">
-        <span style="font-size:13px;font-weight:700;color:${amexLoc.bal>0?'var(--red)':'var(--grn)'}">${amexLoc.bal>0?'-'+f$(amexLoc.bal):'$0'}</span>
-        ${amexLoc.lim?`<span style="font-size:9px;color:var(--mut2);margin-left:8px">avail: ${f$(amexLoc.lim-amexLoc.bal)}</span>`:''}
-      </div>
-    </div>`;
-  }
+  if(loc>0) h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-top:1px solid var(--brd)">'
+    +'<span style="font-weight:600;color:var(--txt)">Amex Business LOC</span>'
+    +'<span style="font-weight:700;color:var(--red)">-$'+loc.toLocaleString()+'</span></div>';
 
-  // Randy Dang
-  html += `<div style="border-top:1px solid var(--brd);padding:10px 14px;background:rgba(196,144,48,0.06);">
-    <div style="display:flex;align-items:center;justify-content:space-between;">
-      <div>
-        <span style="font-size:9px;font-weight:700;padding:1px 8px;background:rgba(224,80,80,0.15);color:var(--red);margin-right:8px;">PRIORITY #1</span>
-        <span style="font-size:12px;font-weight:700;color:var(--txt)">Randy Dang</span>
-        ${dang.notes?`<span style="font-size:9px;color:var(--mut2);margin-left:8px">${esc(dang.notes)}</span>`:''}
-      </div>
-      <span style="font-size:15px;font-weight:700;color:${dang.amt>0?'var(--red)':'var(--grn)'}">${dang.amt>0?'-'+f$(dang.amt):'$0 — clear'}</span>
-    </div>
-  </div>`;
+  h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-top:1px solid var(--brd);background:rgba(196,144,48,0.06)">'
+    +'<div><span style="font-size:9px;font-weight:700;padding:1px 8px;background:rgba(224,80,80,0.15);color:var(--red);margin-right:8px">PRIORITY #1</span>'
+    +'<span style="font-weight:700;color:var(--txt)">Randy Dang</span></div>'
+    +'<span style="font-size:15px;font-weight:700;color:'+(dang>0?'var(--red)':'var(--grn)')+'">'+( dang>0?'-$'+dang.toLocaleString():'$0 — clear')+'</span></div>';
 
-  el.innerHTML = html;
-
-  // Save to state for AI
-  S.tkCards = {cards, amexLoc, dang, totalCC, totalMin, totalObl};
-  localStorage.setItem('kcc_tk_cards', JSON.stringify(S.tkCards));
+  el.innerHTML = h;
 }
 
-function saveTKCards() {
-  updateTKCards();
+function tkSaveCards() {
+  const g = id => parseFloat(document.getElementById(id)?.value)||0;
+  const data = {c1b:g('tk-c1b'),c1m:g('tk-c1m'),c2b:g('tk-c2b'),c2m:g('tk-c2m'),
+    c3b:g('tk-c3b'),c3m:g('tk-c3m'),c4b:g('tk-c4b'),c4m:g('tk-c4m'),loc:g('tk-loc'),dang:g('tk-dang')};
+  localStorage.setItem('kcc_tk_cards', JSON.stringify(data));
   fbSaveAll();
-  const st = document.getElementById('tk-import-status');
-  if(st) st.textContent = '✓ Card balances saved · ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  tkUpdateCards();
+  const st = document.getElementById('tk-status');
+  if(st) st.textContent = '✓ Saved ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 }
-
 
 </script>
 </body>

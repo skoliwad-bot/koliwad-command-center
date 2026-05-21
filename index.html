@@ -1562,27 +1562,6 @@ function setAF(f,e){S.af=f;document.querySelectorAll('#p-alerts .fp').forEach(b=
 function resA(id){const a=S.alerts.find(x=>x.id===id);if(a){a.status='Resolved';localStorage.setItem('kcc_alerts',JSON.stringify(S.alerts));rAlerts();rToday();rBadges();}}
 
 // ── TICKETS PAGE ─────────────────────────────────────────────
-function rTickets(){
-  // Restore saved import data and card balances
-  const saved = JSON.parse(localStorage.getItem('kcc_tk_cards')||'null');
-  if(saved && saved.cards) {
-    const s = (id, val) => { const el=document.getElementById('tk-'+id); if(el&&val!==undefined&&val!==null) el.value=val; };
-    const cards = saved.cards;
-    if(cards[0]) { s('cap1-bal', cards[0].bal); s('cap1-min', cards[0].min); s('cap1-due', cards[0].due); }
-    if(cards[1]) { s('amexbiz-bal', cards[1].bal); s('amexbiz-min', cards[1].min); s('amexbiz-due', cards[1].due); }
-    if(cards[2]) { s('amexlena-bal', cards[2].bal); s('amexlena-min', cards[2].min); s('amexlena-due', cards[2].due); }
-    if(cards[3]) { s('wfcc-bal', cards[3].bal); s('wfcc-min', cards[3].min); }
-    if(saved.amexLoc) { s('amexloc-bal', saved.amexLoc.bal); s('amexloc-lim', saved.amexLoc.lim); }
-    if(saved.dang) { s('dang-bal', saved.dang.amt); s('dang-note', saved.dang.notes); }
-  }
-  const m = S.tkMetrics || JSON.parse(localStorage.getItem('kcc_tk_metrics')||'null');
-  if(m && (m.openListings || m.profitMTD)) {
-    S.tkUpcoming = S.tkUpcoming || JSON.parse(localStorage.getItem('kcc_tk_upcoming')||'[]');
-    rTickets();
-  }
-  tkUpdateCards();
-}
-
 function resTk(id){const t=S.tickets.find(x=>x.id===id);if(t){t.status='Resolved';localStorage.setItem('kcc_tickets',JSON.stringify(S.tickets));rTickets();rToday();rBadges();}}
 
 // ── FINANCIALS ───────────────────────────────────────────────

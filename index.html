@@ -528,7 +528,25 @@ localStorage.setItem = function(key, value) {
           <div class="sp" id="fsp1"><span class="spi">💰</span><div><span class="spl">Monthly Need</span><span class="spv" id="fsv1">—</span></div></div>
           <div class="sp" id="fsp2"><span class="spi">📈</span><div><span class="spl">Current Income</span><span class="spv g" id="fsv2">—</span></div></div>
           <div class="sp" id="fsp3"><span class="spi">📊</span><div><span class="spl">Monthly Gap</span><span class="spv" id="fsv3">—</span></div></div>
-          <div class="sp" id="fsp4"><span class="spi">🎯</span><div><span class="spl">FIRE Status</span><span class="spv" id="fsv4">—</span></div></div>
+          <div class="sp" id="fsp4"><span class="spi">🎯</span><div><span class="spl">FIRE %</span><span class="spv" id="fsv4">—</span></div></div>
+        </div>
+        <!-- Key asset balances -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;" id="fire-asset-row">
+          <div style="border:1px solid var(--brd);background:var(--surf);padding:12px 16px;">
+            <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);display:block;">HF Balance</span>
+            <span id="fire-hf" style="font-size:20px;font-weight:700;display:block;margin-top:4px;color:#4a7ab8;">—</span>
+            <span style="font-size:9px;color:var(--mut)">12% ROI target</span>
+          </div>
+          <div style="border:1px solid var(--brd);background:var(--surf);padding:12px 16px;">
+            <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);display:block;">TIAA Balance</span>
+            <span id="fire-tiaa" style="font-size:20px;font-weight:700;display:block;margin-top:4px;color:#4a7ab8;">—</span>
+            <span style="font-size:9px;color:var(--mut)">Transfer Mo.5 (Oct 2026)</span>
+          </div>
+          <div style="border:1px solid var(--brd);background:var(--surf);padding:12px 16px;">
+            <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);display:block;">HELOC Balance</span>
+            <span id="fire-heloc" style="font-size:20px;font-weight:700;display:block;margin-top:4px;color:var(--red);">—</span>
+            <span style="font-size:9px;color:var(--mut)">$750K max · 6.5%</span>
+          </div>
         </div>
         <div class="card" style="margin-bottom:12px">
           <div class="ch"><span class="ct b">Progress to Goal</span><span id="fpct" style="font-size:11px;font-weight:700;color:var(--blu)">0%</span></div>
@@ -1453,10 +1471,18 @@ function rFire(){
     el('fsv2').textContent=f$(fire.inc);
     el('fsv3').textContent=(gn?'-$':'$')+Math.abs(gap).toLocaleString();
     el('fsv3').style.color=gn?'var(--red)':'var(--grn)';
-    el('fsv4').textContent=gn?'OFF TRACK':'ON TRACK';
-    el('fsv4').style.color=gn?'var(--red)':'var(--grn)';
-    pill('fsp3','fsv3',(gn?'-$':'$')+Math.abs(gap).toLocaleString(),gn?'r':'g',true);
-    pill('fsp4','fsv4',gn?'OFF TRACK':'ON TRACK',gn?'r':'g',true);
+    el('fsv4').textContent=(fire.fire_pct||0)+'%';
+    el('fsv4').style.color=(fire.fire_pct||0)>=100?'var(--grn)':(fire.fire_pct||0)>=70?'var(--amb)':'var(--red)';
+    // Update sub-labels
+    const sp4=document.getElementById('fsp4');
+    if(sp4){const lbl=sp4.querySelector('.spl');if(lbl)lbl.textContent='FIRE %';}
+  }
+  // Asset balances
+  if(fire){
+    const setf=(id,v,c)=>{const e=document.getElementById(id);if(e){e.textContent=v;if(c)e.style.color=c;}};
+    setf('fire-hf',  fire.hf   ? f$(fire.hf)   : '—');
+    setf('fire-tiaa',fire.tiaa ? f$(fire.tiaa)  : '—');
+    setf('fire-heloc',fire.heloc? '-'+f$(fire.heloc): '—');
   }
   if(goals){
     const p=Math.min(100,goals.pct||0);
@@ -1605,7 +1631,7 @@ function rCal(){
       +evts.map(e=>'<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid #2e352e;background:#181d18;margin-bottom:4px">'
         +'<span style="font-size:10px;color:#8aaa8a;width:65px;flex-shrink:0;font-family:JetBrains Mono,monospace">'+(e.time||'All day')+'</span>'
         +'<div style="width:3px;min-height:30px;flex-shrink:0;background:'+(e.calColor||e._t==='ticket'?'#c07030':e._t==='event'?'#4a7ab8':'#d04040')+'"></div>'
-        +'<span style="flex:1;font-size:13px;font-weight:600;color:#f0f7f0">'+esc(e.title||e.event_name||'')+'</span>'
+        +'<span style="flex:1;font-size:13px;font-weight:700;color:'+(e.calColor||'#f0f7f0')+'">'+esc(e.title||e.event_name||'')+'</span>'
         +(e.calName?'<span style="font-size:9px;color:#5a745a;flex-shrink:0;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(e.calName)+'</span>':'')
         +'</div>').join('')
       +'</div>';
@@ -1675,7 +1701,12 @@ const MCFG={
   fire:{title:'Update FIRE Metrics',fields:[
     {n:'need',l:'Monthly Need ($)',t:'num',req:true},
     {n:'inc',l:'Current Monthly Income ($)',t:'num',req:true},
-  ],def:{},k:'kcc_fire',single:true,arr:'fire'},
+    {n:'hf',l:'HF Balance ($)',t:'num'},
+    {n:'tiaa',l:'TIAA Balance ($)',t:'num'},
+    {n:'heloc',l:'HELOC Balance ($)',t:'num'},
+    {n:'biz_income',l:'Business Income ($/mo)',t:'num'},
+    {n:'fire_pct',l:'FIRE % (from FIRE Lab)',t:'num'},
+  ],def:{need:22000,inc:0,hf:150000,tiaa:420000,heloc:700000,biz_income:0,fire_pct:0},k:'kcc_fire',single:true,arr:'fire'},
   fireGoal:{title:'FIRE Goals',fields:[
     {n:'target',l:'Target Annual Income ($)',t:'num',req:true},
     {n:'rr',l:'Current Run Rate ($/yr)',t:'num'},

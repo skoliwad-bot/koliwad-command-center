@@ -667,28 +667,118 @@ localStorage.setItem = function(key, value) {
 
       <!-- TICKETS -->
       <div class="page" id="p-tickets">
-        <div class="ph"><div><div class="pt">Tickets</div><div class="ps">Sell zone + business financials</div></div>
-          <div style="display:flex;gap:6px"><button class="aibtn" onclick="runAI('tickets')">✦ AI Allocation</button><button class="btn p" onclick="om('ticket')">+ Add Item</button></div></div>
-        <div class="ai-block" id="ai-tickets">
-          <div class="ai-hdr"><span class="ai-title">✦ AI Ticket Allocation</span><span class="ai-status" id="ai-tickets-st">Click "AI Allocation" to generate</span></div>
-          <div class="ai-text loading" id="ai-tickets-tx">Claude will analyze your platform balances, upcoming events, and inventory to recommend optimal capital allocation.</div>
-        </div>
-        <div class="tsum">
-          <div class="tsb"><span class="tsn" id="ts1" style="color:var(--red)">0</span><span class="tsl">Sell Now</span></div>
-          <div class="tsb"><span class="tsn" id="ts2" style="color:var(--amb)">0</span><span class="tsl">Lower Price</span></div>
-          <div class="tsb"><span class="tsn" id="ts3" style="color:var(--mut)">0</span><span class="tsl">Hold / Bundle</span></div>
-        </div>
-        <div class="g2">
-          <div class="card"><div class="ch"><span class="ct o">Sell Zone</span></div><div id="tickList"><div class="empty">No items — add one →</div></div></div>
-          <div class="card">
-            <div class="ch"><span class="ct b">Business Financials</span><button class="btn" onclick="om('tickbiz')">Update</button></div>
-            <div class="row"><div style="flex:1"><div class="rtl">StubHub Balance</div></div><span id="tb1" style="font-size:14px;font-weight:700;color:var(--mut)">—</span></div>
-            <div class="row"><div style="flex:1"><div class="rtl">Ticketmaster Balance</div></div><span id="tb2" style="font-size:14px;font-weight:700;color:var(--mut)">—</span></div>
-            <div class="row"><div style="flex:1"><div class="rtl">Cash Available</div></div><span id="tb3" style="font-size:14px;font-weight:700;color:var(--grn)">—</span></div>
-            <div class="row"><div style="flex:1"><div class="rtl">Inventory Value</div></div><span id="tb4" style="font-size:14px;font-weight:700;color:var(--amb)">—</span></div>
+        <div style="padding:0 0 22px 0;">
+
+          <!-- HEADER -->
+          <div class="ph" style="margin-bottom:16px;">
+            <div>
+              <div class="pt">Tickets</div>
+              <div class="ps" id="tk-import-status">Ticket business · Import spreadsheet to populate</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button class="aibtn" onclick="runAI('tickets')">✦ AI Analysis</button>
+              <label style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border:1px solid #4a9c5c;color:#4a9c5c;cursor:pointer;">
+                ⬆ Import Ticket Excel
+                <input type="file" accept=".xlsx,.xls" onchange="importTicketExcel(event)" style="display:none">
+              </label>
+              <button class="btn p" onclick="om('ticket')">+ Add Item</button>
+            </div>
+          </div>
+
+          <!-- AI BLOCK -->
+          <div class="ai-block" id="ai-tickets" style="margin-bottom:16px;">
+            <div class="ai-hdr">
+              <span class="ai-title">✦ AI Ticket & Payment Analysis</span>
+              <span class="ai-thinking" id="ai-tickets-st">Click "AI Analysis" to generate</span>
+            </div>
+            <div class="ai-text loading" id="ai-tickets-tx">Claude will analyze your ticket P&L, upcoming events, credit card balances, and obligations to recommend this week's payment priority and capital allocation.</div>
+          </div>
+
+          <!-- EMPTY STATE -->
+          <div id="tk-empty" style="text-align:center;padding:60px 20px;border:1px solid var(--brd);">
+            <div style="font-size:36px;margin-bottom:12px;">🎟</div>
+            <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--txt);margin-bottom:8px;">No Data Imported</div>
+            <div style="font-size:12px;color:var(--mut);margin-bottom:20px;">Import your Ticket_Hub spreadsheet to see metrics, upcoming events, and CC balances</div>
+            <label style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:10px 24px;border:1px solid var(--grn);color:var(--grn);cursor:pointer;display:inline-block;">
+              ⬆ Import Ticket Excel
+              <input type="file" accept=".xlsx,.xls" onchange="importTicketExcel(event)" style="display:none">
+            </label>
+          </div>
+
+          <!-- MAIN CONTENT -->
+          <div id="tk-content" style="display:none;">
+
+            <!-- KEY METRICS -->
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;" id="tk-pills"></div>
+
+            <!-- HIGH RISK ALERT -->
+            <div id="tk-risk-banner" style="display:none;border:1px solid var(--red);background:rgba(224,80,80,0.08);padding:10px 16px;margin-bottom:16px;">
+              <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);">⚠ HIGH RISK — Events in next 7 days with unsold tickets</span>
+              <div id="tk-risk-list" style="margin-top:8px;"></div>
+            </div>
+
+            <!-- TWO COL: UPCOMING + CC -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+
+              <!-- UPCOMING EVENTS -->
+              <div style="border:1px solid var(--brd);background:var(--surf);">
+                <div style="padding:9px 16px;border-bottom:1px solid var(--brd);background:#080a08;display:flex;align-items:center;justify-content:space-between;">
+                  <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--blu);">📅 Upcoming Events (Next 30 Days)</span>
+                  <span id="tk-upcoming-count" style="font-size:9px;color:var(--mut);">—</span>
+                </div>
+                <div id="tk-upcoming" style="max-height:320px;overflow-y:auto;">
+                  <div class="empty">Import to see upcoming events</div>
+                </div>
+              </div>
+
+              <!-- CREDIT CARDS & OBLIGATIONS -->
+              <div style="border:1px solid var(--brd);background:var(--surf);">
+                <div style="padding:9px 16px;border-bottom:1px solid var(--brd);background:#080a08;display:flex;align-items:center;justify-content:space-between;">
+                  <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);">💳 Business Cards & Obligations</span>
+                  <span id="tk-cc-total" style="font-size:11px;font-weight:700;color:var(--red);">—</span>
+                </div>
+                <div id="tk-cc-content">
+                  <div class="empty">Enter card balances below then import</div>
+                </div>
+                <!-- CC Manual entry - collapsible -->
+                <div style="padding:10px 16px;border-top:1px solid var(--brd);background:#0a0c0a;">
+                  <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:10px;">UPDATE BALANCES MANUALLY</div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+<div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Cap One Biz Balance</label><input type="number" id="tk-cap1-bal" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
+<div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Cap One Min Due</label><input type="number" id="tk-cap1-min" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
+<div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Amex Biz (MBK) Balance</label><input type="number" id="tk-amexbiz-bal" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
+<div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Amex Biz Min Due</label><input type="number" id="tk-amexbiz-min" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
+<div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Amex Lena Balance</label><input type="number" id="tk-amexlena-bal" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
+<div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Amex Lena Min Due</label><input type="number" id="tk-amexlena-min" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
+<div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Wells Fargo CC Balance</label><input type="number" id="tk-wfcc-bal" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
+<div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Wells Fargo CC Min Due</label><input type="number" id="tk-wfcc-min" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
+<div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Amex LOC Balance</label><input type="number" id="tk-amexloc-bal" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
+<div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Amex LOC Limit</label><input type="number" id="tk-amexloc-lim" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
+<div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Randy Dang Owed ($)</label><input type="number" id="tk-dang-bal" placeholder="0" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
+                  </div>
+                  <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Cap One Due Date</label><input type="text" id="tk-cap1-due" placeholder="Jun 1" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
+                    <div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Amex Biz Due Date</label><input type="text" id="tk-amexbiz-due" placeholder="Jun 1" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
+                    <div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Amex Lena Due Date</label><input type="text" id="tk-amexlena-due" placeholder="Jun 1" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
+                    <div><label style="font-size:8px;color:var(--mut);display:block;margin-bottom:2px">Randy Dang Notes</label><input type="text" id="tk-dang-note" placeholder="context..." style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;" onchange="updateTKCards()"></div>
+                  </div>
+                  <button onclick="saveTKCards()" style="margin-top:10px;width:100%;padding:7px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:var(--red);border:none;color:white;cursor:pointer;">💾 Save Card Balances</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- FULL TICKET LOG SAMPLE -->
+            <div style="border:1px solid var(--brd);background:var(--surf);">
+              <div style="padding:9px 16px;border-bottom:1px solid var(--brd);background:#080a08;">
+                <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--amb);">📋 Recent Activity (Last 20 Rows)</span>
+              </div>
+              <div id="tk-log" style="overflow-x:auto;">
+                <div class="empty">Import to see ticket log</div>
+              </div>
+            </div>
+
           </div>
         </div>
-      </div>
 
       <!-- BUSINESS -->
       <div class="page" id="p-business">
@@ -2149,12 +2239,119 @@ function importVBExcel(evt) {
           </div>`;
       }
 
+      // ── READ CREDIT CARDS SHEET ──
+      const ccSheet = wb.Sheets['Credit Cards'];
+      const ccData = {};
+      if(ccSheet) {
+        const ccRows = XLSX.utils.sheet_to_json(ccSheet, {header:1});
+        // Cards are rows 7-10 (0-indexed: 6-9), cols B=1,C=2,D=3,E=4,F=5
+        const cardNames = ['capone','amex_biz','amex_lena','wf'];
+        const cardLabels = ['Cap One Business','Amex Business (MBK)','Amex (Lena)','Wells Fargo CC'];
+        ccData.cards = [];
+        for(let i=0;i<4;i++) {
+          const r = ccRows[6+i] || [];
+          ccData.cards.push({
+            name:  cardLabels[i],
+            bal:   r[2]||0,
+            lim:   r[3]||0,
+            minDue:r[4]||0,
+            due:   r[5] instanceof Date ? r[5].toLocaleDateString('en-US',{month:'short',day:'numeric'}) : (r[5]||''),
+          });
+        }
+        // LOC & Banking (rows 15-16, 0-indexed 14-15)
+        const wfRow = ccRows[14]||[];
+        const locRow = ccRows[15]||[];
+        ccData.wfChecking = wfRow[2]||0;
+        ccData.amexLocBal = locRow[2]||0;
+        ccData.amexLocLim = locRow[3]||0;
+        // Obligations (rows 20-22, 0-indexed 19-21)
+        ccData.obligations = [];
+        for(let i=0;i<3;i++) {
+          const r = ccRows[19+i]||[];
+          if(r[2]>0) ccData.obligations.push({payee:r[1]||'',amount:r[2]||0,priority:r[3]||'',notes:r[6]||''});
+        }
+        ccData.totalCC  = ccData.cards.reduce((s,c)=>s+c.bal,0);
+        ccData.totalMin = ccData.cards.reduce((s,c)=>s+c.minDue,0);
+        ccData.dangOwed = ccRows[19]?.[2]||0;
+      }
+
       // ── SAVE TO STATE ──
       S.fins = { citi, savings, heloc: trueHeloc, helocLim, available, knight,
         citiSweep, savSweep, totalSweep, income, spend, vmort, pmort, helocInt,
-        totalExp: spend+vmort+pmort+helocInt, cf: cashFlow, hf: hfBal, tiaa: tiaaBal, firePct };
+        totalExp: spend+vmort+pmort+helocInt, cf: cashFlow, hf: hfBal, tiaa: tiaaBal, firePct,
+        cc: ccData };
       localStorage.setItem('kcc_fins', JSON.stringify(S.fins));
       fbSaveAll();
+
+      // ── RENDER CC SECTION ──
+      if(ccData && document.getElementById('cc-content')) {
+        const totalCC = ccData.cards ? ccData.cards.reduce((s,c)=>s+c.bal,0) : 0;
+        const totalMin = ccData.cards ? ccData.cards.reduce((s,c)=>s+c.minDue,0) : 0;
+        document.getElementById('cc-total-lbl').textContent = totalCC>0 ? '-$'+Math.round(totalCC).toLocaleString()+' total' : '$0 — cards clear';
+
+        let ccHTML = '';
+        // Cards table
+        if(ccData.cards && ccData.cards.length) {
+          ccHTML += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px;">';
+          ccHTML += '<thead><tr style="background:#0d0f0d">';
+          for(const h of ['Card','Balance','Limit','Utilization','Min Due','Due Date']) {
+            ccHTML += `<th style="padding:7px 12px;text-align:${h==='Card'?'left':'right'};font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#b0ccb0;border-bottom:2px solid var(--brd)">${h}</th>`;
+          }
+          ccHTML += '</tr></thead><tbody>';
+          ccData.cards.forEach(c => {
+            const util = c.lim>0 ? (c.bal/c.lim*100).toFixed(0) : 0;
+            const utilColor = util>80?'var(--red)':util>50?'var(--amb)':'var(--grn)';
+            ccHTML += `<tr style="border-bottom:1px solid #1e231e">
+              <td style="padding:9px 12px;font-weight:600;color:var(--txt)">${c.name}</td>
+              <td style="padding:9px 12px;text-align:right;font-weight:700;color:${c.bal>0?'var(--red)':'var(--grn)'}">${c.bal>0?'-$'+c.bal.toLocaleString():'$0'}</td>
+              <td style="padding:9px 12px;text-align:right;color:var(--mut2)">$${c.lim.toLocaleString()}</td>
+              <td style="padding:9px 12px;text-align:right;font-weight:700;color:${utilColor}">${util}%</td>
+              <td style="padding:9px 12px;text-align:right;color:${c.minDue>0?'var(--amb)':'var(--mut2)'}"><b>${c.minDue>0?'$'+c.minDue.toLocaleString():'—'}</b></td>
+              <td style="padding:9px 12px;text-align:right;color:var(--mut)">${c.due||'—'}</td>
+            </tr>`;
+          });
+          // Totals row
+          ccHTML += `<tr style="background:#0d0f0d;border-top:2px solid var(--brd)">
+            <td style="padding:9px 12px;font-weight:700;color:var(--txt)">TOTAL</td>
+            <td style="padding:9px 12px;text-align:right;font-weight:700;color:var(--red)">-$${totalCC.toLocaleString()}</td>
+            <td style="padding:9px 12px;text-align:right;color:var(--mut2)"></td>
+            <td style="padding:9px 12px;text-align:right;font-weight:700;color:var(--mut)">${ccData.cards.length>0?(totalCC/ccData.cards.reduce((s,c)=>s+c.lim,0)*100).toFixed(0)+'%':''}</td>
+            <td style="padding:9px 12px;text-align:right;font-weight:700;color:var(--amb)">$${totalMin.toLocaleString()}</td>
+            <td></td>
+          </tr>`;
+          ccHTML += '</tbody></table></div>';
+        }
+
+        // LOC & Banking row
+        if(ccData.wfChecking!==undefined || ccData.amexLocBal!==undefined) {
+          ccHTML += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--brd)">';
+          ccHTML += `<div style="padding:10px 16px;border-right:1px solid var(--brd)">
+            <span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">WF Checking</span>
+            <span style="font-size:16px;font-weight:700;display:block;margin-top:4px;color:${ccData.wfChecking>0?'var(--grn)':'var(--mut)'}">${ccData.wfChecking>0?'$'+Math.round(ccData.wfChecking).toLocaleString():'—'}</span>
+          </div>`;
+          ccHTML += `<div style="padding:10px 16px">
+            <span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Amex LOC</span>
+            <span style="font-size:16px;font-weight:700;display:block;margin-top:4px;color:${ccData.amexLocBal>0?'var(--red)':'var(--grn)'}">${ccData.amexLocBal>0?'-$'+Math.round(ccData.amexLocBal).toLocaleString():'$0'}</span>
+            ${ccData.amexLocLim?`<span style="font-size:9px;color:var(--mut2)">limit: $${ccData.amexLocLim.toLocaleString()} · avail: $${(ccData.amexLocLim-ccData.amexLocBal).toLocaleString()}</span>`:''}
+          </div>`;
+          ccHTML += '</div>';
+        }
+
+        // Obligations
+        if(ccData.obligations && ccData.obligations.length) {
+          ccHTML += '<div style="border-top:1px solid var(--brd);padding:9px 16px;background:#0d0f0d"><span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--amb)">⚠ Obligations</span></div>';
+          ccData.obligations.forEach(o => {
+            ccHTML += `<div style="display:flex;align-items:center;gap:12px;padding:9px 16px;border-bottom:1px solid #1e231e">
+              <span style="font-size:9px;font-weight:700;padding:1px 8px;background:rgba(196,144,48,0.15);color:var(--amb)">${o.priority}</span>
+              <span style="flex:1;font-size:13px;font-weight:600;color:var(--txt)">${esc(o.payee)}</span>
+              <span style="font-size:9px;color:var(--mut)">${esc(o.notes)}</span>
+              <span style="font-size:15px;font-weight:700;color:var(--red)">-$${o.amount.toLocaleString()}</span>
+            </div>`;
+          });
+        }
+
+        document.getElementById('cc-content').innerHTML = ccHTML || '<div class="empty">No credit card data in spreadsheet</div>';
+      }
 
       // Show content
       document.getElementById('fin-empty').style.display = 'none';
@@ -2190,3 +2387,277 @@ function rFin() {
 
 </script>
 </body>
+<script>
+// ══ TICKET EXCEL IMPORT ══════════════════════════════════════
+
+function importTicketExcel(evt) {
+  const file = evt.target.files[0];
+  if(!file) return;
+  const st = document.getElementById('tk-import-status');
+  if(st) st.textContent = 'Reading ' + file.name + '…';
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
+      parseTicketWorkbook(wb, file.name);
+    } catch(err) {
+      if(st) st.textContent = 'Error: ' + err.message;
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseTicketWorkbook(wb, fname) {
+  // ── Ticket Metrics sheet ──
+  const tm = wb.Sheets['Ticket Metrics'];
+  const metrics = {};
+  if(tm) {
+    const rows = XLSX.utils.sheet_to_json(tm, {header:1});
+    rows.forEach(r => { if(r[0] && r[1]!==undefined) metrics[String(r[0]).trim()] = r[1]; });
+  }
+
+  // ── Ticket Log sheet ──
+  const tl = wb.Sheets['Ticket Log'];
+  const tlRows = tl ? XLSX.utils.sheet_to_json(tl, {header:1}) : [];
+  // Headers: EventDate,Event,SeasonTix,NotPlayed,Type,Opponent,PurchDate,Qty,Sec,Row,LowSeat,Cost,Card,Platform,Buyer,Status,Reimbursed,ReimbAmt,NetPayment,PnL,PayoutDate,Received,HighRisk
+  const dataRows = tlRows.slice(1).filter(r => r[0] instanceof Date);
+
+  const now = new Date(); now.setHours(0,0,0,0);
+  const in30 = new Date(now); in30.setDate(now.getDate()+30);
+  const in7  = new Date(now); in7.setDate(now.getDate()+7);
+
+  // Upcoming unsold/listed in next 30 days
+  const upcoming = dataRows
+    .filter(r => r[0] > now && r[0] <= in30 && !['Sold','Void','Canceled'].includes(r[15]))
+    .sort((a,b) => a[0]-b[0]);
+
+  // High risk: event within 7 days, not sold
+  const highRisk = dataRows
+    .filter(r => r[0] > now && r[0] <= in7 && !['Sold','Void','Canceled'].includes(r[15]));
+
+  // Recent 20 rows (most recent first)
+  const recent = dataRows.filter(r=>r[0]).sort((a,b)=>b[0]-a[0]).slice(0,20);
+
+  // Save to state
+  S.tkMetrics = metrics;
+  S.tkUpcoming = upcoming;
+  S.tkHighRisk = highRisk;
+  S.tkRecent   = recent;
+  localStorage.setItem('kcc_tk_metrics',  JSON.stringify({
+    profitMTD:    metrics['Ticket Profit MTD']           || 0,
+    profitYTD:    metrics['Ticket Profit YTD']           || 0,
+    profitAllTime:metrics['Ticket Profit  - All Time']   || 0,
+    openListings: metrics['Open Listings']               || 0,
+    notListed:    metrics['Not Listed (have tickets)']   || 0,
+    highRiskCount:metrics['High Risk Count (next 7d)']   || 0,
+    highRiskDol:  metrics['Next 7d Risk $']              || 0,
+    pendingPay:   metrics['Pending Payments']            || 0,
+    qtyPending:   metrics['Qty Pending Payments']        || 0,
+  }));
+  localStorage.setItem('kcc_tk_upcoming', JSON.stringify(
+    upcoming.slice(0,50).map(r=>({
+      date: r[0].toLocaleDateString('en-US',{month:'short',day:'numeric'}),
+      event: r[1]||'', opponent: r[5]||'', qty: r[7]||0,
+      cost: r[11]||0, status: r[15]||'', card: r[12]||'', highRisk: r[22]==='Y'
+    }))
+  ));
+
+  renderTickets();
+  const st = document.getElementById('tk-import-status');
+  if(st) st.textContent = '✓ Imported ' + fname + ' · ' + dataRows.length + ' rows · ' + upcoming.length + ' upcoming';
+}
+
+function renderTickets() {
+  const m = S.tkMetrics || JSON.parse(localStorage.getItem('kcc_tk_metrics')||'{}');
+  if(!m.openListings && !m.profitMTD) return;
+
+  document.getElementById('tk-empty').style.display = 'none';
+  document.getElementById('tk-content').style.display = 'block';
+
+  const f$ = n => (n>=0?'':'-')+'$'+Math.abs(Math.round(n||0)).toLocaleString();
+  const fc = n => (n>=0?'+':'')+f$(n);
+
+  // Pills
+  document.getElementById('tk-pills').innerHTML = [
+    {lbl:'Profit MTD',     val:fc(m.profitMTD||0),    cls:(m.profitMTD||0)>=0?'g':'r'},
+    {lbl:'Profit YTD',     val:fc(m.profitYTD||0),    cls:(m.profitYTD||0)>=0?'g':'r'},
+    {lbl:'Open Listings',  val:m.openListings||'—',   cls:'b'},
+    {lbl:'High Risk (7d)', val:(m.highRiskCount||0)+' events', cls:(m.highRiskCount||0)>0?'r':'g'},
+    {lbl:'Pending Payments',val:'$'+(m.pendingPay||0).toLocaleString(), cls:(m.pendingPay||0)>0?'a':'g'},
+  ].map(p=>`<div style="border:1px solid var(--brd);background:var(--surf);padding:12px 16px;">
+    <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);display:block;">${p.lbl}</span>
+    <span style="font-size:20px;font-weight:700;display:block;margin-top:5px;color:${p.cls==='g'?'var(--grn)':p.cls==='r'?'var(--red)':p.cls==='b'?'var(--blu)':'var(--amb)'}">${p.val}</span>
+  </div>`).join('');
+
+  // High risk banner
+  const hrBanner = document.getElementById('tk-risk-banner');
+  const hrList   = document.getElementById('tk-risk-list');
+  const hr = S.tkHighRisk || [];
+  if(hr.length > 0 && hrBanner && hrList) {
+    hrBanner.style.display = 'block';
+    hrList.innerHTML = hr.map(r=>`<div style="display:flex;gap:10px;align-items:center;padding:4px 0;">
+      <span style="font-size:10px;font-weight:700;color:var(--red)">${r[0].toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>
+      <span style="font-size:11px;color:var(--txt)">${r[1]||''} vs ${r[5]||''}</span>
+      <span style="font-size:9px;color:var(--mut)">qty: ${r[7]||0} · $${(r[11]||0).toLocaleString()} cost · ${r[15]||''}</span>
+    </div>`).join('');
+  }
+
+  // Upcoming events
+  const up = S.tkUpcoming || JSON.parse(localStorage.getItem('kcc_tk_upcoming')||'[]');
+  const upEl = document.getElementById('tk-upcoming');
+  const upCount = document.getElementById('tk-upcoming-count');
+  if(upCount) upCount.textContent = up.length + ' events';
+  if(upEl) {
+    if(!up.length) { upEl.innerHTML='<div class="empty" style="color:var(--grn)">No upcoming unsold events</div>'; }
+    else upEl.innerHTML = up.map(r=>{
+      const isRisk = r.highRisk || r.status==='Not Listed';
+      const statusColor = r.status==='Listed'?'var(--grn)':r.status==='Not Listed'?'var(--red)':'var(--amb)';
+      return `<div style="display:flex;align-items:center;gap:8px;padding:7px 14px;border-bottom:1px solid #1e231e;">
+        <span style="font-size:10px;font-weight:700;color:${isRisk?'var(--red)':'var(--blu)'};width:48px;flex-shrink:0">${r.date}</span>
+        <span style="flex:1;font-size:11px;font-weight:600;color:var(--txt)">${esc(r.event)} ${r.opponent?'vs '+esc(r.opponent):''}</span>
+        <span style="font-size:9px;color:var(--mut)">×${r.qty}</span>
+        <span style="font-size:9px;font-weight:700;padding:1px 6px;background:${statusColor+'22'};color:${statusColor}">${r.status}</span>
+        <span style="font-size:11px;font-weight:700;color:var(--amb)">$${(r.cost||0).toLocaleString()}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // Recent log
+  const logEl = document.getElementById('tk-log');
+  if(logEl && S.tkRecent && S.tkRecent.length) {
+    logEl.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:10px;">'
+      + '<thead><tr style="background:#0d0f0d">'
+      + ['Date','Event','Opp','Qty','Cost','Card','Status','PnL'].map(h=>`<th style="padding:6px 10px;text-align:${h==='PnL'||h==='Cost'?'right':'left'};font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b0ccb0;border-bottom:2px solid var(--brd)">${h}</th>`).join('')
+      + '</tr></thead><tbody>'
+      + S.tkRecent.map(r=>{
+          const pnl = r[19]||0;
+          return `<tr style="border-bottom:1px solid #1e231e;">
+            <td style="padding:6px 10px;color:var(--mut)">${r[0] instanceof Date ? r[0].toLocaleDateString('en-US',{month:'short',day:'numeric'}) : ''}</td>
+            <td style="padding:6px 10px;font-weight:600;color:var(--txt)">${esc(r[1]||'')}</td>
+            <td style="padding:6px 10px;color:var(--txt2)">${esc(r[5]||'')}</td>
+            <td style="padding:6px 10px;color:var(--mut2)">${r[7]||''}</td>
+            <td style="padding:6px 10px;text-align:right;color:var(--mut)">$${(r[11]||0).toLocaleString()}</td>
+            <td style="padding:6px 10px;color:var(--mut2)">${esc(r[12]||'')}</td>
+            <td style="padding:6px 10px;font-weight:600;color:${r[15]==='Sold'?'var(--grn)':r[15]==='Listed'?'var(--blu)':'var(--red)'}">${r[15]||''}</td>
+            <td style="padding:6px 10px;text-align:right;font-weight:700;color:${pnl>=0?'var(--grn)':'var(--red)'}">${pnl!==0?(pnl>=0?'+':'')+f$(pnl):''}</td>
+          </tr>`;
+        }).join('')
+      + '</tbody></table>';
+  }
+
+  // Update CC section
+  updateTKCards();
+}
+
+// ── TICKET CARD BALANCES ──────────────────────────────────────
+function updateTKCards() {
+  const g = id => parseFloat(document.getElementById('tk-'+id)?.value)||0;
+  const gs = id => document.getElementById('tk-'+id)?.value||'';
+
+  const cards = [
+    {name:'Cap One Business',   bal:g('cap1-bal'),   min:g('cap1-min'),   due:gs('cap1-due'),   lim:10000},
+    {name:'Amex Business (MBK)',bal:g('amexbiz-bal'), min:g('amexbiz-min'),due:gs('amexbiz-due'),lim:15000},
+    {name:'Amex (Lena)',        bal:g('amexlena-bal'),min:g('amexlena-min'),due:gs('amexlena-due'),lim:10000},
+    {name:'Wells Fargo CC',     bal:g('wfcc-bal'),    min:g('wfcc-min'),   due:'',               lim:5000},
+  ];
+  const amexLoc = {bal:g('amexloc-bal'), lim:g('amexloc-lim')||50000};
+  const dang    = {amt:g('dang-bal'), notes:gs('dang-note')};
+
+  const totalCC  = cards.reduce((s,c)=>s+c.bal,0);
+  const totalMin = cards.reduce((s,c)=>s+c.min,0);
+  const totalObl = dang.amt;
+
+  const lbl = document.getElementById('tk-cc-total');
+  if(lbl) lbl.textContent = totalCC+totalObl > 0 ? '-$'+Math.round(totalCC+totalObl).toLocaleString()+' total' : '$0';
+
+  const el = document.getElementById('tk-cc-content');
+  if(!el) return;
+
+  const f$ = n => n ? '$'+Math.round(n).toLocaleString() : '—';
+
+  let html = '';
+
+  // Cards table
+  html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px;">';
+  html += '<thead><tr style="background:#0d0f0d">';
+  ['Card','Balance','Min Due','Due'].forEach(h => {
+    html += `<th style="padding:7px 10px;text-align:${h==='Card'?'left':'right'};font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b0ccb0;border-bottom:2px solid var(--brd)">${h}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+  cards.forEach(c => {
+    const util = c.lim > 0 ? Math.round(c.bal/c.lim*100) : 0;
+    html += `<tr style="border-bottom:1px solid #1e231e">
+      <td style="padding:8px 10px;font-weight:600;color:var(--txt)">${c.name}</td>
+      <td style="padding:8px 10px;text-align:right;font-weight:700;color:${c.bal>0?'var(--red)':'var(--grn)'}">${c.bal>0?'-'+f$(c.bal):'$0'}<span style="font-size:8px;color:var(--mut2);margin-left:4px">${util>0?util+'%':''}</span></td>
+      <td style="padding:8px 10px;text-align:right;color:${c.min>0?'var(--amb)':'var(--mut2)'}">${c.min>0?f$(c.min):'—'}</td>
+      <td style="padding:8px 10px;text-align:right;color:var(--mut)">${c.due||'—'}</td>
+    </tr>`;
+  });
+  // Total
+  html += `<tr style="background:#0d0f0d;border-top:2px solid var(--brd)">
+    <td style="padding:8px 10px;font-weight:700;color:var(--txt)">TOTAL CC</td>
+    <td style="padding:8px 10px;text-align:right;font-weight:700;color:var(--red)">${totalCC>0?'-'+f$(totalCC):'$0'}</td>
+    <td style="padding:8px 10px;text-align:right;font-weight:700;color:var(--amb)">${totalMin>0?f$(totalMin):'—'}</td>
+    <td></td>
+  </tr>`;
+  html += '</tbody></table></div>';
+
+  // Amex LOC
+  if(amexLoc.bal > 0 || amexLoc.lim > 0) {
+    html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-top:1px solid var(--brd);background:#0a0c0a;">
+      <span style="font-size:11px;font-weight:600;color:var(--txt)">Amex Business LOC</span>
+      <div style="text-align:right">
+        <span style="font-size:13px;font-weight:700;color:${amexLoc.bal>0?'var(--red)':'var(--grn)'}">${amexLoc.bal>0?'-'+f$(amexLoc.bal):'$0'}</span>
+        ${amexLoc.lim?`<span style="font-size:9px;color:var(--mut2);margin-left:8px">avail: ${f$(amexLoc.lim-amexLoc.bal)}</span>`:''}
+      </div>
+    </div>`;
+  }
+
+  // Randy Dang
+  html += `<div style="border-top:1px solid var(--brd);padding:10px 14px;background:rgba(196,144,48,0.06);">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <span style="font-size:9px;font-weight:700;padding:1px 8px;background:rgba(224,80,80,0.15);color:var(--red);margin-right:8px;">PRIORITY #1</span>
+        <span style="font-size:12px;font-weight:700;color:var(--txt)">Randy Dang</span>
+        ${dang.notes?`<span style="font-size:9px;color:var(--mut2);margin-left:8px">${esc(dang.notes)}</span>`:''}
+      </div>
+      <span style="font-size:15px;font-weight:700;color:${dang.amt>0?'var(--red)':'var(--grn)'}">${dang.amt>0?'-'+f$(dang.amt):'$0 — clear'}</span>
+    </div>
+  </div>`;
+
+  el.innerHTML = html;
+
+  // Save to state for AI
+  S.tkCards = {cards, amexLoc, dang, totalCC, totalMin, totalObl};
+  localStorage.setItem('kcc_tk_cards', JSON.stringify(S.tkCards));
+}
+
+function saveTKCards() {
+  updateTKCards();
+  fbSaveAll();
+  const st = document.getElementById('tk-import-status');
+  if(st) st.textContent = '✓ Card balances saved · ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+}
+
+// Restore saved card values on nav
+function rTickets() {
+  const saved = JSON.parse(localStorage.getItem('kcc_tk_cards')||'null');
+  if(saved && saved.cards) {
+    const s = (id, val) => { const el=document.getElementById('tk-'+id); if(el&&val) el.value=val; };
+    const cards = saved.cards;
+    if(cards[0]) { s('cap1-bal', cards[0].bal); s('cap1-min', cards[0].min); s('cap1-due', cards[0].due); }
+    if(cards[1]) { s('amexbiz-bal', cards[1].bal); s('amexbiz-min', cards[1].min); s('amexbiz-due', cards[1].due); }
+    if(cards[2]) { s('amexlena-bal', cards[2].bal); s('amexlena-min', cards[2].min); s('amexlena-due', cards[2].due); }
+    if(cards[3]) { s('wfcc-bal', cards[3].bal); s('wfcc-min', cards[3].min); }
+    if(saved.amexLoc) { s('amexloc-bal', saved.amexLoc.bal); s('amexloc-lim', saved.amexLoc.lim); }
+    if(saved.dang) { s('dang-bal', saved.dang.amt); s('dang-note', saved.dang.notes); }
+  }
+  const m = S.tkMetrics || JSON.parse(localStorage.getItem('kcc_tk_metrics')||'null');
+  if(m) {
+    S.tkUpcoming = JSON.parse(localStorage.getItem('kcc_tk_upcoming')||'[]');
+    renderTickets();
+  }
+  updateTKCards();
+}
+</script>

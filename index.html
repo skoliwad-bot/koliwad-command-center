@@ -1578,9 +1578,9 @@ function rTickets(){
   const m = S.tkMetrics || JSON.parse(localStorage.getItem('kcc_tk_metrics')||'null');
   if(m && (m.openListings || m.profitMTD)) {
     S.tkUpcoming = S.tkUpcoming || JSON.parse(localStorage.getItem('kcc_tk_upcoming')||'[]');
-    renderTickets();
+    rTickets();
   }
-  updateTKCards();
+  tkUpdateCards();
 }
 
 function resTk(id){const t=S.tickets.find(x=>x.id===id);if(t){t.status='Resolved';localStorage.setItem('kcc_tickets',JSON.stringify(S.tickets));rTickets();rToday();rBadges();}}

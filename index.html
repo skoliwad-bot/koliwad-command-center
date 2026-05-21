@@ -2394,8 +2394,15 @@ function rTickets() {
   const f$  = n => '$'+Math.abs(Math.round(n||0)).toLocaleString();
   const fc  = n => (n>=0?'+':'-')+f$(n);
 
-  // Metrics pills
+  // Metrics pills — always show (placeholders if no data)
   const mEl = document.getElementById('tk-metrics');
+  if(mEl) {
+    if(!Object.keys(mv).length) {
+      mEl.innerHTML = ['Profit MTD','Profit YTD','Open Listings','High Risk 7d','Pending Pmts'].map(l=>
+        '<div style="border:1px solid var(--brd);background:var(--surf);padding:12px 16px"><span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);display:block">'+l+'</span><span style="font-size:20px;font-weight:700;display:block;margin-top:5px;color:var(--mut2)">—</span></div>'
+      ).join('');
+    }
+  }
   if(mEl && Object.keys(mv).length) {
     const mtd = mv['Ticket Profit MTD']||0;
     const ytd = mv['Ticket Profit YTD']||0;
@@ -2406,7 +2413,7 @@ function rTickets() {
       {l:'High Risk 7d', v:(mv['High Risk Count (next 7d)']||0)+' events', c:(mv['High Risk Count (next 7d)']||0)>0?'var(--red)':'var(--grn)'},
       {l:'Pending Pmts', v:'$'+(mv['Pending Payments']||0).toLocaleString(), c:(mv['Pending Payments']||0)>0?'var(--amb)':'var(--grn)'},
     ].map(p=>'<div style="border:1px solid var(--brd);background:var(--surf);padding:12px 16px"><span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);display:block">'+p.l+'</span><span style="font-size:20px;font-weight:700;display:block;margin-top:5px;color:'+p.c+'">'+p.v+'</span></div>').join('');
-  }
+  } // end mv.length check
 
   // High risk
   const hrEl = document.getElementById('tk-risk');

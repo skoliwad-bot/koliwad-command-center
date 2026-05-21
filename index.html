@@ -695,7 +695,7 @@ localStorage.setItem = function(key, value) {
     <!-- UPCOMING -->
     <div style="border:1px solid var(--brd);background:var(--surf);">
       <div class="ch"><span class="ct ct-b">📅 Upcoming Events (30 days)</span><span id="tk-up-count" style="font-size:9px;color:var(--mut)"></span></div>
-      <div id="tk-upcoming" style="max-height:340px;overflow-y:auto;"><div class="empty">Import spreadsheet to populate</div></div>
+      <div id="tk-upcoming" style="max-height:340px;overflow-y:auto;"><div style="padding:16px;font-size:12px;color:#9abf9a;font-style:italic;">⬆ Import your ticket spreadsheet using the button above to see upcoming events</div></div>
     </div>
 
     <!-- CARDS -->
@@ -2404,7 +2404,7 @@ function rTickets() {
   if(mEl) {
     if(!Object.keys(mv).length) {
       mEl.innerHTML = ['Profit MTD','Profit YTD','Open Listings','High Risk 7d','Pending Pmts'].map(l=>
-        '<div style="border:1px solid var(--brd);background:var(--surf);padding:12px 16px"><span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);display:block">'+l+'</span><span style="font-size:20px;font-weight:700;display:block;margin-top:5px;color:var(--mut2)">—</span></div>'
+        '<div style="border:1px solid #364036;background:#1a1e1a;padding:12px 16px"><span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#9abf9a;display:block">'+l+'</span><span style="font-size:20px;font-weight:700;display:block;margin-top:5px;color:#6a886a">—</span></div>'
       ).join('');
     }
   }

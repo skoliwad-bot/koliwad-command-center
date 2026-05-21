@@ -103,7 +103,7 @@ function simulate(params){
     tiaa*=(1+(p.tiaaroi||p.hfroi)/100/12); // TIAA grows at its own ROI until transfer
     hf=hf*(1+hfR); // grow HF on previous balance ONLY
     if(!tiaMoved&&m===tiaaM){hf+=tiaa;tiaa=0;tiaMoved=true;} // TIAA added AFTER growth
-    if(m===1&&p.pto_lump>0)hf+=p.pto_lump; // lump sum PTO payout at month 1
+    if(m===p.jpl_months+p.pto_months+1&&p.pto_lump>0)hf+=p.pto_lump; // lump sum PTO payout after PTO period ends
     if(p.biz_acquire>0&&m===p.biz_acquire_month)hf-=p.biz_acquire;
     const jI=m<=p.jpl_months?p.jpl_net:0;
     const pI=m>p.jpl_months&&m<=p.jpl_months+p.pto_months?p.pto_net:0;
@@ -654,7 +654,7 @@ function App(){
           {l:'PTO duration',    k:'pto_months', min:1,max:12,step:1,fmt:v=>v+'mo',sub:a=>`SDI starts ${MD(a.jpl_months+a.pto_months+1)}`},
           {l:'SDI / mo',        k:'sdi',        min:0,max:12000,step:250,fmt:v=>FC(v),sub:a=>`${MD(a.jpl_months+a.pto_months+1)} – ${MD(a.jpl_months+a.pto_months+a.sdi_months)}`},
           {l:'SDI duration',    k:'sdi_months', min:1,max:12,step:1,fmt:v=>v+'mo',sub:a=>`TIAA transfers ${MD(a.jpl_months+a.pto_months+a.sdi_months+1)}`},
-    {l:'PTO lump sum payout',k:'pto_lump',min:0,max:300000,step:5000,fmt:v=>v===0?'none (monthly PTO)':FC(v)+' at departure',sub:a=>a.pto_lump>0?'Replaces monthly PTO · hits HF at month 1':'Use monthly PTO payments instead'},
+    {l:'PTO lump sum payout',k:'pto_lump',min:0,max:300000,step:5000,fmt:v=>v===0?'none (monthly PTO)':FC(v)+' at departure',sub:a=>a.pto_lump>0?`Pays out after PTO period ends · month ${a.jpl_months+a.pto_months+1}`:'Use monthly PTO payments instead'},
         ]},
         {title:'💰 Business Income',rows:[
           {l:'Monthly income',      k:'biz',              min:0,max:60000,step:500,fmt:v=>FC(v)},

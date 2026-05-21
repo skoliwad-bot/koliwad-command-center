@@ -302,7 +302,7 @@ function App(){
   const [saveLabel,setSaveLabel]=useState('');
   const [selM,setSelM]=useState(null);
   const [met,setMet]=useState('liq');
-  const [actuals,setActuals]=useState([{month:1,hf:150000,biz:null,rent:null,gift:null,spend:null,notes:'Starting balance Jun 2026'}]);
+  const [actuals,setActuals]=useState(()=>{ try{ const imp=localStorage.getItem('kcc_fire_actuals'); if(imp){ const d=JSON.parse(imp); return d.map(a=>({month:a.mo,hf:a.actual||null,biz:null,rent:null,gift:null,spend:null,notes:a.notes||''})); } }catch(e){} return [{month:1,hf:150000,biz:null,rent:null,gift:null,spend:null,notes:'Starting balance Jun 2026'}]);
   const [editM,setEditM]=useState(1);
 
   // upd: Base Case writes to A (it IS the base)

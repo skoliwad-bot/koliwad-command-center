@@ -557,30 +557,6 @@ localStorage.setItem = function(key, value) {
             <span style="font-size:9px;color:var(--mut)">$750K max · 6.5%</span>
           </div>
         </div>
-        <!-- ACTUALS VS PROJECTED -->
-        <div id="fire-actuals-card" style="border:1px solid var(--brd);background:var(--surf);margin-bottom:12px;display:none;">
-          <div style="padding:9px 16px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;background:#131613;">
-            <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#4a9c5c;">📊 Actuals vs Projected — HF Balance</span>
-            <span style="font-size:9px;color:var(--mut)" id="actuals-count"></span>
-          </div>
-          <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;font-size:11px;" id="actuals-table">
-              <thead>
-                <tr style="background:#0f110f;">
-                  <th style="padding:7px 12px;text-align:left;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--brd);">Month</th>
-                  <th style="padding:7px 12px;text-align:right;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--brd);">Actual HF</th>
-                  <th style="padding:7px 12px;text-align:right;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--brd);">Projected</th>
-                  <th style="padding:7px 12px;text-align:right;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--brd);">Variance $</th>
-                  <th style="padding:7px 12px;text-align:right;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--brd);">Variance %</th>
-                  <th style="padding:7px 12px;text-align:center;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--brd);">Status</th>
-                  <th style="padding:7px 12px;text-align:left;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--brd);">Notes</th>
-                </tr>
-              </thead>
-              <tbody id="actuals-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-
         <div class="card" style="margin-bottom:12px">
           <div class="ch"><span class="ct b">Progress to Goal</span><span id="fpct" style="font-size:11px;font-weight:700;color:var(--blu)">0%</span></div>
           <div style="padding:12px 16px">
@@ -1510,31 +1486,6 @@ function rFire(){
     const sp4=document.getElementById('fsp4');
     if(sp4){const lbl=sp4.querySelector('.spl');if(lbl)lbl.textContent='FIRE %';}
   }
-  // Actuals vs Projected table
-  const actuals = S.fireActuals || [];
-  const actCard = document.getElementById('fire-actuals-card');
-  if(actCard) actCard.style.display = actuals.length > 0 ? 'block' : 'none';
-  if(actuals.length > 0) {
-    const countEl = document.getElementById('actuals-count');
-    if(countEl) countEl.textContent = actuals.length + ' month' + (actuals.length===1?'':'s') + ' of real data';
-    const tbody = document.getElementById('actuals-tbody');
-    if(tbody) tbody.innerHTML = actuals.map(a => {
-      const varD = typeof a.varD === 'number' ? a.varD : (a.actual - a.proj);
-      const varP = typeof a.varPct === 'number' ? a.varPct : (a.proj > 0 ? (varD/a.proj*100) : 0);
-      const pos = varD >= 0;
-      const onTrack = pos || varP > -5;
-      return '<tr style="border-bottom:1px solid #1a1e1a;">'
-        + '<td style="padding:8px 12px;color:#f0f7f0;font-weight:600;">' + a.date + '</td>'
-        + '<td style="padding:8px 12px;text-align:right;color:#4a7ab8;font-weight:700;">$' + Math.round(a.actual).toLocaleString() + '</td>'
-        + '<td style="padding:8px 12px;text-align:right;color:#6a886a;">$' + Math.round(a.proj).toLocaleString() + '</td>'
-        + '<td style="padding:8px 12px;text-align:right;color:' + (pos?'#4a9c5c':'#d04040') + ';font-weight:700;">' + (pos?'+':'') + '$' + Math.round(Math.abs(varD)).toLocaleString() + '</td>'
-        + '<td style="padding:8px 12px;text-align:right;color:' + (pos?'#4a9c5c':'#d04040') + ';">' + (pos?'+':'') + varP.toFixed(1) + '%</td>'
-        + '<td style="padding:8px 12px;text-align:center;"><span style="font-size:8px;font-weight:700;padding:2px 7px;background:' + (onTrack?'rgba(74,156,92,0.15)':'rgba(208,64,64,0.15)') + ';color:' + (onTrack?'#4a9c5c':'#d04040') + ';">' + (onTrack?'ON TRACK':'OFF TRACK') + '</span></td>'
-        + '<td style="padding:8px 12px;font-size:10px;color:#6a886a;">' + esc(a.notes||'') + '</td>'
-        + '</tr>';
-    }).join('');
-  }
-
   // Asset balances
   if(fire){
     const setf=(id,v,c)=>{const e=document.getElementById(id);if(e){e.textContent=v;if(c)e.style.color=c;}};
@@ -2028,6 +1979,40 @@ function importFireExcel(evt) {
       S.fire = fireData;
       localStorage.setItem('kcc_fire', JSON.stringify(fireData));
 
+      // ── MAP TO FIRE LAB INPUTS (so FIRE Lab sliders start at real numbers) ──
+      const fireLabInputs = {
+        jpl_net:        iv['JPL net monthly income']              || 17500,
+        jpl_months:     iv['Leave JPL (month # from Jun 26)']     || 3,
+        pto_net:        iv['PTO monthly payout']                  || 17500,
+        pto_months:     iv['PTO duration (months)']               || 1,
+        pto_lump:       iv['PTO lump sum (0 = take monthly)']     || 0,
+        sdi:            iv['SDI monthly']                         || 6000,
+        sdi_months:     iv['SDI duration (months)']               || 0,
+        biz:            iv['Business monthly income']             || 17500,
+        bizstart:       iv['Business start (month #)']            || 6,
+        biz_acquire:    iv['Acquisition cost (0 = none)']         || 75000,
+        biz_acquire_month: iv['Acquisition month #']              || 3,
+        rent:           iv['Paulette rent / month']               || 6500,
+        rent_start:     iv['Rent start (month #)']                || 4,
+        gift:           iv['Parents gift / month']                || 8000,
+        gift_end:       iv['Gift ends (month #)']                 || 120,
+        spend:          iv['Base monthly spend']                  || 22000,
+        vmort:          iv['Vineta mortgage / month']             || 7900,
+        pmort:          iv['Paulette mortgage / month']           || 3477,
+        heloc_balance:  iv['HELOC drawn balance']                 || 700000,
+        heloc_max:      iv['HELOC max limit']                     || 750000,
+        heloc_rate:     ((iv['HELOC interest rate (annual)']||0.065) * 100),
+        hfbal:          hfBal   || 150000,
+        tiaabal:        tiaaBal || 420000,
+        detroit_units:  iv['Detroit units per purchase']          || 2,
+        detroit_unit_cost: iv['Detroit unit cost']                || 50000,
+        detroit_start:  iv['Detroit first deploy (month #)']      || 23,
+        detroit_freq:   iv['Detroit buy frequency (months)']      || 12,
+        detroit_max_units: iv['Detroit max total units']          || 0,
+        tax_return:     iv['Annual tax return (yr 1)']            || 60000,
+      };
+      localStorage.setItem('kcc_firelab_inputs', JSON.stringify(fireLabInputs));
+
       // Also update goals if we have FIRE%
       if(firePct > 0 && !S.fireg) {
         S.fireg = { target: fireData.need * 12, rr: Math.round(totalIncome * 12), pct: firePct };
@@ -2051,8 +2036,8 @@ function importFireExcel(evt) {
         'Net Worth: $'+Math.round(netWorth).toLocaleString(),
       ].join('  ·  ');
       const actMsg = actuals.length > 0
-        ? '\n\nActuals: ' + actuals.length + ' month(s) of real HF data imported'
-        : '\n\nActuals: No real data entered yet in column C of Actuals sheet';
+        ? '\n\nActuals: ' + actuals.length + ' month(s) imported → open FIRE Lab to see Actuals tab'
+        : '\n\nActuals: No real data yet — enter HF balance in column C of Actuals sheet';
       alert('✅ Imported from ' + file.name + '\n\n' + imported + actMsg);
 
     } catch(err) {

@@ -1612,23 +1612,26 @@ function resA(id){const a=S.alerts.find(x=>x.id===id);if(a){a.status='Resolved';
 
 // ── TICKETS PAGE ─────────────────────────────────────────────
 function rTickets(){
-  const items=S.tickets||[], open=items.filter(t=>t.status!=='Resolved');
-  el('ts1').textContent=open.filter(t=>t.da<=2||t.suggested_action==='Sell Now').length;
-  el('ts2').textContent=open.filter(t=>(t.da>2&&t.da<=5)||t.suggested_action==='Lower Price').length;
-  el('ts3').textContent=open.filter(t=>t.da>5||t.suggested_action==='Hold'||t.suggested_action==='Bundle').length;
-  const e=el('tickList');
-  if(!items.length){e.innerHTML='<div class="empty">No items — add one →</div>';return;}
-  e.innerHTML=items.map(t=>{
-    const ac=t.suggested_action||(t.da<=2?'Sell Now':t.da<=5?'Lower Price':'Hold');
-    const[bc,bl]={'Sell Now':['bsl','SELL NOW'],'Lower Price':['blo','LOWER PRICE'],'Bundle':['bbu','BUNDLE'],'Hold':['bho','HOLD']}[ac]||['bho','HOLD'];
-    return'<div class="row"><div style="flex:1;min-width:0"><div class="rtl">'+esc(t.event_name||t.title||'')+'</div><div style="display:flex;gap:8px;margin-top:2px">'+(t.event_date?'<span class="rsb">'+fd(t.event_date)+'</span>':'')+(t.quantity?'<span class="rsb" style="color:var(--orn)">'+t.quantity+' tickets</span>':'')+'</div></div>'
-      +'<span class="b '+bc+'">'+bl+'</span>'
-      +(t.status!=='Resolved'?'<button class="btn" onclick="resTk(\''+t.id+'\')">Resolve</button>':'<span class="b" style="background:#1e221e;color:var(--grn)">✓</span>')
-      +'</div>';
-  }).join('');
-  const tb=S.tb;
-  if(tb){el('tb1').textContent=f$(tb.sh);el('tb2').textContent=f$(tb.tm);el('tb3').textContent=f$(tb.cash);el('tb4').textContent=f$(tb.inv);}
+  // Restore saved import data and card balances
+  const saved = JSON.parse(localStorage.getItem('kcc_tk_cards')||'null');
+  if(saved && saved.cards) {
+    const s = (id, val) => { const el=document.getElementById('tk-'+id); if(el&&val!==undefined&&val!==null) el.value=val; };
+    const cards = saved.cards;
+    if(cards[0]) { s('cap1-bal', cards[0].bal); s('cap1-min', cards[0].min); s('cap1-due', cards[0].due); }
+    if(cards[1]) { s('amexbiz-bal', cards[1].bal); s('amexbiz-min', cards[1].min); s('amexbiz-due', cards[1].due); }
+    if(cards[2]) { s('amexlena-bal', cards[2].bal); s('amexlena-min', cards[2].min); s('amexlena-due', cards[2].due); }
+    if(cards[3]) { s('wfcc-bal', cards[3].bal); s('wfcc-min', cards[3].min); }
+    if(saved.amexLoc) { s('amexloc-bal', saved.amexLoc.bal); s('amexloc-lim', saved.amexLoc.lim); }
+    if(saved.dang) { s('dang-bal', saved.dang.amt); s('dang-note', saved.dang.notes); }
+  }
+  const m = S.tkMetrics || JSON.parse(localStorage.getItem('kcc_tk_metrics')||'null');
+  if(m && (m.openListings || m.profitMTD)) {
+    S.tkUpcoming = S.tkUpcoming || JSON.parse(localStorage.getItem('kcc_tk_upcoming')||'[]');
+    renderTickets();
+  }
+  updateTKCards();
 }
+
 function resTk(id){const t=S.tickets.find(x=>x.id===id);if(t){t.status='Resolved';localStorage.setItem('kcc_tickets',JSON.stringify(S.tickets));rTickets();rToday();rBadges();}}
 
 // ── FINANCIALS ───────────────────────────────────────────────
@@ -2640,24 +2643,5 @@ function saveTKCards() {
   if(st) st.textContent = '✓ Card balances saved · ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 }
 
-// Restore saved card values on nav
-function rTickets() {
-  const saved = JSON.parse(localStorage.getItem('kcc_tk_cards')||'null');
-  if(saved && saved.cards) {
-    const s = (id, val) => { const el=document.getElementById('tk-'+id); if(el&&val) el.value=val; };
-    const cards = saved.cards;
-    if(cards[0]) { s('cap1-bal', cards[0].bal); s('cap1-min', cards[0].min); s('cap1-due', cards[0].due); }
-    if(cards[1]) { s('amexbiz-bal', cards[1].bal); s('amexbiz-min', cards[1].min); s('amexbiz-due', cards[1].due); }
-    if(cards[2]) { s('amexlena-bal', cards[2].bal); s('amexlena-min', cards[2].min); s('amexlena-due', cards[2].due); }
-    if(cards[3]) { s('wfcc-bal', cards[3].bal); s('wfcc-min', cards[3].min); }
-    if(saved.amexLoc) { s('amexloc-bal', saved.amexLoc.bal); s('amexloc-lim', saved.amexLoc.lim); }
-    if(saved.dang) { s('dang-bal', saved.dang.amt); s('dang-note', saved.dang.notes); }
-  }
-  const m = S.tkMetrics || JSON.parse(localStorage.getItem('kcc_tk_metrics')||'null');
-  if(m) {
-    S.tkUpcoming = JSON.parse(localStorage.getItem('kcc_tk_upcoming')||'[]');
-    renderTickets();
-  }
-  updateTKCards();
-}
+
 </script>

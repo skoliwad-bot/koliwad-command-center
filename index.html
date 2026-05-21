@@ -345,6 +345,7 @@ localStorage.setItem = function(key, value) {
   } catch(e) {}
 };
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -519,7 +520,15 @@ localStorage.setItem = function(key, value) {
       <!-- FIRE -->
       <div class="page" id="p-fire">
         <div class="ph"><div><div class="pt">FIRE Path</div><div class="ps">Financial Independence · Base · Keep Paulette · Jun 2026</div></div>
-          <div style="display:flex;gap:6px"><button class="aibtn" onclick="runAI('firepath')">✦ AI Insights</button><button class="btn" onclick="window.open('fire-lab.html','_blank')" style="border-color:#7a5cb8;color:#7a5cb8">🔬 FIRE Lab</button><button class="btn p" onclick="om('fire')">Update Metrics</button></div></div>
+          <div style="display:flex;gap:6px">
+  <button class="aibtn" onclick="runAI('firepath')">✦ AI Insights</button>
+  <button class="btn" onclick="window.open('fire-lab.html','_blank')" style="border-color:#7a5cb8;color:#7a5cb8">🔬 FIRE Lab</button>
+  <label style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;border:1px solid #4a9c5c;color:#4a9c5c;cursor:pointer;" title="Import from FIRE_Lab_v10.xlsx">
+    ⬆ Import Excel
+    <input type="file" accept=".xlsx,.xls" onchange="importFireExcel(event)" style="display:none">
+  </label>
+  <button class="btn p" onclick="om('fire')">Update Metrics</button>
+</div></div>
         <div class="ai-block" id="ai-firepath">
           <div class="ai-hdr"><span class="ai-title">✦ AI FIRE Analysis</span><span class="ai-status" id="ai-firepath-st">Click "AI Insights" to generate</span></div>
           <div class="ai-text loading" id="ai-firepath-tx">Claude will analyze your current trajectory, phase progress, income gap, and Throwzone timeline to flag risks and opportunities.</div>
@@ -548,6 +557,30 @@ localStorage.setItem = function(key, value) {
             <span style="font-size:9px;color:var(--mut)">$750K max · 6.5%</span>
           </div>
         </div>
+        <!-- ACTUALS VS PROJECTED -->
+        <div id="fire-actuals-card" style="border:1px solid var(--brd);background:var(--surf);margin-bottom:12px;display:none;">
+          <div style="padding:9px 16px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;background:#131613;">
+            <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#4a9c5c;">📊 Actuals vs Projected — HF Balance</span>
+            <span style="font-size:9px;color:var(--mut)" id="actuals-count"></span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:11px;" id="actuals-table">
+              <thead>
+                <tr style="background:#0f110f;">
+                  <th style="padding:7px 12px;text-align:left;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--brd);">Month</th>
+                  <th style="padding:7px 12px;text-align:right;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--brd);">Actual HF</th>
+                  <th style="padding:7px 12px;text-align:right;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--brd);">Projected</th>
+                  <th style="padding:7px 12px;text-align:right;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--brd);">Variance $</th>
+                  <th style="padding:7px 12px;text-align:right;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--brd);">Variance %</th>
+                  <th style="padding:7px 12px;text-align:center;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--brd);">Status</th>
+                  <th style="padding:7px 12px;text-align:left;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--brd);">Notes</th>
+                </tr>
+              </thead>
+              <tbody id="actuals-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
         <div class="card" style="margin-bottom:12px">
           <div class="ch"><span class="ct b">Progress to Goal</span><span id="fpct" style="font-size:11px;font-weight:700;color:var(--blu)">0%</span></div>
           <div style="padding:12px 16px">
@@ -1477,6 +1510,31 @@ function rFire(){
     const sp4=document.getElementById('fsp4');
     if(sp4){const lbl=sp4.querySelector('.spl');if(lbl)lbl.textContent='FIRE %';}
   }
+  // Actuals vs Projected table
+  const actuals = S.fireActuals || [];
+  const actCard = document.getElementById('fire-actuals-card');
+  if(actCard) actCard.style.display = actuals.length > 0 ? 'block' : 'none';
+  if(actuals.length > 0) {
+    const countEl = document.getElementById('actuals-count');
+    if(countEl) countEl.textContent = actuals.length + ' month' + (actuals.length===1?'':'s') + ' of real data';
+    const tbody = document.getElementById('actuals-tbody');
+    if(tbody) tbody.innerHTML = actuals.map(a => {
+      const varD = typeof a.varD === 'number' ? a.varD : (a.actual - a.proj);
+      const varP = typeof a.varPct === 'number' ? a.varPct : (a.proj > 0 ? (varD/a.proj*100) : 0);
+      const pos = varD >= 0;
+      const onTrack = pos || varP > -5;
+      return '<tr style="border-bottom:1px solid #1a1e1a;">'
+        + '<td style="padding:8px 12px;color:#f0f7f0;font-weight:600;">' + a.date + '</td>'
+        + '<td style="padding:8px 12px;text-align:right;color:#4a7ab8;font-weight:700;">$' + Math.round(a.actual).toLocaleString() + '</td>'
+        + '<td style="padding:8px 12px;text-align:right;color:#6a886a;">$' + Math.round(a.proj).toLocaleString() + '</td>'
+        + '<td style="padding:8px 12px;text-align:right;color:' + (pos?'#4a9c5c':'#d04040') + ';font-weight:700;">' + (pos?'+':'') + '$' + Math.round(Math.abs(varD)).toLocaleString() + '</td>'
+        + '<td style="padding:8px 12px;text-align:right;color:' + (pos?'#4a9c5c':'#d04040') + ';">' + (pos?'+':'') + varP.toFixed(1) + '%</td>'
+        + '<td style="padding:8px 12px;text-align:center;"><span style="font-size:8px;font-weight:700;padding:2px 7px;background:' + (onTrack?'rgba(74,156,92,0.15)':'rgba(208,64,64,0.15)') + ';color:' + (onTrack?'#4a9c5c':'#d04040') + ';">' + (onTrack?'ON TRACK':'OFF TRACK') + '</span></td>'
+        + '<td style="padding:8px 12px;font-size:10px;color:#6a886a;">' + esc(a.notes||'') + '</td>'
+        + '</tr>';
+    }).join('');
+  }
+
   // Asset balances
   if(fire){
     const setf=(id,v,c)=>{const e=document.getElementById(id);if(e){e.textContent=v;if(c)e.style.color=c;}};
@@ -1847,6 +1905,164 @@ function brp(pid,vid,val,color){
   const pe=el(pid);if(pe) pe.className='brpp'+(color?' '+color:'');
 }
 function stel(id,val,style){const e=el(id);if(e){e.textContent=val;if(style)e.style.cssText=style;}}
+
+// ══ EXCEL IMPORT ════════════════════════════════════════════
+function importFireExcel(evt) {
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, {type:'array'});
+
+      // ── READ INPUTS SHEET ──
+      const inp = wb.Sheets['Inputs'];
+      if(!inp) { alert('Could not find "Inputs" sheet in spreadsheet'); return; }
+      const rows = XLSX.utils.sheet_to_json(inp, {header:1});
+
+      // Map row labels to values
+      const iv = {};
+      rows.forEach(r => { if(r[0] && r[1]!==undefined) iv[String(r[0]).trim()] = r[1]; });
+
+      // ── READ DASHBOARD SHEET ──
+      const dash = wb.Sheets['Dashboard'];
+      const drows = dash ? XLSX.utils.sheet_to_json(dash, {header:1}) : [];
+      const dv = {};
+      drows.forEach(r => {
+        for(let i=0;i<r.length;i++) {
+          if(typeof r[i]==='string' && r[i].trim() && r[i+1]!==undefined) {
+            dv[r[i].trim()] = r[i+1];
+          }
+        }
+      });
+
+      // ── READ PROJECTION SHEET (row 1 = current month) ──
+      const proj = wb.Sheets['Projection'];
+      const prows = proj ? XLSX.utils.sheet_to_json(proj, {header:1}) : [];
+      // Row 0=title, 1=headers, 2=col headers, 3=month1 data
+      // Cols: Mo,Date,W2,PTO,SDI,Business,Rent,Gift,Detroit,TaxRet,TotIncome,Spend,VMort,PMort,HELOCInt,OneTime,TotExpense,CashFlow,HELOCDrawn,HF,TIAA,NetWorth,FIRE%,Passive
+      const m1 = prows[3]; // Month 1 row
+      const hdr = prows[2]; // column headers
+
+      let hfBal=0, tiaaBal=0, helocBal=0, firePct=0, netWorth=0, totalIncome=0, totalExpense=0;
+      if(m1 && hdr) {
+        const ci = (name) => hdr.findIndex(h=>h&&String(h).trim()===name);
+        hfBal       = m1[ci('HF')]        || 0;
+        tiaaBal     = m1[ci('TIAA')]      || 0;
+        helocBal    = m1[ci('HELOCDrawn')]|| 0;
+        firePct     = Math.round((m1[ci('FIRE%')]||0) * 100);
+        netWorth    = m1[ci('NetWorth')]   || 0;
+        totalIncome = m1[ci('TotIncome')] || 0;
+        totalExpense= m1[ci('TotExpense')]|| 0;
+      }
+
+      // ── READ ACTUALS SHEET ──
+      const act = wb.Sheets['Actuals'];
+      const actuals = [];
+      if(act) {
+        const arows = XLSX.utils.sheet_to_json(act, {header:1});
+        // Row 0=title, 1=headers, rows 2+ = data
+        // Cols: Month, Date, HF Actual, HF Projected, Variance$, Variance%, Notes, On Track?
+        for(let i=2; i<arows.length; i++) {
+          const r = arows[i];
+          if(!r[0]) continue;
+          const actual = r[2]; // column C - HF actual (blank until entered)
+          if(actual !== null && actual !== undefined && actual !== '' && actual !== '-') {
+            const dt = r[1];
+            const dateStr = dt instanceof Date
+              ? dt.toLocaleDateString('en-US',{month:'short',year:'numeric'})
+              : String(dt||'');
+            actuals.push({
+              mo:      r[0],
+              date:    dateStr,
+              actual:  actual,
+              proj:    r[3] || 0,
+              varD:    r[4] || (actual - (r[3]||0)),
+              varPct:  r[5] || (r[3]>0 ? (actual-(r[3]||0))/(r[3]||1)*100 : 0),
+              notes:   r[6] || '',
+              onTrack: r[7] || '',
+            });
+          }
+        }
+      }
+      if(actuals.length > 0) {
+        S.fireActuals = actuals;
+        localStorage.setItem('kcc_fire_actuals', JSON.stringify(actuals));
+      }
+
+      // Find FIRE date from dashboard
+      let fireDate = '—';
+      drows.forEach(r => {
+        for(let i=0;i<r.length;i++) {
+          if(typeof r[i]==='string' && r[i].includes('FIRE DATE')) {
+            if(r[i+10]) fireDate = String(r[i+10]);
+          }
+        }
+      });
+
+      // Build fire state object from spreadsheet
+      const fireData = {
+        // From Inputs
+        need:        iv['Base monthly spend']         || 22000,
+        inc:         totalIncome,
+        hf:          hfBal,
+        tiaa:        tiaaBal,
+        heloc:       helocBal,
+        biz_income:  iv['Business monthly income']   || 17500,
+        fire_pct:    firePct,
+        // Extra context
+        net_worth:   Math.round(netWorth),
+        jpl_leave_mo:iv['Leave JPL (month # from Jun 26)'] || 3,
+        biz_start_mo:iv['Business start (month #)']  || 6,
+        pto_months:  iv['PTO duration (months)']     || 1,
+        pto_lump:    iv['PTO lump sum (0 = take monthly)'] || 0,
+        sdi_months:  iv['SDI duration (months)']     || 0,
+        monthly_spend:iv['Base monthly spend']       || 22000,
+        vineta_mort: iv['Vineta mortgage / month']   || 7900,
+        paulette_mort:iv['Paulette mortgage / month']|| 3477,
+        heloc_rate:  iv['HELOC interest rate (annual)']||0.065,
+        _imported:   new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),
+      };
+
+      // Save to state
+      S.fire = fireData;
+      localStorage.setItem('kcc_fire', JSON.stringify(fireData));
+
+      // Also update goals if we have FIRE%
+      if(firePct > 0 && !S.fireg) {
+        S.fireg = { target: fireData.need * 12, rr: Math.round(totalIncome * 12), pct: firePct };
+        localStorage.setItem('kcc_fireg', JSON.stringify(S.fireg));
+      }
+
+      // Save to Firebase
+      fbSaveAll();
+
+      // Re-render
+      rFire();
+      renderAll();
+
+      // Show success
+      const imported = [
+        'HF: $'+Math.round(hfBal).toLocaleString(),
+        'TIAA: $'+Math.round(tiaaBal).toLocaleString(),
+        'HELOC: $'+Math.round(helocBal).toLocaleString(),
+        'Income: $'+Math.round(totalIncome).toLocaleString()+'/mo',
+        'FIRE%: '+firePct+'%',
+        'Net Worth: $'+Math.round(netWorth).toLocaleString(),
+      ].join('  ·  ');
+      const actMsg = actuals.length > 0
+        ? '\n\nActuals: ' + actuals.length + ' month(s) of real HF data imported'
+        : '\n\nActuals: No real data entered yet in column C of Actuals sheet';
+      alert('✅ Imported from ' + file.name + '\n\n' + imported + actMsg);
+
+    } catch(err) {
+      alert('Error reading spreadsheet: ' + err.message);
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
 </script>
 </body>
 </html>

@@ -345,6 +345,7 @@ localStorage.setItem = function(key, value) {
   } catch(e) {}
 };
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -498,23 +499,174 @@ localStorage.setItem = function(key, value) {
 
       <!-- FINANCIALS -->
       <div class="page" id="p-financials">
-        <div class="ph"><div><div class="pt">Financials</div><div class="ps">Personal money hub</div></div>
-          <div style="display:flex;gap:6px"><button class="aibtn" onclick="runAI('financials')">✦ AI Money Move</button><button class="btn p" onclick="om('fin')">Update Numbers</button></div></div>
-        <div class="ai-block" id="ai-financials">
-          <div class="ai-hdr"><span class="ai-title">✦ AI Weekly Money Recommendation</span><span class="ai-status" id="ai-financials-st">Click "AI Money Move" to generate</span></div>
-          <div class="ai-text loading" id="ai-financials-tx">Claude will analyze your balances, HELOC position, and velocity banking flow to recommend optimal money moves this week.</div>
+        <div style="padding:0 0 22px 0;">
+
+          <!-- HEADER -->
+          <div class="ph" style="margin-bottom:16px;">
+            <div><div class="pt">Financials</div><div class="ps">Velocity banking · Import from spreadsheet or enter manually</div></div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button class="aibtn" onclick="runAI('financials')">✦ AI Money Move</button>
+              <label style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border:1px solid #4a9c5c;color:#4a9c5c;cursor:pointer;">
+                ⬆ Import VB Excel
+                <input type="file" accept=".xlsx,.xls" onchange="importVBExcel(event)" style="display:none">
+              </label>
+              <span id="vb-import-status" style="font-size:9px;color:var(--mut)"></span>
+            </div>
+          </div>
+
+          <!-- AI BLOCK -->
+          <div class="ai-block" id="ai-financials" style="margin-bottom:16px;">
+            <div class="ai-hdr"><span class="ai-title">✦ AI Weekly Money Recommendation</span><span class="ai-thinking" id="ai-financials-st">Click "AI Money Move" to generate</span></div>
+            <div class="ai-text loading" id="ai-financials-tx">Claude will analyze your balances, HELOC position, and velocity banking flow to recommend optimal money moves this week.</div>
+          </div>
+
+          <!-- TODAY'S ACTION — hero card -->
+          <div style="border:2px solid #4a9c5c;background:rgba(74,156,92,0.06);padding:16px 20px;margin-bottom:16px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#4a9c5c;margin-bottom:10px;">⚡ TODAY'S VELOCITY BANKING ACTION</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+              <div>
+                <span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block;">Sweep Citi → Savings</span>
+                <span id="vb-citi-sweep" style="font-size:28px;font-weight:700;color:#4a9c5c;display:block;margin-top:4px;">—</span>
+                <span style="font-size:9px;color:var(--mut2)">after buffer + pending outflows</span>
+              </div>
+              <div>
+                <span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block;">Sweep Savings → HELOC</span>
+                <span id="vb-sav-sweep" style="font-size:28px;font-weight:700;color:#4a9c5c;display:block;margin-top:4px;">—</span>
+                <span style="font-size:9px;color:var(--mut2)">after bills + pending outflows</span>
+              </div>
+              <div>
+                <span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block;">Total Available to Sweep</span>
+                <span id="vb-total-sweep" style="font-size:28px;font-weight:700;color:#4a9c5c;display:block;margin-top:4px;">—</span>
+                <span style="font-size:9px;color:var(--mut2)">combined HELOC paydown</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ACCOUNT BALANCES -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;">
+            <div style="border:1px solid var(--brd);background:var(--surf);padding:14px 16px;">
+              <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);display:block;">Citi Checking</span>
+              <span id="fa-citi" style="font-size:20px;font-weight:700;display:block;margin-top:4px;">—</span>
+              <span style="font-size:9px;color:var(--mut)">primary operating account</span>
+            </div>
+            <div style="border:1px solid var(--brd);background:var(--surf);padding:14px 16px;">
+              <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);display:block;">CEFCU Savings</span>
+              <span id="fa-sav" style="font-size:20px;font-weight:700;display:block;margin-top:4px;">—</span>
+              <span style="font-size:9px;color:var(--mut)">staging → HELOC</span>
+            </div>
+            <div style="border:1px solid var(--brd);background:var(--surf);padding:14px 16px;">
+              <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--red);display:block;">True HELOC Balance</span>
+              <span id="fa-heloc" style="font-size:20px;font-weight:700;color:var(--red);display:block;margin-top:4px;">—</span>
+              <span id="fa-heloc-avail" style="font-size:9px;color:var(--mut)">available: —</span>
+            </div>
+            <div style="border:1px solid var(--brd);background:var(--surf);padding:14px 16px;">
+              <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);display:block;">Knight Balance</span>
+              <span id="fa-knight" style="font-size:20px;font-weight:700;display:block;margin-top:4px;">—</span>
+              <span style="font-size:9px;color:var(--mut)">team money held / owed</span>
+            </div>
+          </div>
+
+          <!-- TWO COLUMN: PENDING + BILLS -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+            <!-- Pending Outflows -->
+            <div style="border:1px solid var(--brd);background:var(--surf);">
+              <div style="padding:9px 16px;border-bottom:1px solid var(--brd);background:#0f110f;display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--amb);">⏳ Pending Outflows</span>
+                <span id="pending-total" style="font-size:11px;font-weight:700;color:var(--amb);">—</span>
+              </div>
+              <div id="pending-list"><div class="empty">Import spreadsheet or add manually below</div></div>
+              <div style="padding:8px 16px;border-top:1px solid var(--brd);">
+                <button onclick="om('pending')" class="btn" style="font-size:9px;width:100%;">+ Add Pending Outflow</button>
+              </div>
+            </div>
+            <!-- Bills Due -->
+            <div style="border:1px solid var(--brd);background:var(--surf);">
+              <div style="padding:9px 16px;border-bottom:1px solid var(--brd);background:#0f110f;display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);">📋 Bills Due (Next 30 Days)</span>
+                <span id="bills-total" style="font-size:11px;font-weight:700;color:var(--red);">—</span>
+              </div>
+              <div id="bills-list"><div class="empty">Import spreadsheet or add manually below</div></div>
+              <div style="padding:8px 16px;border-top:1px solid var(--brd);">
+                <button onclick="om('bill')" class="btn" style="font-size:9px;width:100%;">+ Add Bill</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- MANUAL INPUT SECTION -->
+          <div style="border:1px solid var(--brd2);background:#0f110f;padding:16px;margin-bottom:16px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--amb);margin-bottom:14px;">📝 MANUAL INPUTS — Update these if not importing from spreadsheet</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+
+              <!-- Account Balances -->
+              <div>
+                <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--brd);">ACCOUNT BALANCES <span style="color:var(--grn)">(enter from bank)</span></div>
+                ${[
+                  ['citi','Citi Checking Balance ($)','Your current Citi checking balance from the bank'],
+                  ['savings','CEFCU Savings Balance ($)','Your current CEFCU savings balance'],
+                  ['heloc_bal','HELOC Balance Owed ($)','What you currently owe on the HELOC'],
+                  ['heloc_limit','HELOC Credit Limit ($)','Total credit limit (usually $750K-$760K)'],
+                  ['knight','Knight Balance ($)','Positive = holding team money · Negative = you floated them'],
+                ].map(([k,l,h])=>`<div style="margin-bottom:10px;">
+                  <label style="font-size:9px;color:var(--mut);display:block;margin-bottom:3px;">${l}</label>
+                  <div style="font-size:8px;color:var(--mut2);margin-bottom:3px;font-style:italic;">${h}</div>
+                  <input type="number" id="mi-${k}" onchange="calcVB()" placeholder="0"
+                    style="width:100%;background:var(--bg);border:1px solid #c49030;color:var(--txt);padding:6px 10px;font-family:JetBrains Mono,monospace;font-size:12px;outline:none;">
+                </div>`).join('')}
+              </div>
+
+              <!-- VB Settings -->
+              <div>
+                <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--brd);">VB SETTINGS <span style="color:var(--amb)">(adjust as needed)</span></div>
+                ${[
+                  ['buffer','Citi Minimum Buffer ($)','Keep this much in Citi at all times · usually $200-$500','200'],
+                  ['heloc_checks','Outstanding HELOC Checks ($)','HELOC checks written but not yet cleared · zero when they post','0'],
+                  ['citi_pending','Citi Pending Outflows ($)','Total of checks/Zelles/ACHs not yet posted · from Citi Pending tab','0'],
+                  ['sav_pending','Savings Pending Outflows ($)','Total of savings outflows not yet posted · from Savings Pending tab','0'],
+                  ['bills_due','Bills Due Next 30 Days ($)','From Bills Earmark tab — upcoming non-CC bills from savings','0'],
+                ].map(([k,l,h,p])=>`<div style="margin-bottom:10px;">
+                  <label style="font-size:9px;color:var(--mut);display:block;margin-bottom:3px;">${l}</label>
+                  <div style="font-size:8px;color:var(--mut2);margin-bottom:3px;font-style:italic;">${h}</div>
+                  <input type="number" id="mi-${k}" onchange="calcVB()" placeholder="${p}"
+                    style="width:100%;background:var(--bg);border:1px solid #c49030;color:var(--txt);padding:6px 10px;font-family:JetBrains Mono,monospace;font-size:12px;outline:none;">
+                </div>`).join('')}
+              </div>
+
+              <!-- Monthly Budget -->
+              <div>
+                <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--brd);">MONTHLY BUDGET <span style="color:var(--blu)">(from your budget)</span></div>
+                ${[
+                  ['monthly_income','Total Monthly Income ($)','All income sources this month combined'],
+                  ['monthly_spend','Base Monthly Spend ($)','Living expenses excluding fixed obligations'],
+                  ['monthly_vmort','Vineta Mortgage ($/mo)','Fixed · $7,900'],
+                  ['monthly_pmort','Paulette Mortgage ($/mo)','Fixed · $3,477'],
+                  ['cc_balance','Credit Card Balance ($)','Total CC balance across all cards'],
+                  ['cc_due','CC Min Due ($)','Minimum payment due this cycle'],
+                ].map(([k,l,h])=>`<div style="margin-bottom:10px;">
+                  <label style="font-size:9px;color:var(--mut);display:block;margin-bottom:3px;">${l}</label>
+                  <div style="font-size:8px;color:var(--mut2);margin-bottom:3px;font-style:italic;">${h}</div>
+                  <input type="number" id="mi-${k}" onchange="calcVB()" placeholder="0"
+                    style="width:100%;background:var(--bg);border:1px solid #4a7ab8;color:var(--txt);padding:6px 10px;font-family:JetBrains Mono,monospace;font-size:12px;outline:none;">
+                </div>`).join('')}
+              </div>
+
+            </div>
+            <div style="display:flex;gap:8px;margin-top:10px;">
+              <button onclick="saveVBManual()" style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:8px 20px;background:var(--red);border:none;color:white;cursor:pointer;">💾 Save All Inputs</button>
+              <button onclick="calcVB()" style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:8px 20px;border:1px solid var(--grn);background:transparent;color:var(--grn);cursor:pointer;">↻ Recalculate</button>
+            </div>
+          </div>
+
+          <!-- MONTHLY BUDGET SUMMARY -->
+          <div style="border:1px solid var(--brd);background:var(--surf);">
+            <div style="padding:9px 16px;border-bottom:1px solid var(--brd);background:#0f110f;">
+              <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--blu);">📊 Monthly Budget Summary</span>
+            </div>
+            <div id="budget-summary">
+              <div class="empty">Enter your monthly income and expenses above to see budget summary</div>
+            </div>
+          </div>
+
         </div>
-        <div class="finbox">
-          <div class="fb"><span class="fbl">Checking Buffer</span><span class="fbv" id="fa1">—</span><span style="font-size:9px;color:var(--mut)">CEFCU</span></div>
-          <div class="fb"><span class="fbl">HELOC Balance</span><span class="fbv" id="fa2" style="color:var(--red)">—</span><span style="font-size:9px;color:var(--mut)">True balance</span></div>
-          <div class="fb"><span class="fbl">Knight Account</span><span class="fbv" id="fa3">—</span><span style="font-size:9px;color:var(--mut)">Separate</span></div>
-          <div class="fb"><span class="fbl">Savings</span><span class="fbv" id="fa4" style="color:var(--grn)">—</span><span style="font-size:9px;color:var(--mut)">CEFCU</span></div>
-        </div>
-        <div class="g2">
-          <div class="card"><div class="ch"><span class="ct b">Velocity Banking Flow</span></div><div id="velBody"><div class="empty">Update numbers to see recommendations</div></div></div>
-          <div class="card"><div class="ch"><span class="ct a">Obligations</span><button class="btn" onclick="om('alert')">+ Add</button></div><div id="obligBody"><div class="empty">No obligations flagged</div></div></div>
-        </div>
-      </div>
 
       <!-- FIRE -->
       <div class="page" id="p-fire">
@@ -1761,6 +1913,17 @@ const MCFG={
     {n:'price',l:'Execution Price',t:'num'},
     {n:'notes',l:'Notes / Trigger Reason',t:'ta'},
   ],def:{},k:'kcc_tradelogs',arr:'tradelogs'},
+  pending:{title:'Add Pending Outflow',fields:[
+    {n:'payee',l:'Payee',t:'text',req:true},
+    {n:'type',l:'Type',t:'sel',o:['Check','Zelle','ACH','Bill Pay','Other']},
+    {n:'amount',l:'Amount ($)',t:'num',req:true},
+    {n:'knight',l:'Knight expense?',t:'sel',o:['No','Yes']},
+  ],def:{type:'Zelle',knight:'No'},k:'kcc_pending',arr:'pendingItems'},
+  bill:{title:'Add Bill Due',fields:[
+    {n:'bill',l:'Bill Name',t:'text',req:true},
+    {n:'amount',l:'Amount ($)',t:'num',req:true},
+    {n:'due',l:'Due Date',t:'date'},
+  ],def:{},k:'kcc_bills',arr:'billItems'},
   tz:{title:'Throwzone KPIs',fields:[
     {n:'rev',l:'Monthly Revenue ($)',t:'num'},
     {n:'mem',l:'Active Members',t:'num'},
@@ -1861,6 +2024,212 @@ function brp(pid,vid,val,color){
 }
 function stel(id,val,style){const e=el(id);if(e){e.textContent=val;if(style)e.style.cssText=style;}}
 
+
+
+// ══ VELOCITY BANKING EXCEL IMPORT ═══════════════════════════
+function importVBExcel(evt) {
+  const file = evt.target.files[0];
+  if(!file) return;
+  const st = document.getElementById('vb-import-status');
+  if(st) st.textContent = 'Reading…';
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
+      const dash = wb.Sheets['Dashboard'];
+      const rows = XLSX.utils.sheet_to_json(dash, {header:1});
+
+      // Map labels to values
+      const v = {};
+      rows.forEach(r => {
+        for(let i=0;i<r.length;i++) {
+          if(typeof r[i]==='string' && r[i].trim() && r[i+1]!==undefined && r[i+1]!==null) {
+            v[r[i].trim()] = r[i+1];
+          }
+        }
+      });
+
+      // Set inputs
+      const set = (id, val) => { const el=document.getElementById('mi-'+id); if(el&&val!==undefined&&val!==null&&val!=='') el.value=Math.round(val*100)/100; };
+      set('citi',         v['Citi checking']);
+      set('savings',      v['CEFCU savings']);
+      set('heloc_bal',    v['HELOC balance owed']);
+      set('heloc_limit',  v['HELOC credit limit']);
+      set('buffer',       v['Citi minimum buffer']||200);
+      set('heloc_checks', Math.abs(v['Outstanding HELOC checks']||0));
+
+      // Citi pending total
+      const citiPend = wb.Sheets['Citi Pending'];
+      if(citiPend) {
+        const cp = XLSX.utils.sheet_to_json(citiPend, {header:1});
+        const cpTotal = cp.slice(4).filter(r=>r[5]!=='Y').reduce((s,r)=>s+(r[4]||0),0);
+        set('citi_pending', cpTotal);
+        // Populate pending list
+        renderPendingList(cp.slice(4).filter(r=>r[4]&&r[5]!=='Y').map(r=>({
+          date: r[0] instanceof Date ? r[0].toLocaleDateString('en-US',{month:'short',day:'numeric'}) : (r[0]||''),
+          type: r[1]||'', payee: r[2]||'', desc: r[3]||'', amount: r[4]||0, knight: r[6]==='Y'
+        })));
+      }
+
+      // Savings pending total
+      const savPend = wb.Sheets['Savings Pending'];
+      if(savPend) {
+        const sp = XLSX.utils.sheet_to_json(savPend, {header:1});
+        const spTotal = sp.slice(4).filter(r=>r[5]!=='Y').reduce((s,r)=>s+(r[4]||0),0);
+        set('sav_pending', spTotal);
+      }
+
+      // Bills earmark
+      const bills = wb.Sheets['Bills Earmark'];
+      if(bills) {
+        const bl = XLSX.utils.sheet_to_json(bills, {header:1});
+        const blData = bl.slice(4).filter(r=>r[0]&&r[3]!=='Y');
+        const blTotal = blData.reduce((s,r)=>s+(r[2]||0),0);
+        set('bills_due', blTotal);
+        renderBillsList(blData.map(r=>({bill:r[0]||'', due:r[1]||'', amount:r[2]||0, paid:r[3]==='Y', notes:r[4]||''})));
+      }
+
+      // Knight ledger
+      const kl = wb.Sheets['Knight Ledger'];
+      if(kl) {
+        const klRows = XLSX.utils.sheet_to_json(kl, {header:1});
+        let knightBal = 0;
+        klRows.slice(5).forEach(r=>{ if(typeof r[3]==='number') knightBal += r[3]; });
+        set('knight', knightBal);
+      }
+
+      calcVB();
+      if(st) st.textContent = '✓ Imported from ' + file.name;
+      saveVBManual();
+
+    } catch(err) {
+      if(st) st.textContent = 'Error: ' + err.message;
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function renderPendingList(items) {
+  const el = document.getElementById('pending-list');
+  if(!el) return;
+  if(!items.length) { el.innerHTML='<div class="empty" style="color:var(--grn)">No pending outflows</div>'; return; }
+  el.innerHTML = items.map(i=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 14px;border-bottom:1px solid #1a1e1a;">
+    <span style="font-size:9px;color:var(--mut);width:45px;flex-shrink:0">${i.date}</span>
+    <span style="font-size:9px;padding:1px 6px;background:rgba(196,144,48,0.15);color:var(--amb);flex-shrink:0">${i.type}</span>
+    <span style="flex:1;font-size:12px;color:var(--txt)">${esc(i.payee)}</span>
+    ${i.knight?'<span style="font-size:8px;padding:1px 5px;background:rgba(122,92,184,0.2);color:#b080ff">KNIGHT</span>':''}
+    <span style="font-size:13px;font-weight:700;color:var(--red)">$${Number(i.amount).toLocaleString()}</span>
+  </div>`).join('');
+  const total = items.reduce((s,i)=>s+i.amount,0);
+  document.getElementById('pending-total').textContent = '-$'+Math.round(total).toLocaleString();
+}
+
+function renderBillsList(items) {
+  const el = document.getElementById('bills-list');
+  if(!el) return;
+  if(!items.length) { el.innerHTML='<div class="empty" style="color:var(--grn)">No unpaid bills</div>'; return; }
+  el.innerHTML = items.map(i=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 14px;border-bottom:1px solid #1a1e1a;">
+    <span style="flex:1;font-size:12px;color:var(--txt)">${esc(i.bill)}</span>
+    <span style="font-size:9px;color:var(--mut)">${i.due instanceof Date ? i.due.toLocaleDateString('en-US',{month:'short',day:'numeric'}) : (i.due||'')}</span>
+    <span style="font-size:13px;font-weight:700;color:var(--red)">$${Number(i.amount).toLocaleString()}</span>
+  </div>`).join('');
+  const total = items.reduce((s,i)=>s+i.amount,0);
+  document.getElementById('bills-total').textContent = '-$'+Math.round(total).toLocaleString();
+}
+
+function calcVB() {
+  const g = id => parseFloat(document.getElementById('mi-'+id)?.value)||0;
+  const citi      = g('citi');
+  const savings   = g('savings');
+  const helocBal  = g('heloc_bal');
+  const helocLim  = g('heloc_limit') || 760000;
+  const buffer    = g('buffer') || 200;
+  const helocChks = g('heloc_checks');
+  const citiPend  = g('citi_pending');
+  const savPend   = g('sav_pending');
+  const billsDue  = g('bills_due');
+  const knight    = g('knight');
+
+  // Sweep calculations (matching spreadsheet logic)
+  const citiSweep = Math.max(0, citi - citiPend - knight - buffer);
+  const savSweep  = Math.max(0, savings - billsDue - savPend);
+  const totalSweep = citiSweep + savSweep;
+  const trueHeloc = helocBal - helocChks;
+  const available = helocLim - trueHeloc;
+
+  // Update hero cards
+  const set = (id, val, color) => {
+    const el = document.getElementById(id);
+    if(el){ el.textContent = val>0 ? '$'+Math.round(val).toLocaleString() : '—'; if(color) el.style.color=color; }
+  };
+  set('vb-citi-sweep',  citiSweep,  citiSweep>0?'#4a9c5c':'#d04040');
+  set('vb-sav-sweep',   savSweep,   savSweep>0?'#4a9c5c':'#d04040');
+  set('vb-total-sweep', totalSweep, totalSweep>0?'#4a9c5c':'#d04040');
+
+  // Account balances
+  const setEl = (id, val, color) => { const el=document.getElementById(id); if(el){el.textContent=val;if(color)el.style.color=color;} };
+  setEl('fa-citi',   citi>0?'$'+citi.toLocaleString():'—');
+  setEl('fa-sav',    savings>0?'$'+savings.toLocaleString():'—');
+  setEl('fa-heloc',  trueHeloc>0?'-$'+Math.round(trueHeloc).toLocaleString():'—', '#d04040');
+  setEl('fa-heloc-avail', available>0?'available: $'+Math.round(available).toLocaleString():'—');
+  setEl('fa-knight', knight!==0?'$'+Math.abs(knight).toLocaleString()+(knight>0?' (holding)':' (floating)'):'$0', knight>0?'#c49030':knight<0?'#d04040':'#4a9c5c');
+
+  // Budget summary
+  const income = g('monthly_income');
+  const spend  = g('monthly_spend');
+  const vmort  = g('monthly_vmort') || 7900;
+  const pmort  = g('monthly_pmort') || 3477;
+  const helocInt = trueHeloc * 0.065 / 12;
+  const totalOut = spend + vmort + pmort + helocInt;
+  const cf = income - totalOut;
+
+  if(income > 0 || spend > 0) {
+    document.getElementById('budget-summary').innerHTML =
+      `<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-bottom:1px solid var(--brd)">
+        <div style="padding:12px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Total Income</span><span style="font-size:20px;font-weight:700;color:#4a9c5c;display:block;margin-top:4px">$${Math.round(income).toLocaleString()}</span></div>
+        <div style="padding:12px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Total Fixed Expenses</span><span style="font-size:20px;font-weight:700;color:#d04040;display:block;margin-top:4px">$${Math.round(totalOut).toLocaleString()}</span><span style="font-size:9px;color:var(--mut)">spend+vmort+pmort+HELOC int</span></div>
+        <div style="padding:12px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Cash Flow</span><span style="font-size:20px;font-weight:700;color:${cf>=0?'#4a9c5c':'#d04040'};display:block;margin-top:4px">${cf>=0?'+':''}$${Math.round(Math.abs(cf)).toLocaleString()}</span></div>
+        <div style="padding:12px 16px"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">HELOC Interest/mo</span><span style="font-size:20px;font-weight:700;display:block;margin-top:4px">$${Math.round(helocInt).toLocaleString()}</span><span style="font-size:9px;color:var(--mut)">@ 6.5% on $${Math.round(trueHeloc/1000)}K</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--brd)">
+        <div style="padding:10px 16px;border-right:1px solid var(--brd)"><span style="font-size:9px;color:var(--mut)">Base Spend</span><span style="font-size:14px;font-weight:700;display:block">$${Math.round(spend).toLocaleString()}</span></div>
+        <div style="padding:10px 16px;border-right:1px solid var(--brd)"><span style="font-size:9px;color:var(--mut)">Vineta Mortgage</span><span style="font-size:14px;font-weight:700;display:block">$${Math.round(vmort).toLocaleString()}</span></div>
+        <div style="padding:10px 16px;border-right:1px solid var(--brd)"><span style="font-size:9px;color:var(--mut)">Paulette Mortgage</span><span style="font-size:14px;font-weight:700;display:block">$${Math.round(pmort).toLocaleString()}</span></div>
+        <div style="padding:10px 16px"><span style="font-size:9px;color:var(--mut)">Sweep Available</span><span style="font-size:14px;font-weight:700;color:#4a9c5c;display:block">$${Math.round(totalSweep).toLocaleString()}</span></div>
+      </div>`;
+  }
+
+  // Save to S.fins for AI
+  S.fins = { citi, savings, heloc: trueHeloc, helocLim, available, knight,
+    citiSweep, savSweep, totalSweep, income, spend, vmort, pmort, helocInt, totalOut, cf };
+  localStorage.setItem('kcc_fins', JSON.stringify(S.fins));
+}
+
+function saveVBManual() {
+  calcVB();
+  fbSaveAll();
+  const st = document.getElementById('vb-import-status');
+  if(st) st.textContent = '✓ Saved ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+}
+
+function rFin() {
+  // Restore saved inputs
+  const f = S.fins;
+  if(f) {
+    const restore = (id, val) => { const el=document.getElementById('mi-'+id); if(el&&val) el.value=val; };
+    restore('citi',         f.citi);
+    restore('savings',      f.savings);
+    restore('heloc_bal',    f.heloc);
+    restore('heloc_limit',  f.helocLim||760000);
+    restore('knight',       f.knight||0);
+    restore('monthly_income', f.income||0);
+    restore('monthly_spend',  f.spend||22000);
+    restore('monthly_vmort',  f.vmort||7900);
+    restore('monthly_pmort',  f.pmort||3477);
+    calcVB();
+  }
+}
 
 </script>
 </body>

@@ -676,7 +676,7 @@ localStorage.setItem = function(key, value) {
     </div>
   </div>
 
-  <div class="ai-block" id="ai-tickets">
+  <div class="ai-block visible" id="ai-tickets">
     <div class="ai-hdr"><span class="ai-title">✦ AI Ticket Analysis</span><span class="ai-thinking" id="ai-tickets-st">Click to generate</span></div>
     <div class="ai-text loading" id="ai-tickets-tx">Claude will analyze your ticket P&L, upcoming events, and card balances.</div>
   </div>
@@ -2479,6 +2479,7 @@ function rTickets() {
       +'</tbody></table>';
   }
 
+  // Always render card section regardless of import
   tkUpdateCards();
 }
 

@@ -1470,16 +1470,23 @@ function rFin(){
 function rFire(){
   const fire=S.fire, goals=S.fireg;
   if(fire){
-    const gap=fire.inc-fire.need, gn=gap<0;
-    el('fsv1').textContent=f$(fire.need);
+    // True monthly need = base spend + Vineta mortgage + Paulette mortgage + HELOC interest
+    const helocInt = (fire.heloc||700000) * 0.065 / 12;
+    const trueNeed = (fire.need||0) + (fire.vmort||7900) + (fire.pmort||3477) + helocInt;
+    const gap = fire.inc - trueNeed;
+    const gn = gap < 0;
+    el('fsv1').textContent=f$(Math.round(trueNeed));
+    // Update sub-label to show breakdown
+    const sp1=document.getElementById('fsp1');
+    if(sp1){const sub=sp1.querySelector('.pill-sub')||sp1.querySelector('.spl');
+      if(sub) sub.textContent='spend+vmort+pmort+HELOC int';}
     el('fsv2').textContent=f$(fire.inc);
-    el('fsv3').textContent=(gn?'-$':'$')+Math.abs(gap).toLocaleString();
+    el('fsv3').textContent=(gn?'-$':'$')+Math.abs(Math.round(gap)).toLocaleString();
     el('fsv3').style.color=gn?'var(--red)':'var(--grn)';
     el('fsv4').textContent=(fire.fire_pct||0)+'%';
     el('fsv4').style.color=(fire.fire_pct||0)>=100?'var(--grn)':(fire.fire_pct||0)>=70?'var(--amb)':'var(--red)';
-    // Update sub-labels
-    const sp4=document.getElementById('fsp4');
-    if(sp4){const lbl=sp4.querySelector('.spl');if(lbl)lbl.textContent='FIRE %';}
+    // Store true need back for AI/briefing use
+    fire._trueNeed = Math.round(trueNeed);
   }
   // Asset balances
   if(fire){
@@ -1703,14 +1710,16 @@ const MCFG={
     {n:'suggested_action',l:'Action',t:'sel',o:['Sell Now','Lower Price','Bundle','Hold']},
   ],def:{status:'Open',suggested_action:'Hold'},k:'kcc_tickets',arr:'tickets'},
   fire:{title:'Update FIRE Metrics',fields:[
-    {n:'need',l:'Monthly Need ($)',t:'num',req:true},
+    {n:'need',l:'Base Monthly Spend ($)',t:'num',req:true},
     {n:'inc',l:'Current Monthly Income ($)',t:'num',req:true},
+    {n:'vmort',l:'Vineta Mortgage ($/mo)',t:'num'},
+    {n:'pmort',l:'Paulette Mortgage ($/mo)',t:'num'},
+    {n:'heloc',l:'HELOC Balance ($)',t:'num'},
     {n:'hf',l:'HF Balance ($)',t:'num'},
     {n:'tiaa',l:'TIAA Balance ($)',t:'num'},
-    {n:'heloc',l:'HELOC Balance ($)',t:'num'},
     {n:'biz_income',l:'Business Income ($/mo)',t:'num'},
     {n:'fire_pct',l:'FIRE % (from FIRE Lab)',t:'num'},
-  ],def:{need:22000,inc:0,hf:150000,tiaa:420000,heloc:700000,biz_income:0,fire_pct:0},k:'kcc_fire',single:true,arr:'fire'},
+  ],def:{need:22000,vmort:7900,pmort:3477,heloc:700000,inc:0,hf:150000,tiaa:420000,biz_income:0,fire_pct:0},k:'kcc_fire',single:true,arr:'fire'},
   fireGoal:{title:'FIRE Goals',fields:[
     {n:'target',l:'Target Annual Income ($)',t:'num',req:true},
     {n:'rr',l:'Current Run Rate ($/yr)',t:'num'},

@@ -1795,12 +1795,16 @@ function rFin(){
     const fe = document.getElementById('fin-empty');
     if(fc) fc.style.display='block';
     if(fe) fe.style.display='none';
-    el('fa-citi').textContent=f$(f.citi);
-    el('fa-heloc').textContent=f.heloc?'-'+f$(f.heloc):'—';
-    const fha=document.getElementById('fa-heloc-avail'); if(fha) fha.textContent=f.available?f$(f.available):'—';;
-    el('fa-knight').textContent=f$(f.knight);
-    el('fa-sav').textContent=f$(f.savings);
-    if(f.heloc&&f.chk){
+    // Update subtitle
+    const vlbl = document.getElementById('vb-last-import');
+    if(vlbl && f.importTime) vlbl.textContent = 'Last imported: ' + f.importTime;
+    else if(vlbl && S.lastSync) vlbl.textContent = 'Velocity Banking · Last synced ' + new Date(S.lastSync).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    if(el('fa-citi')) el('fa-citi').textContent=f$(f.citi);
+    if(el('fa-heloc')) el('fa-heloc').textContent=f.heloc?'-'+f$(f.heloc):'—';
+    const fha=document.getElementById('fa-heloc-avail'); if(fha) fha.textContent=f.available?f$(f.available):'—';
+    if(el('fa-knight')) el('fa-knight').textContent=f$(f.knight);
+    if(el('fa-sav')) el('fa-sav').textContent=f$(f.savings);
+    if(f.heloc&&f.citi){
       const sur=(f.chk||0)-(f.tgt||5000);
       const rec=sur>0?'Sweep $'+sur.toLocaleString()+' → HELOC paydown':'Maintain current checking buffer';
       el('velBody').innerHTML='<div class="row"><span class="rtl">Checking target</span><span class="rsb">'+f$(f.tgt||5000)+'</span></div>'
@@ -2556,6 +2560,7 @@ function importVBExcel(evt) {
       // Merge CC card data into fins for alerts
       if(ccData) S.fins_cc = ccData;
       S.fins = { citi, savings, heloc: trueHeloc, helocLim, available, knight,
+        importTime: new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
         citiSweep, savSweep, totalSweep, income, spend, vmort, pmort, helocInt,
         totalExp: spend+vmort+pmort+helocInt, cf: cashFlow, hf: hfBal, tiaa: tiaaBal, firePct,
         cc: ccData };  // cc.cards has bal/lim/minDue/dueDay per card

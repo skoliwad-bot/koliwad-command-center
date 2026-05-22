@@ -2491,14 +2491,14 @@ function importVBExcel(evt) {
         ccData.amexLocBal = locRow[2]||0;
         ccData.amexLocLim = locRow[3]||0;
         // Obligations (rows 20-22, 0-indexed 19-21)
+        // Obligations - use dangRow found above
         ccData.obligations = [];
-        for(let i=0;i<3;i++) {
-          const r = ccRows[19+i]||[];
-          if(r[2]>0) ccData.obligations.push({payee:r[1]||'',amount:r[2]||0,priority:r[3]||'',notes:r[6]||''});
+        if(dangRow && typeof dangRow[2]==='number' && dangRow[2]>0) {
+          ccData.obligations.push({payee:dangRow[1]||'Randy Dang', amount:dangRow[2], priority:dangRow[3]||'1 — FIRST', notes:dangRow[6]||''});
         }
         ccData.totalCC  = ccData.cards.reduce((s,c)=>s+c.bal,0);
         ccData.totalMin = ccData.cards.reduce((s,c)=>s+c.minDue,0);
-        ccData.dangOwed = ccRows[19]?.[2]||0;
+        ccData.dangOwed = dangRow ? (dangRow[2]||0) : 0;
       }
 
       // ── SYNC CC DATA TO TICKETS PAGE ──

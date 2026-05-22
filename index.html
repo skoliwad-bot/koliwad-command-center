@@ -304,7 +304,7 @@ const FB_KEYS = [
   'kcc_aitexts','kcc_sync','kcc_name','kcc_cid','kcc_claude',
   'kcc_firelab_inputs','kcc_firelab_saved',
   'kcc_tkm','kcc_tku','kcc_tkhr','kcc_tkmed','kcc_tk_cards',
-  'kcc_payplans','kcc_recbills','kcc_cc_import','kcc_cc_paid','kcc_manbills',
+  'kcc_payplans','kcc_recbills','kcc_playbook_checks','kcc_cc_import','kcc_cc_paid','kcc_manbills',
   'kcc_fire_actuals','kcc_inbox','kcc_emails','kcc_calnames'
 ];
 
@@ -472,6 +472,15 @@ localStorage.setItem = function(key, value) {
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="om('task')">+ Task</button><button class="btn" onclick="om('alert')">+ Alert</button><button class="btn" onclick="om('ticket')">+ Ticket</button></div>
 
         <!-- TOMORROW -->
+        <!-- PLAYBOOK TODAY -->
+        <div style="border:1px solid var(--brd);background:var(--surf);margin-top:16px;">
+          <div class="ch" style="background:#080a08;display:flex;align-items:center;justify-content:space-between;">
+            <span class="ct" style="color:var(--grn)">📋 Playbook</span>
+            <button onclick="nav('playbook')" style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:none;border:1px solid var(--brd);color:var(--mut);padding:3px 8px;cursor:pointer;">View All</button>
+          </div>
+          <div id="t-playbook" style="padding:6px 14px;"><div class="empty">Loading...</div></div>
+        </div>
+
         <div style="margin-top:16px;border:1px solid var(--brd2);background:var(--surf2);">
           <div class="ch" style="background:#0f110f;">
             <span class="ct b">📅 Tomorrow — <span id="tmr-date">—</span></span>
@@ -666,6 +675,50 @@ localStorage.setItem = function(key, value) {
 </div>
 
       </div>
+      <!-- PLAYBOOK -->
+      <div class="page" id="p-playbook">
+        <div class="ph">
+          <div><div class="pt">Playbook</div><div class="ps">Daily · Weekly · Monthly operating cadence</div></div>
+        </div>
+
+        <!-- DAILY -->
+        <div style="border:1px solid var(--brd);background:var(--surf);margin-bottom:12px;">
+          <div class="ch" style="background:#080a08;">
+            <span class="ct" style="color:var(--grn)">⚡ Daily</span>
+            <span style="font-size:9px;color:var(--mut)">Every day — takes ~5 min</span>
+          </div>
+          <div id="pb-daily"></div>
+        </div>
+
+        <!-- WEEKLY -->
+        <div style="border:1px solid var(--brd);background:var(--surf);margin-bottom:12px;">
+          <div class="ch" style="background:#080a08;">
+            <span class="ct" style="color:var(--blu)">📅 Weekly</span>
+            <span style="font-size:9px;color:var(--mut)">Pick a consistent day</span>
+          </div>
+          <div id="pb-weekly"></div>
+        </div>
+
+        <!-- MONTHLY -->
+        <div style="border:1px solid var(--brd);background:var(--surf);margin-bottom:12px;">
+          <div class="ch" style="background:#080a08;">
+            <span class="ct" style="color:var(--amb)">🗓 Monthly</span>
+            <span style="font-size:9px;color:var(--mut)">1st–5th of each month</span>
+          </div>
+          <div id="pb-monthly"></div>
+        </div>
+
+        <!-- ON DEMAND -->
+        <div style="border:1px solid var(--brd);background:var(--surf);margin-bottom:12px;">
+          <div class="ch" style="background:#080a08;">
+            <span class="ct" style="color:var(--mut)">🔧 On Demand</span>
+            <span style="font-size:9px;color:var(--mut)">As needed</span>
+          </div>
+          <div id="pb-ondemand"></div>
+        </div>
+
+      </div>
+
       <!-- FIRE -->
       <div class="page" id="p-fire">
         <div class="ph"><div><div class="pt">FIRE Path</div><div class="ps">Financial Independence — import in 🔬 FIRE Lab to sync data</div></div>
@@ -1355,6 +1408,7 @@ function nav(pg){
   if(pg==='portfolio'){rPortfolio();// init GTC states
     [1,2,3].forEach(n=>{if(S.gtc&&S.gtc[n]!==undefined)toggleGTC(n);});}
   if(pg==='exec') rExec();
+  if(pg==='playbook') renderPlaybook();
 }
 
 // ── GOOGLE API ───────────────────────────────────────────────
@@ -1640,6 +1694,9 @@ function rToday(){
   if(inboxLbl){inboxLbl.textContent=S.inboxCount>0?'Inbox: '+S.inboxCount+' total'+(S.inboxCount>70?' ⚠ OVER 70':''):'';inboxLbl.style.color=S.inboxCount>70?'#d04040':'#8aaa8a';}
   const emEl=el('t-emails');
   if(emEl)emEl.innerHTML=emails.length===0?'<div class="empty">No urgent emails</div>':emails.map(e=>'<div class="row"><span class="b '+(e.m==='Must'?'bm':'bs')+'">'+e.m+'</span><span class="rtl">'+esc(e.title)+'</span><span class="rsb">Gmail</span></div>').join('');
+  // PLAYBOOK
+  renderPlaybookToday();
+
   // TOMORROW
   const tmr = new Date(); tmr.setDate(tmr.getDate()+1); tmr.setHours(0,0,0,0);
   const tmrEnd = new Date(tmr); tmrEnd.setHours(23,59,59);
@@ -4008,6 +4065,137 @@ function delManBill(idx) {
   localStorage.setItem('kcc_manbills', JSON.stringify(bills));
   fbSaveAll();
   renderManBills();
+}
+
+
+// ══ PLAYBOOK ══════════════════════════════════════════════════
+
+const PLAYBOOK = {
+  daily: [
+    { id:'pb_d1', label:'Check Alerts & Today page', detail:'Review open alerts, must tasks, and schedule', icon:'🚨' },
+    { id:'pb_d2', label:'Check ticket listings', detail:'Verify active listings are live and priced correctly', icon:'🎟' },
+    { id:'pb_d3', label:'Google Sync', detail:'Tap ↻ Sync to pull latest tasks, calendar, and email', icon:'🔄' },
+    { id:'pb_d4', label:'Review Tomorrow section', detail:'Scroll to bottom of Today — plan ahead for tomorrow', icon:'📅' },
+  ],
+  weekly: [
+    { id:'pb_w1', label:'Import VB Spreadsheet', detail:'Update balances → Import Excel → refreshes all financials', icon:'📊' },
+    { id:'pb_w2', label:'Run AI Ticket Analysis', detail:'Tickets page → ✦ AI Analysis — get distribution recommendation', icon:'🤖' },
+    { id:'pb_w3', label:'Review FIRE Path tasks', detail:'Check critical tasks, mark completed, update FIRE metrics', icon:'🔥' },
+    { id:'pb_w4', label:'Velocity banking sweep', detail:'Check sweep amount on Financials → execute Citi→Savings→HELOC', icon:'💰' },
+    { id:'pb_w5', label:'Review ticket P&L', detail:'Check Profit MTD/YTD — adjust pricing on stale listings', icon:'📈' },
+  ],
+  monthly: [
+    { id:'pb_m1', label:'Update spreadsheet balances', detail:'Enter new CC balances, checking, savings into VB spreadsheet', icon:'📝' },
+    { id:'pb_m2', label:'Reset CC Paid checkboxes', detail:'Auto-resets on 1st — verify all cards are unchecked', icon:'✅' },
+    { id:'pb_m3', label:'Run AI Exec Summary', detail:'Exec Summary page → ✦ Generate with AI — monthly review', icon:'📋' },
+    { id:'pb_m4', label:'Run AI Money Move', detail:'Financials page → ✦ AI Money Move — velocity banking plan', icon:'🏦' },
+    { id:'pb_m5', label:'Pay manual bills', detail:'Review Manual Bills section on Financials — check off paid', icon:'💳' },
+    { id:'pb_m6', label:'Review payment plans', detail:'Check upcoming season ticket payments on Tickets page', icon:'🎫' },
+  ],
+  ondemand: [
+    { id:'pb_o1', label:'Add ticket event', detail:'Tickets → + Add when you acquire new inventory', icon:'➕' },
+    { id:'pb_o2', label:'Add payment plan', detail:'Tickets → + Add Payment Plan for new season ticket contracts', icon:'📆' },
+    { id:'pb_o3', label:'Add manual bill', detail:'Financials → + Add Bill / Payment for new recurring obligations', icon:'🧾' },
+    { id:'pb_o4', label:'Update FIRE actuals', detail:'FIRE Lab → Actuals tab — record real income/expenses monthly', icon:'📉' },
+    { id:'pb_o5', label:'Add task or alert', detail:'Use + Add buttons to capture anything outside normal cadence', icon:'🔔' },
+  ]
+};
+
+function renderPlaybook() {
+  const now = new Date();
+  const todayKey = now.toISOString().split('T')[0];
+  const thisMonth = now.getFullYear() + '-' + (now.getMonth()+1);
+  const checks = JSON.parse(localStorage.getItem('kcc_playbook_checks')||'{}');
+
+  function renderSection(elId, items, freq) {
+    const el = document.getElementById(elId);
+    if(!el) return;
+    el.innerHTML = items.map(item => {
+      const key = freq === 'daily' ? item.id+'_'+todayKey :
+                  freq === 'weekly' ? item.id+'_week'+getWeekNum(now) :
+                  freq === 'monthly' ? item.id+'_'+thisMonth : item.id;
+      const done = checks[key] || false;
+      return `<div style="display:flex;align-items:flex-start;gap:12px;padding:10px 16px;border-bottom:1px solid #1e231e;${done?'opacity:0.45':''}">
+        <input type="checkbox" ${done?'checked':''} onchange="pbCheck('${key}', this.checked)"
+          style="width:16px;height:16px;margin-top:2px;accent-color:var(--grn);flex-shrink:0;cursor:pointer">
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:600;color:var(--txt)">${item.icon} ${esc(item.label)}${done?' <span style="color:var(--grn);font-size:10px">✓</span>':''}</div>
+          <div style="font-size:10px;color:var(--mut2);margin-top:2px">${esc(item.detail)}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  renderSection('pb-daily', PLAYBOOK.daily, 'daily');
+  renderSection('pb-weekly', PLAYBOOK.weekly, 'weekly');
+  renderSection('pb-monthly', PLAYBOOK.monthly, 'monthly');
+  renderSection('pb-ondemand', PLAYBOOK.ondemand, 'ondemand');
+}
+
+function pbCheck(key, checked) {
+  const checks = JSON.parse(localStorage.getItem('kcc_playbook_checks')||'{}');
+  checks[key] = checked;
+  // Clean up old keys (keep only last 60 days)
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate()-60);
+  Object.keys(checks).forEach(k => {
+    const datePart = k.match(/\d{4}-\d{2}-\d{2}/);
+    if(datePart && new Date(datePart[0]) < cutoff) delete checks[k];
+  });
+  localStorage.setItem('kcc_playbook_checks', JSON.stringify(checks));
+  renderPlaybook();
+  renderPlaybookToday();
+}
+
+function getWeekNum(d) {
+  const onejan = new Date(d.getFullYear(), 0, 1);
+  return Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+}
+
+function renderPlaybookToday() {
+  const el = document.getElementById('t-playbook');
+  if(!el) return;
+  const now = new Date();
+  const todayKey = now.toISOString().split('T')[0];
+  const thisMonth = now.getFullYear() + '-' + (now.getMonth()+1);
+  const checks = JSON.parse(localStorage.getItem('kcc_playbook_checks')||'{}');
+
+  const items = [];
+
+  // Daily items not yet done
+  PLAYBOOK.daily.forEach(item => {
+    const key = item.id+'_'+todayKey;
+    if(!checks[key]) items.push({...item, freq:'Daily', color:'var(--grn)', key});
+  });
+
+  // Weekly items not done this week
+  PLAYBOOK.weekly.forEach(item => {
+    const key = item.id+'_week'+getWeekNum(now);
+    if(!checks[key]) items.push({...item, freq:'Weekly', color:'var(--blu)', key});
+  });
+
+  // Monthly items not done this month (only show 1st-7th)
+  if(now.getDate() <= 7) {
+    PLAYBOOK.monthly.forEach(item => {
+      const key = item.id+'_'+thisMonth;
+      if(!checks[key]) items.push({...item, freq:'Monthly', color:'var(--amb)', key});
+    });
+  }
+
+  if(!items.length) {
+    el.innerHTML = '<div class="empty" style="color:var(--grn)">✅ All Playbook items complete</div>';
+    return;
+  }
+
+  el.innerHTML = items.slice(0,6).map(item =>
+    `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #1e231e">
+      <input type="checkbox" onchange="pbCheck('${item.key}', this.checked)"
+        style="width:14px;height:14px;accent-color:var(--grn);flex-shrink:0;cursor:pointer">
+      <div style="flex:1;min-width:0">
+        <div class="rtl">${item.icon} ${esc(item.label)}</div>
+        <div class="rsb" style="color:${item.color}">${item.freq}</div>
+      </div>
+    </div>`
+  ).join('') + (items.length > 6 ? `<div style="font-size:9px;color:var(--mut2);padding:4px 0">+${items.length-6} more — see Playbook</div>` : '');
 }
 
 </script>

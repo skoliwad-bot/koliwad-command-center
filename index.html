@@ -1792,10 +1792,11 @@ function rFin(){
     const fe = document.getElementById('fin-empty');
     if(fc) fc.style.display='block';
     if(fe) fe.style.display='none';
-    el('fa1').textContent=f$(f.chk);
-    el('fa2').textContent=f.heloc?'-'+f$(f.heloc):'—';
-    el('fa3').textContent=f$(f.knight);
-    el('fa4').textContent=f$(f.sav);
+    el('fa-citi').textContent=f$(f.citi);
+    el('fa-heloc').textContent=f.heloc?'-'+f$(f.heloc):'—';
+    const fha=document.getElementById('fa-heloc-avail'); if(fha) fha.textContent=f.available?f$(f.available):'—';;
+    el('fa-knight').textContent=f$(f.knight);
+    el('fa-sav').textContent=f$(f.savings);
     if(f.heloc&&f.chk){
       const sur=(f.chk||0)-(f.tgt||5000);
       const rec=sur>0?'Sweep $'+sur.toLocaleString()+' → HELOC paydown':'Maintain current checking buffer';
@@ -2163,7 +2164,7 @@ const MCFG={
     {n:'name',    l:'Bill / Payment Name',        t:'text', req:true, ph:'e.g. Mortgage, Tuition, HOA'},
     {n:'amount',  l:'Amount ($)',                  t:'num',  ph:'leave blank if variable'},
     {n:'freq',    l:'Frequency',                  t:'sel',  o:['Monthly','Quarterly','Annual','One-time'], req:true},
-    {n:'nextDate',l:'Next Due Date',              t:'text', req:true, ph:'e.g. Jun 1 2026'},
+    {n:'nextDate',l:'Next Due Date (when is it next due?)', t:'text', req:true, ph:'e.g. Jun 1 2026  or  Sep 15 2026'},
     {n:'account', l:'Pay From Account',           t:'sel',  o:['Citi Checking','CEFCU Savings','HELOC','WF Checking','Other']},
     {n:'notes',   l:'Notes',                      t:'text'},
   ],def:{freq:'Monthly',account:'Citi Checking'},k:'kcc_manbills',arr:'manbills'},
@@ -3873,21 +3874,20 @@ function renderManBills() {
 
   // Calculate next due date for each bill
   function nextDue(b) {
-    // Use nextDate as the anchor - then advance by frequency
-    const baseStr = b.nextDate || b.dueDate;
-    if(!baseStr) return null;
-    let d = new Date(baseStr);
-    if(isNaN(d)) return null;
-    d.setHours(0,0,0,0);
-    if(b.freq === 'One-time') return d;
+    let d = null;
+    // Try nextDate first (new format)
+    if(b.nextDate) { d = new Date(b.nextDate); if(isNaN(d)) d=null; else d.setHours(0,0,0,0); }
+    // Fall back to dueDate
+    if(!d && b.dueDate) { d = new Date(b.dueDate); if(isNaN(d)) d=null; else d.setHours(0,0,0,0); }
+    // Fall back to day-of-month (old format)
+    if(!d && b.day) { d = new Date(now.getFullYear(), now.getMonth(), parseInt(b.day)); }
+    // Default to today if nothing
+    if(!d) d = new Date(now);
+    if(b.freq === 'One-time') return d >= now ? d : null;
     // Advance to next future occurrence
-    if(b.freq === 'Monthly') {
-      while(d < now) d.setMonth(d.getMonth()+1);
-    } else if(b.freq === 'Quarterly') {
-      while(d < now) d.setMonth(d.getMonth()+3);
-    } else if(b.freq === 'Annual') {
-      while(d < now) d.setFullYear(d.getFullYear()+1);
-    }
+    if(b.freq === 'Monthly') { while(d < now) d.setMonth(d.getMonth()+1); }
+    else if(b.freq === 'Quarterly') { while(d < now) d.setMonth(d.getMonth()+3); }
+    else if(b.freq === 'Annual') { while(d < now) d.setFullYear(d.getFullYear()+1); }
     return d;
   }
 

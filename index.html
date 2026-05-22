@@ -2824,13 +2824,27 @@ function tkUpdateCards() {
   h += '<th style="padding:7px 12px;text-align:right;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b0ccb0;border-bottom:2px solid var(--brd)">Due Date</th>';
   h += '</tr></thead><tbody>';
 
+  const MONTHS2=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   c.forEach((card, i) => {
     if(!card) return;
     const isPaid = paid[cardKeys[i]]||false;
+    // Calculate due date
+    let dueLabel = '—';
+    if(card.dueDay) {
+      const n = new Date(); n.setHours(0,0,0,0);
+      let dd = new Date(n.getFullYear(), n.getMonth(), card.dueDay);
+      if(dd < n) dd.setMonth(dd.getMonth()+1);
+      const days = Math.ceil((dd-n)/86400000);
+      dueLabel = MONTHS2[dd.getMonth()]+' '+dd.getDate();
+      if(days<=0) dueLabel += ' 🔴';
+      else if(days<=3) dueLabel += ' 🔴';
+      else if(days<=7) dueLabel += ' 🟡';
+    }
     h += '<tr style="border-bottom:1px solid #1e231e'+(isPaid?';opacity:0.5':'')+'">';
     h += '<td style="padding:8px 12px;font-weight:600;color:var(--txt)">'+(isPaid?'<span style="color:var(--grn);margin-right:4px">✓</span>':'')+esc(String(card.name||''))+'</td>';
     h += '<td style="padding:8px 12px;text-align:right;font-weight:700;color:'+(card.bal>0?'var(--red)':'var(--grn)')+'">'+(card.bal>0?f$(card.bal):'$0')+'</td>';
     h += '<td style="padding:8px 12px;text-align:right;color:'+(card.minDue>0&&!isPaid?'var(--amb)':'var(--grn)')+'">'+( isPaid?'✓ PAID':card.minDue>0?f$(card.minDue):'—')+'</td>';
+    h += '<td style="padding:6px 10px;text-align:right;font-size:10px;color:var(--txt2)">'+dueLabel+'</td>';
     h += '</tr>';
   });
 

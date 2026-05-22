@@ -2501,6 +2501,34 @@ function importVBExcel(evt) {
         ccData.dangOwed = ccRows[19]?.[2]||0;
       }
 
+      // ── SYNC CC DATA TO TICKETS PAGE ──
+      // Map VB CC data into tk_cards format so Tickets page shows real balances
+      if(ccData && ccData.cards && ccData.cards.length) {
+        const existing = JSON.parse(localStorage.getItem('kcc_tk_cards')||'{}');
+        const c = ccData.cards;
+        const merged = {
+          ...existing,
+          c1b: c[0]?.bal||0,  c1m: c[0]?.minDue||0,
+          c2b: c[1]?.bal||0,  c2m: c[1]?.minDue||0,
+          c3b: c[2]?.bal||0,  c3m: c[2]?.minDue||0,
+          c4b: c[3]?.bal||0,  c4m: c[3]?.minDue||0,
+          c5b: c[4]?.bal||0,  c5m: c[4]?.minDue||0,
+          amexLocBal: ccData.amexLocBal||0,
+          amexLocLim: ccData.amexLocLim||0,
+          dang: ccData.obligations?.[0]?.amount||existing.dang||0,
+          // Preserve due days and paid status from existing
+          c1due: c[0]?.dueDay||existing.c1due||'',
+          c2due: c[1]?.dueDay||existing.c2due||'',
+          c3due: c[2]?.dueDay||existing.c3due||'',
+          c4due: c[3]?.dueDay||existing.c4due||'',
+          c5due: c[4]?.dueDay||existing.c5due||'',
+          paid: existing.paid||{},
+          loc: ccData.amexLocBal||existing.loc||0,
+        };
+        localStorage.setItem('kcc_tk_cards', JSON.stringify(merged));
+        S.tkCards = merged;
+      }
+
       // ── SAVE TO STATE ──
       // Merge CC card data into fins for alerts
       if(ccData) S.fins_cc = ccData;

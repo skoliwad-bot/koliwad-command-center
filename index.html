@@ -2505,33 +2505,13 @@ function importVBExcel(evt) {
       if(ccData && ccData.cards && ccData.cards.length) {
         const existingPaid = JSON.parse(localStorage.getItem('kcc_cc_import')||'{}').paid||{};
         const c = ccData.cards;
-        // Build fresh - don't inherit old corrupted data except paid status and due days
+        // Store cards array directly - same format tkUpdateCards reads
         const merged = {
-          // Balances from spreadsheet
-          c1b: c[0]?.bal||0,
-          c2b: c[1]?.bal||0,
-          c3b: c[2]?.bal||0,
-          c4b: c[3]?.bal||0,
-          c5b: c[4]?.bal||0,
-          // Min dues from spreadsheet (actual $ amounts)
-          c1m: c[0]?.minDue||0,
-          c2m: c[1]?.minDue||0,
-          c3m: c[2]?.minDue||0,
-          c4m: c[3]?.minDue||0,
-          c5m: c[4]?.minDue||0,
-          // Due days - use spreadsheet value if available, else preserve existing
-          c1due: c[0]?.dueDay||existing.c1due||'',
-          c2due: c[1]?.dueDay||existing.c2due||'',
-          c3due: c[2]?.dueDay||existing.c3due||'',
-          c4due: c[3]?.dueDay||existing.c4due||'',
-          c5due: c[4]?.dueDay||existing.c5due||'',
-          // LOC and obligations from spreadsheet
+          cards: c,  // full cards array with bal, minDue, dueDay per card
           amexLocBal: ccData.amexLocBal||0,
           amexLocLim: ccData.amexLocLim||0,
-          loc: ccData.amexLocBal||0,
-          dang: ccData.dangOwed||0,
-          // Preserve only paid status from existing
-          paid: existing.paid||{},
+          dangOwed: ccData.dangOwed||0,
+          paid: existingPaid,
         };
         // Save to clean separate key - never mixed with manual data
         localStorage.setItem('kcc_cc_import', JSON.stringify(merged));

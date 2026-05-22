@@ -1783,6 +1783,8 @@ function resTk(id){const t=S.tickets.find(x=>x.id===id);if(t){t.status='Resolved
 
 // ── FINANCIALS ───────────────────────────────────────────────
 function rFin(){
+  // Load from localStorage if S.fins not yet set
+  if(!S.fins) S.fins = JSON.parse(localStorage.getItem('kcc_fins')||'null');
   const f=S.fins;
   if(f){
     // Show fin-content, hide fin-empty

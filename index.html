@@ -3769,7 +3769,7 @@ function renderPaymentPlans() {
   const upEl = document.getElementById('upcoming-payments');
   const upTot = document.getElementById('upcoming-pay-total');
   const upcoming = [];
-  const in30 = new Date(now); in30.setDate(now.getDate()+15);
+  const in30 = new Date(now); in30.setDate(now.getDate()+30);
 
   // From payment plans
   plans.forEach(p => {
@@ -3859,7 +3859,7 @@ function renderManBills() {
   const bills = S.manbills || JSON.parse(localStorage.getItem('kcc_manbills')||'[]');
   S.manbills = bills;
   const now = new Date(); now.setHours(0,0,0,0);
-  const in30 = new Date(now); in30.setDate(now.getDate()+30);
+  const in30 = new Date(now); in30.setDate(now.getDate()+15);
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const f$ = n => '$'+Math.round(n||0).toLocaleString();
 
@@ -3904,7 +3904,7 @@ function renderManBills() {
     if(!upcoming.length) {
       upEl.innerHTML = '<div class="empty" style="color:var(--grn);padding:8px 14px">✓ No manual bills due in 30 days</div>';
     } else {
-      upEl.innerHTML = '<div style="padding:7px 14px;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--brd)">DUE WITHIN 30 DAYS</div>'
+      upEl.innerHTML = '<div style="padding:7px 14px;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--brd)">DUE WITHIN 15 DAYS</div>'
         + upcoming.map(({b,i,d}) => {
           const days = Math.ceil((d-now)/86400000);
           const urgBg = days<=3?'rgba(224,80,80,0.1)':days<=7?'rgba(196,148,48,0.08)':'transparent';

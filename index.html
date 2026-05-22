@@ -71,8 +71,8 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'JetBrai
 
 /* ── CONTENT ── */
 .content{flex:1;overflow-y:auto;overflow-x:hidden;}
-.page{display:none;padding:22px 26px;animation:fi .15s ease;}
-.page.on{display:block;}
+.page{display:none;padding:22px 26px;animation:fi .15s ease;width:100%;box-sizing:border-box;}
+.page.on{display:block;min-height:100px;}
 @keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
 .ph{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px;}
 .pt{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:1px;text-transform:uppercase;}

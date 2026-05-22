@@ -2452,9 +2452,10 @@ function importVBExcel(evt) {
 
       // ── READ CITI PENDING ──
       const cp = wb.Sheets['Citi Pending'];
+      let pendingData = []; let billsData = [];
       if(cp) {
         const rows = XLSX.utils.sheet_to_json(cp, {header:1}).slice(6);
-        const pendingData = rows.filter(r=>r[4]&&r[5]!=='Y').map(r=>({
+        pendingData = rows.filter(r=>r[4]&&r[5]!=='Y').map(r=>({
           date: r[0] instanceof Date ? r[0].toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '',
           type: r[1]||'', payee: r[2]||'', amount: r[4]||0, knight: r[6]==='Y'
         }));
@@ -2480,7 +2481,7 @@ function importVBExcel(evt) {
       const be = wb.Sheets['Bills Earmark'];
       if(be) {
         const rows = XLSX.utils.sheet_to_json(be, {header:1}).slice(6);
-        const billsData = rows.filter(r=>r[0]&&r[3]!=='Y').map(r=>({
+        billsData = rows.filter(r=>r[0]&&r[3]!=='Y').map(r=>({
           bill: r[0]||'',
           due: r[1] instanceof Date ? r[1].toLocaleDateString('en-US',{month:'short',day:'numeric'}) : (r[1]||''),
           amount: r[2]||0

@@ -769,6 +769,17 @@ localStorage.setItem = function(key, value) {
           <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Randy Dang Owed</div><input id="tk-dang" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
         </div>
         <button onclick="tkSaveCards()" style="margin-top:10px;width:100%;padding:7px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:var(--red);border:none;color:white;cursor:pointer;">💾 Save</button>
+        <div style="margin-top:10px;border-top:1px solid var(--brd);padding-top:8px;">
+          <div style="font-size:8px;color:var(--mut2);font-style:italic;margin-bottom:6px;">Due dates auto-read from VB spreadsheet import</div>
+          <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--grn);margin-bottom:6px;">✓ PAID THIS MONTH</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--txt2);cursor:pointer;"><input type="checkbox" id="tk-paid-c1" onchange="tkSaveCards()" style="accent-color:var(--grn);width:14px;height:14px;flex-shrink:0"> Cap One Biz</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--txt2);cursor:pointer;"><input type="checkbox" id="tk-paid-c2" onchange="tkSaveCards()" style="accent-color:var(--grn);width:14px;height:14px;flex-shrink:0"> Amex Biz (MBK)</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--txt2);cursor:pointer;"><input type="checkbox" id="tk-paid-c3" onchange="tkSaveCards()" style="accent-color:var(--grn);width:14px;height:14px;flex-shrink:0"> Amex Lena</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--txt2);cursor:pointer;"><input type="checkbox" id="tk-paid-c4" onchange="tkSaveCards()" style="accent-color:var(--grn);width:14px;height:14px;flex-shrink:0"> Wells Fargo CC</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--txt2);cursor:pointer;"><input type="checkbox" id="tk-paid-c5" onchange="tkSaveCards()" style="accent-color:var(--grn);width:14px;height:14px;flex-shrink:0"> Amex Stardust</label>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -2399,12 +2410,23 @@ function importVBExcel(evt) {
         ccData.cards = [];
         for(let i=0;i<5;i++) {
           const r = ccRows[6+i] || [];
+          // Due day is now stored as plain number (1-31)
+          let dueDay = '';
+          let dueDisplay = '';
+          if(typeof r[5] === 'number' && r[5] >= 1 && r[5] <= 31) {
+            dueDay = r[5];
+            dueDisplay = r[5];  // just the number
+          } else if(r[5] instanceof Date) {
+            dueDay = r[5].getDate();
+            dueDisplay = r[5].getDate();
+          }
           ccData.cards.push({
-            name:  cardLabels[i],
-            bal:   r[2]||0,
-            lim:   r[3]||0,
-            minDue:r[4]||0,
-            due:   r[5] instanceof Date ? r[5].toLocaleDateString('en-US',{month:'short',day:'numeric'}) : (r[5]||''),
+            name:    cardLabels[i],
+            bal:     r[2]||0,
+            lim:     r[3]||0,
+            minDue:  r[4]||0,
+            due:     dueDisplay,
+            dueDay:  dueDay,
           });
         }
         // LOC & Banking (rows 15-16, 0-indexed 14-15)
@@ -2425,10 +2447,12 @@ function importVBExcel(evt) {
       }
 
       // ── SAVE TO STATE ──
+      // Merge CC card data into fins for alerts
+      if(ccData) S.fins_cc = ccData;
       S.fins = { citi, savings, heloc: trueHeloc, helocLim, available, knight,
         citiSweep, savSweep, totalSweep, income, spend, vmort, pmort, helocInt,
         totalExp: spend+vmort+pmort+helocInt, cf: cashFlow, hf: hfBal, tiaa: tiaaBal, firePct,
-        cc: ccData };
+        cc: ccData };  // cc.cards has bal/lim/minDue/dueDay per card
       localStorage.setItem('kcc_fins', JSON.stringify(S.fins));
       fbSaveAll();
 
@@ -2762,11 +2786,20 @@ function tkUpdateCards() {
 
 function tkSaveCards() {
   const g = id => parseFloat(document.getElementById(id)?.value)||0;
-  const data = {c1b:g('tk-c1b'),c1m:g('tk-c1m'),c2b:g('tk-c2b'),c2m:g('tk-c2m'),
-    c3b:g('tk-c3b'),c3m:g('tk-c3m'),c4b:g('tk-c4b'),c4m:g('tk-c4m'),c5b:g('tk-c5b'),c5m:g('tk-c5m'),loc:g('tk-loc'),dang:g('tk-dang')};
+  const gs2 = id => document.getElementById('tk-'+id)?.value||'';
+  const gb = id => document.getElementById('tk-'+id)?.checked||false;
+  const thisMonth = new Date().getFullYear()+'-'+(new Date().getMonth()+1);
+  const data = {c1b:g('tk-c1b'),c1m:g('tk-c1m'),c1due:gs2('c1due'),
+    c2b:g('tk-c2b'),c2m:g('tk-c2m'),c2due:gs2('c2due'),
+    c3b:g('tk-c3b'),c3m:g('tk-c3m'),c3due:gs2('c3due'),
+    c4b:g('tk-c4b'),c4m:g('tk-c4m'),c4due:gs2('c4due'),
+    c5b:g('tk-c5b'),c5m:g('tk-c5m'),c5due:gs2('c5due'),
+    loc:g('tk-loc'),dang:g('tk-dang'),
+    paid:{c1:gb('paid-c1'),c2:gb('paid-c2'),c3:gb('paid-c3'),c4:gb('paid-c4'),c5:gb('paid-c5'),month:thisMonth}};
   localStorage.setItem('kcc_tk_cards', JSON.stringify(data));
   fbSaveAll();
   tkUpdateCards();
+  autoAlerts();
   const st = document.getElementById('tk-status');
   if(st) st.textContent = '✓ Saved ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 }
@@ -3359,8 +3392,69 @@ function autoAlerts() {
     });
   } else { clear('tasks_overdue'); }
 
-  // ── TICKET ALERTS ─────────────────────────────────────────
+  // ── CREDIT CARD DUE DATE ALERTS ──────────────────────────
   const tkCards = JSON.parse(localStorage.getItem('kcc_tk_cards')||'null');
+  // CC alert definitions — read from imported card data or manual inputs
+  const importedCards = fins && fins.cc && fins.cc.cards ? fins.cc.cards : [];
+  const ccDefs = [
+    {key:'c1', name:'Cap One Business',    idx:0},
+    {key:'c2', name:'Amex Business (MBK)', idx:1},
+    {key:'c3', name:'Amex (Lena)',          idx:2},
+    {key:'c4', name:'Wells Fargo CC',       idx:3},
+    {key:'c5', name:'Amex Stardust',        idx:4},
+  ];
+  const tkCardsLocal = JSON.parse(localStorage.getItem('kcc_tk_cards')||'null');
+  const ccSource = importedCards.length > 0 ? importedCards : null;
+  if(ccSource || tkCardsLocal) {
+    ccDefs.forEach(cd => {
+      const imp  = ccSource ? ccSource[cd.idx] : null;
+      const bal  = imp ? imp.bal  : (tkCardsLocal ? (tkCardsLocal[cd.key+'b']||0) : 0);
+      const min  = imp ? imp.minDue : (tkCardsLocal ? (tkCardsLocal[cd.key+'m']||0) : 0);
+      // Use dueDay from import first, then manual input
+      const dueDay2 = imp && imp.dueDay ? imp.dueDay : parseInt(tkCardsLocal?.[cd.key+'due']||'0');
+      const dueStr = String(dueDay2||'');
+      // Skip if marked paid this month
+      const thisMonthStr = new Date().getFullYear()+'-'+(new Date().getMonth()+1);
+      const paidStatus = tkCardsLocal && tkCardsLocal.paid && tkCardsLocal.paid.month === thisMonthStr;
+      const isPaid = paidStatus && tkCardsLocal.paid[cd.key];
+      if(isPaid) { clear('cc_due_'+cd.key); return; }
+      if(!dueStr || min === 0) { clear('cc_due_'+cd.key); return; }
+      // Due date is stored as day-of-month (e.g. "3" or "15")
+      // Calculate next occurrence of that day
+      const dayNum = parseInt(dueStr);
+      if(isNaN(dayNum) || dayNum < 1 || dayNum > 31) return;
+      let dueDate = new Date(now.getFullYear(), now.getMonth(), dayNum, 12);
+      // If that day already passed this month, use next month
+      if(dueDate < now) {
+        dueDate = new Date(now.getFullYear(), now.getMonth()+1, dayNum, 12);
+      }
+      const diff = Math.ceil((dueDate - now) / 86400000);
+      if(diff < 0) {
+        // Overdue
+        upsert('cc_due_'+cd.key, {
+          title: cd.name+' payment OVERDUE — $'+Math.round(min).toLocaleString()+' min due',
+          type:'Credit Cards', sev:'High',
+          action:'Pay immediately to avoid late fee and credit score impact. Balance: $'+Math.round(bal).toLocaleString()
+        });
+      } else if(diff === 0) {
+        upsert('cc_due_'+cd.key, {
+          title: cd.name+' due TODAY — $'+Math.round(min).toLocaleString()+' minimum',
+          type:'Credit Cards', sev:'High',
+          action:'Pay today. Balance: $'+Math.round(bal).toLocaleString()+'. Late fee if missed.'
+        });
+      } else if(diff <= 3) {
+        upsert('cc_due_'+cd.key, {
+          title: cd.name+' due in '+diff+' day'+(diff===1?'':'s')+' — $'+Math.round(min).toLocaleString()+' min due',
+          type:'Credit Cards', sev:'Medium',
+          action:'Schedule payment now. Balance: $'+Math.round(bal).toLocaleString()+'. Recurring due date: '+dayNum+' of each month.'
+        });
+      } else {
+        clear('cc_due_'+cd.key);
+      }
+    });
+  }
+
+  // ── TICKET ALERTS ─────────────────────────────────────────
   if(tkCards) {
     const totalCC = (tkCards.c1b||0)+(tkCards.c2b||0)+(tkCards.c3b||0)+(tkCards.c4b||0);
     // CC utilization high

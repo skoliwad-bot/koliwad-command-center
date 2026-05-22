@@ -380,6 +380,10 @@ localStorage.setItem = function(key, value) {
     <div class="tr">
       <span class="tst" id="tst">Not synced</span>
       <button class="tbtn" id="sbtn" onclick="doSync()">↻ Sync</button>
+      <label class="tbtn" title="Import all Excel files at once" style="cursor:pointer;">
+        ⬆ Import Excel
+        <input type="file" accept=".xlsx,.xls" multiple onchange="importAllExcel(event)" style="display:none">
+      </label>
       <button class="tbtn" onclick="fbSaveAll().then(()=>alert('✅ Saved to cloud — all devices will sync on next load'))" title="Save to cloud">☁</button>
       <button class="tbtn" onclick="showSetup()">⚙</button>
     </div>
@@ -2573,6 +2577,116 @@ function tkSaveCards() {
   tkUpdateCards();
   const st = document.getElementById('tk-status');
   if(st) st.textContent = '✓ Saved ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+}
+
+
+// ══ IMPORT ALL EXCEL FILES ═══════════════════════════════════
+async function importAllExcel(evt) {
+  const files = Array.from(evt.target.files);
+  if(!files.length) return;
+
+  // Reset the input so same files can be selected again
+  evt.target.value = '';
+
+  const status = [];
+  for(const file of files) {
+    const name = file.name.toLowerCase();
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, {type:'array', cellDates:true});
+      const sheets = wb.SheetNames;
+
+      if(sheets.includes('Ticket Log') || sheets.includes('Ticket Metrics')) {
+        // Ticket Hub
+        parseTicketWorkbook(wb, file.name);
+        status.push('🎟 ' + file.name + ' → Tickets');
+      } else if(sheets.includes('Projection') || sheets.includes('Scenarios')) {
+        // FIRE Lab
+        // Save inputs for FIRE Lab
+        const inp = wb.Sheets['Inputs'];
+        if(inp) {
+          const rows = XLSX.utils.sheet_to_json(inp, {header:1});
+          const iv = {};
+          rows.forEach(r => { if(r[0]&&r[1]!==undefined) iv[String(r[0]).trim()]=r[1]; });
+          const proj = wb.Sheets['Projection'];
+          const prows = proj ? XLSX.utils.sheet_to_json(proj,{header:1}) : [];
+          const phdr = prows[2]||[];
+          const ci = n => phdr.findIndex(h=>h&&String(h).trim()===n);
+          const m1 = prows[3]||[];
+          const hfBal   = m1[ci('HF')]||0;
+          const tiaaBal = m1[ci('TIAA')]||0;
+          const helocBal= m1[ci('HELOCDrawn')]||0;
+          const firePct = Math.round((m1[ci('FIRE%')]||0)*100);
+          const totalIn = m1[ci('TotIncome')]||0;
+          const totalOut= m1[ci('TotExpense')]||0;
+          // Update FIRE state
+          const fireData = {
+            need: iv['Base monthly spend']||22000,
+            inc: totalIn,
+            hf: hfBal, tiaa: tiaaBal, heloc: helocBal,
+            vmort: iv['Vineta mortgage / month']||7900,
+            pmort: iv['Paulette mortgage / month']||3477,
+            biz_income: iv['Business monthly income']||17500,
+            fire_pct: firePct,
+            _imported: new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
+          };
+          S.fire = fireData;
+          localStorage.setItem('kcc_fire', JSON.stringify(fireData));
+          // Actuals
+          const act = wb.Sheets['Actuals'];
+          if(act) {
+            const arows = XLSX.utils.sheet_to_json(act,{header:1});
+            const actuals = [];
+            for(let i=2;i<arows.length;i++) {
+              const r=arows[i]; if(!r[0]) continue;
+              const actual=r[2];
+              if(actual!==null&&actual!==undefined&&actual!=='') {
+                const dt=r[1]; let dateStr='—';
+                if(dt instanceof Date) dateStr=(['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'])[dt.getMonth()]+' '+dt.getFullYear();
+                actuals.push({mo:r[0],date:dateStr,actual,proj:r[3]||0,varD:actual-(r[3]||0),varP:r[3]>0?(actual-(r[3]||0))/(r[3]||1)*100:0,notes:r[6]||''});
+              }
+            }
+            if(actuals.length) localStorage.setItem('kcc_fire_actuals',JSON.stringify(actuals));
+          }
+          localStorage.setItem('kcc_firelab_inputs', JSON.stringify({
+            hfbal:hfBal, tiaabal:tiaaBal, heloc_balance:helocBal,
+            spend:iv['Base monthly spend']||22000,
+            vmort:iv['Vineta mortgage / month']||7900,
+            pmort:iv['Paulette mortgage / month']||3477,
+            biz:iv['Business monthly income']||17500,
+            bizstart:iv['Business start (month #)']||6,
+            jpl_months:iv['Leave JPL (month # from Jun 26)']||3,
+            pto_months:iv['PTO duration (months)']||1,
+            pto_lump:iv['PTO lump sum (0 = take monthly)']||0,
+            sdi_months:iv['SDI duration (months)']||0,
+            heloc_rate:(iv['HELOC interest rate (annual)']||0.065)*100,
+          }));
+          status.push('🔥 ' + file.name + ' → FIRE Lab');
+        }
+      } else if(sheets.includes('Dashboard') || sheets.includes('Monthly Budget') || sheets.includes('Citi Pending')) {
+        // VB Dashboard
+        importVBExcel({target:{files:[file], value:''}});
+        status.push('💰 ' + file.name + ' → Financials');
+      } else {
+        status.push('❓ ' + file.name + ' → unrecognized (skipped)');
+      }
+    } catch(err) {
+      status.push('❌ ' + file.name + ' → Error: ' + err.message);
+      console.error(err);
+    }
+  }
+
+  // Re-render everything
+  renderAll();
+  if(S.page==='fire') rFire();
+  if(S.page==='financials') rFin();
+  if(S.page==='tickets') rTickets();
+
+  // Save to Firebase
+  fbSaveAll();
+
+  // Show summary
+  alert('✅ Import Complete\n\n' + status.join('\n') + '\n\nAll data saved and synced to cloud.');
 }
 
 </script>

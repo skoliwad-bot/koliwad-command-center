@@ -385,8 +385,19 @@ localStorage.setItem = function(key, value) {
   <div class="main">
     <div class="sidebar">
       <div class="sbhdr">
-        <span class="d" id="sbd">—</span>
-        <div class="n" id="sbn">Command Center</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <svg width="26" height="28" viewBox="0 0 26 28" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+            <path d="M13 2L2 6.5V14C2 19.8 7 24.8 13 26.5C19 24.8 24 19.8 24 14V6.5L13 2Z" fill="#1a1f1a" stroke="#d04040" stroke-width="1.5"/>
+            <text x="7.5" y="18.5" font-family="JetBrains Mono,monospace" font-size="11" font-weight="700" fill="#e05050">K</text>
+            <circle cx="18" cy="10" r="1.2" fill="#c49030"/>
+            <circle cx="19.5" cy="14" r="1.2" fill="#c49030"/>
+            <circle cx="18" cy="18" r="1.2" fill="#c49030"/>
+          </svg>
+          <div>
+            <span class="d" id="sbd">—</span>
+            <div class="n" id="sbn">Command Center</div>
+          </div>
+        </div>
       </div>
       <span class="nslbl">Operations</span>
       <div class="ni on" id="n-today"    onclick="nav('today')">   <span class="ico">⚡</span><span class="nlbl">Today</span>   <span class="nbadge r" id="nb-t">0</span></div>
@@ -686,9 +697,13 @@ localStorage.setItem = function(key, value) {
   <div id="tk-metrics" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;"></div>
 
   <!-- HIGH RISK -->
-  <div id="tk-risk" style="display:none;border:1px solid var(--red);background:rgba(224,80,80,0.08);padding:12px 16px;margin-bottom:16px;">
-    <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:8px;">⚠ HIGH RISK — Unsold events within 7 days</div>
+  <div id="tk-risk" style="display:none;border:1px solid var(--red);background:rgba(224,80,80,0.08);padding:12px 16px;margin-bottom:8px;">
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:8px;">🔴 HIGH RISK — Within 7 days · NOT LISTED</div>
     <div id="tk-risk-list"></div>
+  </div>
+  <div id="tk-med" style="display:none;border:1px solid var(--amb);background:rgba(212,160,48,0.08);padding:12px 16px;margin-bottom:16px;">
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--amb);margin-bottom:8px;">🟡 MEDIUM RISK — Within 7 days · Listed but not sold</div>
+    <div id="tk-med-list"></div>
   </div>
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
@@ -2352,7 +2367,10 @@ function importTicketExcel(evt) {
       const d7  = new Date(now); d7.setDate(now.getDate()+7);
       
       const upcoming = rows.filter(r=>r[0]>now&&r[0]<=d30&&!['Sold','Void','Canceled'].includes(r[15])).sort((a,b)=>a[0]-b[0]);
-      const highRisk = rows.filter(r=>r[0]>now&&r[0]<=d7&&!['Sold','Void','Canceled'].includes(r[15]));
+      // High risk = within 7 days AND not listed (sitting with no action)
+      const highRisk = rows.filter(r=>r[0]>now&&r[0]<=d7&&r[15]==='Not Listed');
+      // Medium risk = within 7 days AND listed but not yet sold
+      const medRisk  = rows.filter(r=>r[0]>now&&r[0]<=d7&&r[15]==='Listed');
       const recent   = rows.filter(r=>r[0]).sort((a,b)=>b[0]-a[0]).slice(0,20);
       
       // Store
@@ -2365,6 +2383,10 @@ function importTicketExcel(evt) {
         date:r[0] instanceof Date?r[0].toLocaleDateString('en-US',{month:'short',day:'numeric'}):'',
         event:r[1]||'', opp:r[5]||'', qty:r[7]||0, cost:r[11]||0,
         card:r[12]||'', status:r[15]||'', pnl:r[19]||0
+      }))));
+      localStorage.setItem('kcc_tkmed', JSON.stringify(medRisk.map(r=>({
+        date:r[0].toLocaleDateString('en-US',{month:'short',day:'numeric'}),
+        event:r[1]||'', opp:r[5]||'', qty:r[7]||0, cost:r[11]||0, status:r[15]||''
       }))));
       localStorage.setItem('kcc_tkhr', JSON.stringify(highRisk.map(r=>({
         date:r[0].toLocaleDateString('en-US',{month:'short',day:'numeric'}),
@@ -2396,7 +2418,6 @@ function rTickets() {
   const mv  = JSON.parse(localStorage.getItem('kcc_tkm')||'{}');
   const up  = JSON.parse(localStorage.getItem('kcc_tku')||'[]');
   const rec = JSON.parse(localStorage.getItem('kcc_tkr')||'[]');
-  const hr  = JSON.parse(localStorage.getItem('kcc_tkhr')||'[]');
   const f$  = n => '$'+Math.abs(Math.round(n||0)).toLocaleString();
   const fc  = n => (n>=0?'+':'-')+f$(n);
 
@@ -2422,11 +2443,21 @@ function rTickets() {
   } // end mv.length check
 
   // High risk
+  const hr  = JSON.parse(localStorage.getItem('kcc_tkhr')||'[]');
+  const med = JSON.parse(localStorage.getItem('kcc_tkmed')||'[]');
   const hrEl = document.getElementById('tk-risk');
   if(hrEl) {
     hrEl.style.display = hr.length>0 ? 'block' : 'none';
     const hrl = document.getElementById('tk-risk-list');
-    if(hrl) hrl.innerHTML = hr.map(r=>'<div style="display:flex;gap:10px;padding:3px 0"><span style="color:var(--red);font-weight:700;font-size:10px;width:50px">'+r.date+'</span><span style="color:var(--txt);font-size:11px">'+esc(r.event)+' vs '+esc(r.opp)+'</span><span style="color:var(--mut);font-size:9px">×'+r.qty+' · $'+r.cost.toLocaleString()+'</span><span style="color:var(--amb);font-size:9px">'+r.status+'</span></div>').join('');
+    const rRow = r => '<div style="display:flex;gap:10px;padding:3px 0"><span style="font-weight:700;font-size:10px;width:50px;color:var(--red)">'+r.date+'</span><span style="color:var(--txt);font-size:11px">'+esc(r.event)+' vs '+esc(r.opp)+'</span><span style="color:var(--mut);font-size:9px">×'+r.qty+' · $'+r.cost.toLocaleString()+'</span></div>';
+    if(hrl) hrl.innerHTML = hr.map(rRow).join('');
+  }
+  const medEl = document.getElementById('tk-med');
+  if(medEl) {
+    medEl.style.display = med.length>0 ? 'block' : 'none';
+    const medl = document.getElementById('tk-med-list');
+    const mRow = r => '<div style="display:flex;gap:10px;padding:3px 0"><span style="font-weight:700;font-size:10px;width:50px;color:var(--amb)">'+r.date+'</span><span style="color:var(--txt);font-size:11px">'+esc(r.event)+' vs '+esc(r.opp)+'</span><span style="color:var(--mut);font-size:9px">×'+r.qty+' · $'+r.cost.toLocaleString()+'</span></div>';
+    if(medl) medl.innerHTML = med.map(mRow).join('');
   }
 
   // Upcoming

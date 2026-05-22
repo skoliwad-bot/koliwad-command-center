@@ -1037,6 +1037,12 @@ localStorage.setItem = function(key, value) {
 
       </div>
 
+      <!-- ALERTS -->
+      <div id="br-alerts-wrap" style="margin-bottom:10px;display:none;">
+        <div class="br-sec">Open Alerts</div>
+        <div id="bAlerts"></div>
+      </div>
+
       <!-- NOTES -->
       <div class="br-sec">Notes</div>
       <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
@@ -1844,8 +1850,16 @@ function renderBrief(){
       <span class="br-t-b ${t.m.charAt(0)}">${t.m}</span>
     </div>`).join('');
 
-  // Today's schedule — cap at 8 events, truncate names
-  const tc=cal.filter(e=>e.isToday).slice(0,8);
+  // Today's schedule — only MY calendars (exclude family/kids calendars), cap at 8
+  const myCalKeywords = ['koliwad.sonny','sonny','personal','koliwad command','family','birthday'];
+  const excludeKeywords = ['kyrin','kyleigh','kylo','knight'];
+  const tc = cal.filter(e => {
+    if(!e.isToday) return false;
+    const cn = (e.calName||'').toLowerCase();
+    // Exclude kids/team calendars
+    if(excludeKeywords.some(k => cn.includes(k))) return false;
+    return true;
+  }).slice(0,8);
   el('bCAL').innerHTML=tc.length===0?'<div style="color:#aaa;font-size:10px;padding:8px 0">No events today</div>':
     tc.map(e=>`<div class="br-ev">
       <span class="br-ev-t">${e.time}</span>
@@ -1880,6 +1894,20 @@ function renderBrief(){
   }
 
   // metrics removed - now in status bar
+
+  // Alerts
+  const alertWrap = document.getElementById('br-alerts-wrap');
+  const alertEl = document.getElementById('bAlerts');
+  if(alertWrap && alertEl && oa.length > 0) {
+    alertWrap.style.display = 'block';
+    alertEl.innerHTML = oa.slice(0,4).map(a=>`<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid #eee;font-size:9px;">
+      <span style="font-size:6px;font-weight:700;padding:1px 5px;background:${a.sev==='High'?'#c03030':a.sev==='Medium'?'#8b5000':'#ccc'};color:${a.sev==='Low'?'#555':'#fff'};white-space:nowrap;">${a.sev||'?'}</span>
+      <span style="flex:1;font-weight:600;">${esc(a.title)}</span>
+      ${a.action?`<span style="font-size:7px;color:#888;">${esc(a.action)}</span>`:''}
+    </div>`).join('');
+  } else if(alertWrap) {
+    alertWrap.style.display = 'none';
+  }
 
   // Update sync time in footer
   const g2=el('bgen2'); if(g2) g2.textContent=S.lastSync?new Date(S.lastSync).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'Not synced';

@@ -2454,11 +2454,11 @@ function importVBExcel(evt) {
       const cp = wb.Sheets['Citi Pending'];
       if(cp) {
         const rows = XLSX.utils.sheet_to_json(cp, {header:1}).slice(6);
-        const items = rows.filter(r=>r[4]&&r[5]!=='Y').map(r=>({
+        const pendingData = rows.filter(r=>r[4]&&r[5]!=='Y').map(r=>({
           date: r[0] instanceof Date ? r[0].toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '',
           type: r[1]||'', payee: r[2]||'', amount: r[4]||0, knight: r[6]==='Y'
         }));
-        if(S.fins) S.fins.pendingItems = items;
+        const items = pendingData;
         const pEl = document.getElementById('pending-list');
         if(pEl) {
           if(!items.length) { pEl.innerHTML='<div class="empty" style="color:var(--grn)">✓ No pending outflows</div>'; }
@@ -2480,15 +2480,15 @@ function importVBExcel(evt) {
       const be = wb.Sheets['Bills Earmark'];
       if(be) {
         const rows = XLSX.utils.sheet_to_json(be, {header:1}).slice(6);
-        const items = rows.filter(r=>r[0]&&r[3]!=='Y').map(r=>({
+        const billsData = rows.filter(r=>r[0]&&r[3]!=='Y').map(r=>({
           bill: r[0]||'',
           due: r[1] instanceof Date ? r[1].toLocaleDateString('en-US',{month:'short',day:'numeric'}) : (r[1]||''),
           amount: r[2]||0
         }));
-        if(S.fins) S.fins.billItems = items;
+        const billItems2 = billsData;
         const bEl = document.getElementById('bills-list');
         if(bEl) {
-          if(!items.length) { bEl.innerHTML='<div class="empty" style="color:var(--grn)">✓ No unpaid bills</div>'; }
+          if(!billItems2.length) { bEl.innerHTML='<div class="empty" style="color:var(--grn)">✓ No unpaid bills</div>'; }
           else {
             bEl.innerHTML = items.map(i=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid #1a1e1a;">
               <span style="flex:1;font-size:12px;color:var(--txt)">${esc(i.bill)}</span>
@@ -2615,6 +2615,9 @@ function importVBExcel(evt) {
         citiSweep, savSweep, totalSweep, income, spend, vmort, pmort, helocInt,
         totalExp: spend+vmort+pmort+helocInt, cf: cashFlow, hf: hfBal, tiaa: tiaaBal, firePct,
         cc: ccData };  // cc.cards has bal/lim/minDue/dueDay per card
+      // Attach pending/bills data to S.fins AFTER it's built
+      if(S.fins && typeof pendingData !== 'undefined') S.fins.pendingItems = pendingData;
+      if(S.fins && typeof billsData !== 'undefined') S.fins.billItems = billsData;
       localStorage.setItem('kcc_fins', JSON.stringify(S.fins));
       fbSaveAll();
 

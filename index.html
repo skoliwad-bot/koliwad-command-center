@@ -2467,12 +2467,16 @@ function importVBExcel(evt) {
             dueDay:  dueDay,
           });
         }
-        // LOC & Banking (rows 15-16, 0-indexed 14-15)
-        const wfRow = ccRows[14]||[];
-        const locRow = ccRows[15]||[];
-        ccData.wfChecking = wfRow[2]||0;
-        ccData.amexLocBal = locRow[2]||0;
-        ccData.amexLocLim = locRow[3]||0;
+        // LOC & Banking - scan by label (works v2 and v3)
+        let wfCheckRow=null, amexLocRow2=null;
+        for(let ri2=6+numCards; ri2<Math.min(ccRows.length,28); ri2++) {
+          const lbl2 = String(ccRows[ri2]&&ccRows[ri2][1]||'');
+          if(lbl2.includes('Wells Fargo Checking')) wfCheckRow=ccRows[ri2];
+          if(lbl2.includes('Amex Business LOC')||lbl2.includes('Amex LOC')) amexLocRow2=ccRows[ri2];
+        }
+        ccData.wfChecking = wfCheckRow&&typeof wfCheckRow[2]==='number' ? wfCheckRow[2] : 0;
+        ccData.amexLocBal = amexLocRow2&&typeof amexLocRow2[2]==='number' ? amexLocRow2[2] : 0;
+        ccData.amexLocLim = amexLocRow2&&typeof amexLocRow2[3]==='number' ? amexLocRow2[3] : 0;
         // Obligations - scan for Randy Dang row
         let dangRow = null;
         for(let ri=12; ri<Math.min(ccRows.length,30); ri++) {

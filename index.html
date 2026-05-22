@@ -1493,7 +1493,7 @@ function rToday(){
   // Cal today
   const tc=cal.filter(e=>e.isToday);
   el('t-cal').innerHTML=tc.length===0?'<div class="empty">No events today</div>':
-    tc.map(e=>'<div class="row"><span class="rsb" style="width:50px;flex-shrink:0">'+e.time+'</span><span class="rtl">'+esc(e.title)+'</span></div>').join('');
+    tc.map(e=>'<div class="row"><span class="rsb" style="width:50px;flex-shrink:0;color:'+(e.calColor||'var(--mut)')+'">'+e.time+'</span><div style="width:3px;height:20px;background:'+(e.calColor||'var(--blu)')+';flex-shrink:0;margin-right:8px"></div><span class="rtl" style="color:'+(e.calColor||'var(--txt)')+'">'+esc(e.title)+'</span><span class="rsb" style="color:var(--mut2)">'+esc(e.calName||'')+'</span></div>').join('');
   // Deadlines
   const td0=new Date(); td0.setHours(0,0,0,0);
   const dls=tasks.filter(t=>t.dd).sort((a,b)=>new Date(a.dd)-new Date(b.dd)).slice(0,5);

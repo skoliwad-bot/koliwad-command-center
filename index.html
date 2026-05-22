@@ -176,94 +176,80 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'JetBrai
 .mbtns{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
 
 /* ── BRIEFING ── */
-#brief{display:none;background:#f2f4f0;}
-#brief.on{display:block;min-height:100vh;padding:20px;}
-.brnav{display:flex;align-items:center;justify-content:space-between;max-width:9in;margin:0 auto 14px;}
-.brnav button{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:8px 18px;border:none;cursor:pointer;}
+#brief{display:none;background:#e8e8e8;}
+#brief.on{display:block;min-height:100vh;padding:16px;}
+.brnav{display:flex;align-items:center;justify-content:space-between;max-width:7.5in;margin:0 auto 12px;}
+.brnav button{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:7px 16px;border:none;cursor:pointer;}
 .brback{background:#1a1f1a;color:#f0f0f0;}
 .brprint{background:#c04040;color:#fff;}
-.brpg{max-width:9in;min-height:11in;margin:0 auto;background:#fff;box-shadow:0 4px 32px rgba(0,0,0,.15);color:#1a1a1a;font-family:'JetBrains Mono',monospace;}
 
-/* Header bar */
-.brhead{background:#1a1f1a;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;}
-.brhead-left{display:flex;align-items:center;gap:14px;}
-.brhead-crest{width:32px;height:34px;}
-.brhead-title{color:#fff;font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;display:block;}
-.brhead-sub{color:#6a886a;font-size:8px;letter-spacing:3px;text-transform:uppercase;display:block;margin-top:2px;}
+.brpg{max-width:7.5in;min-height:10in;margin:0 auto;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.15);font-family:'JetBrains Mono',monospace;color:#111;}
+
+/* Compact header */
+.brhead{border-bottom:3px solid #111;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;}
+.brhead-left{display:flex;align-items:center;gap:10px;}
+.brhead-title{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#111;}
+.brhead-sub{font-size:7px;letter-spacing:2px;text-transform:uppercase;color:#888;margin-top:1px;}
 .brhead-date{text-align:right;}
-.brhead-dn{color:#e05050;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;display:block;}
-.brhead-dd{color:#fff;font-size:28px;font-weight:700;line-height:1;display:block;}
-.brhead-my{color:#6a886a;font-size:9px;display:block;margin-top:2px;}
+.brhead-day{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#c04040;}
+.brhead-num{font-size:26px;font-weight:700;color:#111;line-height:1;}
+.brhead-mon{font-size:8px;color:#888;}
 
-/* Status bar */
-.brstatus{background:#111411;display:grid;grid-template-columns:repeat(4,1fr);}
-.brstat{padding:10px 16px;border-right:1px solid #2e352e;}
+/* Thin status strip */
+.brstatus{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid #ccc;background:#f5f5f5;}
+.brstat{padding:6px 14px;border-right:1px solid #ccc;}
 .brstat:last-child{border-right:none;}
-.brstat-lbl{font-size:7px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#4a5e4a;display:block;margin-bottom:4px;}
-.brstat-val{font-size:18px;font-weight:700;display:block;line-height:1;}
-.brstat-val.r{color:#e05050;}.brstat-val.g{color:#4a9c5c;}.brstat-val.a{color:#c49030;}
+.brstat-lbl{font-size:6px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999;display:block;}
+.brstat-val{font-size:14px;font-weight:700;color:#111;display:block;margin-top:1px;}
+.brstat-val.r{color:#c04040;}.brstat-val.g{color:#2a7a3a;}.brstat-val.a{color:#a06000;}
 
 /* Body */
-.brbody{padding:20px 28px;}
-.brsec{margin-bottom:16px;}
-.brsec-hdr{font-size:8px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#1a1f1a;border-bottom:2px solid #1a1f1a;padding-bottom:4px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
-.brsec-hdr span{color:#888;font-size:7px;font-weight:400;letter-spacing:1px;}
+.brbody{padding:14px 20px;}
 
-/* Grid */
-.brgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.brgrid3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px;}
+/* Section label */
+.brlbl{font-size:7px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#c04040;border-bottom:1px solid #c04040;padding-bottom:2px;margin-bottom:7px;}
 
-/* Task list */
-.br-task{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid #eee;}
+/* Two column layout */
+.brcols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;}
+
+/* Tasks */
+.br-task{display:flex;align-items:flex-start;gap:8px;padding:4px 0;border-bottom:1px solid #eee;}
 .br-task:last-child{border-bottom:none;}
-.br-task-num{font-size:11px;font-weight:700;color:#e05050;min-width:18px;}
-.br-task-body{flex:1;}
-.br-task-title{font-size:11px;font-weight:700;color:#1a1a1a;display:block;line-height:1.3;}
-.br-task-sub{font-size:8px;color:#888;margin-top:2px;display:block;}
-.br-badge{font-size:7px;font-weight:700;padding:1px 6px;letter-spacing:1px;white-space:nowrap;}
-.br-badge.M{background:#e05050;color:#fff;}
-.br-badge.S{background:#c49030;color:#fff;}
-.br-badge.C{background:#4a7ab8;color:#fff;}
+.br-task-n{font-size:9px;font-weight:700;color:#c04040;min-width:14px;}
+.br-task-t{flex:1;font-size:10px;font-weight:600;color:#111;line-height:1.3;}
+.br-task-s{font-size:7px;color:#999;display:block;margin-top:1px;}
+.br-bge{font-size:6px;font-weight:700;padding:1px 5px;white-space:nowrap;flex-shrink:0;}
+.br-bge.M{background:#c04040;color:#fff;}
+.br-bge.S{background:#a06000;color:#fff;}
 
-/* Metrics grid */
-.br-metric{background:#f8f9f8;border:1px solid #e8ece8;padding:8px 10px;}
-.br-metric-lbl{font-size:7px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;display:block;margin-bottom:3px;}
-.br-metric-val{font-size:18px;font-weight:700;color:#1a1a1a;display:block;line-height:1;}
-.br-metric-val.r{color:#e05050;}.br-metric-val.g{color:#4a9c5c;}.br-metric-val.a{color:#c49030;}
+/* Cal */
+.br-cal{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid #eee;font-size:9px;}
+.br-cal:last-child{border-bottom:none;}
+.br-cal-t{color:#888;width:48px;flex-shrink:0;font-size:8px;}
+.br-cal-d{width:2px;height:14px;flex-shrink:0;}
+.br-cal-n{flex:1;font-weight:600;color:#111;}
 
-/* Calendar */
-.br-cal-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #eee;font-size:10px;}
-.br-cal-row:last-child{border-bottom:none;}
-.br-cal-time{color:#888;width:55px;flex-shrink:0;font-size:9px;}
-.br-cal-dot{width:3px;height:16px;flex-shrink:0;}
-.br-cal-title{flex:1;font-weight:600;color:#1a1a1a;}
-.br-cal-cal{font-size:8px;color:#aaa;}
+/* FIRE row */
+.br-fire{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #ddd;margin-bottom:14px;}
+.br-fc{padding:6px 10px;border-right:1px solid #ddd;}
+.br-fc:last-child{border-right:none;}
+.br-fcl{font-size:6px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999;display:block;}
+.br-fcv{font-size:14px;font-weight:700;color:#111;display:block;margin-top:2px;}
+.br-fcv.r{color:#c04040;}.br-fcv.g{color:#2a7a3a;}
 
-/* Deadlines */
-.br-dl-row{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid #eee;font-size:10px;}
-.br-dl-row:last-child{border-bottom:none;}
-.br-dl-when{font-size:8px;font-weight:700;padding:2px 6px;white-space:nowrap;}
-
-/* FIRE */
-.br-fire-grid{display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid #e8ece8;}
-.br-fire-cell{padding:8px 10px;border-right:1px solid #e8ece8;}
-.br-fire-cell:last-child{border-right:none;}
-.br-fire-lbl{font-size:7px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;display:block;}
-.br-fire-val{font-size:16px;font-weight:700;color:#1a1a1a;display:block;margin-top:2px;}
-
-/* Notes lines */
-.br-line{height:22px;border-bottom:1px solid #ddd;margin-bottom:2px;}
+/* Write lines */
+.br-line{height:22px;border-bottom:1px solid #ccc;margin-bottom:0;}
 
 /* Footer */
-.brfoot{background:#1a1f1a;padding:10px 28px;display:flex;align-items:center;justify-content:space-between;}
-.brfoot-l{font-size:8px;color:#4a5e4a;font-style:italic;letter-spacing:1px;}
-.brfoot-r{font-size:8px;color:#4a5e4a;text-align:right;line-height:1.6;}
+.brfoot{border-top:1px solid #ccc;padding:6px 20px;display:flex;justify-content:space-between;align-items:center;background:#f5f5f5;}
+.brfoot-l{font-size:7px;color:#aaa;}
+.brfoot-r{font-size:7px;color:#aaa;}
 
 @media print{
   #shell{display:none!important;}
   #brief{display:block!important;padding:0;background:none;}
   .brnav{display:none!important;}
-  .brpg{box-shadow:none;}
+  .brpg{box-shadow:none;max-width:100%;}
 }
 
 .ai-block{border:1px solid #3a2a5a;background:linear-gradient(135deg,#0e0a1a,#160e22);padding:12px 16px;margin-bottom:12px;display:none;}
@@ -986,148 +972,91 @@ localStorage.setItem = function(key, value) {
 <!-- BRIEFING -->
 <div id="brief">
   <div class="brnav">
-    <button class="brback" onclick="setM('cmd')">← Back to Command</button>
-    <button class="brprint" onclick="window.print()">⎙ Print / Save PDF</button>
+    <button class="brback" onclick="setM('cmd')">← Command</button>
+    <button class="brprint" onclick="window.print()">⎙ Print</button>
   </div>
   <div class="brpg">
 
     <!-- HEADER -->
     <div class="brhead">
       <div class="brhead-left">
-        <svg class="brhead-crest" viewBox="0 0 26 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M13 2L2 6.5V14C2 19.8 7 24.8 13 26.5C19 24.8 24 19.8 24 14V6.5L13 2Z" fill="#1a1f1a" stroke="#e05050" stroke-width="1.5"/>
-          <text x="7.5" y="18.5" font-family="JetBrains Mono,monospace" font-size="11" font-weight="700" fill="#e05050">K</text>
-          <circle cx="18" cy="10" r="1.2" fill="#c49030"/>
-          <circle cx="19.5" cy="14" r="1.2" fill="#c49030"/>
-          <circle cx="18" cy="18" r="1.2" fill="#c49030"/>
+        <svg width="24" height="26" viewBox="0 0 26 28" fill="none">
+          <path d="M13 2L2 6.5V14C2 19.8 7 24.8 13 26.5C19 24.8 24 19.8 24 14V6.5L13 2Z" fill="#111" stroke="#c04040" stroke-width="1.5"/>
+          <text x="7.5" y="18.5" font-family="monospace" font-size="11" font-weight="700" fill="#c04040">K</text>
         </svg>
         <div>
-          <span class="brhead-title">Koliwad Command Center</span>
-          <span class="brhead-sub">Daily Operating Brief · <span id="bgen">—</span></span>
+          <div class="brhead-title">Koliwad Command Center</div>
+          <div class="brhead-sub">Daily Operating Brief · <span id="bgen">—</span></div>
         </div>
       </div>
       <div class="brhead-date">
-        <span class="brhead-dn" id="bdn">—</span>
-        <span class="brhead-dd" id="bdd">—</span>
-        <span class="brhead-my" id="bmy">—</span>
+        <div class="brhead-day" id="bdn">—</div>
+        <div class="brhead-num" id="bdd">—</div>
+        <div class="brhead-mon" id="bmy">—</div>
       </div>
     </div>
 
-    <!-- STATUS BAR -->
+    <!-- STATUS STRIP -->
     <div class="brstatus">
-      <div class="brstat" id="bpp1">
-        <span class="brstat-lbl">Ticket Risk</span>
-        <span class="brstat-val" id="bpv1">—</span>
-      </div>
-      <div class="brstat" id="bpp2">
-        <span class="brstat-lbl">Must-Do Tasks</span>
-        <span class="brstat-val" id="bpv2">—</span>
-      </div>
-      <div class="brstat" id="bpp3">
-        <span class="brstat-lbl">Open Alerts</span>
-        <span class="brstat-val" id="bpv3">—</span>
-      </div>
-      <div class="brstat" id="bpp4">
-        <span class="brstat-lbl">FIRE Status</span>
-        <span class="brstat-val" id="bpv4">—</span>
-      </div>
+      <div class="brstat"><span class="brstat-lbl">Ticket Risk</span><span class="brstat-val" id="bpv1">—</span></div>
+      <div class="brstat"><span class="brstat-lbl">Must Tasks</span><span class="brstat-val" id="bpv2">—</span></div>
+      <div class="brstat"><span class="brstat-lbl">Open Alerts</span><span class="brstat-val" id="bpv3">—</span></div>
+      <div class="brstat"><span class="brstat-lbl">FIRE Status</span><span class="brstat-val" id="bpv4">—</span></div>
     </div>
 
-    <!-- BODY -->
     <div class="brbody">
 
-      <!-- TOP ROW: Tasks + Calendar -->
-      <div class="brgrid3" style="margin-bottom:16px;">
+      <!-- FIRE ROW -->
+      <div class="brlbl" style="margin-bottom:7px;">FIRE Snapshot</div>
+      <div class="br-fire" style="margin-bottom:14px;">
+        <div class="br-fc"><span class="br-fcl">Monthly Need</span><span class="br-fcv" id="bf1">—</span></div>
+        <div class="br-fc"><span class="br-fcl">Current Income</span><span class="br-fcv g" id="bf2">—</span></div>
+        <div class="br-fc"><span class="br-fcl">Gap / Month</span><span class="br-fcv" id="bf3">—</span></div>
+        <div class="br-fc"><span class="br-fcl">HF Balance</span><span class="br-fcv" id="bf4">—</span></div>
+        <div class="br-fc"><span class="br-fcl">HELOC</span><span class="br-fcv r" id="bf5">—</span></div>
+        <div class="br-fc"><span class="br-fcl">FIRE %</span><span class="br-fcv" id="bf6">—</span></div>
+      </div>
 
-        <!-- Priority Tasks -->
-        <div class="brsec">
-          <div class="brsec-hdr">Priority Tasks — MoSCoW Ranked <span>Must · Should</span></div>
+      <!-- TWO COLUMNS -->
+      <div class="brcols">
+
+        <!-- Tasks -->
+        <div>
+          <div class="brlbl">Priority Tasks</div>
           <div id="bMIT"></div>
         </div>
 
-        <!-- Today's Schedule -->
-        <div class="brsec">
-          <div class="brsec-hdr">Today's Schedule</div>
-          <div id="bCAL"></div>
-        </div>
-
-        <!-- Key Deadlines -->
-        <div class="brsec">
-          <div class="brsec-hdr">Key Deadlines</div>
+        <!-- Schedule + Deadlines -->
+        <div>
+          <div class="brlbl">Today's Schedule</div>
+          <div id="bCAL" style="margin-bottom:12px;"></div>
+          <div class="brlbl">Key Deadlines</div>
           <div id="bDL"></div>
         </div>
 
       </div>
 
-      <!-- MIDDLE ROW: FIRE + Metrics -->
-      <div class="brgrid" style="margin-bottom:16px;">
-
-        <!-- FIRE Snapshot -->
-        <div class="brsec">
-          <div class="brsec-hdr">FIRE Snapshot</div>
-          <div class="br-fire-grid" style="margin-bottom:8px;">
-            <div class="br-fire-cell"><span class="br-fire-lbl">Monthly Need</span><span class="br-fire-val" id="bf1">—</span></div>
-            <div class="br-fire-cell"><span class="br-fire-lbl">Current Income</span><span class="br-fire-val g" id="bf2">—</span></div>
-            <div class="br-fire-cell"><span class="br-fire-lbl">Gap / Month</span><span class="br-fire-val" id="bf3">—</span></div>
-          </div>
-          <div class="br-fire-grid">
-            <div class="br-fire-cell"><span class="br-fire-lbl">HF Balance</span><span class="br-fire-val" id="bf4">—</span></div>
-            <div class="br-fire-cell"><span class="br-fire-lbl">HELOC Balance</span><span class="br-fire-val r" id="bf5">—</span></div>
-            <div class="br-fire-cell"><span class="br-fire-lbl">FIRE Coverage</span><span class="br-fire-val" id="bf6">—</span></div>
-          </div>
-        </div>
-
-        <!-- Metrics -->
-        <div class="brsec">
-          <div class="brsec-hdr">Key Metrics</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-            <div class="br-metric"><span class="br-metric-lbl">Must Items</span><span class="br-metric-val" id="bm1">—</span></div>
-            <div class="br-metric"><span class="br-metric-lbl">Open Alerts</span><span class="br-metric-val" id="bm2">—</span></div>
-            <div class="br-metric"><span class="br-metric-lbl">Ticket Risk</span><span class="br-metric-val" id="bm3">—</span></div>
-            <div class="br-metric"><span class="br-metric-lbl">FIRE %</span><span class="br-metric-val" id="bm4">—</span></div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- BOTTOM ROW: Notes + Capture -->
-      <div class="brgrid" style="margin-bottom:0;">
-
-        <!-- Notes -->
-        <div class="brsec">
-          <div class="brsec-hdr">Notes & Scratch</div>
+      <!-- WRITE LINES -->
+      <div class="brlbl">Notes / Capture</div>
+      <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
+      <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
+      <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <div class="brlbl">Waiting On</div>
           <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
+        </div>
+        <div>
+          <div class="brlbl">Tomorrow</div>
           <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
-          <div class="br-line"></div><div class="br-line"></div>
         </div>
-
-        <!-- Capture -->
-        <div class="brsec">
-          <div class="brsec-hdr">Capture & Action Items</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-            <div>
-              <div style="font-size:7px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#e05050;margin-bottom:6px;">Waiting On</div>
-              <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
-            </div>
-            <div>
-              <div style="font-size:7px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#e05050;margin-bottom:6px;">Tomorrow's Setup</div>
-              <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
-            </div>
-          </div>
-          <div style="margin-top:10px;">
-            <div style="font-size:7px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1a1f1a;margin-bottom:6px;">Today's #1 Priority</div>
-            <div class="br-line"></div><div class="br-line"></div>
-          </div>
-        </div>
-
       </div>
 
     </div>
 
     <!-- FOOTER -->
     <div class="brfoot">
-      <div class="brfoot-l" id="bfd">Koliwad Command Center · Family as a Business</div>
-      <div class="brfoot-r">Daily Operating Brief · MoSCoW Prioritized<br>Synced: <span id="bgen2">—</span></div>
+      <span class="brfoot-l">Koliwad Command Center · Family as a Business</span>
+      <span class="brfoot-r" id="bfd">—</span>
     </div>
 
   </div>

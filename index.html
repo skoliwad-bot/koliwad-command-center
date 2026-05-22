@@ -1222,6 +1222,7 @@ function launch(){
         S.tz       = JSON.parse(localStorage.getItem('kcc_tz')||'null');
         S.lastSync = localStorage.getItem('kcc_sync')||null;
         renderAll();
+        autoAlerts();
       }
     }).catch(e => console.warn('Firebase background load failed:', e));
   } catch(e) { console.warn('Firebase init error:', e); }
@@ -2246,6 +2247,8 @@ function importVBExcel(evt) {
             </div>`).join('');
             const tot = items.reduce((s,i)=>s+i.amount,0);
             setEl('bills-total', '-$'+Math.round(tot).toLocaleString());
+            // Save for auto-alerts
+            localStorage.setItem('kcc_vb_bills', JSON.stringify(items));
           }
         }
       }
@@ -2396,6 +2399,9 @@ function importVBExcel(evt) {
 
         document.getElementById('cc-content').innerHTML = ccHTML || '<div class="empty">No credit card data in spreadsheet</div>';
       }
+
+      // Run auto-alerts after import
+      autoAlerts();
 
       // Show content
       document.getElementById('fin-empty').style.display = 'none';
@@ -2786,6 +2792,9 @@ async function importAllExcel(evt) {
   if(S.page==='financials') rFin();
   if(S.page==='tickets') rTickets();
 
+  // Run auto-alerts
+  autoAlerts();
+
   // Save to Firebase
   fbSaveAll();
 
@@ -3093,6 +3102,191 @@ function downloadDocx() {
   a.download = 'Koliwad_Exec_Summary_'+month.replace(' ','_')+'.doc';
   a.click();
   URL.revokeObjectURL(url);
+}
+
+
+// ══ AUTO-ALERT GENERATION ════════════════════════════════════
+
+function autoAlerts() {
+  const now   = new Date(); now.setHours(0,0,0,0);
+  const in3   = new Date(now); in3.setDate(now.getDate()+3);
+  const in7   = new Date(now); in7.setDate(now.getDate()+7);
+  const fire  = S.fire;
+  const fins  = S.fins;
+  const tasks = S.tasks||[];
+  const existing = S.alerts||[];
+
+  // Helper: add alert if not already present (match by _autoKey)
+  function upsert(key, alert) {
+    const idx = existing.findIndex(a=>a._autoKey===key);
+    // Only add if not already resolved manually
+    if(idx > -1) {
+      if(existing[idx].status === 'Open') {
+        existing[idx] = {...existing[idx], ...alert, _autoKey:key};
+      }
+    } else {
+      existing.push({...alert, id:'auto_'+key+'_'+Date.now(), _autoKey:key, status:'Open'});
+    }
+  }
+  function clear(key) {
+    const idx = existing.findIndex(a=>a._autoKey===key&&a.status==='Open');
+    if(idx>-1) existing[idx].status = 'Resolved';
+  }
+
+  // ── FIRE PATH ALERTS ─────────────────────────────────────
+  if(fire) {
+    const helocInt  = (fire.heloc||700000)*0.065/12;
+    const trueNeed  = (fire.need||22000)+(fire.vmort||7900)+(fire.pmort||3477)+helocInt;
+    const gap       = (fire.inc||0) - trueNeed;
+    const firePct   = fire.fire_pct||0;
+
+    // Gap > $15K/mo = High
+    if(gap < -15000) {
+      upsert('fire_gap_high', {
+        title: 'FIRE gap critical — $'+Math.abs(Math.round(gap)).toLocaleString()+'/mo shortfall',
+        type:'FIRE', sev:'High',
+        action:'Identify income source to close gap. Throwzone launch and Paulette tenant are highest leverage.'
+      });
+    } else if(gap < -5000) {
+      upsert('fire_gap_med', {
+        title: 'FIRE gap $'+Math.abs(Math.round(gap)).toLocaleString()+'/mo — monitor closely',
+        type:'FIRE', sev:'Medium',
+        action:'Review income sources and velocity banking sweep to reduce HELOC drag.'
+      });
+      clear('fire_gap_high');
+    } else {
+      clear('fire_gap_high'); clear('fire_gap_med');
+    }
+
+    // HF balance dropping (below $130K)
+    if(fire.hf && fire.hf < 130000) {
+      upsert('fire_hf_low', {
+        title: 'HF balance below $130K — drawdown accelerating',
+        type:'FIRE', sev:'High',
+        action:'Reduce monthly draws. Prioritize getting income streams online before HF depletes further.'
+      });
+    } else { clear('fire_hf_low'); }
+
+    // FIRE % stuck (below 30% and no income growth)
+    if(firePct < 30 && (fire.inc||0) < 20000) {
+      upsert('fire_pct_low', {
+        title: 'FIRE coverage at '+firePct+'% — income streams not yet active',
+        type:'FIRE', sev:'Medium',
+        action:'Throwzone and Paulette rental are key. Each month delayed = FIRE date slips ~2 months.'
+      });
+    } else { clear('fire_pct_low'); }
+  }
+
+  // ── FIRE PATH TASK ALERTS ─────────────────────────────────
+  // Check for critical FIRE phase 0 tasks not done
+  const criticalNotDone = FP[0].tasks.filter(t=>t.tag==='critical'&&!S.fchk[t.id]);
+  if(criticalNotDone.length > 0) {
+    upsert('fire_critical_tasks', {
+      title: criticalNotDone.length+' critical pre-departure tasks not complete',
+      type:'FIRE', sev:'High',
+      action:'Open FIRE Path → Phase 00. Items: '+criticalNotDone.slice(0,3).map(t=>t.t).join(', ')+(criticalNotDone.length>3?' +more':'')+'.'
+    });
+  } else { clear('fire_critical_tasks'); }
+
+  // ── VELOCITY BANKING ALERTS ───────────────────────────────
+  if(fins) {
+    // Sweep sitting idle (> $3K available, not swept)
+    if((fins.totalSweep||0) > 3000) {
+      upsert('vb_sweep_idle', {
+        title: '$'+Math.round(fins.totalSweep).toLocaleString()+' sweep available — HELOC paydown pending',
+        type:'Financials', sev:'Medium',
+        action:'Sweep Citi → Savings → HELOC today. Every day delayed costs ~$'+Math.round(fins.heloc*0.065/365)+' in interest.'
+      });
+    } else { clear('vb_sweep_idle'); }
+
+    // Citi balance low (below $1K)
+    if((fins.citi||0) < 1000 && fins.citi !== 0) {
+      upsert('vb_citi_low', {
+        title: 'Citi checking low — $'+Math.round(fins.citi).toLocaleString()+' balance',
+        type:'Financials', sev:'High',
+        action:'Draw from HELOC or transfer from savings before bills hit. Maintain minimum $500 buffer.'
+      });
+    } else { clear('vb_citi_low'); }
+
+    // Randy Dang owed
+    if(fins.cc && (fins.cc.dangOwed||0) > 0) {
+      upsert('dang_owed', {
+        title: 'Randy Dang — $'+Math.round(fins.cc.dangOwed).toLocaleString()+' owed (Priority #1)',
+        type:'Financials', sev:'High',
+        action:'Pay from next ticket proceeds before any other CC payments. Business relationship depends on this.'
+      });
+    } else { clear('dang_owed'); }
+  }
+
+  // ── BILLS DUE WITHIN 3 DAYS ───────────────────────────────
+  const bills = JSON.parse(localStorage.getItem('kcc_bills')||'[]');
+  const billSheet = JSON.parse(localStorage.getItem('kcc_tkm')||'{}'); // fallback
+  // Also check from VB import stored bills
+  const storedBills = JSON.parse(localStorage.getItem('kcc_vb_bills')||'[]');
+  storedBills.forEach((b,i) => {
+    if(!b.bill || !b.due) return;
+    const dueDate = new Date(b.due+'T12:00:00');
+    if(isNaN(dueDate)) return;
+    const diff = Math.ceil((dueDate - now) / 86400000);
+    if(diff <= 3 && diff >= 0) {
+      upsert('bill_due_'+i, {
+        title: 'Bill due in '+diff+' day'+(diff===1?'':'s')+': '+b.bill+' — $'+Number(b.amount).toLocaleString(),
+        type:'Bills', sev:'Medium',
+        action:'Pay from savings or schedule payment before '+b.due+' to avoid late fees.'
+      });
+    } else if(diff < 0) {
+      upsert('bill_overdue_'+i, {
+        title: 'OVERDUE: '+b.bill+' — $'+Number(b.amount).toLocaleString()+' ('+Math.abs(diff)+' days past due)',
+        type:'Bills', sev:'High',
+        action:'Pay immediately. Late fees may apply.'
+      });
+    }
+  });
+
+  // ── TASKS OVERDUE ─────────────────────────────────────────
+  const overdueMust = tasks.filter(t=>{
+    if(t.m!=='Must'||t.status==='Done'||!t.dd) return false;
+    const d = new Date(t.dd+'T12:00:00');
+    return !isNaN(d) && d < now;
+  });
+  if(overdueMust.length > 0) {
+    upsert('tasks_overdue', {
+      title: overdueMust.length+' Must task'+(overdueMust.length>1?'s':'')+' overdue',
+      type:'Tasks', sev:'High',
+      action:'Review: '+overdueMust.slice(0,3).map(t=>t.title).join(', ')+(overdueMust.length>3?' +more':'')
+    });
+  } else { clear('tasks_overdue'); }
+
+  // ── TICKET ALERTS ─────────────────────────────────────────
+  const tkCards = JSON.parse(localStorage.getItem('kcc_tk_cards')||'null');
+  if(tkCards) {
+    const totalCC = (tkCards.c1b||0)+(tkCards.c2b||0)+(tkCards.c3b||0)+(tkCards.c4b||0);
+    // CC utilization high
+    if(totalCC > 20000) {
+      upsert('tk_cc_high', {
+        title: 'Business CC debt $'+Math.round(totalCC).toLocaleString()+' — high utilization',
+        type:'Tickets', sev:'Medium',
+        action:'Prioritize paying down from ticket proceeds. Focus on highest APR card first after Randy Dang.'
+      });
+    } else { clear('tk_cc_high'); }
+  }
+
+  // High risk tickets (within 7 days, not listed)
+  const hr = JSON.parse(localStorage.getItem('kcc_tkhr')||'[]');
+  if(hr.length > 0) {
+    upsert('tk_high_risk', {
+      title: hr.length+' high-risk ticket event'+(hr.length>1?'s':'')+' — within 7 days, NOT LISTED',
+      type:'Tickets', sev:'High',
+      action:'List immediately: '+hr.slice(0,2).map(r=>r.event+' ('+r.date+')').join(', ')+(hr.length>2?' +more':'')
+    });
+  } else { clear('tk_high_risk'); }
+
+  // Save
+  S.alerts = existing;
+  localStorage.setItem('kcc_alerts', JSON.stringify(existing));
+  rAlerts();
+  rBadges();
+  rToday();
 }
 
 </script>

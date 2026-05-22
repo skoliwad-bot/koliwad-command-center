@@ -776,9 +776,13 @@ localStorage.setItem = function(key, value) {
             <button class="aibtn" onclick="runAI('exec')">✦ Generate with AI</button>
             <button class="btn" id="dlBtn" onclick="downloadDocx()" style="display:none">⬇ Download .docx</button>
           </div></div>
-        <div class="ai-block visible" id="ai-exec" style="background:transparent;border:none;padding:0;">
-          <div class="ai-hdr" style="margin-bottom:10px;"><span class="ai-title">✦ AI Executive Summary</span><span class="ai-status" id="ai-exec-st">Click "Generate with AI" to write your monthly summary</span></div>
-          <div id="ai-exec-tx" style="font-size:12px;color:var(--txt2);font-style:italic;">Claude will generate a full JPL-style executive summary with your real data — HELOC, cash flow, FIRE path, ticket business, and key decisions.</div>
+        <!-- Exec AI controls -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+          <span id="ai-exec-st" style="font-size:9px;color:var(--mut);font-style:italic;">Click "Generate with AI" to produce your monthly executive summary</span>
+        </div>
+        <!-- Exec output - renders in white JPL style -->
+        <div id="ai-exec-tx" style="font-size:12px;color:var(--txt2);font-style:italic;border:1px solid var(--brd);padding:20px;text-align:center;">
+          ✦ Click Generate with AI above to produce your JPL-style executive summary
         </div>
         <div class="g4" style="margin-bottom:16px">
           <div style="border:1px solid var(--brd);background:var(--surf);padding:12px 16px"><span style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--mut);display:block">Tasks Done</span><span id="ek1" style="font-size:22px;font-weight:700;display:block;margin-top:3px">—</span></div>
@@ -3042,8 +3046,8 @@ function renderExecSummary(d) {
   const container = el('ai-exec-tx');
   if(container) {
     container.innerHTML = html;
-    container.classList.remove('loading');
-    container.style.cssText = 'font-size:inherit;color:inherit;line-height:inherit;';
+    // White page styling - matches the document output
+    container.style.cssText = 'font-size:inherit;color:#111;line-height:inherit;background:#fff;border-radius:4px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.4);margin-bottom:16px;';
   }
   const st = el('ai-exec-st');
   if(st) st.textContent = '✦ Generated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
@@ -3061,17 +3065,32 @@ function downloadDocx() {
 
   const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8">
   <style>
-    body{font-family:Arial,sans-serif;font-size:10pt;margin:0.5in;color:#111;}
-    table{width:100%;border-collapse:collapse;margin-bottom:10px;}
-    td{padding:5px 8px;border:1px solid #ccc;font-size:9pt;}
-    div{box-sizing:border-box;}
-  </style></head><body>${execHTML}</body></html>`;
+    @page { size: 8.5in 11in; margin: 0.45in 0.45in 0.45in 0.45in; }
+    @media print { body { zoom: 1; } }
+    html, body { width: 7.6in; max-width: 7.6in; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; font-size: 7.5pt; color: #111; }
+    * { box-sizing: border-box; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 6px; table-layout: fixed; }
+    td { padding: 3px 6px; border: 1px solid #ccc; font-size: 7pt; word-wrap: break-word; overflow-wrap: break-word; }
+    div { max-width: 100%; }
+    /* Scale down big numbers in cells */
+    .big-num { font-size: 13pt !important; }
+    /* Prevent overflow */
+    * { overflow: visible; }
+    /* Quick summary grid */
+    .qs-grid { display: table; width: 100%; }
+    .qs-cell { display: table-cell; width: 33%; padding-right: 8px; font-size: 7pt; }
+  </style>
+  <!--[if gte mso 9]>
+  <xml><w:WordDocument><w:View>Print</w:View><w:Zoom>90</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument></xml>
+  <![endif]-->
+  </head><body>${execHTML}</body></html>`;
 
   const blob = new Blob([docContent], {type:'text/html'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'Koliwad_Exec_Summary_'+month.replace(' ','_')+'.html';
+  a.download = 'Koliwad_Exec_Summary_'+month.replace(' ','_')+'.doc';
   a.click();
   URL.revokeObjectURL(url);
 }

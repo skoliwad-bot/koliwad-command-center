@@ -461,6 +461,29 @@ localStorage.setItem = function(key, value) {
 
         <div class="card" style="margin-bottom:12px"><div class="ch"><span class="ct b">🎯 FIRE Snapshot</span><div style="display:flex;gap:8px;align-items:center"><span onclick="nav('fire')" style="font-size:9px;color:var(--mut);cursor:pointer">Details →</span><button onclick="window.open('fire-lab.html','_blank')" style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border:1px solid var(--pur);background:transparent;color:var(--pur);cursor:pointer;">🔬 FIRE Lab</button></div></div><div id="t-fire"><div class="empty">Go to FIRE page to enter numbers →</div></div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="om('task')">+ Task</button><button class="btn" onclick="om('alert')">+ Alert</button><button class="btn" onclick="om('ticket')">+ Ticket</button></div>
+
+        <!-- TOMORROW -->
+        <div style="margin-top:16px;border:1px solid var(--brd2);background:var(--surf2);">
+          <div class="ch" style="background:#0f110f;">
+            <span class="ct b">📅 Tomorrow — <span id="tmr-date">—</span></span>
+            <span style="font-size:8px;color:var(--mut2);font-style:italic;">Plan your evening review here</span>
+          </div>
+          <div class="g3" style="padding:0;">
+            <div style="border-right:1px solid var(--brd);">
+              <div style="padding:7px 12px;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--brd);">Schedule</div>
+              <div id="tmr-cal"><div class="empty">↻ Sync to load</div></div>
+            </div>
+            <div style="border-right:1px solid var(--brd);">
+              <div style="padding:7px 12px;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--brd);">Tasks Due</div>
+              <div id="tmr-tasks"><div class="empty">No tasks due tomorrow</div></div>
+            </div>
+            <div>
+              <div style="padding:7px 12px;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--brd);">Watch List</div>
+              <div id="tmr-watch"><div class="empty">Nothing flagged</div></div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- TASKS -->
@@ -1549,6 +1572,73 @@ function rToday(){
   if(inboxLbl){inboxLbl.textContent=S.inboxCount>0?'Inbox: '+S.inboxCount+' total'+(S.inboxCount>70?' ⚠ OVER 70':''):'';inboxLbl.style.color=S.inboxCount>70?'#d04040':'#8aaa8a';}
   const emEl=el('t-emails');
   if(emEl)emEl.innerHTML=emails.length===0?'<div class="empty">No urgent emails</div>':emails.map(e=>'<div class="row"><span class="b '+(e.m==='Must'?'bm':'bs')+'">'+e.m+'</span><span class="rtl">'+esc(e.title)+'</span><span class="rsb">Gmail</span></div>').join('');
+  // TOMORROW
+  const tmr = new Date(); tmr.setDate(tmr.getDate()+1); tmr.setHours(0,0,0,0);
+  const tmrEnd = new Date(tmr); tmrEnd.setHours(23,59,59);
+  const tmrLabel = DAYS[tmr.getDay()]+', '+SM[tmr.getMonth()]+' '+tmr.getDate();
+  const tmrDateEl = el('tmr-date'); if(tmrDateEl) tmrDateEl.textContent = tmrLabel;
+
+  // Tomorrow calendar
+  const tmrCal = cal.filter(e => {
+    if(!e.dd) return false;
+    const d = new Date(e.dd.length===10 ? e.dd+'T12:00:00' : e.dd);
+    return !isNaN(d) && d >= tmr && d <= tmrEnd;
+  });
+  const tmrCalEl = el('tmr-cal');
+  if(tmrCalEl) {
+    tmrCalEl.innerHTML = tmrCal.length===0 ? '<div class="empty">No events</div>' :
+      tmrCal.map(e=>'<div class="row"><span class="rsb" style="width:50px;flex-shrink:0;color:'+(e.calColor||'var(--mut)')+'">'+e.time+'</span>'
+        +'<div style="width:3px;height:18px;background:'+(e.calColor||'var(--blu)')+';flex-shrink:0;margin-right:8px"></div>'
+        +'<span class="rtl" style="color:'+(e.calColor||'var(--txt)')+'">'+esc(e.title)+'</span></div>').join('');
+  }
+
+  // Tomorrow tasks due
+  const tmrTasks = tasks.filter(t => {
+    if(!t.dd || t.status==='Done') return false;
+    const d = new Date(t.dd+'T12:00:00');
+    return !isNaN(d) && d >= tmr && d <= tmrEnd;
+  });
+  const tmrTaskEl = el('tmr-tasks');
+  if(tmrTaskEl) {
+    tmrTaskEl.innerHTML = tmrTasks.length===0 ? '<div class="empty" style="color:var(--grn)">✓ Nothing due</div>' :
+      tmrTasks.map(t=>'<div class="row">'
+        +'<span class="b '+(t.m==='Must'?'bm':t.m==='Should'?'bs':'bc')+'">'+t.m+'</span>'
+        +'<span class="rtl">'+esc(t.title)+'</span></div>').join('');
+  }
+
+  // Tomorrow watch list — tickets + bills + alerts due soon
+  const watchItems = [];
+  // Tickets within 48hrs unsold
+  const tkUp = JSON.parse(localStorage.getItem('kcc_tku')||'[]');
+  tkUp.forEach(r => {
+    const d = new Date(r.date+', '+tmr.getFullYear());
+    if(!isNaN(d) && d >= tmr && d <= tmrEnd && r.status !== 'Sold') {
+      watchItems.push({icon:'🎟', text:r.event+(r.opp?' vs '+r.opp:''), sub:r.status, color:r.status==='Not Listed'?'var(--red)':'var(--amb)'});
+    }
+  });
+  // Bills within 48hrs
+  const vbBills = JSON.parse(localStorage.getItem('kcc_vb_bills')||'[]');
+  vbBills.forEach(b => {
+    if(!b.due) return;
+    const d = new Date(b.due+'T12:00:00');
+    if(!isNaN(d) && d >= tmr && d <= tmrEnd) {
+      watchItems.push({icon:'📋', text:b.bill, sub:'$'+Number(b.amount).toLocaleString()+' due', color:'var(--amb)'});
+    }
+  });
+  // Open alerts
+  const urgentAlerts = alerts.filter(a=>a.status==='Open'&&a.sev==='High').slice(0,2);
+  urgentAlerts.forEach(a => watchItems.push({icon:'🚨', text:a.title, sub:a.action||'', color:'var(--red)'}));
+
+  const tmrWatchEl = el('tmr-watch');
+  if(tmrWatchEl) {
+    tmrWatchEl.innerHTML = watchItems.length===0 ? '<div class="empty" style="color:var(--grn)">✓ Nothing flagged</div>' :
+      watchItems.map(w=>'<div class="row">'
+        +'<span style="flex-shrink:0;margin-right:6px">'+w.icon+'</span>'
+        +'<div style="flex:1;min-width:0"><div class="rtl" style="color:'+w.color+'">'+esc(w.text)+'</div>'
+        +(w.sub?'<div class="rsb" style="white-space:normal">'+esc(w.sub)+'</div>':'')
+        +'</div></div>').join('');
+  }
+
   // FIRE
   if(!fire){
     el('t-fire').innerHTML='<div class="empty">Go to 🎯 FIRE page to enter your numbers →</div>';

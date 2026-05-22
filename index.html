@@ -752,38 +752,21 @@ localStorage.setItem = function(key, value) {
     <div style="border:1px solid var(--brd);background:var(--surf);">
       <div class="ch"><span class="ct ct-r">💳 Business Cards & Obligations</span><span id="tk-cc-total" style="font-size:11px;font-weight:700;color:var(--red)"></span></div>
       <div id="tk-cards-display"></div>
-      <!-- Manual entry -->
-      <div style="padding:12px 16px;border-top:1px solid var(--brd);background:#0a0c0a;">
-        <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:10px;">UPDATE BALANCES</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:10px;">
-          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Cap One Biz Balance</div><input id="tk-c1b" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
-          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Cap One Min Due</div><input id="tk-c1m" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
-          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Amex Biz (MBK) Balance</div><input id="tk-c2b" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
-          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Amex Biz Min Due</div><input id="tk-c2m" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
-          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Amex Lena Balance</div><input id="tk-c3b" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
-          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Amex Lena Min Due</div><input id="tk-c3m" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
-          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Wells Fargo CC Balance</div><input id="tk-c4b" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
-          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Wells Fargo Min Due</div><input id="tk-c4m" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
-          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Amex Stardust Balance</div><input id="tk-c5b" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
-          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Amex Stardust Min Due</div><input id="tk-c5m" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
-          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Amex LOC Balance</div><input id="tk-loc" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
-          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Randy Dang Owed</div><input id="tk-dang" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
-        </div>
-        <button onclick="tkSaveCards()" style="margin-top:10px;width:100%;padding:7px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:var(--red);border:none;color:white;cursor:pointer;">💾 Save</button>
-        <div style="margin-top:10px;border-top:1px solid var(--brd);padding-top:8px;">
-          <div style="font-size:8px;color:var(--mut2);font-style:italic;margin-bottom:6px;">Due dates auto-read from VB spreadsheet import</div>
-          <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--grn);margin-bottom:6px;">✓ PAID THIS MONTH</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">
-            <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--txt2);cursor:pointer;"><input type="checkbox" id="tk-paid-c1" onchange="tkSaveCards()" style="accent-color:var(--grn);width:14px;height:14px;flex-shrink:0"> Cap One Biz</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--txt2);cursor:pointer;"><input type="checkbox" id="tk-paid-c2" onchange="tkSaveCards()" style="accent-color:var(--grn);width:14px;height:14px;flex-shrink:0"> Amex Biz (MBK)</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--txt2);cursor:pointer;"><input type="checkbox" id="tk-paid-c3" onchange="tkSaveCards()" style="accent-color:var(--grn);width:14px;height:14px;flex-shrink:0"> Amex Lena</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--txt2);cursor:pointer;"><input type="checkbox" id="tk-paid-c4" onchange="tkSaveCards()" style="accent-color:var(--grn);width:14px;height:14px;flex-shrink:0"> Wells Fargo CC</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--txt2);cursor:pointer;"><input type="checkbox" id="tk-paid-c5" onchange="tkSaveCards()" style="accent-color:var(--grn);width:14px;height:14px;flex-shrink:0"> Amex Stardust</label>
-          </div>
+      <!-- Import note + Paid checkboxes only -->
+      <div style="padding:10px 14px;border-top:1px solid var(--brd);background:#0a0c0a;">
+        <div style="font-size:8px;color:var(--mut2);font-style:italic;margin-bottom:8px;">↑ Balances auto-populated from ⬆ Import Excel</div>
+        <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--grn);margin-bottom:6px;">✓ PAID THIS MONTH</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--txt2);cursor:pointer;"><input type="checkbox" id="tk-paid-c1" onchange="tkSaveCards()" style="accent-color:var(--grn);width:14px;height:14px;flex-shrink:0"> Cap One Biz</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--txt2);cursor:pointer;"><input type="checkbox" id="tk-paid-c2" onchange="tkSaveCards()" style="accent-color:var(--grn);width:14px;height:14px;flex-shrink:0"> Amex Biz (MBK)</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--txt2);cursor:pointer;"><input type="checkbox" id="tk-paid-c3" onchange="tkSaveCards()" style="accent-color:var(--grn);width:14px;height:14px;flex-shrink:0"> Amex Lena</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--txt2);cursor:pointer;"><input type="checkbox" id="tk-paid-c4" onchange="tkSaveCards()" style="accent-color:var(--grn);width:14px;height:14px;flex-shrink:0"> Wells Fargo CC</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--txt2);cursor:pointer;"><input type="checkbox" id="tk-paid-c5" onchange="tkSaveCards()" style="accent-color:var(--grn);width:14px;height:14px;flex-shrink:0"> Amex Stardust</label>
         </div>
       </div>
     </div>
   </div>
+
 
   <!-- PAYMENT PLANS & RECURRING BILLS -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">

@@ -426,7 +426,8 @@ localStorage.setItem = function(key, value) {
       <div class="ndiv"></div>
       <span class="nslbl">Business</span>
       <div class="ni"    id="n-tickets"  onclick="nav('tickets')"> <span class="ico">🎟</span><span class="nlbl">Tickets</span>  <span class="nbadge r" id="nb-tk">0</span></div>
-      <div class="ni"    id="n-business"   onclick="nav('business')">  <span class="ico">🏢</span><span class="nlbl">Business</span></div>
+      <div class="ni"    id="n-playbook"   onclick="nav('playbook')">  <span class="ico">📋</span><span class="nlbl">Playbook</span></div>
+            <div class="ni"    id="n-business"   onclick="nav('business')">  <span class="ico">🏢</span><span class="nlbl">Business</span></div>
       <div class="ni"    id="n-exec"       onclick="nav('exec')">      <span class="ico">📊</span><span class="nlbl">Exec Summary</span></div>
       <div class="ndiv"></div>
       <span class="nslbl">Investments</span>
@@ -1408,6 +1409,7 @@ function nav(pg){
   if(pg==='portfolio'){rPortfolio();// init GTC states
     [1,2,3].forEach(n=>{if(S.gtc&&S.gtc[n]!==undefined)toggleGTC(n);});}
   if(pg==='exec') rExec();
+  if(pg==='playbook') renderPlaybook();
   if(pg==='playbook') renderPlaybook();
 }
 

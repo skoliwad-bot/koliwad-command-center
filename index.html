@@ -2451,17 +2451,18 @@ function importVBExcel(evt) {
           const r = ccRows[6+i] || [];
           // Col A empty: B=1(name), C=2(bal), D=3(limit), E=4(minDue), F=5(dueDay/date)
           let dueDay = '';
-          const rawDue = r[5];
+          const rawDue = r[4];  // due day/date is col F = index 4 (col A skipped)
           if(typeof rawDue==='number' && rawDue>=1 && rawDue<=31) {
             dueDay = rawDue;
           } else if(rawDue instanceof Date) {
             dueDay = rawDue.getDate();
           }
+          // XLSX.js header:1 skips empty col A, so: r[0]=name, r[1]=bal, r[2]=lim, r[3]=minDue, r[4]=dueDay
           ccData.cards.push({
-            name:   r[1] || cardLabels[i],
-            bal:    typeof r[2]==='number' ? r[2] : 0,
-            lim:    typeof r[3]==='number' ? r[3] : 0,
-            minDue: typeof r[4]==='number' ? r[4] : 0,
+            name:   (typeof r[0]==='string' ? r[0] : null) || cardLabels[i],
+            bal:    typeof r[1]==='number' ? r[1] : 0,
+            lim:    typeof r[2]==='number' ? r[2] : 0,
+            minDue: typeof r[3]==='number' ? r[3] : 0,
             dueDay: dueDay,
           });
         }
@@ -2472,9 +2473,9 @@ function importVBExcel(evt) {
           if(lbl2.includes('Wells Fargo Checking')) wfCheckRow=ccRows[ri2];
           if(lbl2.includes('Amex Business LOC')||lbl2.includes('Amex LOC')) amexLocRow2=ccRows[ri2];
         }
-        ccData.wfChecking = wfCheckRow&&typeof wfCheckRow[2]==='number' ? wfCheckRow[2] : 0;
-        ccData.amexLocBal = amexLocRow2&&typeof amexLocRow2[2]==='number' ? amexLocRow2[2] : 0;
-        ccData.amexLocLim = amexLocRow2&&typeof amexLocRow2[3]==='number' ? amexLocRow2[3] : 0;
+        ccData.wfChecking = wfCheckRow&&typeof wfCheckRow[1]==='number' ? wfCheckRow[1] : 0;
+        ccData.amexLocBal = amexLocRow2&&typeof amexLocRow2[1]==='number' ? amexLocRow2[1] : 0;
+        ccData.amexLocLim = amexLocRow2&&typeof amexLocRow2[2]==='number' ? amexLocRow2[2] : 0;
         // Obligations - scan for Randy Dang
         let dangRow = null;
         for(let ri=12; ri<Math.min(ccRows.length,30); ri++) {
@@ -2482,11 +2483,11 @@ function importVBExcel(evt) {
         }
         ccData.obligations = [];
         if(dangRow && typeof dangRow[2]==='number' && dangRow[2]>0) {
-          ccData.obligations.push({payee:dangRow[1]||'Randy Dang',amount:dangRow[2],priority:dangRow[3]||'1 — FIRST'});
+          ccData.obligations.push({payee:dangRow[0]||'Randy Dang',amount:dangRow[1],priority:dangRow[2]||'1 — FIRST'});
         }
         ccData.totalCC  = ccData.cards.reduce((s,c)=>s+c.bal,0);
         ccData.totalMin = ccData.cards.reduce((s,c)=>s+c.minDue,0);
-        ccData.dangOwed = dangRow ? (dangRow[2]||0) : 0;
+        ccData.dangOwed = dangRow ? (dangRow[1]||0) : 0;
       }
 
       // ── SYNC CC DATA TO TICKETS PAGE ──

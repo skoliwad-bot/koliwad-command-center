@@ -2442,29 +2442,27 @@ function importVBExcel(evt) {
       const ccData = {};
       if(ccSheet) {
         const ccRows = XLSX.utils.sheet_to_json(ccSheet, {header:1});
-        // Cards are rows 7-10 (0-indexed: 6-9), cols B=1,C=2,D=3,E=4,F=5
-        const cardNames = ['capone','amex_biz','amex_lena','wf'];
-        const cardLabels = ['Cap One Business','Amex Business (MBK)','Amex (Lena)','Wells Fargo CC'];
+        const cardLabels = ['Cap One Business','Amex Business (MBK)','Amex (Lena)','Wells Fargo CC','Amex Stardust'];
+        // Detect if Stardust row exists (v3) or TOTAL is row 10 (v2)
+        const hasStardust = ccRows[10] && typeof ccRows[10][1]==='string' && ccRows[10][1].includes('Stardust');
+        const numCards = hasStardust ? 5 : 4;
         ccData.cards = [];
-        for(let i=0;i<5;i++) {
+        for(let i=0;i<numCards;i++) {
           const r = ccRows[6+i] || [];
-          // Due day is now stored as plain number (1-31)
+          // Col A empty: B=1(name), C=2(bal), D=3(limit), E=4(minDue), F=5(dueDay/date)
           let dueDay = '';
-          let dueDisplay = '';
-          if(typeof r[5] === 'number' && r[5] >= 1 && r[5] <= 31) {
-            dueDay = r[5];
-            dueDisplay = r[5];  // just the number
-          } else if(r[5] instanceof Date) {
-            dueDay = r[5].getDate();
-            dueDisplay = r[5].getDate();
+          const rawDue = r[5];
+          if(typeof rawDue==='number' && rawDue>=1 && rawDue<=31) {
+            dueDay = rawDue;
+          } else if(rawDue instanceof Date) {
+            dueDay = rawDue.getDate();
           }
           ccData.cards.push({
-            name:    cardLabels[i],
-            bal:     r[2]||0,
-            lim:     r[3]||0,
-            minDue:  r[4]||0,
-            due:     dueDisplay,
-            dueDay:  dueDay,
+            name:   r[1] || cardLabels[i],
+            bal:    typeof r[2]==='number' ? r[2] : 0,
+            lim:    typeof r[3]==='number' ? r[3] : 0,
+            minDue: typeof r[4]==='number' ? r[4] : 0,
+            dueDay: dueDay,
           });
         }
         // LOC & Banking - scan by label (works v2 and v3)
@@ -2477,14 +2475,14 @@ function importVBExcel(evt) {
         ccData.wfChecking = wfCheckRow&&typeof wfCheckRow[2]==='number' ? wfCheckRow[2] : 0;
         ccData.amexLocBal = amexLocRow2&&typeof amexLocRow2[2]==='number' ? amexLocRow2[2] : 0;
         ccData.amexLocLim = amexLocRow2&&typeof amexLocRow2[3]==='number' ? amexLocRow2[3] : 0;
-        // Obligations - scan for Randy Dang row
+        // Obligations - scan for Randy Dang
         let dangRow = null;
         for(let ri=12; ri<Math.min(ccRows.length,30); ri++) {
-          if(ccRows[ri] && ccRows[ri][1] && String(ccRows[ri][1]).includes('Dang')) { dangRow=ccRows[ri]; break; }
+          if(ccRows[ri]&&ccRows[ri][1]&&String(ccRows[ri][1]).includes('Dang')){ dangRow=ccRows[ri]; break; }
         }
         ccData.obligations = [];
         if(dangRow && typeof dangRow[2]==='number' && dangRow[2]>0) {
-          ccData.obligations.push({payee:dangRow[1]||'Randy Dang', amount:dangRow[2], priority:dangRow[3]||'1 — FIRST', notes:dangRow[6]||''});
+          ccData.obligations.push({payee:dangRow[1]||'Randy Dang',amount:dangRow[2],priority:dangRow[3]||'1 — FIRST'});
         }
         ccData.totalCC  = ccData.cards.reduce((s,c)=>s+c.bal,0);
         ccData.totalMin = ccData.cards.reduce((s,c)=>s+c.minDue,0);

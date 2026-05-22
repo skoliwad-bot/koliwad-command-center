@@ -2473,8 +2473,11 @@ function importVBExcel(evt) {
         ccData.wfChecking = wfRow[2]||0;
         ccData.amexLocBal = locRow[2]||0;
         ccData.amexLocLim = locRow[3]||0;
-        // Obligations (rows 20-22, 0-indexed 19-21)
-        // Obligations - use dangRow found above
+        // Obligations - scan for Randy Dang row
+        let dangRow = null;
+        for(let ri=12; ri<Math.min(ccRows.length,30); ri++) {
+          if(ccRows[ri] && ccRows[ri][1] && String(ccRows[ri][1]).includes('Dang')) { dangRow=ccRows[ri]; break; }
+        }
         ccData.obligations = [];
         if(dangRow && typeof dangRow[2]==='number' && dangRow[2]>0) {
           ccData.obligations.push({payee:dangRow[1]||'Randy Dang', amount:dangRow[2], priority:dangRow[3]||'1 — FIRST', notes:dangRow[6]||''});

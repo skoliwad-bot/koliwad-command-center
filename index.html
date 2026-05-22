@@ -301,7 +301,7 @@ const FB_KEYS = [
   'kcc_aitexts','kcc_sync','kcc_name','kcc_cid','kcc_claude',
   'kcc_firelab_inputs','kcc_firelab_saved',
   'kcc_tkm','kcc_tku','kcc_tkhr','kcc_tkmed','kcc_tk_cards',
-  'kcc_payplans','kcc_recbills','kcc_cc_import',
+  'kcc_payplans','kcc_recbills','kcc_cc_import','kcc_cc_paid',
   'kcc_fire_actuals','kcc_inbox','kcc_emails','kcc_calnames'
 ];
 
@@ -2802,7 +2802,9 @@ function tkUpdateCards() {
 
   const f$ = n => '$'+Math.round(Math.abs(n)||0).toLocaleString();
   const thisMonth = new Date().getFullYear()+'-'+(new Date().getMonth()+1);
-  const paid = (d.paid && d.paid.month===thisMonth) ? d.paid : {};
+  // Read paid from dedicated key - survives Firebase sync
+  const paidStored = JSON.parse(localStorage.getItem('kcc_cc_paid')||'{}');
+  const paid = paidStored.month===thisMonth ? paidStored : ((d.paid&&d.paid.month===thisMonth) ? d.paid : {});
 
   const cardKeys = ['c1','c2','c3','c4','c5'];
   const wf = d.wfChecking||0;
@@ -2884,9 +2886,12 @@ function tkSaveCards() {
   const g = id => parseFloat(document.getElementById(id)?.value)||0;
   const gb = id => document.getElementById('tk-'+id)?.checked||false;
   const thisMonth = new Date().getFullYear()+'-'+(new Date().getMonth()+1);
-  // Only save paid status - all other data comes from spreadsheet import
+  // Save paid status to its own key - separate from import data
+  const paidData = {c1:gb('paid-c1'),c2:gb('paid-c2'),c3:gb('paid-c3'),c4:gb('paid-c4'),c5:gb('paid-c5'),month:thisMonth};
+  localStorage.setItem('kcc_cc_paid', JSON.stringify(paidData));
+  // Also update kcc_cc_import paid field
   const existing2 = JSON.parse(localStorage.getItem('kcc_cc_import')||'{}');
-  existing2.paid = {c1:gb('paid-c1'),c2:gb('paid-c2'),c3:gb('paid-c3'),c4:gb('paid-c4'),c5:gb('paid-c5'),month:thisMonth};
+  existing2.paid = paidData;
   const data = existing2;
   localStorage.setItem('kcc_cc_import', JSON.stringify(data));
   fbSaveAll();

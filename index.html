@@ -1790,6 +1790,11 @@ function rFin(){
     const fha=document.getElementById('fa-heloc-avail'); if(fha) fha.textContent=f.available?f$(f.available):'—';
     if(el('fa-knight')) el('fa-knight').textContent=f$(f.knight);
     if(el('fa-sav')) el('fa-sav').textContent=f$(f.savings);
+    // Velocity banking sweeps
+    const setEl2 = (id, val, color) => { const e=document.getElementById(id); if(!e)return; e.textContent=val; if(color)e.style.color=color; };
+    setEl2('vb-citi-sweep',  f$(f.citiSweep),  (f.citiSweep||0)>0?'var(--grn)':'var(--red)');
+    setEl2('vb-sav-sweep',   f$(f.savSweep),   (f.savSweep||0)>0?'var(--grn)':'var(--red)');
+    setEl2('vb-total-sweep', f$(f.totalSweep), (f.totalSweep||0)>0?'var(--grn)':'var(--red)');
     if(f.heloc&&f.citi){
       const sur=(f.chk||0)-(f.tgt||5000);
       const rec=sur>0?'Sweep $'+sur.toLocaleString()+' → HELOC paydown':'Maintain current checking buffer';
@@ -1798,6 +1803,42 @@ function rFin(){
         +'<div class="row"><span class="rtl">Recommendation</span><span style="font-size:11px;color:var(--grn);flex:1;text-align:right">'+rec+'</span></div>';
     }
   }
+  // Re-render pending outflows, bills, budget from saved S.fins data
+  if(f.pendingItems) {
+    const pEl = document.getElementById('pending-list');
+    if(pEl) {
+      if(!f.pendingItems.length) pEl.innerHTML='<div class="empty" style="color:var(--grn)">✓ No pending outflows</div>';
+      else pEl.innerHTML = f.pendingItems.map(i=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid #1e231e">
+        <span style="font-size:9px;color:var(--mut2);width:48px;flex-shrink:0">${i.date}</span>
+        <span style="font-size:9px;padding:1px 6px;background:rgba(90,138,204,0.15);color:var(--blu);flex-shrink:0">${i.type}</span>
+        <span style="flex:1;font-size:11px;font-weight:600">${esc(i.payee)}</span>
+        ${i.knight?'<span style="font-size:9px;padding:1px 5px;background:rgba(74,156,92,0.15);color:var(--grn)">KNIGHT</span>':''}
+        <span style="font-size:13px;font-weight:700;color:var(--red)">-${f$(i.amount)}</span>
+      </div>`).join('');
+    }
+  }
+  if(f.billItems) {
+    const bEl = document.getElementById('bills-list');
+    if(bEl) {
+      if(!f.billItems.length) bEl.innerHTML='<div class="empty" style="color:var(--grn)">✓ No unpaid bills</div>';
+      else bEl.innerHTML = f.billItems.map(b=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid #1e231e">
+        <div style="flex:1"><span style="font-size:11px;font-weight:600">${esc(b.bill)}</span></div>
+        <span style="font-size:9px;color:var(--mut2)">${b.due||''}</span>
+        <span style="font-size:13px;font-weight:700;color:var(--red)">-${f$(b.amount)}</span>
+      </div>`).join('');
+    }
+  }
+  if(f.income || f.spend) {
+    const bsEl = document.getElementById('budget-summary');
+    if(bsEl) bsEl.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-bottom:1px solid var(--brd)">
+        <div style="padding:14px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Total Income</span><span style="font-size:24px;font-weight:700;color:var(--grn);display:block;margin-top:6px">${f$(f.income)}</span></div>
+        <div style="padding:14px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Total Fixed Expenses</span><span style="font-size:24px;font-weight:700;color:var(--red);display:block;margin-top:6px">${f$(f.totalExp)}</span><span style="font-size:9px;color:var(--mut)">spend + vmort + pmort + HELOC int</span></div>
+        <div style="padding:14px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Cash Flow</span><span style="font-size:24px;font-weight:700;color:var(--red);display:block;margin-top:6px">${f$(f.cf)}</span></div>
+        <div style="padding:14px 16px"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">HELOC Interest / Mo</span><span style="font-size:24px;font-weight:700;display:block;margin-top:6px">${f$(f.helocInt)}</span><span style="font-size:9px;color:var(--mut)">${((f.heloc||0)/1000).toFixed(0)}% on ${f$(f.heloc)}</span></div>
+      </div>`;
+  }
+
   const obs=S.alerts.filter(a=>a.type==='Cash'&&a.status==='Open');
   el('obligBody').innerHTML=obs.length===0?'<div class="empty">No financial obligations flagged</div>':
     obs.map(o=>'<div class="row"><div style="flex:1"><div class="rtl">'+esc(o.title)+'</div></div><span class="b '+(o.sev==='High'?'bm':'bs')+'">'+o.sev+'</span></div>').join('');
@@ -2395,6 +2436,7 @@ function importVBExcel(evt) {
           date: r[0] instanceof Date ? r[0].toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '',
           type: r[1]||'', payee: r[2]||'', amount: r[4]||0, knight: r[6]==='Y'
         }));
+        if(S.fins) S.fins.pendingItems = items;
         const pEl = document.getElementById('pending-list');
         if(pEl) {
           if(!items.length) { pEl.innerHTML='<div class="empty" style="color:var(--grn)">✓ No pending outflows</div>'; }
@@ -2421,6 +2463,7 @@ function importVBExcel(evt) {
           due: r[1] instanceof Date ? r[1].toLocaleDateString('en-US',{month:'short',day:'numeric'}) : (r[1]||''),
           amount: r[2]||0
         }));
+        if(S.fins) S.fins.billItems = items;
         const bEl = document.getElementById('bills-list');
         if(bEl) {
           if(!items.length) { bEl.innerHTML='<div class="empty" style="color:var(--grn)">✓ No unpaid bills</div>'; }
@@ -2641,29 +2684,6 @@ function importVBExcel(evt) {
   reader.readAsArrayBuffer(file);
 }
 
-function rFin() {
-  const f = S.fins;
-  if(!f) return;
-  document.getElementById('fin-empty').style.display = 'none';
-  document.getElementById('fin-content').style.display = 'block';
-  const f$ = n => n ? '$' + Math.round(n).toLocaleString() : '—';
-  const setEl = (id, val, color) => { const el=document.getElementById(id); if(!el)return; el.textContent=val; if(color)el.style.color=color; };
-  setEl('vb-citi-sweep',  f$(f.citiSweep),  f.citiSweep>0?'var(--grn)':'var(--red)');
-  setEl('vb-sav-sweep',   f$(f.savSweep),   f.savSweep>0?'var(--grn)':'var(--red)');
-  setEl('vb-total-sweep', f$(f.totalSweep), f.totalSweep>0?'var(--grn)':'var(--red)');
-  setEl('fa-citi',   f$(f.citi));
-  setEl('fa-sav',    f$(f.savings));
-  setEl('fa-heloc',  f.heloc>0 ? '-'+f$(f.heloc) : '—', 'var(--red)');
-  setEl('fa-heloc-avail', f.available>0 ? 'available: '+f$(f.available) : '—');
-}
-
-
-
-
-</script>
-
-<script>
-// ══ TICKET FUNCTIONS ════════════════════════════════════════
 
 function importTicketExcel(evt) {
   const file = evt.target.files[0];

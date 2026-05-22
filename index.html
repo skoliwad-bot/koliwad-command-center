@@ -301,6 +301,7 @@ const FB_KEYS = [
   'kcc_aitexts','kcc_sync','kcc_name','kcc_cid','kcc_claude',
   'kcc_firelab_inputs','kcc_firelab_saved',
   'kcc_tkm','kcc_tku','kcc_tkhr','kcc_tkmed','kcc_tk_cards',
+  'kcc_payplans','kcc_recbills',
   'kcc_fire_actuals','kcc_inbox','kcc_emails','kcc_calnames'
 ];
 
@@ -782,6 +783,44 @@ localStorage.setItem = function(key, value) {
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- PAYMENT PLANS & RECURRING BILLS -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+
+    <!-- SEASON TICKET PAYMENT PLANS -->
+    <div style="border:1px solid var(--brd);background:var(--surf);">
+      <div class="ch" style="background:#080a08;">
+        <span class="ct ct-b">🎟 Season Ticket Payment Plans</span>
+        <span id="plans-total" style="font-size:11px;font-weight:700;color:var(--red);">—</span>
+      </div>
+      <div id="plans-list"><div class="empty">No payment plans added</div></div>
+      <div style="padding:8px 12px;border-top:1px solid var(--brd);">
+        <button onclick="om('payplan')" class="btn" style="font-size:9px;width:100%;">+ Add Payment Plan</button>
+      </div>
+    </div>
+
+    <!-- RECURRING BILLS (WELLS CHECKING) -->
+    <div style="border:1px solid var(--brd);background:var(--surf);">
+      <div class="ch" style="background:#080a08;">
+        <span class="ct ct-a">💳 Recurring Bills — Wells Checking</span>
+        <span id="bills-mo-total" style="font-size:11px;font-weight:700;color:var(--amb);">—</span>
+      </div>
+      <div id="recurring-list"><div class="empty">No recurring bills added</div></div>
+      <div style="padding:8px 12px;border-top:1px solid var(--brd);">
+        <button onclick="om('recbill')" class="btn" style="font-size:9px;width:100%;">+ Add Recurring Bill</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- UPCOMING PAYMENTS (NEXT 30 DAYS) -->
+  <div style="border:1px solid var(--brd);background:var(--surf);margin-bottom:16px;">
+    <div class="ch" style="background:#080a08;display:flex;align-items:center;justify-content:space-between;">
+      <span class="ct ct-r">⚡ Upcoming Payments — Next 30 Days</span>
+      <span id="upcoming-pay-total" style="font-size:11px;font-weight:700;color:var(--red);">—</span>
+    </div>
+    <div id="upcoming-payments"><div class="empty">Add payment plans and recurring bills above to see upcoming payments</div></div>
   </div>
 
   <!-- LOG -->
@@ -2105,6 +2144,22 @@ const MCFG={
     {n:'price',l:'Execution Price',t:'num'},
     {n:'notes',l:'Notes / Trigger Reason',t:'ta'},
   ],def:{},k:'kcc_tradelogs',arr:'tradelogs'},
+  payplan:{title:'Add Season Ticket Payment Plan',fields:[
+    {n:'name',   l:'Plan Name',              t:'text', req:true, ph:'e.g. Crypto.com Arena Lakers/Kings'},
+    {n:'total',  l:'Total Contract ($)',      t:'num',  req:true},
+    {n:'amount', l:'Payment Amount ($)',      t:'num',  req:true},
+    {n:'day',    l:'Payment Day of Month',    t:'num',  req:true, ph:'e.g. 1'},
+    {n:'months', l:'Number of Payments',      t:'num',  req:true, ph:'e.g. 6'},
+    {n:'start',  l:'Start Month (MM/YYYY)',   t:'text', req:true, ph:'e.g. 09/2026'},
+    {n:'card',   l:'Charged to Card',         t:'sel',  o:['Cap One Business','Amex Business (MBK)','Amex (Lena)','Wells Fargo CC','Amex Stardust','Cash']},
+    {n:'notes',  l:'Notes',                   t:'text'},
+  ],def:{card:'Cap One Business'},k:'kcc_payplans',arr:'payplans'},
+  recbill:{title:'Add Recurring Bill (Wells Checking)',fields:[
+    {n:'name',   l:'Bill Name',               t:'text', req:true, ph:'e.g. Car Payment - Tesla'},
+    {n:'amount', l:'Monthly Amount ($)',       t:'num',  req:true},
+    {n:'day',    l:'Day of Month it Hits',     t:'num',  req:true, ph:'e.g. 15'},
+    {n:'notes',  l:'Notes',                   t:'text'},
+  ],def:{},k:'kcc_recbills',arr:'recbills'},
   pending:{title:'Add Pending Outflow',fields:[
     {n:'payee',l:'Payee',t:'text',req:true},
     {n:'type',l:'Type',t:'sel',o:['Check','Zelle','ACH','Bill Pay','Other']},
@@ -2726,6 +2781,7 @@ function rTickets() {
 
   // Always render card section regardless of import
   tkUpdateCards();
+  renderPaymentPlans();
 }
 
 function tkUpdateCards() {
@@ -3483,6 +3539,179 @@ function autoAlerts() {
   rAlerts();
   rBadges();
   rToday();
+}
+
+// ══ PAYMENT PLANS & RECURRING BILLS ══════════════════════════
+
+function renderPaymentPlans() {
+  const plans   = S.payplans  || JSON.parse(localStorage.getItem('kcc_payplans')||'[]');
+  const recbills = S.recbills || JSON.parse(localStorage.getItem('kcc_recbills')||'[]');
+  const f$ = n => '$'+Math.round(n||0).toLocaleString();
+  const now = new Date(); now.setHours(0,0,0,0);
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  // ── PAYMENT PLANS ──────────────────────────────────────────
+  const plEl = document.getElementById('plans-list');
+  const plTot = document.getElementById('plans-total');
+  if(plEl) {
+    if(!plans.length) {
+      plEl.innerHTML = '<div class="empty">No payment plans — click + Add Payment Plan</div>';
+    } else {
+      let totalRemaining = 0;
+      plEl.innerHTML = plans.map((p,i) => {
+        // Calculate payments made and remaining
+        const [sm, sy] = (p.start||'01/2026').split('/');
+        const startDate = new Date(parseInt(sy), parseInt(sm)-1, p.day||1);
+        const paysMade = Math.max(0, Math.floor((now - startDate) / (30.5*24*3600*1000)));
+        const paysTotal = parseInt(p.months)||0;
+        const paysLeft = Math.max(0, paysTotal - paysMade);
+        const remaining = paysLeft * (p.amount||0);
+        totalRemaining += remaining;
+
+        // Next payment date
+        let nextPay = new Date(startDate);
+        nextPay.setMonth(startDate.getMonth() + paysMade);
+        if(nextPay < now) nextPay.setMonth(nextPay.getMonth()+1);
+        const daysUntil = Math.ceil((nextPay - now) / 86400000);
+        const urgentColor = daysUntil <= 3 ? 'var(--red)' : daysUntil <= 7 ? 'var(--amb)' : 'var(--txt2)';
+
+        return `<div style="padding:10px 14px;border-bottom:1px solid #1e231e;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-size:12px;font-weight:700;color:var(--txt)">${esc(p.name)}</span>
+            <div style="text-align:right">
+              <span style="font-size:13px;font-weight:700;color:var(--red)">${f$(remaining)} left</span>
+              <span style="font-size:8px;color:var(--mut2);display:block">${paysMade}/${paysTotal} paid</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span style="font-size:10px;font-weight:700;color:${urgentColor}">Next: ${f$(p.amount)} on ${MONTHS[nextPay.getMonth()]} ${nextPay.getDate()} (${daysUntil}d)</span>
+            <span style="font-size:9px;padding:1px 6px;background:rgba(90,138,204,0.15);color:var(--blu)">${esc(p.card||'')}</span>
+            ${p.notes?`<span style="font-size:9px;color:var(--mut2)">${esc(p.notes)}</span>`:''}
+          </div>
+          <div style="margin-top:5px;background:#1e231e;height:4px;border-radius:2px;">
+            <div style="background:var(--grn);height:4px;border-radius:2px;width:${Math.round(paysMade/paysTotal*100)}%"></div>
+          </div>
+          <button onclick="delItem('payplans',${i})" style="font-size:8px;color:var(--mut2);background:none;border:none;cursor:pointer;margin-top:4px;padding:0;">✕ Remove</button>
+        </div>`;
+      }).join('');
+      if(plTot) plTot.textContent = f$(totalRemaining) + ' remaining';
+    }
+  }
+
+  // ── RECURRING BILLS ────────────────────────────────────────
+  const rbEl = document.getElementById('recurring-list');
+  const rbTot = document.getElementById('bills-mo-total');
+  if(rbEl) {
+    if(!recbills.length) {
+      rbEl.innerHTML = '<div class="empty">No recurring bills — click + Add Recurring Bill</div>';
+    } else {
+      const monthlyTotal = recbills.reduce((s,b)=>s+(b.amount||0),0);
+      if(rbTot) rbTot.textContent = f$(monthlyTotal) + '/mo';
+      rbEl.innerHTML = recbills.map((b,i) => {
+        // Next occurrence
+        const day = parseInt(b.day)||1;
+        let next = new Date(now.getFullYear(), now.getMonth(), day);
+        if(next < now) next.setMonth(next.getMonth()+1);
+        const daysUntil = Math.ceil((next - now) / 86400000);
+        const urgentColor = daysUntil <= 3 ? 'var(--red)' : daysUntil <= 5 ? 'var(--amb)' : 'var(--txt2)';
+        return `<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid #1e231e;">
+          <div style="flex:1">
+            <span style="font-size:12px;font-weight:600;color:var(--txt)">${esc(b.name)}</span>
+            ${b.notes?`<span style="font-size:9px;color:var(--mut2);margin-left:6px">${esc(b.notes)}</span>`:''}
+          </div>
+          <span style="font-size:10px;color:${urgentColor};white-space:nowrap">Due ${MONTHS[next.getMonth()]} ${next.getDate()} (${daysUntil}d)</span>
+          <span style="font-size:13px;font-weight:700;color:var(--amb)">${f$(b.amount)}</span>
+          <button onclick="delItem('recbills',${i})" style="font-size:8px;color:var(--mut2);background:none;border:none;cursor:pointer;">✕</button>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // ── UPCOMING PAYMENTS (next 30 days) ───────────────────────
+  const upEl = document.getElementById('upcoming-payments');
+  const upTot = document.getElementById('upcoming-pay-total');
+  const upcoming = [];
+  const in30 = new Date(now); in30.setDate(now.getDate()+30);
+
+  // From payment plans
+  plans.forEach(p => {
+    const [sm, sy] = (p.start||'01/2026').split('/');
+    const startDate = new Date(parseInt(sy), parseInt(sm)-1, p.day||1);
+    const paysMade = Math.max(0, Math.floor((now - startDate) / (30.5*24*3600*1000)));
+    const paysTotal = parseInt(p.months)||0;
+    let nextPay = new Date(startDate);
+    nextPay.setMonth(startDate.getMonth() + paysMade);
+    if(nextPay < now) nextPay.setMonth(nextPay.getMonth()+1);
+    if(nextPay <= in30 && paysMade < paysTotal) {
+      upcoming.push({
+        date: nextPay, amount: p.amount||0,
+        label: p.name, sub: `Payment ${paysMade+1}/${paysTotal} · ${p.card||''}`,
+        type:'plan', color:'var(--blu)'
+      });
+    }
+  });
+
+  // From recurring bills
+  recbills.forEach(b => {
+    const day = parseInt(b.day)||1;
+    let next = new Date(now.getFullYear(), now.getMonth(), day);
+    if(next < now) next.setMonth(next.getMonth()+1);
+    if(next <= in30) {
+      upcoming.push({
+        date: next, amount: b.amount||0,
+        label: b.name, sub: 'Recurring · Wells Checking',
+        type:'bill', color:'var(--amb)'
+      });
+    }
+  });
+
+  // Sort by date
+  upcoming.sort((a,b) => a.date - b.date);
+
+  if(upEl) {
+    if(!upcoming.length) {
+      upEl.innerHTML = '<div class="empty" style="color:var(--grn)">✓ No payments in next 30 days</div>';
+      if(upTot) upTot.textContent = '$0';
+    } else {
+      const total = upcoming.reduce((s,u)=>s+u.amount,0);
+      if(upTot) upTot.textContent = '-$'+Math.round(total).toLocaleString()+' in 30d';
+      upEl.innerHTML = upcoming.map(u => {
+        const daysUntil = Math.ceil((u.date - now) / 86400000);
+        const urgBg = daysUntil <= 3 ? 'rgba(224,80,80,0.1)' : daysUntil <= 7 ? 'rgba(212,160,48,0.08)' : 'transparent';
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid #1e231e;background:${urgBg}">
+          <div style="text-align:center;min-width:42px;flex-shrink:0">
+            <div style="font-size:16px;font-weight:900;color:${u.color};line-height:1">${u.date.getDate()}</div>
+            <div style="font-size:8px;color:var(--mut)">${MONTHS[u.date.getMonth()]}</div>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:600;color:var(--txt)">${esc(u.label)}</div>
+            <div style="font-size:9px;color:var(--mut2)">${esc(u.sub)}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:14px;font-weight:700;color:var(--red)">-$${Math.round(u.amount).toLocaleString()}</div>
+            <div style="font-size:9px;color:${daysUntil<=3?'var(--red)':daysUntil<=7?'var(--amb)':'var(--mut2)'}">in ${daysUntil}d</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Save to state for AI
+  S.payplans  = plans;
+  S.recbills  = recbills;
+  S.upcomingPayments = upcoming;
+  localStorage.setItem('kcc_payplans', JSON.stringify(plans));
+  localStorage.setItem('kcc_recbills', JSON.stringify(recbills));
+}
+
+function delItem(storeKey, idx) {
+  const key = 'kcc_'+storeKey;
+  const arr = JSON.parse(localStorage.getItem(key)||'[]');
+  arr.splice(idx, 1);
+  localStorage.setItem(key, JSON.stringify(arr));
+  S[storeKey] = arr;
+  renderPaymentPlans();
+  fbSaveAll();
 }
 
 </script>

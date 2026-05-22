@@ -2597,8 +2597,28 @@ async function importAllExcel(evt) {
       const sheets = wb.SheetNames;
 
       if(sheets.includes('Ticket Log') || sheets.includes('Ticket Metrics')) {
-        // Ticket Hub
-        parseTicketWorkbook(wb, file.name);
+        // Ticket Hub - inline parse (parseTicketWorkbook is in separate script block)
+        try {
+          const tm = wb.Sheets['Ticket Metrics'];
+          const mv = {};
+          if(tm) { XLSX.utils.sheet_to_json(tm,{header:1}).forEach(r=>{ if(r[0]&&r[1]!==undefined) mv[String(r[0]).trim()]=r[1]; }); }
+          const tl = wb.Sheets['Ticket Log'];
+          const rows = tl ? XLSX.utils.sheet_to_json(tl,{header:1}).slice(1).filter(r=>r[0] instanceof Date) : [];
+          const now2=new Date(); now2.setHours(0,0,0,0);
+          const d30=new Date(now2); d30.setDate(now2.getDate()+30);
+          const d7=new Date(now2); d7.setDate(now2.getDate()+7);
+          const upcoming=rows.filter(r=>r[0]>now2&&r[0]<=d30&&!['Sold','Void','Canceled'].includes(r[15])).sort((a,b)=>a[0]-b[0]);
+          const highRisk=rows.filter(r=>r[0]>now2&&r[0]<=d7&&r[15]==='Not Listed');
+          const medRisk=rows.filter(r=>r[0]>now2&&r[0]<=d7&&r[15]==='Listed');
+          const recent=rows.filter(r=>r[0]).sort((a,b)=>b[0]-a[0]).slice(0,20);
+          const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+          localStorage.setItem('kcc_tkm',JSON.stringify(mv));
+          localStorage.setItem('kcc_tku',JSON.stringify(upcoming.slice(0,60).map(r=>({date:r[0].toLocaleDateString('en-US',{month:'short',day:'numeric'}),event:r[1]||'',opp:r[5]||'',qty:r[7]||0,cost:r[11]||0,status:r[15]||'',risk:r[22]==='Y'}))));
+          localStorage.setItem('kcc_tkhr',JSON.stringify(highRisk.map(r=>({date:r[0].toLocaleDateString('en-US',{month:'short',day:'numeric'}),event:r[1]||'',opp:r[5]||'',qty:r[7]||0,cost:r[11]||0,status:r[15]||''}))));
+          localStorage.setItem('kcc_tkmed',JSON.stringify(medRisk.map(r=>({date:r[0].toLocaleDateString('en-US',{month:'short',day:'numeric'}),event:r[1]||'',opp:r[5]||'',qty:r[7]||0,cost:r[11]||0,status:r[15]||''}))));
+          localStorage.setItem('kcc_tkr',JSON.stringify(recent.map(r=>({date:r[0] instanceof Date?r[0].toLocaleDateString('en-US',{month:'short',day:'numeric'}):'',event:r[1]||'',opp:r[5]||'',qty:r[7]||0,cost:r[11]||0,card:r[12]||'',status:r[15]||'',pnl:r[19]||0}))));
+          S.tkMetrics=mv; S.tkUpcoming=JSON.parse(localStorage.getItem('kcc_tku'));
+        } catch(te) { console.error('Ticket parse error:',te); }
         status.push('🎟 ' + file.name + ' → Tickets');
       } else if(sheets.includes('Projection') || sheets.includes('Scenarios')) {
         // FIRE Lab

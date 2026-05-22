@@ -1286,6 +1286,8 @@ function launch(){
         S.lastSync = localStorage.getItem('kcc_sync')||null;
         renderAll();
         autoAlerts();
+        // Re-apply paid checkboxes after Firebase loads (overwrites localStorage)
+        setTimeout(()=>{ tkUpdateCards(); }, 100);
       }
     }).catch(e => console.warn('Firebase background load failed:', e));
   } catch(e) { console.warn('Firebase init error:', e); }
@@ -2880,6 +2882,11 @@ function tkUpdateCards() {
   h += '<span style="font-size:15px;font-weight:700;color:'+(dang>0?'var(--red)':'var(--grn)')+'">'+( dang>0?'-'+f$(dang):'$0 — clear')+'</span></div>';
 
   el.innerHTML = h;
+  // Restore checkbox UI state
+  ['c1','c2','c3','c4','c5'].forEach(k => {
+    const cb = document.getElementById('tk-paid-'+k);
+    if(cb) cb.checked = paid[k]||false;
+  });
 }
 
 function tkSaveCards() {

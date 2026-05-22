@@ -580,7 +580,7 @@ localStorage.setItem = function(key, value) {
           </div>
 
           <!-- MAIN CONTENT -->
-          <div id="fin-content" style="display:none;">
+          <div id="fin-content">
 
             <!-- VELOCITY ACTION HERO -->
             <div style="border:2px solid var(--grn);background:rgba(74,156,92,0.06);padding:16px 20px;margin-bottom:16px;">
@@ -2160,13 +2160,12 @@ const MCFG={
     {n:'notes',l:'Notes / Trigger Reason',t:'ta'},
   ],def:{},k:'kcc_tradelogs',arr:'tradelogs'},
   manbill:{title:'Add Manual Bill / Payment',fields:[
-    {n:'name',   l:'Bill / Payment Name',     t:'text', req:true, ph:'e.g. Mortgage, Tuition, HOA'},
-    {n:'amount', l:'Amount ($)',               t:'num'},
-    {n:'freq',   l:'Frequency',               t:'sel',  o:['Monthly','Quarterly','Annual','One-time'], req:true},
-    {n:'day',    l:'Due Day of Month',        t:'num',  ph:'e.g. 15 (leave blank for one-time)'},
-    {n:'dueDate',l:'Due Date (one-time)',     t:'text', ph:'e.g. Aug 15 2026'},
-    {n:'account',l:'Pay From Account',        t:'sel',  o:['Citi Checking','CEFCU Savings','HELOC','WF Checking','Other']},
-    {n:'notes',  l:'Notes',                   t:'text'},
+    {n:'name',    l:'Bill / Payment Name',        t:'text', req:true, ph:'e.g. Mortgage, Tuition, HOA'},
+    {n:'amount',  l:'Amount ($)',                  t:'num',  ph:'leave blank if variable'},
+    {n:'freq',    l:'Frequency',                  t:'sel',  o:['Monthly','Quarterly','Annual','One-time'], req:true},
+    {n:'nextDate',l:'Next Due Date',              t:'text', req:true, ph:'e.g. Jun 1 2026'},
+    {n:'account', l:'Pay From Account',           t:'sel',  o:['Citi Checking','CEFCU Savings','HELOC','WF Checking','Other']},
+    {n:'notes',   l:'Notes',                      t:'text'},
   ],def:{freq:'Monthly',account:'Citi Checking'},k:'kcc_manbills',arr:'manbills'},
   payplan:{title:'Add Season Ticket Payment Plan',fields:[
     {n:'name',   l:'Plan Name',              t:'text', req:true, ph:'e.g. Crypto.com Arena Lakers/Kings'},
@@ -3618,14 +3617,14 @@ function autoAlerts() {
     if(isPaid2) { clear('manbill_'+bi); return; }
     // Calculate next due
     let dueD = null;
-    if(b.freq==='One-time' && b.dueDate) {
-      dueD = new Date(b.dueDate);
-    } else if(b.day) {
-      const dy = parseInt(b.day);
-      dueD = new Date(now.getFullYear(), now.getMonth(), dy);
-      if(b.freq==='Monthly' && dueD < now) dueD.setMonth(dueD.getMonth()+1);
-      else if(b.freq==='Quarterly') { while(dueD < now) dueD.setMonth(dueD.getMonth()+3); }
-      else if(b.freq==='Annual') { while(dueD < now) dueD.setFullYear(dueD.getFullYear()+1); }
+    const baseStr2 = b.nextDate || b.dueDate;
+    if(baseStr2) {
+      dueD = new Date(baseStr2); dueD.setHours(0,0,0,0);
+      if(!isNaN(dueD) && b.freq !== 'One-time') {
+        if(b.freq==='Monthly') { while(dueD < now) dueD.setMonth(dueD.getMonth()+1); }
+        else if(b.freq==='Quarterly') { while(dueD < now) dueD.setMonth(dueD.getMonth()+3); }
+        else if(b.freq==='Annual') { while(dueD < now) dueD.setFullYear(dueD.getFullYear()+1); }
+      }
     }
     if(!dueD || isNaN(dueD)) return;
     const diff2 = Math.ceil((dueD-now)/86400000);
@@ -3874,16 +3873,16 @@ function renderManBills() {
 
   // Calculate next due date for each bill
   function nextDue(b) {
-    if(b.freq === 'One-time') {
-      if(!b.dueDate) return null;
-      const d = new Date(b.dueDate);
-      return isNaN(d) ? null : d;
-    }
-    if(!b.day) return null;
-    const day = parseInt(b.day);
-    let d = new Date(now.getFullYear(), now.getMonth(), day);
+    // Use nextDate as the anchor - then advance by frequency
+    const baseStr = b.nextDate || b.dueDate;
+    if(!baseStr) return null;
+    let d = new Date(baseStr);
+    if(isNaN(d)) return null;
+    d.setHours(0,0,0,0);
+    if(b.freq === 'One-time') return d;
+    // Advance to next future occurrence
     if(b.freq === 'Monthly') {
-      if(d < now) d.setMonth(d.getMonth()+1);
+      while(d < now) d.setMonth(d.getMonth()+1);
     } else if(b.freq === 'Quarterly') {
       while(d < now) d.setMonth(d.getMonth()+3);
     } else if(b.freq === 'Annual') {

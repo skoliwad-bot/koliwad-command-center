@@ -2469,7 +2469,7 @@ function importVBExcel(evt) {
         // LOC & Banking - scan by label (works v2 and v3)
         let wfCheckRow=null, amexLocRow2=null;
         for(let ri2=6+numCards; ri2<Math.min(ccRows.length,28); ri2++) {
-          const lbl2 = String(ccRows[ri2]&&ccRows[ri2][1]||'');
+          const lbl2 = String(ccRows[ri2]&&(ccRows[ri2][0]||ccRows[ri2][1])||'');
           if(lbl2.includes('Wells Fargo Checking')) wfCheckRow=ccRows[ri2];
           if(lbl2.includes('Amex Business LOC')||lbl2.includes('Amex LOC')) amexLocRow2=ccRows[ri2];
         }
@@ -2479,15 +2479,15 @@ function importVBExcel(evt) {
         // Obligations - scan for Randy Dang
         let dangRow = null;
         for(let ri=12; ri<Math.min(ccRows.length,30); ri++) {
-          if(ccRows[ri]&&ccRows[ri][1]&&String(ccRows[ri][1]).includes('Dang')){ dangRow=ccRows[ri]; break; }
+          if(ccRows[ri]&&(String(ccRows[ri][0]||'').includes('Dang')||String(ccRows[ri][1]||'').includes('Dang'))){ dangRow=ccRows[ri]; break; }
         }
         ccData.obligations = [];
         if(dangRow && typeof dangRow[2]==='number' && dangRow[2]>0) {
-          ccData.obligations.push({payee:dangRow[1]||'Randy Dang',amount:typeof dangRow[2]==='number'?dangRow[2]:dangRow[1],priority:dangRow[3]||'1 — FIRST'});
+          ccData.obligations.push({payee:dangRow[0]||'Randy Dang',amount:dangRow[1]||0,priority:dangRow[2]||'1 — FIRST'});
         }
         ccData.totalCC  = ccData.cards.reduce((s,c)=>s+c.bal,0);
         ccData.totalMin = ccData.cards.reduce((s,c)=>s+c.minDue,0);
-        ccData.dangOwed = dangRow ? (typeof dangRow[2]==='number' ? dangRow[2] : (typeof dangRow[1]==='number' ? dangRow[1] : 0)) : 0;
+        ccData.dangOwed = dangRow ? (typeof dangRow[1]==='number' ? dangRow[1] : 0) : 0;
       }
 
       // ── SYNC CC DATA TO TICKETS PAGE ──
@@ -2821,6 +2821,7 @@ function tkUpdateCards() {
   h += '<th style="padding:7px 12px;text-align:left;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b0ccb0;border-bottom:2px solid var(--brd)">Card</th>';
   h += '<th style="padding:7px 12px;text-align:right;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b0ccb0;border-bottom:2px solid var(--brd)">Balance</th>';
   h += '<th style="padding:7px 12px;text-align:right;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b0ccb0;border-bottom:2px solid var(--brd)">Min Due</th>';
+  h += '<th style="padding:7px 12px;text-align:right;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b0ccb0;border-bottom:2px solid var(--brd)">Due Date</th>';
   h += '</tr></thead><tbody>';
 
   c.forEach((card, i) => {

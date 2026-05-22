@@ -2404,9 +2404,8 @@ function rTickets() {
   const mEl = document.getElementById('tk-metrics');
   if(mEl) {
     if(!Object.keys(mv).length) {
-      mEl.style.cssText += ';border:3px solid red;min-height:80px';
       mEl.innerHTML = ['Profit MTD','Profit YTD','Open Listings','High Risk 7d','Pending Pmts'].map(l=>
-        '<div style="border:2px solid #e05050;background:#2a0000;padding:14px 16px;min-height:70px"><span style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#ff9090;display:block;margin-bottom:6px">'+l+'</span><span style="font-size:24px;font-weight:700;display:block;color:#ffffff">—</span></div>'
+        '<div style="border:1px solid #364036;background:#181d18;padding:12px 16px"><span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#9abf9a;display:block;margin-bottom:6px">'+l+'</span><span style="font-size:20px;font-weight:700;display:block;color:#f4faf4">—</span></div>'
       ).join('');
     }
   }

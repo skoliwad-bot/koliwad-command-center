@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1346,7 +1349,7 @@ function nav(pg){
   if(ne) ne.classList.add('on');
   if(pg==='calendar') rCal();
   if(pg==='fire') rFire();
-  if(pg==='financials') rFin();
+  if(pg==='financials') { try { rFin(); } catch(e) { alert('Financials error: '+e.message); console.error('rFin crash:',e); } }
   if(pg==='tickets') { try { rTickets(); } catch(e) { console.error('nav rTickets crash:', e.message, e.stack); alert('Tickets error: ' + e.message); } }
   if(pg==='business') rBiz();
   if(pg==='portfolio'){rPortfolio();// init GTC states
@@ -1778,56 +1781,57 @@ function resTk(id){const t=S.tickets.find(x=>x.id===id);if(t){t.status='Resolved
 
 // ── FINANCIALS ───────────────────────────────────────────────
 function rFin(){
-  if(!S.fins) S.fins = JSON.parse(localStorage.getItem('kcc_fins')||'null');
-  const f=S.fins||{};
-  {
-    // fin-content always visible - no show/hide needed
-    const vlbl = document.getElementById('vb-last-import');
-    if(vlbl && f.importTime) vlbl.textContent = 'Last imported: ' + f.importTime;
-    else if(vlbl && S.lastSync) vlbl.textContent = 'Velocity Banking · Last synced ' + new Date(S.lastSync).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-    if(el('fa-citi')) el('fa-citi').textContent=f$(f.citi);
-    if(el('fa-heloc')) el('fa-heloc').textContent=f.heloc?'-'+f$(f.heloc):'—';
-    const fha=document.getElementById('fa-heloc-avail'); if(fha) fha.textContent=f.available?f$(f.available):'—';
-    if(el('fa-knight')) el('fa-knight').textContent=f$(f.knight);
-    if(el('fa-sav')) el('fa-sav').textContent=f$(f.savings);
-    // Velocity banking sweeps
-    const setEl2 = (id, val, color) => { const e=document.getElementById(id); if(!e)return; e.textContent=val; if(color)e.style.color=color; };
-    setEl2('vb-citi-sweep',  f$(f.citiSweep),  (f.citiSweep||0)>0?'var(--grn)':'var(--red)');
-    setEl2('vb-sav-sweep',   f$(f.savSweep),   (f.savSweep||0)>0?'var(--grn)':'var(--red)');
-    setEl2('vb-total-sweep', f$(f.totalSweep), (f.totalSweep||0)>0?'var(--grn)':'var(--red)');
-    if(f.heloc&&f.citi){
-      const sur=(f.chk||0)-(f.tgt||5000);
-      const rec=sur>0?'Sweep $'+sur.toLocaleString()+' → HELOC paydown':'Maintain current checking buffer';
-      el('velBody').innerHTML='<div class="row"><span class="rtl">Checking target</span><span class="rsb">'+f$(f.tgt||5000)+'</span></div>'
-        +'<div class="row"><span class="rtl">Current surplus</span><span class="rsb" style="color:'+(sur>0?'var(--grn)':'var(--amb)')+'">'+(sur>0?'+':'')+f$(sur)+'</span></div>'
-        +'<div class="row"><span class="rtl">Recommendation</span><span style="font-size:11px;color:var(--grn);flex:1;text-align:right">'+rec+'</span></div>';
-    }
+  // Always read fresh from localStorage - never rely on S.fins
+  const raw = localStorage.getItem('kcc_fins');
+  if(!raw) return; // Nothing imported yet
+  let f;
+  try { f = JSON.parse(raw); } catch(e) { return; }
+  if(!f) return;
+  S.fins = f; // Keep S in sync
+
+  // Update subtitle
+  const vlbl = document.getElementById('vb-last-import');
+  if(vlbl && f.importTime) vlbl.textContent = 'Last imported: ' + f.importTime;
+
+  // Balances
+  const setEl = (id, val, color) => { const e=document.getElementById(id); if(!e)return; e.textContent=val; if(color)e.style.color=color; };
+  const f$ = n => n!=null ? '$'+Math.round(Math.abs(n)).toLocaleString() : '—';
+  setEl('fa-citi',   f$(f.citi));
+  setEl('fa-sav',    f$(f.savings));
+  setEl('fa-heloc',  f.heloc ? '-'+f$(f.heloc) : '—', 'var(--red)');
+  setEl('fa-heloc-avail', f.available ? f$(f.available) : '—');
+  setEl('fa-knight', f$(f.knight));
+
+  // Velocity banking sweeps
+  setEl('vb-citi-sweep',  f$(f.citiSweep),  (f.citiSweep||0)>0?'var(--grn)':'var(--red)');
+  setEl('vb-sav-sweep',   f$(f.savSweep),   (f.savSweep||0)>0?'var(--grn)':'var(--red)');
+  setEl('vb-total-sweep', f$(f.totalSweep), (f.totalSweep||0)>0?'var(--grn)':'var(--red)');
+
+  // Pending outflows
+  const pEl = document.getElementById('pending-list');
+  if(pEl && f.pendingItems) {
+    if(!f.pendingItems.length) pEl.innerHTML='<div class="empty" style="color:var(--grn)">✓ No pending outflows</div>';
+    else pEl.innerHTML = f.pendingItems.map(i=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid #1e231e">
+      <span style="font-size:9px;color:var(--mut2);width:48px;flex-shrink:0">${i.date||''}</span>
+      <span style="font-size:9px;padding:1px 6px;background:rgba(90,138,204,0.15);color:var(--blu);flex-shrink:0">${i.type||''}</span>
+      <span style="flex:1;font-size:11px;font-weight:600">${esc(i.payee||'')}</span>
+      ${i.knight?'<span style="font-size:9px;padding:1px 5px;background:rgba(74,156,92,0.15);color:var(--grn)">KNIGHT</span>':''}
+      <span style="font-size:13px;font-weight:700;color:var(--red)">-${f$(i.amount)}</span>
+    </div>`).join('');
   }
-  // Re-render pending outflows, bills, budget from saved S.fins data
-  if(f.pendingItems) {
-    const pEl = document.getElementById('pending-list');
-    if(pEl) {
-      if(!f.pendingItems.length) pEl.innerHTML='<div class="empty" style="color:var(--grn)">✓ No pending outflows</div>';
-      else pEl.innerHTML = f.pendingItems.map(i=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid #1e231e">
-        <span style="font-size:9px;color:var(--mut2);width:48px;flex-shrink:0">${i.date}</span>
-        <span style="font-size:9px;padding:1px 6px;background:rgba(90,138,204,0.15);color:var(--blu);flex-shrink:0">${i.type}</span>
-        <span style="flex:1;font-size:11px;font-weight:600">${esc(i.payee)}</span>
-        ${i.knight?'<span style="font-size:9px;padding:1px 5px;background:rgba(74,156,92,0.15);color:var(--grn)">KNIGHT</span>':''}
-        <span style="font-size:13px;font-weight:700;color:var(--red)">-${f$(i.amount)}</span>
-      </div>`).join('');
-    }
+
+  // Bills earmarked
+  const bEl = document.getElementById('bills-list');
+  if(bEl && f.billItems) {
+    if(!f.billItems.length) bEl.innerHTML='<div class="empty" style="color:var(--grn)">✓ No unpaid bills</div>';
+    else bEl.innerHTML = f.billItems.map(b=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid #1e231e">
+      <div style="flex:1"><span style="font-size:11px;font-weight:600">${esc(b.bill||'')}</span></div>
+      <span style="font-size:9px;color:var(--mut2)">${b.due||''}</span>
+      <span style="font-size:13px;font-weight:700;color:var(--red)">-${f$(b.amount)}</span>
+    </div>`).join('');
   }
-  if(f.billItems) {
-    const bEl = document.getElementById('bills-list');
-    if(bEl) {
-      if(!f.billItems.length) bEl.innerHTML='<div class="empty" style="color:var(--grn)">✓ No unpaid bills</div>';
-      else bEl.innerHTML = f.billItems.map(b=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid #1e231e">
-        <div style="flex:1"><span style="font-size:11px;font-weight:600">${esc(b.bill)}</span></div>
-        <span style="font-size:9px;color:var(--mut2)">${b.due||''}</span>
-        <span style="font-size:13px;font-weight:700;color:var(--red)">-${f$(b.amount)}</span>
-      </div>`).join('');
-    }
-  }
+
+  // Budget summary
   if(f.income || f.spend) {
     const bsEl = document.getElementById('budget-summary');
     if(bsEl) bsEl.innerHTML = `
@@ -1835,16 +1839,34 @@ function rFin(){
         <div style="padding:14px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Total Income</span><span style="font-size:24px;font-weight:700;color:var(--grn);display:block;margin-top:6px">${f$(f.income)}</span></div>
         <div style="padding:14px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Total Fixed Expenses</span><span style="font-size:24px;font-weight:700;color:var(--red);display:block;margin-top:6px">${f$(f.totalExp)}</span><span style="font-size:9px;color:var(--mut)">spend + vmort + pmort + HELOC int</span></div>
         <div style="padding:14px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Cash Flow</span><span style="font-size:24px;font-weight:700;color:var(--red);display:block;margin-top:6px">${f$(f.cf)}</span></div>
-        <div style="padding:14px 16px"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">HELOC Interest / Mo</span><span style="font-size:24px;font-weight:700;display:block;margin-top:6px">${f$(f.helocInt)}</span><span style="font-size:9px;color:var(--mut)">${((f.heloc||0)/1000).toFixed(0)}% on ${f$(f.heloc)}</span></div>
+        <div style="padding:14px 16px"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">HELOC Interest / Mo</span><span style="font-size:24px;font-weight:700;display:block;margin-top:6px">${f$(f.helocInt)}</span><span style="font-size:9px;color:var(--mut)">${((f.heloc||0)*0.065/12/1000).toFixed(1)}% on ${f$(f.heloc)}</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--brd)">
+        <div style="padding:10px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;text-transform:uppercase;color:var(--mut);display:block">Base Spend</span><span style="font-size:16px;font-weight:700;display:block;margin-top:4px">${f$(f.spend)}</span></div>
+        <div style="padding:10px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;text-transform:uppercase;color:var(--mut);display:block">Vineta Mort</span><span style="font-size:16px;font-weight:700;display:block;margin-top:4px">${f$(f.vmort)}</span></div>
+        <div style="padding:10px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;text-transform:uppercase;color:var(--mut);display:block">Paulette Mort</span><span style="font-size:16px;font-weight:700;display:block;margin-top:4px">${f$(f.pmort)}</span></div>
+        <div style="padding:10px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;text-transform:uppercase;color:var(--mut);display:block">HF Balance</span><span style="font-size:16px;font-weight:700;display:block;margin-top:4px">${f$(f.hf)}</span></div>
+        <div style="padding:10px 16px"><span style="font-size:8px;text-transform:uppercase;color:var(--mut);display:block">FIRE %</span><span style="font-size:16px;font-weight:700;display:block;margin-top:4px">${f.firePct||'—'}${f.firePct?'%':''}</span></div>
       </div>`;
   }
 
-  const obs=S.alerts.filter(a=>a.type==='Cash'&&a.status==='Open');
-  el('obligBody').innerHTML=obs.length===0?'<div class="empty">No financial obligations flagged</div>':
+  // Velocity banking action recommendation
+  if(f.heloc && f.citi) {
+    const surplus = (f.citi||0) - (f.tgt||5000);
+    const rec = surplus>0 ? 'Sweep $'+Math.round(surplus).toLocaleString()+' → HELOC paydown' : 'Maintain current checking buffer';
+    const velBody = document.getElementById('velBody');
+    if(velBody) velBody.innerHTML = '<div class="row"><span class="rtl">Checking target</span><span class="rsb">'+f$(f.tgt||5000)+'</span></div>'
+      +'<div class="row"><span class="rtl">Current surplus</span><span class="rsb" style="color:'+(surplus>0?'var(--grn)':'var(--amb)')+'">'+( surplus>0?'+':'')+f$(surplus)+'</span></div>'
+      +'<div class="row"><span class="rtl">Recommendation</span><span style="font-size:11px;color:var(--grn);flex:1;text-align:right">'+rec+'</span></div>';
+  }
+
+  // Alerts / obligations
+  const obs=(S.alerts||[]).filter(a=>a.type==='Cash'&&a.status==='Open');
+  const obligBody = document.getElementById('obligBody');
+  if(obligBody) obligBody.innerHTML = obs.length===0?'<div class="empty">No financial obligations flagged</div>':
     obs.map(o=>'<div class="row"><div style="flex:1"><div class="rtl">'+esc(o.title)+'</div></div><span class="b '+(o.sev==='High'?'bm':'bs')+'">'+o.sev+'</span></div>').join('');
 }
 
-// ── FIRE PAGE ────────────────────────────────────────────────
 function rFire(){
   const fire=S.fire, goals=S.fireg;
   if(fire){

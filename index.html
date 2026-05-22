@@ -3084,11 +3084,21 @@ FINANCIALS: ${finSum}
 THROWZONE: ${tzSum}
 Provide 4-5 sentences: (1) on track or off, (2) biggest lever, (3) biggest risk, (4) action this week with dollar amount. Be specific.`,
 
-    tickets: `You are the ticket business advisor for Sonny Koliwad.
+    tickets: `You are the cash flow advisor for Sonny Koliwad's ticket business.
+WF CHECKING: $${JSON.parse(localStorage.getItem('kcc_cc_import')||'{}').wfChecking||0}
 TICKET METRICS: ${tkSum}
-CREDIT CARDS: Total CC: $${totalCC}, Randy Dang owed: $${dang} (PRIORITY #1)
-FINANCES: ${finSum}
-Recommend payment priority and capital allocation in 4-5 sentences. Specific amounts. What to pay first, what to hold.`,
+CC BALANCES (ALL 0% APR):
+${(JSON.parse(localStorage.getItem('kcc_cc_import')||'{}').cards||[]).map(c=>c.name+': $'+Math.round(c.bal).toLocaleString()+' / $'+Math.round(c.lim).toLocaleString()+' limit').join(' | ')}
+RANDY DANG: $${dang} owed — PRIORITY #1
+UPCOMING SEASON TICKET PAYMENTS: ${(S.upcomingPayments||[]).filter(u=>u.type==='plan').map(u=>u.label+' $'+u.amount+' on '+u.date?.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' via '+u.sub).join(' | ')||'None'}
+RECURRING BILLS: ${(S.recbills||[]).map(b=>b.name+' $'+b.amount+' on '+b.day+'th').join(' | ')||'None'}
+All credit cards are 0% APR — no interest cost to carrying balances. Do NOT recommend paying down CC debt unless needed to create headroom for an upcoming charge.
+Give a 5-point cash distribution plan for the WF Checking balance:
+1. Bills reserve — how much to hold for recurring bills this month
+2. Season ticket headroom — does the charge card have enough room? If not, pay just enough to create headroom
+3. Randy Dang — how much to pay from remaining balance (Priority #1 obligation)
+4. Remaining cash — what to do with leftover
+5. One specific action TODAY with exact dollar amount`,
 
     financials: `You are the velocity banking advisor for Sonny Koliwad.
 BALANCES: ${finSum}

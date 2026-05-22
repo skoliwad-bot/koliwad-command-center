@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Koliwad CC">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#080a08">
 <title>Koliwad Command Center</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=JetBrains+Mono:wght@400;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -16,7 +21,7 @@
   --blu:#5a8acc;--orn:#c07030;
   --pp:#f5efe0;--pi:#2c2416;--pr:#8b3a2a;--ps:#4a6741;--pa:#b8882a;--prl:#c8bfa8;--pf:#9a8e78;
 }
-html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'JetBrains Mono',monospace;overflow:hidden;}
+html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:var(--txt);font-family:'JetBrains Mono',monospace;overflow:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);}
 
 /* ── SETUP ── */
 #setup{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;}
@@ -34,11 +39,11 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'JetBrai
 .snote a{color:var(--red);text-decoration:none;}
 
 /* ── SHELL ── */
-#shell{display:none;height:100vh;flex-direction:column;}
+#shell{display:none;height:100vh;height:-webkit-fill-available;flex-direction:column;}
 #shell.on{display:flex;}
 
 /* ── TOPBAR ── */
-.top{height:44px;background:#0c0f0c;border-bottom:1px solid #3d473d;display:flex;align-items:center;justify-content:space-between;padding:0 18px;flex-shrink:0;}
+.top{height:44px;background:#0c0f0c;border-bottom:1px solid #3d473d;padding-top:env(safe-area-inset-top,0px);display:flex;align-items:center;justify-content:space-between;padding:0 18px;flex-shrink:0;}
 .logo{font-size:12px;font-weight:700;color:var(--red);letter-spacing:3px;}
 .mtog{display:flex;border:1px solid var(--brd2);overflow:hidden;}
 .mtog button{padding:6px 18px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border:none;cursor:pointer;background:var(--surf);color:var(--mut);transition:all .15s;}
@@ -758,6 +763,8 @@ localStorage.setItem = function(key, value) {
           <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Amex Lena Min Due</div><input id="tk-c3m" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
           <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Wells Fargo CC Balance</div><input id="tk-c4b" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
           <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Wells Fargo Min Due</div><input id="tk-c4m" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
+          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Amex Stardust Balance</div><input id="tk-c5b" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
+          <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Amex Stardust Min Due</div><input id="tk-c5m" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
           <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Amex LOC Balance</div><input id="tk-loc" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
           <div><div style="color:var(--mut);font-size:8px;margin-bottom:2px">Randy Dang Owed</div><input id="tk-dang" type="number" placeholder="0" oninput="tkUpdateCards()" style="width:100%;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:5px 8px;font-family:inherit;font-size:11px;outline:none"></div>
         </div>
@@ -1311,6 +1318,11 @@ function loadGSI(){
 
 function doSync(){
   if(!CFG.id){showSetup();return;}
+  // iOS standalone mode warning
+  if(window.navigator.standalone && !AT) {
+    const ok = confirm('Google Sync works best in Safari (not Home Screen mode).\n\nTap OK to try anyway, or open in Safari for full sync.');
+    if(!ok) return;
+  }
   if(!window._tc){loadGSI();setTimeout(doSync,1500);return;}
   setSY('Authorizing…',true);
   window._tc.requestAccessToken({prompt:AT?'':'consent'});
@@ -2385,7 +2397,7 @@ function importVBExcel(evt) {
         const cardNames = ['capone','amex_biz','amex_lena','wf'];
         const cardLabels = ['Cap One Business','Amex Business (MBK)','Amex (Lena)','Wells Fargo CC'];
         ccData.cards = [];
-        for(let i=0;i<4;i++) {
+        for(let i=0;i<5;i++) {
           const r = ccRows[6+i] || [];
           ccData.cards.push({
             name:  cardLabels[i],
@@ -2751,7 +2763,7 @@ function tkUpdateCards() {
 function tkSaveCards() {
   const g = id => parseFloat(document.getElementById(id)?.value)||0;
   const data = {c1b:g('tk-c1b'),c1m:g('tk-c1m'),c2b:g('tk-c2b'),c2m:g('tk-c2m'),
-    c3b:g('tk-c3b'),c3m:g('tk-c3m'),c4b:g('tk-c4b'),c4m:g('tk-c4m'),loc:g('tk-loc'),dang:g('tk-dang')};
+    c3b:g('tk-c3b'),c3m:g('tk-c3m'),c4b:g('tk-c4b'),c4m:g('tk-c4m'),c5b:g('tk-c5b'),c5m:g('tk-c5m'),loc:g('tk-loc'),dang:g('tk-dang')};
   localStorage.setItem('kcc_tk_cards', JSON.stringify(data));
   fbSaveAll();
   tkUpdateCards();

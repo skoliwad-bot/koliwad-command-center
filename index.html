@@ -2508,22 +2508,30 @@ function importVBExcel(evt) {
         const c = ccData.cards;
         const merged = {
           ...existing,
-          c1b: c[0]?.bal||0,  c1m: c[0]?.minDue||0,
-          c2b: c[1]?.bal||0,  c2m: c[1]?.minDue||0,
-          c3b: c[2]?.bal||0,  c3m: c[2]?.minDue||0,
-          c4b: c[3]?.bal||0,  c4m: c[3]?.minDue||0,
-          c5b: c[4]?.bal||0,  c5m: c[4]?.minDue||0,
-          amexLocBal: ccData.amexLocBal||0,
-          amexLocLim: ccData.amexLocLim||0,
-          dang: ccData.obligations?.[0]?.amount||existing.dang||0,
-          // Preserve due days and paid status from existing
+          // Balances
+          c1b: c[0]?.bal||0,
+          c2b: c[1]?.bal||0,
+          c3b: c[2]?.bal||0,
+          c4b: c[3]?.bal||0,
+          c5b: c[4]?.bal||0,
+          // Min dues (actual dollar amounts)
+          c1m: c[0]?.minDue||0,
+          c2m: c[1]?.minDue||0,
+          c3m: c[2]?.minDue||0,
+          c4m: c[3]?.minDue||0,
+          c5m: c[4]?.minDue||0,
+          // Due days (1-31, separate from min due)
           c1due: c[0]?.dueDay||existing.c1due||'',
           c2due: c[1]?.dueDay||existing.c2due||'',
           c3due: c[2]?.dueDay||existing.c3due||'',
           c4due: c[3]?.dueDay||existing.c4due||'',
           c5due: c[4]?.dueDay||existing.c5due||'',
-          paid: existing.paid||{},
+          // LOC and obligations
+          amexLocBal: ccData.amexLocBal||0,
+          amexLocLim: ccData.amexLocLim||0,
           loc: ccData.amexLocBal||existing.loc||0,
+          dang: ccData.dangOwed||existing.dang||0,
+          paid: existing.paid||{},
         };
         localStorage.setItem('kcc_tk_cards', JSON.stringify(merged));
         S.tkCards = merged;
@@ -2813,14 +2821,16 @@ function rTickets() {
 }
 
 function tkUpdateCards() {
-  const g = id => parseFloat(document.getElementById(id)?.value)||0;
-  const c1b=g('tk-c1b'), c1m=g('tk-c1m');
-  const c2b=g('tk-c2b'), c2m=g('tk-c2m');
-  const c3b=g('tk-c3b'), c3m=g('tk-c3m');
-  const c4b=g('tk-c4b'), c4m=g('tk-c4m');
-  const loc=g('tk-loc'), dang=g('tk-dang');
-  const total = c1b+c2b+c3b+c4b+loc+dang;
-  const minTotal = c1m+c2m+c3m+c4m;
+  // Read from saved imported data not input fields
+  const saved = JSON.parse(localStorage.getItem('kcc_tk_cards')||'{}');
+  const c1b=saved.c1b||0, c1m=saved.c1m||0;
+  const c2b=saved.c2b||0, c2m=saved.c2m||0;
+  const c3b=saved.c3b||0, c3m=saved.c3m||0;
+  const c4b=saved.c4b||0, c4m=saved.c4m||0;
+  const c5b=saved.c5b||0, c5m=saved.c5m||0;
+  const loc=saved.loc||0, dang=saved.dang||0;
+  const total = c1b+c2b+c3b+c4b+c5b+loc+dang;
+  const minTotal = c1m+c2m+c3m+c4m+c5m;
 
   const lbl = document.getElementById('tk-cc-total');
   if(lbl) lbl.textContent = total>0 ? '-$'+Math.round(total).toLocaleString() : '$0';

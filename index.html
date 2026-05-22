@@ -569,15 +569,7 @@ localStorage.setItem = function(key, value) {
           </div>
 
           <!-- EMPTY STATE -->
-          <div id="fin-empty" style="text-align:center;padding:60px 20px;border:1px solid var(--brd);">
-            <div style="font-size:36px;margin-bottom:12px;">💰</div>
-            <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--txt);margin-bottom:8px;">No Data Imported</div>
-            <div style="font-size:12px;color:var(--mut);max-width:420px;margin:0 auto 8px;line-height:1.7;">Import your <b>Koliwad_-_Velo_Banking_Dashboard.xlsx</b> to populate all financial data.<br>Update the <b>Monthly Budget</b> sheet in Excel first — that is the only place you need to enter data.</div>
-            <label style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:10px 24px;border:1px solid var(--grn);color:var(--grn);cursor:pointer;display:inline-block;margin-top:12px;">
-              ⬆ Import VB Excel Spreadsheet
-              <input type="file" accept=".xlsx,.xls" onchange="importVBExcel(event)" style="display:none">
-            </label>
-          </div>
+          
 
           <!-- MAIN CONTENT -->
           <div id="fin-content">
@@ -1786,16 +1778,10 @@ function resTk(id){const t=S.tickets.find(x=>x.id===id);if(t){t.status='Resolved
 
 // ── FINANCIALS ───────────────────────────────────────────────
 function rFin(){
-  // Load from localStorage if S.fins not yet set
   if(!S.fins) S.fins = JSON.parse(localStorage.getItem('kcc_fins')||'null');
-  const f=S.fins;
-  if(f){
-    // Show fin-content, hide fin-empty
-    const fc = document.getElementById('fin-content');
-    const fe = document.getElementById('fin-empty');
-    if(fc) fc.style.display='block';
-    if(fe) fe.style.display='none';
-    // Update subtitle
+  const f=S.fins||{};
+  {
+    // fin-content always visible - no show/hide needed
     const vlbl = document.getElementById('vb-last-import');
     if(vlbl && f.importTime) vlbl.textContent = 'Last imported: ' + f.importTime;
     else if(vlbl && S.lastSync) vlbl.textContent = 'Velocity Banking · Last synced ' + new Date(S.lastSync).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});

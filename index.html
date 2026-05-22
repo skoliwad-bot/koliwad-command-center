@@ -2848,11 +2848,6 @@ function tkUpdateCards() {
     h += '<span style="font-size:15px;font-weight:700;color:var(--grn)">+'+f$(wf)+'</span></div>';
   }
   // Amex LOC
-  // WF Checking balance (always show - key for AI distribution recommendation)
-  h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-top:1px solid var(--brd);background:rgba(74,122,184,0.06)">';
-  h += '<div><span style="font-size:9px;font-weight:700;padding:1px 8px;background:rgba(74,122,184,0.2);color:var(--blu);margin-right:8px">CHECKING</span>';
-  h += '<span style="font-weight:600;color:var(--txt)">WF Checking</span></div>';
-  h += '<span style="font-size:15px;font-weight:700;color:'+(wf>0?'var(--grn)':'var(--mut)')+'">'+(wf>0?'+'+f$(wf):'$0')+'</span></div>';
   if(loc>0) {
     h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-top:1px solid var(--brd)">';
     h += '<span style="font-weight:600;color:var(--txt)">Amex Business LOC</span>';

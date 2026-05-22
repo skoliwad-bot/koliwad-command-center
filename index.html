@@ -301,7 +301,7 @@ const FB_KEYS = [
   'kcc_aitexts','kcc_sync','kcc_name','kcc_cid','kcc_claude',
   'kcc_firelab_inputs','kcc_firelab_saved',
   'kcc_tkm','kcc_tku','kcc_tkhr','kcc_tkmed','kcc_tk_cards',
-  'kcc_payplans','kcc_recbills',
+  'kcc_payplans','kcc_recbills','kcc_cc_import',
   'kcc_fire_actuals','kcc_inbox','kcc_emails','kcc_calnames'
 ];
 
@@ -2502,39 +2502,40 @@ function importVBExcel(evt) {
       }
 
       // ── SYNC CC DATA TO TICKETS PAGE ──
-      // Map VB CC data into tk_cards format so Tickets page shows real balances
       if(ccData && ccData.cards && ccData.cards.length) {
-        const existing = JSON.parse(localStorage.getItem('kcc_tk_cards')||'{}');
+        const existingPaid = JSON.parse(localStorage.getItem('kcc_cc_import')||'{}').paid||{};
         const c = ccData.cards;
+        // Build fresh - don't inherit old corrupted data except paid status and due days
         const merged = {
-          ...existing,
-          // Balances
+          // Balances from spreadsheet
           c1b: c[0]?.bal||0,
           c2b: c[1]?.bal||0,
           c3b: c[2]?.bal||0,
           c4b: c[3]?.bal||0,
           c5b: c[4]?.bal||0,
-          // Min dues (actual dollar amounts)
+          // Min dues from spreadsheet (actual $ amounts)
           c1m: c[0]?.minDue||0,
           c2m: c[1]?.minDue||0,
           c3m: c[2]?.minDue||0,
           c4m: c[3]?.minDue||0,
           c5m: c[4]?.minDue||0,
-          // Due days (1-31, separate from min due)
+          // Due days - use spreadsheet value if available, else preserve existing
           c1due: c[0]?.dueDay||existing.c1due||'',
           c2due: c[1]?.dueDay||existing.c2due||'',
           c3due: c[2]?.dueDay||existing.c3due||'',
           c4due: c[3]?.dueDay||existing.c4due||'',
           c5due: c[4]?.dueDay||existing.c5due||'',
-          // LOC and obligations
+          // LOC and obligations from spreadsheet
           amexLocBal: ccData.amexLocBal||0,
           amexLocLim: ccData.amexLocLim||0,
-          loc: ccData.amexLocBal||existing.loc||0,
-          dang: ccData.dangOwed||existing.dang||0,
+          loc: ccData.amexLocBal||0,
+          dang: ccData.dangOwed||0,
+          // Preserve only paid status from existing
           paid: existing.paid||{},
         };
-        localStorage.setItem('kcc_tk_cards', JSON.stringify(merged));
-        S.tkCards = merged;
+        // Save to clean separate key - never mixed with manual data
+        localStorage.setItem('kcc_cc_import', JSON.stringify(merged));
+        S.ccImport = merged;
       }
 
       // ── SAVE TO STATE ──
@@ -2821,14 +2822,15 @@ function rTickets() {
 }
 
 function tkUpdateCards() {
-  // Read from saved imported data not input fields
-  const saved = JSON.parse(localStorage.getItem('kcc_tk_cards')||'{}');
-  const c1b=saved.c1b||0, c1m=saved.c1m||0;
-  const c2b=saved.c2b||0, c2m=saved.c2m||0;
-  const c3b=saved.c3b||0, c3m=saved.c3m||0;
-  const c4b=saved.c4b||0, c4m=saved.c4m||0;
-  const c5b=saved.c5b||0, c5m=saved.c5m||0;
-  const loc=saved.loc||0, dang=saved.dang||0;
+  // Read ONLY from clean import data
+  const d = JSON.parse(localStorage.getItem('kcc_cc_import')||'{}');
+  const c = d.cards||[];
+  const c1b=c[0]?.bal||0, c1m=c[0]?.minDue||0;
+  const c2b=c[1]?.bal||0, c2m=c[1]?.minDue||0;
+  const c3b=c[2]?.bal||0, c3m=c[2]?.minDue||0;
+  const c4b=c[3]?.bal||0, c4m=c[3]?.minDue||0;
+  const c5b=c[4]?.bal||0, c5m=c[4]?.minDue||0;
+  const loc=d.amexLocBal||0, dang=d.dangOwed||0;
   const total = c1b+c2b+c3b+c4b+c5b+loc+dang;
   const minTotal = c1m+c2m+c3m+c4m+c5m;
 
@@ -2880,17 +2882,13 @@ function tkUpdateCards() {
 
 function tkSaveCards() {
   const g = id => parseFloat(document.getElementById(id)?.value)||0;
-  const gs2 = id => document.getElementById('tk-'+id)?.value||'';
   const gb = id => document.getElementById('tk-'+id)?.checked||false;
   const thisMonth = new Date().getFullYear()+'-'+(new Date().getMonth()+1);
-  const data = {c1b:g('tk-c1b'),c1m:g('tk-c1m'),c1due:gs2('c1due'),
-    c2b:g('tk-c2b'),c2m:g('tk-c2m'),c2due:gs2('c2due'),
-    c3b:g('tk-c3b'),c3m:g('tk-c3m'),c3due:gs2('c3due'),
-    c4b:g('tk-c4b'),c4m:g('tk-c4m'),c4due:gs2('c4due'),
-    c5b:g('tk-c5b'),c5m:g('tk-c5m'),c5due:gs2('c5due'),
-    loc:g('tk-loc'),dang:g('tk-dang'),
-    paid:{c1:gb('paid-c1'),c2:gb('paid-c2'),c3:gb('paid-c3'),c4:gb('paid-c4'),c5:gb('paid-c5'),month:thisMonth}};
-  localStorage.setItem('kcc_tk_cards', JSON.stringify(data));
+  // Only save paid status - all other data comes from spreadsheet import
+  const existing2 = JSON.parse(localStorage.getItem('kcc_cc_import')||'{}');
+  existing2.paid = {c1:gb('paid-c1'),c2:gb('paid-c2'),c3:gb('paid-c3'),c4:gb('paid-c4'),c5:gb('paid-c5'),month:thisMonth};
+  const data = existing2;
+  localStorage.setItem('kcc_cc_import', JSON.stringify(data));
   fbSaveAll();
   tkUpdateCards();
   autoAlerts();

@@ -2444,7 +2444,7 @@ function importVBExcel(evt) {
         const ccRows = XLSX.utils.sheet_to_json(ccSheet, {header:1});
         const cardLabels = ['Cap One Business','Amex Business (MBK)','Amex (Lena)','Wells Fargo CC','Amex Stardust'];
         // Detect if Stardust row exists (v3) or TOTAL is row 10 (v2)
-        const hasStardust = ccRows[10] && typeof ccRows[10][1]==='string' && ccRows[10][1].includes('Stardust');
+        const hasStardust = ccRows[10] && (String(ccRows[10][0]||'').includes('Stardust') || String(ccRows[10][1]||'').includes('Stardust'));
         const numCards = hasStardust ? 5 : 4;
         ccData.cards = [];
         for(let i=0;i<numCards;i++) {
@@ -2483,11 +2483,11 @@ function importVBExcel(evt) {
         }
         ccData.obligations = [];
         if(dangRow && typeof dangRow[2]==='number' && dangRow[2]>0) {
-          ccData.obligations.push({payee:dangRow[0]||'Randy Dang',amount:dangRow[1],priority:dangRow[2]||'1 — FIRST'});
+          ccData.obligations.push({payee:dangRow[1]||'Randy Dang',amount:typeof dangRow[2]==='number'?dangRow[2]:dangRow[1],priority:dangRow[3]||'1 — FIRST'});
         }
         ccData.totalCC  = ccData.cards.reduce((s,c)=>s+c.bal,0);
         ccData.totalMin = ccData.cards.reduce((s,c)=>s+c.minDue,0);
-        ccData.dangOwed = dangRow ? (dangRow[1]||0) : 0;
+        ccData.dangOwed = dangRow ? (typeof dangRow[2]==='number' ? dangRow[2] : (typeof dangRow[1]==='number' ? dangRow[1] : 0)) : 0;
       }
 
       // ── SYNC CC DATA TO TICKETS PAGE ──

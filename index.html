@@ -776,9 +776,9 @@ localStorage.setItem = function(key, value) {
             <button class="aibtn" onclick="runAI('exec')">✦ Generate with AI</button>
             <button class="btn" id="dlBtn" onclick="downloadDocx()" style="display:none">⬇ Download .docx</button>
           </div></div>
-        <div class="ai-block" id="ai-exec">
-          <div class="ai-hdr"><span class="ai-title">✦ AI Executive Summary</span><span class="ai-status" id="ai-exec-st">Click "Generate with AI" to write your monthly summary</span></div>
-          <div class="ai-text loading" id="ai-exec-tx">Claude will synthesize your Tasks, Financials, FIRE progress, Ticket business, and Throwzone KPIs into a concise executive summary — the kind you'd present to a board.</div>
+        <div class="ai-block visible" id="ai-exec" style="background:transparent;border:none;padding:0;">
+          <div class="ai-hdr" style="margin-bottom:10px;"><span class="ai-title">✦ AI Executive Summary</span><span class="ai-status" id="ai-exec-st">Click "Generate with AI" to write your monthly summary</span></div>
+          <div id="ai-exec-tx" style="font-size:12px;color:var(--txt2);font-style:italic;">Claude will generate a full JPL-style executive summary with your real data — HELOC, cash flow, FIRE path, ticket business, and key decisions.</div>
         </div>
         <div class="g4" style="margin-bottom:16px">
           <div style="border:1px solid var(--brd);background:var(--surf);padding:12px 16px"><span style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--mut);display:block">Tasks Done</span><span id="ek1" style="font-size:22px;font-weight:700;display:block;margin-top:3px">—</span></div>
@@ -2787,6 +2787,293 @@ async function importAllExcel(evt) {
 
   // Show summary
   alert('✅ Import Complete\n\n' + status.join('\n') + '\n\nAll data saved and synced to cloud.');
+}
+
+// ══ AI + EXEC SUMMARY ═══════════════════════════════════════
+
+function buildPrompt(section) {
+  const tasks  = S.tasks||[];
+  const alerts = S.alerts||[];
+  const fire   = S.fire;
+  const fins   = S.fins;
+  const tz     = S.tz;
+  const goals  = S.fireg;
+  const cal    = S.cal||[];
+  const now    = new Date();
+  const fchk   = S.fchk||{};
+  const tkm    = JSON.parse(localStorage.getItem('kcc_tkm')||'{}');
+  const tkcards= JSON.parse(localStorage.getItem('kcc_tk_cards')||'null');
+
+  const month  = MONS[now.getMonth()]+' '+now.getFullYear();
+  const taskSum  = tasks.slice(0,8).map(t=>`- ${t.title} [${t.m}] due:${t.dd||'none'}`).join('\n');
+  const alertSum = alerts.filter(a=>a.status==='Open').map(a=>`- ${a.title} [${a.sev}]`).join('\n');
+  const helocInt = fire&&fire.heloc ? fire.heloc*0.065/12 : 3855;
+  const trueNeed = fire ? (fire.need||22000)+(fire.vmort||7900)+(fire.pmort||3477)+helocInt : 37169;
+  const fireSum  = fire ? `Need: $${Math.round(trueNeed)}/mo, Income: $${fire.inc||0}/mo, Gap: $${Math.round(fire.inc-(trueNeed))}/mo, HF: $${fire.hf||0}, TIAA: $${fire.tiaa||0}, HELOC: $${fire.heloc||0}, FIRE%: ${fire.fire_pct||0}%` : 'No FIRE data';
+  const finSum   = fins ? `Citi: $${fins.citi||0}, Savings: $${fins.savings||0}, HELOC owed: $${fins.heloc||0}, Available: $${fins.available||0}, Sweep ready: $${fins.totalSweep||0}` : 'No VB data';
+  const tkSum    = `Profit MTD: $${tkm['Ticket Profit MTD']||0}, YTD: $${tkm['Ticket Profit YTD']||0}, Open listings: ${tkm['Open Listings']||0}, Pending pmts: $${tkm['Pending Payments']||0}`;
+  const tzSum    = tz ? `Revenue: $${tz.rev||0}/mo, Members: ${tz.mem||0}, Capacity: ${tz.cap||0}%` : 'Not yet launched';
+  const doneCount = Object.values(fchk).filter(Boolean).length;
+  const totalFP   = FP.reduce((s,p)=>s+p.tasks.length,0);
+  const dang = tkcards ? tkcards.dang||0 : 0;
+  const totalCC = tkcards ? (tkcards.c1b||0)+(tkcards.c2b||0)+(tkcards.c3b||0)+(tkcards.c4b||0) : 0;
+
+  const prompts = {
+    today: `You are the AI advisor for Sonny Koliwad. Today is ${DAYS[now.getDay()]}, ${MONS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}.
+TASKS: ${taskSum||'None synced'}
+ALERTS: ${alertSum||'None'}
+FIRE: ${fireSum}
+Write a 3-4 sentence morning brief: (1) most critical action today, (2) key risk, (3) one sharp recommendation. Be direct, use real numbers.`,
+
+    firepath: `You are the FIRE advisor for Sonny Koliwad.
+FIRE: ${fireSum}
+FIRE PATH: ${doneCount}/${totalFP} tasks complete
+FINANCIALS: ${finSum}
+THROWZONE: ${tzSum}
+Provide 4-5 sentences: (1) on track or off, (2) biggest lever, (3) biggest risk, (4) action this week with dollar amount. Be specific.`,
+
+    tickets: `You are the ticket business advisor for Sonny Koliwad.
+TICKET METRICS: ${tkSum}
+CREDIT CARDS: Total CC: $${totalCC}, Randy Dang owed: $${dang} (PRIORITY #1)
+FINANCES: ${finSum}
+Recommend payment priority and capital allocation in 4-5 sentences. Specific amounts. What to pay first, what to hold.`,
+
+    financials: `You are the velocity banking advisor for Sonny Koliwad.
+BALANCES: ${finSum}
+FIRE GAP: ${fire?'$'+Math.abs(Math.round(fire.inc-trueNeed))+'/mo '+(fire.inc>=trueNeed?'surplus':'deficit'):'Unknown'}
+Recommend this week's money moves in 4-5 sentences. Exact amounts, sequencing, what to sweep, what to hold.`,
+
+    exec: `You are writing the monthly executive summary for Sonny Koliwad — ${month}.
+FIRE: ${fireSum}
+VELOCITY BANKING: ${finSum}
+TICKETS: ${tkSum}
+THROWZONE: ${tzSum}
+TASKS: ${tasks.filter(t=>t.status==='Done').length} done of ${tasks.length} total
+ALERTS: ${alerts.filter(a=>a.status==='Resolved').length} resolved, ${alerts.filter(a=>a.status==='Open').length} open
+CC DEBT: $${totalCC} total, Randy Dang: $${dang}
+FIRE PATH: ${doneCount}/${totalFP} tasks complete
+
+Return ONLY valid JSON (no markdown, no backticks):
+{
+  "quickSummary": {"cashFlow": "2 sentences on cash position", "firePath": "2 sentences on FIRE trajectory", "thisMonth": "2 sentences on top priorities"},
+  "warningNote": "one sentence on biggest current risk",
+  "helocBalance": number,
+  "helocAvailable": number,
+  "sweepReady": number,
+  "helocRate": "6.5%",
+  "helocInterest": number,
+  "actualIncome": number,
+  "fixedExpenses": number,
+  "netCashFlow": number,
+  "fireCoverage": number,
+  "gapDrivers": [{"label":"...", "amount": number, "positive": boolean, "note":"..."}],
+  "investments": [{"label":"...", "amount": "...", "color":"blue|green|yellow", "note":"..."}],
+  "keyDecisions": [
+    {"title":"...", "headline":"...", "color":"red|yellow|blue", "body":"2 sentences"},
+    {"title":"...", "headline":"...", "color":"red|yellow|blue", "body":"2 sentences"},
+    {"title":"...", "headline":"...", "color":"red|yellow|blue", "body":"2 sentences"}
+  ]
+}`
+  };
+  return prompts[section] || 'Summarize the current situation.';
+}
+
+async function runAI(section) {
+  const key = CFG.claude || localStorage.getItem('kcc_claude');
+  if(!key) { alert('Add your Claude API key in ⚙ Setup.\n\nGet one at console.anthropic.com → API Keys'); return; }
+
+  const block = el('ai-'+section);
+  const tx    = el('ai-'+section+'-tx');
+  const st    = el('ai-'+section+'-st');
+  if(block) block.classList.add('visible');
+  if(tx){ tx.textContent='Analyzing your data…'; tx.classList.add('loading'); }
+  if(st) st.textContent='✦ Thinking…';
+
+  const maxTok = section==='exec' ? 1500 : 600;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({model:'claude-sonnet-4-5',max_tokens:maxTok,messages:[{role:'user',content:buildPrompt(section)}]})
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error.message);
+    const text = data.content[0].text;
+
+    if(section==='exec') {
+      try {
+        const clean = text.replace(/```json|```/g,'').trim();
+        const d = JSON.parse(clean);
+        renderExecSummary(d);
+        window._execData = d;
+        const dlBtn = el('dlBtn');
+        if(dlBtn) dlBtn.style.display='';
+      } catch(e) {
+        // fallback - show raw text
+        if(tx){ tx.textContent=text; tx.classList.remove('loading'); }
+      }
+    } else {
+      if(tx){ tx.textContent=text; tx.classList.remove('loading'); }
+      if(st) st.textContent='✦ Generated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    }
+
+    const saved = JSON.parse(localStorage.getItem('kcc_aitexts')||'{}');
+    saved[section] = text;
+    localStorage.setItem('kcc_aitexts', JSON.stringify(saved));
+
+  } catch(e) {
+    if(tx){ tx.textContent='Error: '+e.message; tx.classList.remove('loading'); }
+    if(st) st.textContent='Error';
+  }
+}
+
+function renderExecSummary(d) {
+  const now = new Date();
+  const month = MONS[now.getMonth()]+' '+now.getFullYear();
+  const f$ = n => n!=null?'$'+Math.round(Math.abs(n)).toLocaleString():'—';
+  const sign = n => n>=0?'+':'−';
+
+  const colBg = {red:'#f8d7da', yellow:'#fff3cd', blue:'#dde8f5'};
+  const colFg = {red:'#721c24', yellow:'#7a4f00', blue:'#0a1628'};
+  const colBd = {red:'#c03030', yellow:'#8b5000', blue:'#0a1628'};
+
+  const gapRows = (d.gapDrivers||[]).map(g=>`
+    <tr>
+      <td style="border:1px solid #ccc;padding:4px 8px;font-weight:700;background:#f8f9fa;">${esc(g.label)}</td>
+      <td style="border:1px solid #ccc;padding:4px 8px;font-weight:700;text-align:right;background:${g.positive?'#d4edda':'#f8d7da'};color:${g.positive?'#155724':'#721c24'};">${g.positive?'+':'−'}${f$(g.amount)}</td>
+      <td style="border:1px solid #ccc;padding:4px 8px;color:#555;">${esc(g.note||'')}</td>
+    </tr>`).join('');
+
+  const invRows = (d.investments||[]).map(inv=>{
+    const bg = inv.color==='green'?'#d4edda':inv.color==='yellow'?'#fff3cd':'#dde8f5';
+    const fg = inv.color==='green'?'#155724':inv.color==='yellow'?'#7a4f00':'#0a1628';
+    return `<tr>
+      <td style="border:1px solid #ccc;padding:4px 8px;font-weight:700;background:#f8f9fa;">${esc(inv.label)}</td>
+      <td style="border:1px solid #ccc;padding:4px 8px;font-weight:700;text-align:right;background:${bg};color:${fg};">${esc(String(inv.amount))}</td>
+      <td style="border:1px solid #ccc;padding:4px 8px;color:#555;">${esc(inv.note||'')}</td>
+    </tr>`;
+  }).join('');
+
+  const kdCells = (d.keyDecisions||[]).map(kd=>`
+    <td style="border:1px solid #b0c0d8;padding:8px 10px;vertical-align:top;width:33%;background:${colBg[kd.color]||'#f5f5f5'};">
+      <div style="font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${colBd[kd.color]||'#333'};margin-bottom:3px;">${esc(kd.title)}</div>
+      <div style="font-size:14px;font-weight:900;color:${colFg[kd.color]||'#111'};margin-bottom:4px;">${esc(kd.headline)}</div>
+      <div style="font-size:8px;line-height:1.5;color:#333;">${esc(kd.body)}</div>
+    </td>`).join('');
+
+  const netColor = (d.netCashFlow||0) >= 0 ? '#155724' : '#721c24';
+  const netBg    = (d.netCashFlow||0) >= 0 ? '#d4edda' : '#f8d7da';
+
+  const html = `
+  <div id="exec-output" style="font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#111;width:100%;">
+
+    <div style="background:#0a1628;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <svg width="20" height="22" viewBox="0 0 26 28" fill="none">
+          <path d="M13 2L2 6.5V14C2 19.8 7 24.8 13 26.5C19 24.8 24 19.8 24 14V6.5L13 2Z" fill="#0a1628" stroke="#e05050" stroke-width="1.5"/>
+          <text x="7.5" y="18.5" font-family="Arial" font-size="11" font-weight="900" fill="#e05050">K</text>
+        </svg>
+        <div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#fff;">Koliwad — Financial Status</div>
+          <div style="font-size:8px;color:#6a8aaa;letter-spacing:1px;">Year-to-Date through ${month}  ·  Executive Summary</div>
+        </div>
+      </div>
+      <div style="font-size:8px;color:#6a8aaa;text-align:right;">Family as a Business<br>Koliwad Command Center</div>
+    </div>
+
+    <div style="background:#e8f0f8;border-bottom:2px solid #1a3a6a;padding:8px 16px;">
+      <div style="font-size:7px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1a3a6a;margin-bottom:6px;">QUICK SUMMARY</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        <div style="font-size:9px;line-height:1.6;color:#1a2a3a;"><strong>Cash Flow:</strong> ${esc(d.quickSummary?.cashFlow||'')}</div>
+        <div style="font-size:9px;line-height:1.6;color:#1a2a3a;"><strong>FIRE Path:</strong> ${esc(d.quickSummary?.firePath||'')}</div>
+        <div style="font-size:9px;line-height:1.6;color:#1a2a3a;"><strong>This Month:</strong> ${esc(d.quickSummary?.thisMonth||'')}</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;background:#fffbe6;border-bottom:1px solid #c8a800;padding:5px 14px;align-items:flex-start;">
+      <span style="font-size:11px;flex-shrink:0;">⚠</span>
+      <div style="font-size:9px;line-height:1.5;">${esc(d.warningNote||'')}</div>
+    </div>
+
+    <div style="padding:10px 16px;">
+
+      <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:#0a1628;color:#fff;padding:4px 8px;margin-bottom:4px;">VELOCITY BANKING  ·  HELOC Plan $760,000</div>
+      <div style="font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#555;margin-bottom:4px;">MONTHLY SUMMARY</div>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:10px;">
+        <tr>
+          <td style="border:1px solid #b0c0d8;padding:6px 10px;background:#dde8f5;text-align:center;width:25%"><div style="font-size:18px;font-weight:900;color:#0a1628;">${f$(d.helocBalance)}</div><div style="font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1a3a6a;">HELOC BALANCE</div></td>
+          <td style="border:1px solid #b0c0d8;padding:6px 10px;background:#d4edda;text-align:center;width:25%"><div style="font-size:18px;font-weight:900;color:#155724;">${f$(d.helocAvailable)}</div><div style="font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#155724;">AVAILABLE CREDIT</div></td>
+          <td style="border:1px solid #b0c0d8;padding:6px 10px;background:#d4edda;text-align:center;width:25%"><div style="font-size:18px;font-weight:900;color:#155724;">${f$(d.sweepReady)}</div><div style="font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#155724;">SWEEP AVAILABLE</div></td>
+          <td style="border:1px solid #b0c0d8;padding:6px 10px;background:#fff3cd;text-align:center;width:25%"><div style="font-size:18px;font-weight:900;color:#7a4f00;">${f$(d.helocInterest)}/mo</div><div style="font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#7a4f00;">HELOC INTEREST (${d.helocRate||'6.5%'})</div></td>
+        </tr>
+      </table>
+
+      <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:#0a1628;color:#fff;padding:4px 8px;margin-bottom:4px;">CASH FLOW  ·  Monthly Operating Plan</div>
+      <div style="font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#555;margin-bottom:4px;">MONTHLY SUMMARY</div>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:6px;">
+        <tr>
+          <td style="border:1px solid #b0c0d8;padding:6px 10px;background:#d4edda;text-align:center;width:25%"><div style="font-size:18px;font-weight:900;color:#155724;">${f$(d.actualIncome)}</div><div style="font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#155724;">ACTUAL INCOME</div></td>
+          <td style="border:1px solid #b0c0d8;padding:6px 10px;background:#f8d7da;text-align:center;width:25%"><div style="font-size:18px;font-weight:900;color:#721c24;">${f$(d.fixedExpenses)}</div><div style="font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#721c24;">FIXED EXPENSES</div></td>
+          <td style="border:1px solid #b0c0d8;padding:6px 10px;text-align:center;width:25%;background:${netBg}"><div style="font-size:18px;font-weight:900;color:${netColor};">${sign(d.netCashFlow||0)}${f$(d.netCashFlow)}</div><div style="font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${netColor};">NET CASH FLOW</div></td>
+          <td style="border:1px solid #b0c0d8;padding:6px 10px;background:#dde8f5;text-align:center;width:25%"><div style="font-size:18px;font-weight:900;color:#0a1628;">${d.fireCoverage||0}%</div><div style="font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1a3a6a;">FIRE COVERAGE</div></td>
+        </tr>
+      </table>
+
+      <div style="font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#555;margin-bottom:3px;">CASH FLOW GAP DRIVERS</div>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:10px;">${gapRows}</table>
+
+      <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:#0a1628;color:#fff;padding:4px 8px;margin-bottom:4px;">FIRE PATH  ·  Target: Financial Independence</div>
+      <div style="font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#555;margin-bottom:3px;">INVESTMENT & BUSINESS OUTLOOK</div>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:10px;">${invRows}</table>
+
+      <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:#0a1628;color:#fff;padding:4px 8px;margin-bottom:6px;">KEY DECISIONS</div>
+      <table style="width:100%;border-collapse:collapse;"><tr>${kdCells}</tr></table>
+
+    </div>
+
+    <div style="background:#0a1628;padding:4px 16px;display:flex;justify-content:space-between;">
+      <span style="font-size:7px;color:#4a6a8a;">Koliwad Command Center · Family as a Business · AI-Generated via Claude</span>
+      <span style="font-size:7px;color:#4a6a8a;">${month} · Confidential</span>
+    </div>
+
+  </div>`;
+
+  const container = el('ai-exec-tx');
+  if(container) {
+    container.innerHTML = html;
+    container.classList.remove('loading');
+    container.style.cssText = 'font-size:inherit;color:inherit;line-height:inherit;';
+  }
+  const st = el('ai-exec-st');
+  if(st) st.textContent = '✦ Generated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+}
+
+function downloadDocx() {
+  const d = window._execData;
+  const now = new Date();
+  const month = MONS[now.getMonth()]+' '+now.getFullYear();
+  const container = el('exec-output');
+  if(!container && !d) { alert('Generate the AI summary first.'); return; }
+
+  // Get the rendered HTML
+  const execHTML = container ? container.outerHTML : '<p>No data</p>';
+
+  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>
+    body{font-family:Arial,sans-serif;font-size:10pt;margin:0.5in;color:#111;}
+    table{width:100%;border-collapse:collapse;margin-bottom:10px;}
+    td{padding:5px 8px;border:1px solid #ccc;font-size:9pt;}
+    div{box-sizing:border-box;}
+  </style></head><body>${execHTML}</body></html>`;
+
+  const blob = new Blob([docContent], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Koliwad_Exec_Summary_'+month.replace(' ','_')+'.html';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 </script>

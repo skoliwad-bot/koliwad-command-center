@@ -176,78 +176,88 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'JetBrai
 .mbtns{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
 
 /* ── BRIEFING ── */
-#brief{display:none;background:#b8ae96;}
-#brief.on{display:block;min-height:100vh;padding:16px;}
-.brnav{display:flex;align-items:center;justify-content:space-between;width:8.5in;margin:0 auto 12px;}
-.brnav button{font-family:'Special Elite',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:9px 20px;border:none;cursor:pointer;}
-.brback{background:#2c2416;color:#f5efe0;}
-.brprint{background:#8b3a2a;color:#fff;}
-.brpg{width:8.5in;min-height:11in;margin:0 auto;background:var(--pp);position:relative;overflow:hidden;box-shadow:0 6px 48px rgba(0,0,0,.3);color:var(--pi);font-family:'Libre Baskerville',Georgia,serif;}
-.brpg::before{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(200,191,168,.35) 27px,rgba(200,191,168,.35) 28px);pointer-events:none;z-index:0;}
-.brpg::after{content:'';position:absolute;top:0;bottom:0;left:.72in;width:2px;background:rgba(180,80,60,.18);z-index:1;}
-.brc{position:relative;z-index:2;padding:.28in .32in .28in .88in;}
-.brm{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:3px double var(--pi);padding-bottom:.08in;margin-bottom:.1in;}
-.brmt{font-family:'Playfair Display',serif;font-size:24pt;font-weight:700;line-height:1;}
-.brmt em{font-style:italic;color:var(--pr);}
-.brmts{font-family:'Special Elite',monospace;font-size:7pt;color:var(--pf);letter-spacing:2px;text-transform:uppercase;margin-top:3px;}
-.brmd{text-align:right;}
-.brdn{font-family:'Playfair Display',serif;font-size:15pt;font-weight:700;color:var(--pr);display:block;line-height:1;}
-.brdd{font-family:'Playfair Display',serif;font-size:32pt;font-weight:700;color:var(--pi);line-height:1;display:block;}
-.brmy{font-size:9pt;color:#5a4e38;}
-.brsb{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--prl);margin-bottom:.1in;}
-.brpp{display:flex;align-items:center;gap:7px;padding:5px 8px;border-right:1px solid var(--prl);}
-.brpp:last-child{border-right:none;}
-.brpp.r{background:rgba(139,58,42,.07);}.brpp.g{background:rgba(74,103,65,.07);}.brpp.a{background:rgba(184,136,42,.07);}
-.bric{font-size:12pt;line-height:1;}
-.brpl{font-family:'Special Elite',monospace;font-size:5.5pt;letter-spacing:1.5px;text-transform:uppercase;color:var(--pf);display:block;}
-.brpv{font-family:'Playfair Display',serif;font-size:12pt;font-weight:700;line-height:1;display:block;}
-.brpv.r{color:var(--pr);}.brpv.g{color:var(--ps);}.brpv.a{color:var(--pa);}
-.brgrd{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.09in;}
-.brcl{padding:.06in .08in;background:rgba(255,255,255,.28);border:1px solid var(--prl);}
-.brs2{grid-column:span 2;}
-.brsl{font-family:'Special Elite',monospace;font-size:6.5pt;letter-spacing:3px;text-transform:uppercase;color:var(--pr);margin-bottom:4px;display:flex;align-items:center;gap:6px;}
-.brsl::after{content:'';flex:1;height:1px;background:var(--prl);}
-.brml{list-style:none;margin-top:3px;}
-.brml li{display:flex;align-items:flex-start;gap:7px;padding:4px 0;border-bottom:1px solid rgba(200,191,168,.5);font-size:8.5pt;line-height:1.3;}
-.brml li:last-child{border-bottom:none;}
-.brmn{font-family:'Playfair Display',serif;font-size:13pt;font-weight:700;color:var(--pr);line-height:1;min-width:15px;}
-.brmb{flex:1;}
-.brmt2{font-weight:700;display:block;}
-.brmd2{font-size:7pt;color:var(--pf);font-style:italic;}
-.brmm{display:flex;gap:3px;margin-top:2px;align-items:center;flex-wrap:wrap;}
-.pch{width:12px;height:12px;border:1.5px solid #5a4e38;border-radius:1px;flex-shrink:0;margin-top:2px;}
-.pb{font-family:'Special Elite',monospace;font-size:6pt;padding:1px 4px;white-space:nowrap;flex-shrink:0;}
-.pbM{background:var(--pr);color:#fff;}.pbS{background:var(--pa);color:#fff;}.pbC{background:var(--ps);color:#fff;}
-.brdl{list-style:none;margin-top:3px;}
-.brdl li{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid rgba(200,191,168,.5);font-size:8pt;}
-.brdl li:last-child{border-bottom:none;}
-.brdlt{flex:1;}.brdld{font-family:'Special Elite',monospace;font-size:7pt;color:var(--pf);}
-.brmxg{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:4px;}
-.brmx{background:rgba(255,255,255,.35);border:1px solid var(--prl);border-left:3px solid #c4694f;padding:4px 6px;}
-.brmxl{font-family:'Special Elite',monospace;font-size:6pt;letter-spacing:1px;text-transform:uppercase;color:var(--pf);display:block;}
-.brmxv{font-family:'Playfair Display',serif;font-size:14pt;font-weight:700;color:var(--pi);line-height:1.1;display:block;}
-.brfr{display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid var(--prl);margin-top:5px;}
-.brfc{padding:4px 7px;border-right:1px solid var(--prl);}
-.brfc:last-child{border-right:none;}
-.brfcl{font-family:'Special Elite',monospace;font-size:5.5pt;letter-spacing:1px;text-transform:uppercase;color:var(--pf);}
-.brfcv{font-family:'Playfair Display',serif;font-size:12pt;font-weight:700;line-height:1.1;}
-.brfcv.pos{color:var(--ps);}.brfcv.neg{color:var(--pr);}
-.brcall{list-style:none;margin-top:3px;}
-.brcall li{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid rgba(200,191,168,.5);font-size:8pt;}
-.brcall li:last-child{border-bottom:none;}
-.brcalt{font-family:'Special Elite',monospace;font-size:7pt;color:var(--pf);width:40px;flex-shrink:0;}
-.brhbl{list-style:none;margin-top:3px;}
-.brhbr{display:flex;align-items:center;gap:7px;padding:3px 0;border-bottom:1px solid rgba(200,191,168,.5);font-size:7.5pt;}
-.brhbr:last-child{border-bottom:none;}
-.brhbn{flex:1;}
-.brhbb{display:flex;gap:2px;}
-.hb{width:10px;height:10px;border:1.5px solid var(--prl);}
-.hb.d{background:var(--ps);border-color:var(--ps);}
-.nl{border-bottom:1px solid var(--prl);height:21px;}
-.brft{margin-top:.08in;padding-top:.05in;border-top:2px double var(--pi);display:flex;justify-content:space-between;align-items:center;}
-.brfq{font-family:'Playfair Display',serif;font-style:italic;font-size:7.5pt;color:var(--pf);max-width:4.5in;}
-.brfm{font-family:'Special Elite',monospace;font-size:6.5pt;color:var(--pf);text-align:right;line-height:1.6;}
-.pe{font-style:italic;font-size:8pt;color:var(--pf);padding:4px 0;}
+#brief{display:none;background:#f2f4f0;}
+#brief.on{display:block;min-height:100vh;padding:20px;}
+.brnav{display:flex;align-items:center;justify-content:space-between;max-width:9in;margin:0 auto 14px;}
+.brnav button{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:8px 18px;border:none;cursor:pointer;}
+.brback{background:#1a1f1a;color:#f0f0f0;}
+.brprint{background:#c04040;color:#fff;}
+.brpg{max-width:9in;min-height:11in;margin:0 auto;background:#fff;box-shadow:0 4px 32px rgba(0,0,0,.15);color:#1a1a1a;font-family:'JetBrains Mono',monospace;}
+
+/* Header bar */
+.brhead{background:#1a1f1a;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;}
+.brhead-left{display:flex;align-items:center;gap:14px;}
+.brhead-crest{width:32px;height:34px;}
+.brhead-title{color:#fff;font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;display:block;}
+.brhead-sub{color:#6a886a;font-size:8px;letter-spacing:3px;text-transform:uppercase;display:block;margin-top:2px;}
+.brhead-date{text-align:right;}
+.brhead-dn{color:#e05050;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;display:block;}
+.brhead-dd{color:#fff;font-size:28px;font-weight:700;line-height:1;display:block;}
+.brhead-my{color:#6a886a;font-size:9px;display:block;margin-top:2px;}
+
+/* Status bar */
+.brstatus{background:#111411;display:grid;grid-template-columns:repeat(4,1fr);}
+.brstat{padding:10px 16px;border-right:1px solid #2e352e;}
+.brstat:last-child{border-right:none;}
+.brstat-lbl{font-size:7px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#4a5e4a;display:block;margin-bottom:4px;}
+.brstat-val{font-size:18px;font-weight:700;display:block;line-height:1;}
+.brstat-val.r{color:#e05050;}.brstat-val.g{color:#4a9c5c;}.brstat-val.a{color:#c49030;}
+
+/* Body */
+.brbody{padding:20px 28px;}
+.brsec{margin-bottom:16px;}
+.brsec-hdr{font-size:8px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#1a1f1a;border-bottom:2px solid #1a1f1a;padding-bottom:4px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.brsec-hdr span{color:#888;font-size:7px;font-weight:400;letter-spacing:1px;}
+
+/* Grid */
+.brgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.brgrid3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px;}
+
+/* Task list */
+.br-task{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid #eee;}
+.br-task:last-child{border-bottom:none;}
+.br-task-num{font-size:11px;font-weight:700;color:#e05050;min-width:18px;}
+.br-task-body{flex:1;}
+.br-task-title{font-size:11px;font-weight:700;color:#1a1a1a;display:block;line-height:1.3;}
+.br-task-sub{font-size:8px;color:#888;margin-top:2px;display:block;}
+.br-badge{font-size:7px;font-weight:700;padding:1px 6px;letter-spacing:1px;white-space:nowrap;}
+.br-badge.M{background:#e05050;color:#fff;}
+.br-badge.S{background:#c49030;color:#fff;}
+.br-badge.C{background:#4a7ab8;color:#fff;}
+
+/* Metrics grid */
+.br-metric{background:#f8f9f8;border:1px solid #e8ece8;padding:8px 10px;}
+.br-metric-lbl{font-size:7px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;display:block;margin-bottom:3px;}
+.br-metric-val{font-size:18px;font-weight:700;color:#1a1a1a;display:block;line-height:1;}
+.br-metric-val.r{color:#e05050;}.br-metric-val.g{color:#4a9c5c;}.br-metric-val.a{color:#c49030;}
+
+/* Calendar */
+.br-cal-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #eee;font-size:10px;}
+.br-cal-row:last-child{border-bottom:none;}
+.br-cal-time{color:#888;width:55px;flex-shrink:0;font-size:9px;}
+.br-cal-dot{width:3px;height:16px;flex-shrink:0;}
+.br-cal-title{flex:1;font-weight:600;color:#1a1a1a;}
+.br-cal-cal{font-size:8px;color:#aaa;}
+
+/* Deadlines */
+.br-dl-row{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid #eee;font-size:10px;}
+.br-dl-row:last-child{border-bottom:none;}
+.br-dl-when{font-size:8px;font-weight:700;padding:2px 6px;white-space:nowrap;}
+
+/* FIRE */
+.br-fire-grid{display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid #e8ece8;}
+.br-fire-cell{padding:8px 10px;border-right:1px solid #e8ece8;}
+.br-fire-cell:last-child{border-right:none;}
+.br-fire-lbl{font-size:7px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;display:block;}
+.br-fire-val{font-size:16px;font-weight:700;color:#1a1a1a;display:block;margin-top:2px;}
+
+/* Notes lines */
+.br-line{height:22px;border-bottom:1px solid #ddd;margin-bottom:2px;}
+
+/* Footer */
+.brfoot{background:#1a1f1a;padding:10px 28px;display:flex;align-items:center;justify-content:space-between;}
+.brfoot-l{font-size:8px;color:#4a5e4a;font-style:italic;letter-spacing:1px;}
+.brfoot-r{font-size:8px;color:#4a5e4a;text-align:right;line-height:1.6;}
 
 @media print{
   #shell{display:none!important;}
@@ -980,67 +990,146 @@ localStorage.setItem = function(key, value) {
     <button class="brprint" onclick="window.print()">⎙ Print / Save PDF</button>
   </div>
   <div class="brpg">
-    <div class="brc">
-      <div class="brm">
-        <div><div class="brmt">Koliwad <em>Command</em> Center</div><div class="brmts">Morning Briefing · MoSCoW Prioritized · <span id="bgen">—</span></div></div>
-        <div class="brmd"><span class="brdn" id="bdn">—</span><span class="brdd" id="bdd">—</span><span class="brmy" id="bmy">—</span></div>
-      </div>
-      <div class="brsb">
-        <div class="brpp" id="bpp1"><span class="bric">🎟</span><div><span class="brpl">Ticket Risk</span><span class="brpv" id="bpv1">—</span></div></div>
-        <div class="brpp" id="bpp2"><span class="bric">🔥</span><div><span class="brpl">High Tasks</span><span class="brpv" id="bpv2">—</span></div></div>
-        <div class="brpp" id="bpp3"><span class="bric">🚨</span><div><span class="brpl">Open Alerts</span><span class="brpv" id="bpv3">—</span></div></div>
-        <div class="brpp" id="bpp4"><span class="bric">🎯</span><div><span class="brpl">FIRE Status</span><span class="brpv" id="bpv4">—</span></div></div>
-      </div>
-      <div class="brgrd">
-        <div class="brcl brs2"><div class="brsl">Most Important Tasks — MoSCoW Ranked</div><ul class="brml" id="bMIT"><li><span class="pe">Sync to populate</span></li></ul></div>
-        <div class="brcl"><div class="brsl">Key Deadlines</div><ul class="brdl" id="bDL"><li><span class="pe">Awaiting sync</span></li></ul></div>
-        <div class="brcl">
-          <div class="brsl">Metrics & FIRE</div>
-          <div class="brmxg">
-            <div class="brmx"><span class="brmxl">Must Items</span><span class="brmxv" id="bm1">—</span></div>
-            <div class="brmx"><span class="brmxl">Open Alerts</span><span class="brmxv" id="bm2">—</span></div>
-            <div class="brmx"><span class="brmxl">Ticket Risk</span><span class="brmxv" id="bm3">—</span></div>
-            <div class="brmx"><span class="brmxl">FIRE Gap/mo</span><span class="brmxv" id="bm4" style="font-size:10pt">—</span></div>
-          </div>
-          <div class="brfr">
-            <div class="brfc"><div class="brfcl">Need</div><div class="brfcv" id="bf1">—</div></div>
-            <div class="brfc"><div class="brfcl">Income</div><div class="brfcv pos" id="bf2">—</div></div>
-            <div class="brfc"><div class="brfcl">Gap</div><div class="brfcv" id="bf3">—</div></div>
-          </div>
-        </div>
-        <div class="brcl"><div class="brsl">Today's Schedule</div><ul class="brcall" id="bCAL"><li><span class="pe">Sync calendar</span></li></ul></div>
-        <div class="brcl">
-          <div class="brsl">Habit Tracker</div>
-          <ul class="brhbl">
-            <li class="brhbr"><div class="pch"></div><span class="brhbn">Morning pages</span><div class="brhbb"><div class="hb d"></div><div class="hb d"></div><div class="hb d"></div><div class="hb d"></div><div class="hb d"></div><div class="hb"></div><div class="hb"></div></div></li>
-            <li class="brhbr"><div class="pch"></div><span class="brhbn">Walk / move</span><div class="brhbb"><div class="hb d"></div><div class="hb d"></div><div class="hb d"></div><div class="hb d"></div><div class="hb"></div><div class="hb"></div><div class="hb"></div></div></li>
-            <li class="brhbr"><div class="pch"></div><span class="brhbn">Read (20 min)</span><div class="brhbb"><div class="hb d"></div><div class="hb d"></div><div class="hb"></div><div class="hb"></div><div class="hb"></div><div class="hb"></div><div class="hb"></div></div></li>
-            <li class="brhbr"><div class="pch"></div><span class="brhbn">No screens 10pm</span><div class="brhbb"><div class="hb d"></div><div class="hb"></div><div class="hb"></div><div class="hb"></div><div class="hb"></div><div class="hb"></div><div class="hb"></div></div></li>
-            <li class="brhbr"><div class="pch"></div><span class="brhbn">Vitamins / 2L</span><div class="brhbb"><div class="hb d"></div><div class="hb d"></div><div class="hb d"></div><div class="hb d"></div><div class="hb d"></div><div class="hb"></div><div class="hb"></div></div></li>
-          </ul>
-        </div>
-        <div class="brcl"><div class="brsl">Notes & Scratch</div><div class="nl"></div><div class="nl"></div><div class="nl"></div><div class="nl"></div><div class="nl"></div><div class="nl"></div><div class="nl"></div><div class="nl"></div></div>
-        <div class="brcl" style="background:rgba(139,58,42,.05);border-color:rgba(139,58,42,.22)">
-          <div class="brsl" style="color:var(--pr)">Today's Intention</div>
-          <div style="font-family:'Playfair Display',serif;font-style:italic;font-size:8.5pt;color:#5a4e38;margin-top:4px;line-height:1.5">What would make today a success?</div>
-          <div class="nl" style="margin-top:8px"></div><div class="nl" style="margin-top:3px"></div>
-          <div style="font-family:'Playfair Display',serif;font-style:italic;font-size:8.5pt;color:#5a4e38;margin-top:8px">One thing to let go of:</div>
-          <div class="nl" style="margin-top:5px"></div>
-        </div>
-        <div class="brcl brs2">
-          <div class="brsl">Capture & Brain Dump</div>
-          <div class="nl"></div><div class="nl"></div><div class="nl"></div><div class="nl"></div><div class="nl"></div>
-          <div style="margin-top:7px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <div><div style="font-family:'Special Elite',monospace;font-size:6pt;letter-spacing:2px;text-transform:uppercase;color:var(--pr);margin-bottom:3px">Waiting On</div><div class="nl"></div><div class="nl" style="margin-top:2px"></div><div class="nl" style="margin-top:2px"></div></div>
-            <div><div style="font-family:'Special Elite',monospace;font-size:6pt;letter-spacing:2px;text-transform:uppercase;color:var(--pr);margin-bottom:3px">Tomorrow's Setup</div><div class="nl"></div><div class="nl" style="margin-top:2px"></div><div class="nl" style="margin-top:2px"></div></div>
-          </div>
+
+    <!-- HEADER -->
+    <div class="brhead">
+      <div class="brhead-left">
+        <svg class="brhead-crest" viewBox="0 0 26 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M13 2L2 6.5V14C2 19.8 7 24.8 13 26.5C19 24.8 24 19.8 24 14V6.5L13 2Z" fill="#1a1f1a" stroke="#e05050" stroke-width="1.5"/>
+          <text x="7.5" y="18.5" font-family="JetBrains Mono,monospace" font-size="11" font-weight="700" fill="#e05050">K</text>
+          <circle cx="18" cy="10" r="1.2" fill="#c49030"/>
+          <circle cx="19.5" cy="14" r="1.2" fill="#c49030"/>
+          <circle cx="18" cy="18" r="1.2" fill="#c49030"/>
+        </svg>
+        <div>
+          <span class="brhead-title">Koliwad Command Center</span>
+          <span class="brhead-sub">Daily Operating Brief · <span id="bgen">—</span></span>
         </div>
       </div>
-      <div class="brft">
-        <div class="brfq">"The secret of getting ahead is getting started." — Mark Twain</div>
-        <div class="brfm"><span id="bfd">—</span><br>Koliwad Command Center · Family as a Business</div>
+      <div class="brhead-date">
+        <span class="brhead-dn" id="bdn">—</span>
+        <span class="brhead-dd" id="bdd">—</span>
+        <span class="brhead-my" id="bmy">—</span>
       </div>
     </div>
+
+    <!-- STATUS BAR -->
+    <div class="brstatus">
+      <div class="brstat" id="bpp1">
+        <span class="brstat-lbl">Ticket Risk</span>
+        <span class="brstat-val" id="bpv1">—</span>
+      </div>
+      <div class="brstat" id="bpp2">
+        <span class="brstat-lbl">Must-Do Tasks</span>
+        <span class="brstat-val" id="bpv2">—</span>
+      </div>
+      <div class="brstat" id="bpp3">
+        <span class="brstat-lbl">Open Alerts</span>
+        <span class="brstat-val" id="bpv3">—</span>
+      </div>
+      <div class="brstat" id="bpp4">
+        <span class="brstat-lbl">FIRE Status</span>
+        <span class="brstat-val" id="bpv4">—</span>
+      </div>
+    </div>
+
+    <!-- BODY -->
+    <div class="brbody">
+
+      <!-- TOP ROW: Tasks + Calendar -->
+      <div class="brgrid3" style="margin-bottom:16px;">
+
+        <!-- Priority Tasks -->
+        <div class="brsec">
+          <div class="brsec-hdr">Priority Tasks — MoSCoW Ranked <span>Must · Should</span></div>
+          <div id="bMIT"></div>
+        </div>
+
+        <!-- Today's Schedule -->
+        <div class="brsec">
+          <div class="brsec-hdr">Today's Schedule</div>
+          <div id="bCAL"></div>
+        </div>
+
+        <!-- Key Deadlines -->
+        <div class="brsec">
+          <div class="brsec-hdr">Key Deadlines</div>
+          <div id="bDL"></div>
+        </div>
+
+      </div>
+
+      <!-- MIDDLE ROW: FIRE + Metrics -->
+      <div class="brgrid" style="margin-bottom:16px;">
+
+        <!-- FIRE Snapshot -->
+        <div class="brsec">
+          <div class="brsec-hdr">FIRE Snapshot</div>
+          <div class="br-fire-grid" style="margin-bottom:8px;">
+            <div class="br-fire-cell"><span class="br-fire-lbl">Monthly Need</span><span class="br-fire-val" id="bf1">—</span></div>
+            <div class="br-fire-cell"><span class="br-fire-lbl">Current Income</span><span class="br-fire-val g" id="bf2">—</span></div>
+            <div class="br-fire-cell"><span class="br-fire-lbl">Gap / Month</span><span class="br-fire-val" id="bf3">—</span></div>
+          </div>
+          <div class="br-fire-grid">
+            <div class="br-fire-cell"><span class="br-fire-lbl">HF Balance</span><span class="br-fire-val" id="bf4">—</span></div>
+            <div class="br-fire-cell"><span class="br-fire-lbl">HELOC Balance</span><span class="br-fire-val r" id="bf5">—</span></div>
+            <div class="br-fire-cell"><span class="br-fire-lbl">FIRE Coverage</span><span class="br-fire-val" id="bf6">—</span></div>
+          </div>
+        </div>
+
+        <!-- Metrics -->
+        <div class="brsec">
+          <div class="brsec-hdr">Key Metrics</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+            <div class="br-metric"><span class="br-metric-lbl">Must Items</span><span class="br-metric-val" id="bm1">—</span></div>
+            <div class="br-metric"><span class="br-metric-lbl">Open Alerts</span><span class="br-metric-val" id="bm2">—</span></div>
+            <div class="br-metric"><span class="br-metric-lbl">Ticket Risk</span><span class="br-metric-val" id="bm3">—</span></div>
+            <div class="br-metric"><span class="br-metric-lbl">FIRE %</span><span class="br-metric-val" id="bm4">—</span></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- BOTTOM ROW: Notes + Capture -->
+      <div class="brgrid" style="margin-bottom:0;">
+
+        <!-- Notes -->
+        <div class="brsec">
+          <div class="brsec-hdr">Notes & Scratch</div>
+          <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
+          <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
+          <div class="br-line"></div><div class="br-line"></div>
+        </div>
+
+        <!-- Capture -->
+        <div class="brsec">
+          <div class="brsec-hdr">Capture & Action Items</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <div style="font-size:7px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#e05050;margin-bottom:6px;">Waiting On</div>
+              <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
+            </div>
+            <div>
+              <div style="font-size:7px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#e05050;margin-bottom:6px;">Tomorrow's Setup</div>
+              <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
+            </div>
+          </div>
+          <div style="margin-top:10px;">
+            <div style="font-size:7px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1a1f1a;margin-bottom:6px;">Today's #1 Priority</div>
+            <div class="br-line"></div><div class="br-line"></div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="brfoot">
+      <div class="brfoot-l" id="bfd">Koliwad Command Center · Family as a Business</div>
+      <div class="brfoot-r">Daily Operating Brief · MoSCoW Prioritized<br>Synced: <span id="bgen2">—</span></div>
+    </div>
+
   </div>
 </div>
 
@@ -1797,42 +1886,79 @@ function rCal(){
 
 
 function renderBrief(){
-  const tasks=S.tasks||[],alerts=S.alerts||[],tickets=S.tickets||[],cal=S.cal||[],fire=S.fire;
+  const tasks=S.tasks||[],alerts=S.alerts||[],cal=S.cal||[],fire=S.fire,tickets=S.tickets||[];
   const oa=alerts.filter(a=>a.status==='Open');
   const ot=tickets.filter(t=>t.status!=='Resolved');
   const ht=tasks.filter(t=>t.m==='Must');
-  const gap=fire?(fire.inc-fire.need):null, gn=gap!==null&&gap<0;
-  brp('bpp1','bpv1',ot.length,ot.length>0?'r':'g');
-  brp('bpp2','bpv2',ht.length,ht.length>0?'r':'g');
-  brp('bpp3','bpv3',oa.length,oa.length>0?'a':'g');
-  brp('bpp4','bpv4',gap===null?'—':gn?'OFF TRACK':'ON TRACK',gap===null?'':gn?'r':'g');
-  const mit=tasks.slice(0,5);
-  el('bMIT').innerHTML=mit.length===0?'<li><span class="pe">✅ No pending tasks</span></li>':
-    mit.map((t,i)=>'<li><span class="brmn">'+(i+1)+'</span><div class="brmb"><span class="brmt2">'+esc(t.title)+'</span>'
-      +(t.detail?'<span class="brmd2">'+esc(t.detail.substring(0,50))+'</span>':'')
-      +'<div class="brmm"><span class="pb pb'+t.m.charAt(0)+'">'+t.m+'</span><span style="font-size:6.5pt;color:var(--pf)">'+t.src+'</span>'
-      +(t.dd?'<span style="font-size:6.5pt;color:var(--pf)">due '+fd(t.dd)+'</span>':'')+'</div></div><div class="pch"></div></li>').join('');
-  const td0=new Date(); td0.setHours(0,0,0,0);
-  const dls=tasks.filter(t=>t.dd).sort((a,b)=>new Date(a.dd)-new Date(b.dd)).slice(0,7);
-  el('bDL').innerHTML=dls.length===0?'<li><span class="pe">No deadlines</span></li>':
-    dls.map(t=>{const diff=Math.ceil((new Date(t.dd)-td0)/86400000);
-      return'<li><span class="pb pb'+(diff<=0?'M':diff<=2?'S':'C')+'">'+(diff<=0?'TODAY':diff===1?'TMW':fd(t.dd))+'</span><span class="brdlt">'+esc(t.title)+'</span><span class="brdld">'+fd(t.dd)+'</span></li>';
-    }).join('');
-  const mc=ht.length;
-  stel('bm1',mc,'font-size:14pt;color:'+(mc>0?'var(--pr)':'var(--ps)'));
-  stel('bm2',oa.length,'font-size:14pt;color:'+(oa.length>0?'var(--pa)':'var(--ps)'));
-  stel('bm3',ot.length,'font-size:14pt;color:'+(ot.length>0?'var(--pr)':'var(--ps)'));
-  if(gap!==null) stel('bm4',(gn?'-$':'$')+Math.abs(gap).toLocaleString(),'font-size:10pt;color:'+(gn?'var(--pr)':'var(--ps)'));
-  if(fire){
-    el('bf1').textContent=f$(fire.need);
-    el('bf2').textContent=f$(fire.inc);
-    const ge=el('bf3'); ge.textContent=gap!==null?(gn?'-$'+Math.abs(gap).toLocaleString():'$'+gap.toLocaleString()):'—';
-    ge.className='brfcv '+(gn?'neg':'pos');
-  }
+  const gap=fire?(fire.inc-(fire._trueNeed||fire.need)):null, gn=gap!==null&&gap<0;
+  const f$=n=>n!=null?'$'+Math.round(Math.abs(n)).toLocaleString():'—';
+
+  // Status bar
+  const setS=(pid,vid,val,cls)=>{
+    const ve=el(vid);if(ve){ve.textContent=val;ve.className='brstat-val'+(cls?' '+cls:'');}
+  };
+  setS('bpp1','bpv1',ot.length, ot.length>0?'r':'g');
+  setS('bpp2','bpv2',ht.length, ht.length>0?'r':'g');
+  setS('bpp3','bpv3',oa.length, oa.length>0?'a':'g');
+  setS('bpp4','bpv4',gap===null?'—':gn?'OFF TRACK':'ON TRACK', gap===null?'':gn?'r':'g');
+
+  // Priority tasks
+  const mit=tasks.filter(t=>t.status!=='Done').slice(0,7);
+  el('bMIT').innerHTML=mit.length===0?'<div style="color:#aaa;font-size:10px;padding:8px 0">✅ No pending tasks</div>':
+    mit.map((t,i)=>`<div class="br-task">
+      <span class="br-task-num">${i+1}</span>
+      <div class="br-task-body">
+        <span class="br-task-title">${esc(t.title)}</span>
+        <span class="br-task-sub">${t.src||''}${t.dd?' · due '+fd(t.dd):''}</span>
+      </div>
+      <span class="br-badge ${t.m.charAt(0)}">${t.m}</span>
+    </div>`).join('');
+
+  // Today's schedule
   const tc=cal.filter(e=>e.isToday);
-  el('bCAL').innerHTML=tc.length===0?'<li><span class="pe">No events today</span></li>':
-    tc.map(e=>'<li><span class="brcalt">'+e.time+'</span><span>'+esc(e.title)+'</span></li>').join('');
+  el('bCAL').innerHTML=tc.length===0?'<div style="color:#aaa;font-size:10px;padding:8px 0">No events today</div>':
+    tc.map(e=>`<div class="br-cal-row">
+      <span class="br-cal-time">${e.time}</span>
+      <div class="br-cal-dot" style="background:${e.calColor||'#4a7ab8'}"></div>
+      <span class="br-cal-title">${esc(e.title)}</span>
+      <span class="br-cal-cal">${esc(e.calName||'')}</span>
+    </div>`).join('');
+
+  // Deadlines
+  const td0=new Date(); td0.setHours(0,0,0,0);
+  const dls=tasks.filter(t=>t.dd).sort((a,b)=>new Date(a.dd)-new Date(b.dd)).slice(0,6);
+  el('bDL').innerHTML=dls.length===0?'<div style="color:#aaa;font-size:10px;padding:8px 0">No deadlines</div>':
+    dls.map(t=>{const diff=Math.ceil((new Date(t.dd)-td0)/86400000);
+      const cls=diff<=0?'background:#e05050;color:#fff':diff<=2?'background:#c49030;color:#fff':'background:#eee;color:#555';
+      return`<div class="br-dl-row">
+        <span class="br-dl-when" style="${cls}">${diff<=0?'TODAY':diff===1?'TMW':fd(t.dd)}</span>
+        <span style="flex:1;font-size:10px;font-weight:600">${esc(t.title)}</span>
+      </div>`;
+    }).join('');
+
+  // FIRE snapshot
+  if(fire){
+    el('bf1').textContent=f$(fire._trueNeed||fire.need);
+    el('bf2').textContent=f$(fire.inc);
+    const gapEl=el('bf3');
+    gapEl.textContent=(gn?'-':'')+f$(gap);
+    gapEl.className='br-fire-val '+(gn?'r':'g');
+    el('bf4').textContent=f$(fire.hf);
+    el('bf5').textContent=fire.heloc?f$(fire.heloc):'—';
+    el('bf6').textContent=(fire.fire_pct||0)+'%';
+    el('bf6').className='br-fire-val '+((fire.fire_pct||0)>=100?'g':(fire.fire_pct||0)>=70?'a':'r');
+  }
+
+  // Key metrics
+  el('bm1').textContent=ht.length; el('bm1').className='br-metric-val'+(ht.length>0?' r':'');
+  el('bm2').textContent=oa.length; el('bm2').className='br-metric-val'+(oa.length>0?' a':'');
+  el('bm3').textContent=ot.length; el('bm3').className='br-metric-val'+(ot.length>0?' r':'');
+  if(gap!==null){el('bm4').textContent=(gn?'-':'')+f$(gap)+'/mo';el('bm4').className='br-metric-val'+(gn?' r':' g');}
+
+  // Update sync time in footer
+  const g2=el('bgen2'); if(g2) g2.textContent=S.lastSync?new Date(S.lastSync).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'Not synced';
 }
+
 function rBrief(){renderBrief();}
 
 // ── MODALS ───────────────────────────────────────────────────

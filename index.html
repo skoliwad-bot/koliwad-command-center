@@ -1306,8 +1306,11 @@ function launch(){
         S.tz       = JSON.parse(localStorage.getItem('kcc_tz')||'null');
         S.lastSync = localStorage.getItem('kcc_sync')||null;
         S.manbills = JSON.parse(localStorage.getItem('kcc_manbills')||'[]');
+        S.fins     = JSON.parse(localStorage.getItem('kcc_fins')||'null');
         renderAll();
         autoAlerts();
+        // If user is on financials page, re-render it with fresh data
+        if(S.page==='financials') rFin();
         // Re-apply paid checkboxes after Firebase loads (overwrites localStorage)
         setTimeout(()=>{ tkUpdateCards(); }, 100);
       }
@@ -3766,7 +3769,7 @@ function renderPaymentPlans() {
   const upEl = document.getElementById('upcoming-payments');
   const upTot = document.getElementById('upcoming-pay-total');
   const upcoming = [];
-  const in30 = new Date(now); in30.setDate(now.getDate()+30);
+  const in30 = new Date(now); in30.setDate(now.getDate()+15);
 
   // From payment plans
   plans.forEach(p => {

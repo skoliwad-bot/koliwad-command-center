@@ -2869,7 +2869,7 @@ function tkUpdateCards() {
     h += '<div><span style="font-size:9px;font-weight:700;padding:1px 8px;background:rgba(90,138,204,0.15);color:var(--blu);margin-right:8px">LOC</span>';
     h += '<span style="font-weight:600;color:var(--txt)">Amex Business LOC</span>';
     h += '<span style="font-size:9px;color:var(--mut2);margin-left:8px">limit: $'+Math.round(locLim).toLocaleString()+'</span></div>';
-    h += '<span style="font-weight:700;color:'+(loc>0?'var(--red)':'var(--grn)')+'">'+( loc>0?f$(loc):'$0 available')+'</span></div>';
+    h += '<span style="font-weight:700;color:'+(loc>0?'var(--red)':'var(--grn)')+'">'+( loc>0?f$(loc):'$0 balance')+'</span></div>';
   }
 
   h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-top:1px solid var(--brd);background:rgba(196,144,48,0.06)">';

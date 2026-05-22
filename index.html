@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+<!DOC
+
+        TYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -425,9 +427,7 @@ localStorage.setItem = function(key, value) {
       <div class="ni"    id="n-firelab"    onclick="openFireLab()">   <span class="ico">🔬</span><span class="nlbl">FIRE Lab</span></div>
       <div class="ndiv"></div>
       <span class="nslbl">Business</span>
-      <div class="ni"    id="n-tickets"  onclick="nav('tickets')"> <span class="ico">🎟</span><span class="nlbl">Tickets</span>  <span class="nbadge r" id="nb-tk">0</span></div>
-      <div class="ni"    id="n-playbook"   onclick="nav('playbook')">  <span class="ico">📋</span><span class="nlbl">Playbook</span></div>
-            <div class="ni"    id="n-business"   onclick="nav('business')">  <span class="ico">🏢</span><span class="nlbl">Business</span></div>
+      <div class="ni"    id="n-tickets"  onclick="nav('tickets')"> <span class="ico">🎟</span><span class="nlbl">Tickets</span>  <span class="nbadge r" id="nb-tk">0</span></div> <div class="ni"    id="n-business"   onclick="nav('business')">  <span class="ico">🏢</span><span class="nlbl">Business</span></div>
       <div class="ni"    id="n-exec"       onclick="nav('exec')">      <span class="ico">📊</span><span class="nlbl">Exec Summary</span></div>
       <div class="ndiv"></div>
       <span class="nslbl">Investments</span>
@@ -460,7 +460,7 @@ localStorage.setItem = function(key, value) {
         </div>
         <div class="g3">
           <div class="card"><div class="ch"><span class="ct m">📅 Today's Schedule</span></div><div id="t-cal"><div class="empty">↻ Sync</div></div></div>
-          <div class="card"><div class="ch"><span class="ct m">📋 Deadlines</span></div><div id="t-dl"><div class="empty">↻ Sync</div></div></div>
+          
           <div class="card"><div class="ch"><span class="ct o">🎟 Sell Zone</span></div><div id="t-tk"><div class="empty" style="color:var(--grn)">✅ None needed</div></div></div>
         </div>
         <!-- URGENT EMAILS -->
@@ -470,12 +470,7 @@ localStorage.setItem = function(key, value) {
             <span id="inbox-count-lbl" style="font-size:9px;color:#6a886a;"></span>
           </div>
           <div id="t-emails"><div class="empty">↻ Sync to load urgent emails</div></div>
-        </div>
 
-        <div class="card" style="margin-bottom:12px"><div class="ch"><span class="ct b">🎯 FIRE Snapshot</span><div style="display:flex;gap:8px;align-items:center"><span onclick="nav('fire')" style="font-size:9px;color:var(--mut);cursor:pointer">Details →</span><button onclick="window.open('fire-lab.html','_blank')" style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border:1px solid var(--pur);background:transparent;color:var(--pur);cursor:pointer;">🔬 FIRE Lab</button></div></div><div id="t-fire"><div class="empty">Go to FIRE page to enter numbers →</div></div></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="om('task')">+ Task</button><button class="btn" onclick="om('alert')">+ Alert</button><button class="btn" onclick="om('ticket')">+ Ticket</button></div>
-
-        <!-- TOMORROW -->
         <!-- PLAYBOOK TODAY -->
         <div style="border:1px solid var(--brd);background:var(--surf);margin-top:16px;">
           <div class="ch" style="background:#080a08;display:flex;align-items:center;justify-content:space-between;">
@@ -484,6 +479,13 @@ localStorage.setItem = function(key, value) {
           </div>
           <div id="t-playbook" style="padding:6px 14px;"><div class="empty">Loading...</div></div>
         </div>
+        </div>
+
+        <div class="card" style="margin-bottom:12px"><div class="ch"><span class="ct b">🎯 FIRE Snapshot</span><div style="display:flex;gap:8px;align-items:center"><span onclick="nav('fire')" style="font-size:9px;color:var(--mut);cursor:pointer">Details →</span><button onclick="window.open('fire-lab.html','_blank')" style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border:1px solid var(--pur);background:transparent;color:var(--pur);cursor:pointer;">🔬 FIRE Lab</button></div></div><div id="t-fire"><div class="empty">Go to FIRE page to enter numbers →</div></div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="om('task')">+ Task</button><button class="btn" onclick="om('alert')">+ Alert</button><button class="btn" onclick="om('ticket')">+ Ticket</button></div>
+
+        <!-- TOMORROW -->
+        
 
         <div style="margin-top:16px;border:1px solid var(--brd2);background:var(--surf2);">
           <div class="ch" style="background:#0f110f;">

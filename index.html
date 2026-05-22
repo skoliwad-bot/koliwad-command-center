@@ -1779,6 +1779,11 @@ function resTk(id){const t=S.tickets.find(x=>x.id===id);if(t){t.status='Resolved
 function rFin(){
   const f=S.fins;
   if(f){
+    // Show fin-content, hide fin-empty
+    const fc = document.getElementById('fin-content');
+    const fe = document.getElementById('fin-empty');
+    if(fc) fc.style.display='block';
+    if(fe) fe.style.display='none';
     el('fa1').textContent=f$(f.chk);
     el('fa2').textContent=f.heloc?'-'+f$(f.heloc):'—';
     el('fa3').textContent=f$(f.knight);

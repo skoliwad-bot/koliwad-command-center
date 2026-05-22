@@ -592,19 +592,7 @@ localStorage.setItem = function(key, value) {
                   <span style="font-size:9px;color:var(--mut2)">after buffer + pending outflows</span>
                 </div>
                 <div>
-                  <span style="f
-        <!-- MANUAL BILLS & PAYMENTS -->
-        <div style="border:1px solid var(--brd);background:var(--surf);margin:16px 0 0 0;">
-          <div style="padding:9px 16px;border-bottom:1px solid var(--brd);background:#0f110f;display:flex;align-items:center;justify-content:space-between;">
-            <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--amb);">📋 Manual Bills & Payments</span>
-            <span id="manbills-total" style="font-size:11px;font-weight:700;color:var(--amb);">—</span>
-          </div>
-          <div id="manbills-upcoming"></div>
-          <div id="manbills-list"></div>
-          <div style="padding:8px 12px;border-top:1px solid var(--brd);">
-            <button onclick="om('manbill')" class="btn" style="font-size:9px;width:100%;">+ Add Bill / Payment</button>
-          </div>
-ont-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block;">Sweep Savings → HELOC</span>
+                  <span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block;">Sweep Savings → HELOC</span>
                   <span id="vb-sav-sweep" style="font-size:32px;font-weight:700;color:var(--grn);display:block;margin-top:6px;">—</span>
                   <span style="font-size:9px;color:var(--mut2)">after bills + pending outflows</span>
                 </div>
@@ -1293,7 +1281,12 @@ function launch(){
   document.getElementById('shell').classList.add('on');
   setM('cmd');
   S.manbills = JSON.parse(localStorage.getItem('kcc_manbills')||'[]');
-  S.fins = JSON.parse(localStorage.getItem('kcc_fins')||'null');
+  S.fins     = JSON.parse(localStorage.getItem('kcc_fins')||'null');
+  S.tasks    = JSON.parse(localStorage.getItem('kcc_tasks')||'[]');
+  S.alerts   = JSON.parse(localStorage.getItem('kcc_alerts')||'[]');
+  S.fire     = JSON.parse(localStorage.getItem('kcc_fire')||'null');
+  S.fchk     = JSON.parse(localStorage.getItem('kcc_fchk')||'{}');
+  S.cal      = JSON.parse(localStorage.getItem('kcc_cal')||'[]');
   renderAll();
   loadGSI();
   // Try Firebase in background — never blocks launch
@@ -2166,7 +2159,7 @@ const MCFG={
   ],def:{},k:'kcc_tradelogs',arr:'tradelogs'},
   manbill:{title:'Add Manual Bill / Payment',fields:[
     {n:'name',   l:'Bill / Payment Name',     t:'text', req:true, ph:'e.g. Mortgage, Tuition, HOA'},
-    {n:'amount', l:'Amount ($)',               t:'num',  req:true},
+    {n:'amount', l:'Amount ($)',               t:'num'},
     {n:'freq',   l:'Frequency',               t:'sel',  o:['Monthly','Quarterly','Annual','One-time'], req:true},
     {n:'day',    l:'Due Day of Month',        t:'num',  ph:'e.g. 15 (leave blank for one-time)'},
     {n:'dueDate',l:'Due Date (one-time)',     t:'text', ph:'e.g. Aug 15 2026'},

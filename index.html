@@ -2483,11 +2483,11 @@ function importVBExcel(evt) {
         }
         ccData.obligations = [];
         if(dangRow && typeof dangRow[2]==='number' && dangRow[2]>0) {
-          ccData.obligations.push({payee:dangRow[0]||'Randy Dang',amount:dangRow[1],priority:dangRow[2]||'1 — FIRST'});
+          ccData.obligations.push({payee:dangRow[1]||'Randy Dang',amount:dangRow[2],priority:dangRow[3]||'1 — FIRST'});
         }
         ccData.totalCC  = ccData.cards.reduce((s,c)=>s+c.bal,0);
         ccData.totalMin = ccData.cards.reduce((s,c)=>s+c.minDue,0);
-        ccData.dangOwed = dangRow ? (dangRow[1]||0) : 0;
+        ccData.dangOwed = dangRow ? (dangRow[2]||0) : 0;
       }
 
       // ── SYNC CC DATA TO TICKETS PAGE ──
@@ -2496,7 +2496,8 @@ function importVBExcel(evt) {
         const c = ccData.cards;
         // Store cards array directly - same format tkUpdateCards reads
         const merged = {
-          cards: c,  // full cards array with bal, minDue, dueDay per card
+          cards: c,
+          wfChecking: ccData.wfChecking||0,
           amexLocBal: ccData.amexLocBal||0,
           amexLocLim: ccData.amexLocLim||0,
           dangOwed: ccData.dangOwed||0,
@@ -2804,6 +2805,7 @@ function tkUpdateCards() {
   const paid = (d.paid && d.paid.month===thisMonth) ? d.paid : {};
 
   const cardKeys = ['c1','c2','c3','c4','c5'];
+  const wf = d.wfChecking||0;
   const totalBal = c.reduce((s,card)=>s+(card.bal||0),0);
   const totalMin = c.reduce((s,card)=>s+(card.minDue||0),0);
 
@@ -2837,6 +2839,19 @@ function tkUpdateCards() {
   h += '<td style="padding:8px 12px;text-align:right;font-weight:700;color:var(--amb)">'+(totalMin>0?f$(totalMin):'—')+'</td>';
   h += '</tr></tbody></table>';
 
+  // WF Checking balance
+  if(wf>0) {
+    h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-top:1px solid var(--brd);background:rgba(74,122,184,0.06)">';
+    h += '<div><span style="font-size:9px;font-weight:700;padding:1px 8px;background:rgba(74,122,184,0.2);color:var(--blu);margin-right:8px">CHECKING</span>';
+    h += '<span style="font-weight:600;color:var(--txt)">WF Checking</span></div>';
+    h += '<span style="font-size:15px;font-weight:700;color:var(--grn)">+'+f$(wf)+'</span></div>';
+  }
+  // Amex LOC
+  // WF Checking balance (always show - key for AI distribution recommendation)
+  h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-top:1px solid var(--brd);background:rgba(74,122,184,0.06)">';
+  h += '<div><span style="font-size:9px;font-weight:700;padding:1px 8px;background:rgba(74,122,184,0.2);color:var(--blu);margin-right:8px">CHECKING</span>';
+  h += '<span style="font-weight:600;color:var(--txt)">WF Checking</span></div>';
+  h += '<span style="font-size:15px;font-weight:700;color:'+(wf>0?'var(--grn)':'var(--mut)')+'">'+(wf>0?'+'+f$(wf):'$0')+'</span></div>';
   if(loc>0) {
     h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-top:1px solid var(--brd)">';
     h += '<span style="font-weight:600;color:var(--txt)">Amex Business LOC</span>';

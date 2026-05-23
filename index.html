@@ -458,22 +458,15 @@ localStorage.setItem = function(key, value) {
           <div class="card"><div class="ch"><span class="ct r">🔥 Must Do Today</span><span style="font-size:8px;color:var(--mut)">MoSCoW ranked</span></div><div id="t-mit"><div class="empty">↻ Sync to load</div></div></div>
           <div class="card"><div class="ch"><span class="ct a">🚨 Critical Alerts</span><button class="btn" onclick="om('alert')">+ Add</button></div><div id="t-alerts"><div class="empty" style="color:var(--grn)">✅ No alerts</div></div></div>
         </div>
-        <div class="g3">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
           <div class="card"><div class="ch"><span class="ct m">📅 Today's Schedule</span></div><div id="t-cal"><div class="empty">↻ Sync</div></div></div>
-
-        
-          
-          
-
+          <div style="border:1px solid var(--brd);background:var(--surf);">
+            <div class="ch" style="background:#080a08;display:flex;align-items:center;justify-content:space-between;">
+              <span class="ct" style="color:var(--grn)">📋 Playbook</span>
+              <button onclick="nav('playbook')" style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:none;border:1px solid var(--brd);color:var(--mut);padding:3px 8px;cursor:pointer;">View All</button>
+            </div>
+            <div id="t-playbook" style="padding:6px 14px;"><div class="empty">Loading...</div></div>
           </div>
-
-        <!-- PLAYBOOK TODAY -->
-        <div style="border:1px solid var(--brd);background:var(--surf);margin-top:16px;">
-          <div class="ch" style="background:#080a08;display:flex;align-items:center;justify-content:space-between;">
-            <span class="ct" style="color:var(--grn)">📋 Playbook</span>
-            <button onclick="nav('playbook')" style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:none;border:1px solid var(--brd);color:var(--mut);padding:3px 8px;cursor:pointer;">View All</button>
-          </div>
-          <div id="t-playbook" style="padding:6px 14px;"><div class="empty">Loading...</div></div>
         </div>
         <!-- URGENT EMAILS -->
         <div class="card" style="margin-bottom:12px" id="emails-card">

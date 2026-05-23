@@ -1718,12 +1718,12 @@ function rToday(){
   // Deadlines
   const td0=new Date(); td0.setHours(0,0,0,0);
   const dls=tasks.filter(t=>t.dd&&t.m!=='Must').sort((a,b)=>new Date(a.dd)-new Date(b.dd)).slice(0,5);
-  el('t-dl').innerHTML=dls.length===0?'<div class="empty">No upcoming deadlines</div>':
+  if(el('t-dl')) el('t-dl').innerHTML=dls.length===0?'<div class="empty">No upcoming deadlines</div>':
     dls.map(t=>{const diff=Math.ceil((new Date(t.dd)-td0)/86400000);
       return'<div class="row"><span class="b '+(diff<=0?'bt':diff<=1?'bw':'bl')+'">'+(diff<=0?'TODAY':diff===1?'TMW':fd(t.dd))+'</span><span class="rtl">'+esc(t.title)+'</span></div>';
     }).join('');
   // Tickets
-  el('t-tk').innerHTML=ot.length===0?'<div class="empty" style="color:var(--grn)">✅ No actions needed</div>':
+  if(el('t-tk')) el('t-tk').innerHTML=ot.length===0?'<div class="empty" style="color:var(--grn)">✅ No actions needed</div>':
     ot.slice(0,4).map(t=>{
       const[bc,bl]=t.da<=2?['bsl','SELL NOW']:t.da<=5?['blo','LOWER']:['bho','HOLD'];
       return'<div class="row"><div style="flex:1;min-width:0"><div class="rtl">'+esc(t.event_name||t.title||'')+'</div></div><span class="b '+bc+'">'+bl+'</span></div>';
@@ -3189,7 +3189,11 @@ async function importAllExcel(evt) {
             sdi_months:iv['SDI duration (months)']||0,
             heloc_rate:(iv['HELOC interest rate (annual)']||0.065)*100,
           }));
-          status.push('🔥 ' + file.name + ' → FIRE Lab');
+          // Trigger re-render
+          S.fire = fireData;
+          renderAll();
+          if(S.page==='fire') rFire();
+          status.push('🔥 ' + file.name + ' → FIRE Lab ✓');
         }
       } else if(sheets.includes('Dashboard') || sheets.includes('Monthly Budget') || sheets.includes('Citi Pending')) {
         // VB Dashboard

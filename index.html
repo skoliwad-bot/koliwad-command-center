@@ -3999,9 +3999,9 @@ function autoAlerts() {
     }
 
     // HF balance dropping (below $130K)
-    if(fire.hf && fire.hf < 130000) {
+    if(fire.hf && fire.hf < 75000) {
       upsert('fire_hf_low', {
-        title: 'HF balance below $130K — drawdown accelerating',
+        title: 'HF balance below $75K — drawdown accelerating',
         type:'FIRE', sev:'High',
         action:'Reduce monthly draws. Prioritize getting income streams online before HF depletes further.'
       });
@@ -4150,8 +4150,14 @@ function autoAlerts() {
       } else if(diff <= 3) {
         upsert('cc_due_'+cd.key, {
           title: cd.name+' due in '+diff+' day'+(diff===1?'':'s')+' — $'+Math.round(min).toLocaleString()+' min due',
+          type:'Credit Cards', sev:'High',
+          action:'Pay now. Balance: $'+Math.round(bal).toLocaleString()+'. Recurring due date: '+dayNum+' of each month.'
+        });
+      } else if(diff <= 5) {
+        upsert('cc_due_'+cd.key, {
+          title: cd.name+' due in '+diff+' days — $'+Math.round(min).toLocaleString()+' min due',
           type:'Credit Cards', sev:'Medium',
-          action:'Schedule payment now. Balance: $'+Math.round(bal).toLocaleString()+'. Recurring due date: '+dayNum+' of each month.'
+          action:'Schedule payment. Balance: $'+Math.round(bal).toLocaleString()+'. Recurring due date: '+dayNum+' of each month.'
         });
       } else {
         clear('cc_due_'+cd.key);

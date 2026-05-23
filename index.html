@@ -460,7 +460,18 @@ localStorage.setItem = function(key, value) {
         </div>
         <div class="g3">
           <div class="card"><div class="ch"><span class="ct m">📅 Today's Schedule</span></div><div id="t-cal"><div class="empty">↻ Sync</div></div></div>
+
+        
           
+          <!-- PLAYBOOK TODAY -->
+        <div style="border:1px solid var(--brd);background:var(--surf);margin-top:16px;">
+          <div class="ch" style="background:#080a08;display:flex;align-items:center;justify-content:space-between;">
+            <span class="ct" style="color:var(--grn)">📋 Playbook</span>
+            <button onclick="nav('playbook')" style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:none;border:1px solid var(--brd);color:var(--mut);padding:3px 8px;cursor:pointer;">View All</button>
+          </div>
+          <div id="t-playbook" style="padding:6px 14px;"><div class="empty">Loading...</div></div>
+        </div>
+
           <div class="card"><div class="ch"><span class="ct o">🎟 Sell Zone</span></div><div id="t-tk"><div class="empty" style="color:var(--grn)">✅ None needed</div></div></div>
         </div>
         <!-- URGENT EMAILS -->
@@ -471,14 +482,7 @@ localStorage.setItem = function(key, value) {
           </div>
           <div id="t-emails"><div class="empty">↻ Sync to load urgent emails</div></div>
 
-        <!-- PLAYBOOK TODAY -->
-        <div style="border:1px solid var(--brd);background:var(--surf);margin-top:16px;">
-          <div class="ch" style="background:#080a08;display:flex;align-items:center;justify-content:space-between;">
-            <span class="ct" style="color:var(--grn)">📋 Playbook</span>
-            <button onclick="nav('playbook')" style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:none;border:1px solid var(--brd);color:var(--mut);padding:3px 8px;cursor:pointer;">View All</button>
-          </div>
-          <div id="t-playbook" style="padding:6px 14px;"><div class="empty">Loading...</div></div>
-        </div>
+        
         </div>
 
         <div class="card" style="margin-bottom:12px"><div class="ch"><span class="ct b">🎯 FIRE Snapshot</span><div style="display:flex;gap:8px;align-items:center"><span onclick="nav('fire')" style="font-size:9px;color:var(--mut);cursor:pointer">Details →</span><button onclick="window.open('fire-lab.html','_blank')" style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border:1px solid var(--pur);background:transparent;color:var(--pur);cursor:pointer;">🔬 FIRE Lab</button></div></div><div id="t-fire"><div class="empty">Go to FIRE page to enter numbers →</div></div></div>
@@ -922,6 +926,7 @@ localStorage.setItem = function(key, value) {
         </div>
         <div class="g2">
           <div class="card"><div class="ch"><span class="ct g">Wins This Month</span></div><div style="padding:14px 16px;font-size:12px;color:var(--mut);font-style:italic">Track wins by adding completed tasks and resolved alerts</div></div>
+          
           <div class="card"><div class="ch"><span class="ct a">Focus Next Month</span></div><div style="padding:14px 16px;font-size:12px;color:var(--mut);font-style:italic">Set focus by adding High-priority tasks for next month</div></div>
         </div>
       </div>
@@ -1643,6 +1648,39 @@ function nbadge(id,v){
 }
 
 // ── TODAY ────────────────────────────────────────────────────
+// ══ PLAYBOOK ══════════════════════════════════════════════════
+
+const PLAYBOOK = {
+  daily: [
+    { id:'pb_d1', label:'Check Alerts & Today page', detail:'Review open alerts, must tasks, and schedule', icon:'🚨' },
+    { id:'pb_d2', label:'Check ticket listings', detail:'Verify active listings are live and priced correctly', icon:'🎟' },
+    { id:'pb_d3', label:'Google Sync', detail:'Tap ↻ Sync to pull latest tasks, calendar, and email', icon:'🔄' },
+    { id:'pb_d4', label:'Review Tomorrow section', detail:'Scroll to bottom of Today — plan ahead for tomorrow', icon:'📅' },
+  ],
+  weekly: [
+    { id:'pb_w1', label:'Import VB Spreadsheet', detail:'Update balances → Import Excel → refreshes all financials', icon:'📊' },
+    { id:'pb_w2', label:'Run AI Ticket Analysis', detail:'Tickets page → ✦ AI Analysis — get distribution recommendation', icon:'🤖' },
+    { id:'pb_w3', label:'Review FIRE Path tasks', detail:'Check critical tasks, mark completed, update FIRE metrics', icon:'🔥' },
+    { id:'pb_w4', label:'Velocity banking sweep', detail:'Check sweep amount on Financials → execute Citi→Savings→HELOC', icon:'💰' },
+    { id:'pb_w5', label:'Review ticket P&L', detail:'Check Profit MTD/YTD — adjust pricing on stale listings', icon:'📈' },
+  ],
+  monthly: [
+    { id:'pb_m1', label:'Update spreadsheet balances', detail:'Enter new CC balances, checking, savings into VB spreadsheet', icon:'📝' },
+    { id:'pb_m2', label:'Reset CC Paid checkboxes', detail:'Auto-resets on 1st — verify all cards are unchecked', icon:'✅' },
+    { id:'pb_m3', label:'Run AI Exec Summary', detail:'Exec Summary page → ✦ Generate with AI — monthly review', icon:'📋' },
+    { id:'pb_m4', label:'Run AI Money Move', detail:'Financials page → ✦ AI Money Move — velocity banking plan', icon:'🏦' },
+    { id:'pb_m5', label:'Pay manual bills', detail:'Review Manual Bills section on Financials — check off paid', icon:'💳' },
+    { id:'pb_m6', label:'Review payment plans', detail:'Check upcoming season ticket payments on Tickets page', icon:'🎫' },
+  ],
+  ondemand: [
+    { id:'pb_o1', label:'Add ticket event', detail:'Tickets → + Add when you acquire new inventory', icon:'➕' },
+    { id:'pb_o2', label:'Add payment plan', detail:'Tickets → + Add Payment Plan for new season ticket contracts', icon:'📆' },
+    { id:'pb_o3', label:'Add manual bill', detail:'Financials → + Add Bill / Payment for new recurring obligations', icon:'🧾' },
+    { id:'pb_o4', label:'Update FIRE actuals', detail:'FIRE Lab → Actuals tab — record real income/expenses monthly', icon:'📉' },
+    { id:'pb_o5', label:'Add task or alert', detail:'Use + Add buttons to capture anything outside normal cadence', icon:'🔔' },
+  ]
+};
+
 function rToday(){
   const tasks=S.tasks||[],alerts=S.alerts||[],tickets=S.tickets||[],cal=S.cal||[],fire=S.fire;
   const oa=alerts.filter(a=>a.status==='Open');
@@ -4074,39 +4112,6 @@ function delManBill(idx) {
   renderManBills();
 }
 
-
-// ══ PLAYBOOK ══════════════════════════════════════════════════
-
-const PLAYBOOK = {
-  daily: [
-    { id:'pb_d1', label:'Check Alerts & Today page', detail:'Review open alerts, must tasks, and schedule', icon:'🚨' },
-    { id:'pb_d2', label:'Check ticket listings', detail:'Verify active listings are live and priced correctly', icon:'🎟' },
-    { id:'pb_d3', label:'Google Sync', detail:'Tap ↻ Sync to pull latest tasks, calendar, and email', icon:'🔄' },
-    { id:'pb_d4', label:'Review Tomorrow section', detail:'Scroll to bottom of Today — plan ahead for tomorrow', icon:'📅' },
-  ],
-  weekly: [
-    { id:'pb_w1', label:'Import VB Spreadsheet', detail:'Update balances → Import Excel → refreshes all financials', icon:'📊' },
-    { id:'pb_w2', label:'Run AI Ticket Analysis', detail:'Tickets page → ✦ AI Analysis — get distribution recommendation', icon:'🤖' },
-    { id:'pb_w3', label:'Review FIRE Path tasks', detail:'Check critical tasks, mark completed, update FIRE metrics', icon:'🔥' },
-    { id:'pb_w4', label:'Velocity banking sweep', detail:'Check sweep amount on Financials → execute Citi→Savings→HELOC', icon:'💰' },
-    { id:'pb_w5', label:'Review ticket P&L', detail:'Check Profit MTD/YTD — adjust pricing on stale listings', icon:'📈' },
-  ],
-  monthly: [
-    { id:'pb_m1', label:'Update spreadsheet balances', detail:'Enter new CC balances, checking, savings into VB spreadsheet', icon:'📝' },
-    { id:'pb_m2', label:'Reset CC Paid checkboxes', detail:'Auto-resets on 1st — verify all cards are unchecked', icon:'✅' },
-    { id:'pb_m3', label:'Run AI Exec Summary', detail:'Exec Summary page → ✦ Generate with AI — monthly review', icon:'📋' },
-    { id:'pb_m4', label:'Run AI Money Move', detail:'Financials page → ✦ AI Money Move — velocity banking plan', icon:'🏦' },
-    { id:'pb_m5', label:'Pay manual bills', detail:'Review Manual Bills section on Financials — check off paid', icon:'💳' },
-    { id:'pb_m6', label:'Review payment plans', detail:'Check upcoming season ticket payments on Tickets page', icon:'🎫' },
-  ],
-  ondemand: [
-    { id:'pb_o1', label:'Add ticket event', detail:'Tickets → + Add when you acquire new inventory', icon:'➕' },
-    { id:'pb_o2', label:'Add payment plan', detail:'Tickets → + Add Payment Plan for new season ticket contracts', icon:'📆' },
-    { id:'pb_o3', label:'Add manual bill', detail:'Financials → + Add Bill / Payment for new recurring obligations', icon:'🧾' },
-    { id:'pb_o4', label:'Update FIRE actuals', detail:'FIRE Lab → Actuals tab — record real income/expenses monthly', icon:'📉' },
-    { id:'pb_o5', label:'Add task or alert', detail:'Use + Add buttons to capture anything outside normal cadence', icon:'🔔' },
-  ]
-};
 
 function renderPlaybook() {
   const now = new Date();

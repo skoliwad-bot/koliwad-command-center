@@ -424,7 +424,7 @@ localStorage.setItem = function(key, value) {
       <span class="nslbl">Money</span>
       <div class="ni"    id="n-financials" onclick="nav('financials')"><span class="ico">💰</span><span class="nlbl">Financials</span></div>
       <div class="ni"    id="n-fire"       onclick="nav('fire')">      <span class="ico">🎯</span><span class="nlbl">FIRE Path</span></div>
-      <div class="ni"    id="n-firelab"    onclick="openFireLab()">   <span class="ico">🔬</span><span class="nlbl">FIRE Lab</span></div>
+      <div class="ni"    id="n-firelab"    onclick="nav('firelab')">   <span class="ico">🔬</span><span class="nlbl">FIRE Lab</span></div>
       <div class="ndiv"></div>
       <span class="nslbl">Business</span>
       <div class="ni"    id="n-tickets"  onclick="nav('tickets')"> <span class="ico">🎟</span><span class="nlbl">Tickets</span>  <span class="nbadge r" id="nb-tk">0</span></div> <div class="ni"    id="n-business"   onclick="nav('business')">  <span class="ico">🏢</span><span class="nlbl">Business</span></div>
@@ -479,7 +479,7 @@ localStorage.setItem = function(key, value) {
         
         </div>
 
-        <div class="card" style="margin-bottom:12px"><div class="ch"><span class="ct b">🎯 FIRE Snapshot</span><div style="display:flex;gap:8px;align-items:center"><span onclick="nav('fire')" style="font-size:9px;color:var(--mut);cursor:pointer">Details →</span><button onclick="window.open('fire-lab.html','_blank')" style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border:1px solid var(--pur);background:transparent;color:var(--pur);cursor:pointer;">🔬 FIRE Lab</button></div></div><div id="t-fire"><div class="empty">Go to FIRE page to enter numbers →</div></div></div>
+        <div class="card" style="margin-bottom:12px"><div class="ch"><span class="ct b">🎯 FIRE Snapshot</span><div style="display:flex;gap:8px;align-items:center"><span onclick="nav('fire')" style="font-size:9px;color:var(--mut);cursor:pointer">Details →</span><button onclick="nav('firelab')" style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border:1px solid var(--pur);background:transparent;color:var(--pur);cursor:pointer;">🔬 FIRE Lab</button></div></div><div id="t-fire"><div class="empty">Go to FIRE page to enter numbers →</div></div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="om('task')">+ Task</button><button class="btn" onclick="om('alert')">+ Alert</button><button class="btn" onclick="om('ticket')">+ Ticket</button></div>
 
         <!-- TOMORROW -->
@@ -728,7 +728,7 @@ localStorage.setItem = function(key, value) {
         <div class="ph"><div><div class="pt">FIRE Path</div><div class="ps">Financial Independence — import in 🔬 FIRE Lab to sync data</div></div>
           <div style="display:flex;gap:6px">
   <button class="aibtn" onclick="runAI('firepath')">✦ AI Insights</button>
-  <button class="btn" onclick="window.open('fire-lab.html','_blank')" style="border-color:#7a5cb8;color:#7a5cb8">🔬 FIRE Lab ↗</button>
+  <button class="btn" onclick="nav('firelab')" style="border-color:#7a5cb8;color:#7a5cb8">🔬 FIRE Lab ↗</button>
   <button class="btn p" onclick="om('fire')">Update Metrics</button>
 </div></div>
         <div class="ai-block" id="ai-firepath">
@@ -925,7 +925,765 @@ localStorage.setItem = function(key, value) {
         </div>
       </div>
 
-    
+
+      <!-- FIRE LAB -->
+      <div class="page" id="p-firelab">
+        <div class="ph">
+          <div><div class="pt">FIRE Lab</div><div class="ps" id="fl-import-status">Upload your FIRE Lab spreadsheet to populate</div></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <label style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border:1px solid #7a5cb8;color:#9a7cd8;cursor:pointer;">
+              ⬆ Import FIRE Lab Excel
+              <input type="file" accept=".xlsx" onchange="flImport(event)" style="display:none">
+            </label>
+          </div>
+        </div>
+        <div id="fl-body">
+
+
+<!-- TOP BAR -->
+
+
+<!-- IMPORT BAR -->
+<div class="import-bar">
+  <label>
+    ⬆ Import Excel
+    <input type="file" accept=".xlsx,.xls" onchange="flImport(event)" style="display:none">
+  </label>
+  <span class="scenario-badge" id="active-scenario">No data imported</span>
+  <span class="last-import" id="last-import"></span>
+  <span class="import-status" id="import-status">Upload your FIRE_Lab spreadsheet to populate all tabs</span>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab on" onclick="setTab('dashboard',this)">Dashboard</button>
+  <button class="tab" onclick="setTab('timeline',this)">Timeline</button>
+  <button class="tab" onclick="setTab('actuals',this)">Actuals</button>
+  <button class="tab" onclick="setTab('scenarios',this)">Scenarios</button>
+  <button class="tab" onclick="setTab('ai',this)">✦ AI Analysis</button>
+</div>
+
+<!-- DASHBOARD TAB -->
+<div id="tab-dashboard" class="wrap">
+  <div id="dash-empty" class="empty-state">
+    <div class="icon">📊</div>
+    <h2>No Data Yet</h2>
+    <p>Import your FIRE Lab Excel spreadsheet to see your Dashboard, Timeline, Actuals, and get AI analysis of your financial independence trajectory.</p>
+    <label>⬆ Import Excel Spreadsheet<input type="file" accept=".xlsx,.xls" onchange="importExcel(event)" style="display:none"></label>
+  </div>
+  <div id="dash-content" style="display:none">
+    <!-- Status pills -->
+    <div class="g4" id="dash-pills"></div>
+    <!-- Key dates -->
+    <div style="margin-bottom:16px">
+      <div class="ch" style="margin-bottom:0;border:1px solid var(--brd);border-bottom:none;"><span class="ct ct-b">📅 Key Dates & Milestones</span></div>
+      <div class="dates-grid" id="dash-dates"></div>
+    </div>
+    <!-- Income breakdown -->
+    <div class="g2">
+      <div class="card">
+        <div class="ch"><span class="ct ct-g">Income at End State (Month 120)</span></div>
+        <div id="dash-income"></div>
+      </div>
+      <div class="card">
+        <div class="ch"><span class="ct ct-a">Monthly Expenses (Month 1)</span></div>
+        <div id="dash-expenses"></div>
+      </div>
+    </div>
+    <!-- Real estate -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="ch"><span class="ct ct-m">🏠 Real Estate Projection (Month 120)</span></div>
+      <div id="dash-realestate" style="display:grid;grid-template-columns:repeat(4,1fr);"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TIMELINE TAB -->
+<div id="tab-timeline" class="wrap" style="display:none">
+  <div id="timeline-empty" class="empty-state">
+    <div class="icon">📈</div>
+    <h2>No Timeline Data</h2>
+    <p>Import your spreadsheet to see the 120-month projection.</p>
+    <label>⬆ Import Excel<input type="file" accept=".xlsx,.xls" onchange="importExcel(event)" style="display:none"></label>
+  </div>
+  <div id="timeline-content" style="display:none">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+      <div style="display:flex;gap:10px;font-size:9px;color:var(--mut);">
+        <span style="color:#4a9c5c">● Today's row</span>
+        <span style="color:#4a7ab8">● FIRE month</span>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:6px;">
+        <button onclick="setTimelineView('all')" id="tv-all" style="font-size:9px;padding:4px 10px;border:1px solid var(--brd2);background:var(--red);color:#fff;cursor:pointer;">All 120</button>
+        <button onclick="setTimelineView('24')" id="tv-24" style="font-size:9px;padding:4px 10px;border:1px solid var(--brd2);background:transparent;color:var(--mut);cursor:pointer;">First 24</button>
+        <button onclick="setTimelineView('fire')" id="tv-fire" style="font-size:9px;padding:4px 10px;border:1px solid var(--brd2);background:transparent;color:var(--mut);cursor:pointer;">Around FIRE</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="text-align:left">Mo</th><th style="text-align:left">Date</th>
+            <th>W2</th><th>PTO</th><th>SDI</th><th>Business</th><th>Rent</th><th>Gift</th><th>Total In</th>
+            <th>Spend</th><th>VMort</th><th>PMort</th><th>HELOC Int</th><th>Total Out</th>
+            <th>Cash Flow</th><th>HELOC</th><th>HF</th><th>TIAA</th><th>Net Worth</th><th>FIRE%</th>
+          </tr>
+        </thead>
+        <tbody id="timeline-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ACTUALS TAB -->
+<div id="tab-actuals" class="wrap" style="display:none">
+  <div id="actuals-empty" class="empty-state">
+    <div class="icon">✅</div>
+    <h2>No Actuals Yet</h2>
+    <p>Enter your real HF balance each month in column C of the Actuals sheet in your Excel file, then import to track actual vs projected performance.</p>
+    <label>⬆ Import Excel<input type="file" accept=".xlsx,.xls" onchange="importExcel(event)" style="display:none"></label>
+  </div>
+  <div id="actuals-content" style="display:none">
+    <div class="g3" id="actuals-pills" style="margin-bottom:16px"></div>
+    <div class="card">
+      <div class="ch"><span class="ct ct-g">📊 Actual vs Projected — HF Balance</span><span id="actuals-count" style="font-size:9px;color:var(--mut)"></span></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="text-align:left">Month</th><th style="text-align:left">Date</th>
+            <th>Actual HF</th><th>Projected HF</th><th>Variance $</th><th>Variance %</th>
+            <th style="text-align:center">Status</th><th style="text-align:left">Notes</th>
+          </tr></thead>
+          <tbody id="actuals-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCENARIOS TAB -->
+<div id="tab-scenarios" class="wrap" style="display:none">
+  <div id="scenarios-empty" class="empty-state">
+    <div class="icon">🎯</div>
+    <h2>No Scenario Data</h2>
+    <p>Import your spreadsheet to compare all 10 scenarios.</p>
+    <label>⬆ Import Excel<input type="file" accept=".xlsx,.xls" onchange="importExcel(event)" style="display:none"></label>
+  </div>
+  <div id="scenarios-content" style="display:none">
+    <div class="card" style="margin-bottom:16px">
+      <div class="ch"><span class="ct ct-p">🎯 Scenario Comparison</span><span style="font-size:9px;color:var(--mut)" id="active-sc-label"></span></div>
+      <div class="tbl-wrap">
+        <table class="sc-table">
+          <thead id="sc-thead"></thead>
+          <tbody id="sc-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AI TAB -->
+<div id="tab-ai" class="wrap" style="display:none">
+  <div class="ai-block">
+    <div class="ai-hdr">
+      <span class="ai-title">✦ AI FIRE Analysis</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="ai-status" id="ai-status">Click Generate to analyze your FIRE trajectory</span>
+        <button class="ai-btn" onclick="runAI()">✦ Generate Analysis</button>
+      </div>
+    </div>
+    <div class="ai-text loading" id="ai-text">Claude will analyze your actual spreadsheet data — active scenario, timeline, key dates, income vs expenses, and FIRE trajectory — then give you specific strategic advice for this month.</div>
+  </div>
+
+  <div id="ai-empty" class="empty-state" style="display:none">
+    <div class="icon">🤖</div>
+    <h2>Import Data First</h2>
+    <p>Import your spreadsheet so Claude has real numbers to analyze.</p>
+  </div>
+
+  <!-- API Key input -->
+  <div style="border:1px solid var(--brd);background:var(--surf);padding:14px 16px;margin-bottom:16px;">
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px;">Claude API Key (stored locally)</div>
+    <div style="display:flex;gap:8px;">
+      <input type="password" id="api-key-input" placeholder="sk-ant-... (paste once, saved locally)" 
+        style="flex:1;background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:8px 12px;font-family:JetBrains Mono,monospace;font-size:11px;outline:none;">
+      <button onclick="saveKey()" style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:8px 14px;border:1px solid var(--grn);background:transparent;color:var(--grn);cursor:pointer;">Save Key</button>
+    </div>
+    <div style="font-size:9px;color:var(--mut2);margin-top:6px;" id="key-status">Key saved in Command Center setup will be used automatically if available.</div>
+  </div>
+</div>
+
+<script>
+// ── STATE ────────────────────────────────────────────────────
+let D = {
+  imported: false,
+  scenario: '',
+  scenarioNum: 0,
+  lastImport: '',
+  // Dashboard
+  fireDate: '—',
+  netWorth: 0,
+  firePct: 0,
+  helocAvail: 0,
+  hfFinal: 0,
+  keyDates: {},
+  income: {},
+  expenses: {},
+  realEstate: {},
+  // Timeline
+  timeline: [],
+  fireMonth: 0,
+  todayMonth: 1,
+  // Actuals
+  actuals: [],
+  // Scenarios
+  scenarios: [],
+  scHeaders: [],
+  scRows: [],
+};
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const f$ = n => n==null?'—':'$'+Math.round(n).toLocaleString();
+const fp = n => n==null?'—':Math.round(n*100).toFixed(1)+'%';
+const fc = n => n==null?'—':(n>=0?'+':'')+f$(n);
+const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+// ── IMPORT ───────────────────────────────────────────────────
+function importExcel(evt) {
+  const file = evt.target.files[0];
+  if(!file) return;
+  document.getElementById('import-status').textContent = 'Reading ' + file.name + '…';
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
+      parseWorkbook(wb, file.name);
+    } catch(err) {
+      document.getElementById('import-status').textContent = 'Error: ' + err.message;
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseWorkbook(wb, fname) {
+  // ── INPUTS ──
+  const inp = wb.Sheets['Inputs'];
+  const inpRows = inp ? XLSX.utils.sheet_to_json(inp, {header:1}) : [];
+  const iv = {};
+  inpRows.forEach(r => { if(r[0] && r[1]!==undefined) iv[String(r[0]).trim()] = r[1]; });
+
+  // ── DASHBOARD ──
+  const dash = wb.Sheets['Dashboard'];
+  const drows = dash ? XLSX.utils.sheet_to_json(dash, {header:1}) : [];
+
+  // Parse dashboard - look for key labels
+  let activeScenarioName = 'Base·Keep';
+  let activeScenarioNum = 1;
+  drows.forEach(r => {
+    for(let i=0;i<r.length;i++) {
+      const v = r[i];
+      if(typeof v === 'string') {
+        const t = v.trim();
+        if(t.includes('ACTIVE SCENARIO')) {
+          // Find the number and name
+          for(let j=i+1;j<r.length;j++) {
+            if(typeof r[j] === 'number') { activeScenarioNum = r[j]; }
+            if(typeof r[j] === 'string' && r[j].length > 2 && !r[j].includes('Change')) {
+              activeScenarioName = r[j]; break;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Extract key dashboard values by scanning all cells
+  const dv = {};
+  drows.forEach(r => {
+    for(let i=0;i<r.length;i++) {
+      if(typeof r[i]==='string' && r[i].trim()) {
+        // Look ahead for values
+        for(let j=i+1;j<Math.min(i+12,r.length);j++) {
+          if(r[j]!==null && r[j]!==undefined && r[j]!=='') {
+            dv[r[i].trim()] = r[j];
+            break;
+          }
+        }
+      }
+    }
+  });
+
+  // ── PROJECTION ──
+  const proj = wb.Sheets['Projection'];
+  const prows = proj ? XLSX.utils.sheet_to_json(proj, {header:1}) : [];
+  // Row 2 = column headers, Row 3+ = data
+  const phdr = prows[2] || [];
+  const ci = name => phdr.findIndex(h=>h&&String(h).trim()===name);
+  const moI=ci('Mo'), dtI=ci('Date'), w2I=ci('W2'), ptoI=ci('PTO'), sdiI=ci('SDI');
+  const bizI=ci('Business'), rentI=ci('Rent'), giftI=ci('Gift'), detI=ci('Detroit');
+  const trI=ci('TaxRet'), totInI=ci('TotIncome');
+  const spI=ci('Spend'), vmI=ci('VMort'), pmI=ci('PMort'), hiI=ci('HELOCInt');
+  const otI=ci('OneTime'), totExI=ci('TotExpense'), cfI=ci('CashFlow');
+  const helocI=ci('HELOCDrawn'), hfI=ci('HF'), tiaaI=ci('TIAA');
+  const nwI=ci('NetWorth'), fpI=ci('FIRE%'), paI=ci('Passive');
+
+  const timeline = [];
+  const now = new Date();
+  const startDate = new Date(2026, 5, 1); // Jun 2026
+
+  for(let i=3;i<prows.length;i++) {
+    const r=prows[i];
+    if(!r[moI]) continue;
+    const dt = r[dtI];
+    let dateStr = '—';
+    if(dt instanceof Date) dateStr = MONTHS[dt.getMonth()]+' '+dt.getFullYear();
+    else if(typeof dt==='string') dateStr = dt;
+
+    const firePctVal = r[fpI] || 0;
+    const moNum = r[moI];
+    // Today's month
+    const rowDate = dt instanceof Date ? dt : new Date(2026, 5+moNum-1, 1);
+    const isToday = rowDate.getFullYear()===now.getFullYear() && rowDate.getMonth()===now.getMonth();
+
+    timeline.push({
+      mo: moNum, date: dateStr,
+      w2: r[w2I]||0, pto: r[ptoI]||0, sdi: r[sdiI]||0,
+      biz: r[bizI]||0, rent: r[rentI]||0, gift: r[giftI]||0,
+      totalIn: r[totInI]||0,
+      spend: r[spI]||0, vmort: r[vmI]||0, pmort: r[pmI]||0,
+      helocInt: r[hiI]||0, oneTime: r[otI]||0, totalOut: r[totExI]||0,
+      cf: r[cfI]||0, heloc: r[helocI]||0, hf: r[hfI]||0,
+      tiaa: r[tiaaI]||0, nw: r[nwI]||0,
+      firePct: firePctVal, passive: r[paI]||0,
+      isToday,
+    });
+  }
+
+  // Find FIRE month (first month FIRE% >= 1.0)
+  const fireMonthRow = timeline.find(r=>r.firePct>=1.0);
+  const todayRow = timeline.find(r=>r.isToday) || timeline[0];
+
+  // ── ACTUALS ──
+  const act = wb.Sheets['Actuals'];
+  const actuals = [];
+  if(act) {
+    const arows = XLSX.utils.sheet_to_json(act, {header:1});
+    for(let i=2;i<arows.length;i++) {
+      const r=arows[i];
+      if(!r[0]) continue;
+      const actual = r[2];
+      if(actual!==null && actual!==undefined && actual!=='' && actual!=='-') {
+        const dt = r[1];
+        let dateStr = '—';
+        if(dt instanceof Date) dateStr = MONTHS[dt.getMonth()]+' '+dt.getFullYear();
+        const proj = r[3]||0;
+        const varD = actual - proj;
+        const varP = proj>0 ? (varD/proj*100) : 0;
+        actuals.push({mo:r[0], date:dateStr, actual, proj, varD, varP, notes:r[6]||''});
+      }
+    }
+  }
+
+  // ── SCENARIOS ──
+  const sc = wb.Sheets['Scenarios'];
+  const scRows = sc ? XLSX.utils.sheet_to_json(sc, {header:1}) : [];
+  // Find scenario names row (row 3 in 0-index)
+  let scNames = [], scData = [];
+  scRows.forEach(r => {
+    if(typeof r[4]==='string' && r[4].includes('Keep') || r[4]==='Base·Keep') {
+      scNames = r.slice(4).filter(v=>v&&typeof v==='string');
+    }
+    if(typeof r[0]==='number' && r[0]>=1) {
+      scData.push(r);
+    }
+  });
+
+  // ── SAVE STATE ──
+  D = {
+    imported: true,
+    scenario: activeScenarioName,
+    scenarioNum: activeScenarioNum,
+    lastImport: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + ' · ' + fname,
+    fireDate: fireMonthRow ? fireMonthRow.date : 'Beyond '+timeline[timeline.length-1]?.date,
+    netWorth: timeline[timeline.length-1]?.nw || 0,
+    firePct: fireMonthRow ? 100 : Math.round((todayRow?.firePct||0)*100),
+    hfFinal: timeline[timeline.length-1]?.hf || 0,
+    helocFinal: timeline[timeline.length-1]?.heloc || 0,
+    todayRow, fireMonthRow,
+    keyDates: {
+      jplDeparture: dv['JPL Departure'] || ('Month '+(iv['Leave JPL (month # from Jun 26)']||3)),
+      ptoEnds:      dv['PTO Ends']      || '—',
+      sdiEnds:      dv['SDI Ends']      || '—',
+      tiaaTransfers:dv['TIAA Transfers']|| '—',
+      bizStarts:    dv['Business Starts']||'—',
+      detroitFirst: dv['Detroit 1st Buy']||'Disabled',
+    },
+    income: {
+      biz:     dv['Business Income']  || 0,
+      rent:    dv['Paulette Rent']    || 0,
+      detroit: dv['Detroit Rental']   || 0,
+      hfReturn:dv['HF Return']        || 0,
+      gift:    dv['Parents Gift']     || 0,
+      total:   dv['TOTAL PASSIVE']    || 0,
+    },
+    expenses: {
+      spend:   iv['Base monthly spend']          || 22000,
+      vmort:   iv['Vineta mortgage / month']     || 7900,
+      pmort:   iv['Paulette mortgage / month']   || 3477,
+      helocInt:(iv['HELOC drawn balance']||700000)*(iv['HELOC interest rate (annual)']||0.065)/12,
+      total:   todayRow?.totalOut || 0,
+    },
+    realEstate: {
+      vinetaVal:  dv['Vineta Value']   || 0,
+      vinetaEq:   dv['Vineta Equity 45%'] || 0,
+      paulVal:    dv['Paulette Value'] || 0,
+      paulEq:     dv['Paulette Equity']|| 0,
+      helocDrawn: dv['HELOC Drawn']    || 0,
+    },
+    timeline,
+    fireMonth: fireMonthRow?.mo || 0,
+    actuals,
+    scNames, scData,
+    iv, // raw inputs for AI
+  };
+
+  // Save actuals and inputs for Command Center / FIRE Path
+  try {
+    localStorage.setItem('kcc_fire_actuals', JSON.stringify(actuals));
+    localStorage.setItem('kcc_firelab_inputs', JSON.stringify({
+      jpl_net: iv['JPL net monthly income']||17500,
+      jpl_months: iv['Leave JPL (month # from Jun 26)']||3,
+      pto_months: iv['PTO duration (months)']||1,
+      pto_lump: iv['PTO lump sum (0 = take monthly)']||0,
+      sdi_months: iv['SDI duration (months)']||0,
+      biz: iv['Business monthly income']||17500,
+      bizstart: iv['Business start (month #)']||6,
+      spend: iv['Base monthly spend']||22000,
+      vmort: iv['Vineta mortgage / month']||7900,
+      pmort: iv['Paulette mortgage / month']||3477,
+      heloc_balance: iv['HELOC drawn balance']||700000,
+      heloc_rate: ((iv['HELOC interest rate (annual)']||0.065)*100),
+      hfbal: todayRow?.hf || 150000,
+      tiaabal: todayRow?.tiaa || 420000,
+    }));
+  } catch(e) {}
+
+  renderAll();
+
+  document.getElementById('import-status').textContent = '✓ Imported · ' + timeline.length + ' months · ' + actuals.length + ' actuals';
+  document.getElementById('active-scenario').textContent = 'Scenario ' + D.scenarioNum + ': ' + D.scenario;
+  document.getElementById('last-import').textContent = D.lastImport;
+}
+
+// ── RENDER ALL ───────────────────────────────────────────────
+function renderAll() {
+  renderDashboard();
+  renderTimeline('all');
+  renderActuals();
+  renderScenarios();
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────
+function renderDashboard() {
+  document.getElementById('dash-empty').style.display = 'none';
+  document.getElementById('dash-content').style.display = 'block';
+
+  const firePctNow = D.todayRow ? Math.round(D.todayRow.firePct*100) : 0;
+
+  document.getElementById('dash-pills').innerHTML = [
+    {lbl:'FIRE Date',    val: D.fireDate,                    cls:D.fireMonth?'g':'a', sub:'first month FIRE% ≥ 100%'},
+    {lbl:'Net Worth',    val: f$(D.netWorth),                cls:'b',                 sub:'at month 120'},
+    {lbl:'FIRE Coverage',val: firePctNow+'%',                cls:firePctNow>=100?'g':firePctNow>=70?'a':'r', sub:'passive / expenses today'},
+    {lbl:'HF at End',    val: f$(D.hfFinal),                 cls:'b',                 sub:'month 120 balance'},
+  ].map(p=>`<div class="pill ${p.cls}"><span class="pill-lbl">${p.lbl}</span><span class="pill-val ${p.cls}">${p.val}</span><span class="pill-sub">${p.sub}</span></div>`).join('');
+
+  // Key dates
+  const kd = D.keyDates;
+  document.getElementById('dash-dates').innerHTML = [
+    {lbl:'JPL Departure',  val:kd.jplDeparture, sub:'leave date'},
+    {lbl:'PTO Ends',       val:kd.ptoEnds,      sub:'last PTO payment'},
+    {lbl:'SDI Ends',       val:kd.sdiEnds,      sub:'state disability'},
+    {lbl:'TIAA Transfers', val:kd.tiaaTransfers,sub:'→ HF account'},
+    {lbl:'Business Starts',val:kd.bizStarts,    sub:'Throwzone income'},
+    {lbl:'Detroit 1st Buy',val:kd.detroitFirst, sub:'rental expansion'},
+  ].map(d=>`<div class="date-item"><span class="date-lbl">${d.lbl}</span><div class="date-val">${d.val||'—'}</div><div class="date-sub">${d.sub}</div></div>`).join('');
+
+  // Income
+  const inc = D.income;
+  document.getElementById('dash-income').innerHTML = [
+    ['Business Income',  inc.biz,     'var(--grn)'],
+    ['Paulette Rent',    inc.rent,    'var(--grn)'],
+    ['Detroit Rental',   inc.detroit, inc.detroit>0?'var(--grn)':'var(--mut)'],
+    ['HF Return (4%)',   inc.hfReturn,'var(--blu)'],
+    ['Parents Gift',     inc.gift,    'var(--mut)'],
+    ['TOTAL PASSIVE',    inc.total,   'var(--amb)'],
+  ].map(([l,v,c])=>`<div style="display:flex;align-items:center;padding:8px 16px;border-bottom:1px solid #1a1e1a;"><span style="flex:1;font-size:12px;color:var(--txt2)">${l}</span><span style="font-size:14px;font-weight:700;color:${c}">${f$(v)}</span></div>`).join('');
+
+  // Expenses
+  const ex = D.expenses;
+  document.getElementById('dash-expenses').innerHTML = [
+    ['Base Monthly Spend', ex.spend,    'var(--red)'],
+    ['Vineta Mortgage',    ex.vmort,    'var(--mut)'],
+    ['Paulette Mortgage',  ex.pmort,    'var(--mut)'],
+    ['HELOC Interest',     ex.helocInt, 'var(--mut)'],
+    ['TOTAL FIXED',        ex.total,    'var(--amb)'],
+  ].map(([l,v,c])=>`<div style="display:flex;align-items:center;padding:8px 16px;border-bottom:1px solid #1a1e1a;"><span style="flex:1;font-size:12px;color:var(--txt2)">${l}</span><span style="font-size:14px;font-weight:700;color:${c}">${f$(v)}</span></div>`).join('');
+
+  // Real estate
+  const re = D.realEstate;
+  document.getElementById('dash-realestate').innerHTML = [
+    {lbl:'Vineta Value',    val:re.vinetaVal, sub:'5% annual growth'},
+    {lbl:'Vineta Equity',   val:re.vinetaEq,  sub:'45% share'},
+    {lbl:'Paulette Value',  val:re.paulVal,   sub:'5% annual growth'},
+    {lbl:'HELOC Drawn',     val:re.helocDrawn,sub:'outstanding balance'},
+  ].map(p=>`<div style="padding:12px 16px;border-right:1px solid var(--brd);"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block;margin-bottom:4px">${p.lbl}</span><span style="font-size:18px;font-weight:700;display:block">${f$(p.val)}</span><span style="font-size:9px;color:var(--mut2)">${p.sub}</span></div>`).join('');
+}
+
+// ── TIMELINE ─────────────────────────────────────────────────
+let timelineView = 'all';
+function setTimelineView(v) {
+  timelineView = v;
+  ['all','24','fire'].forEach(t=>{
+    const b=document.getElementById('tv-'+t);
+    if(b){b.style.background=t===v?'var(--red)':'transparent';b.style.color=t===v?'#fff':'var(--mut)';}
+  });
+  renderTimeline(v);
+}
+
+function renderTimeline(view) {
+  if(!D.imported) return;
+  document.getElementById('timeline-empty').style.display='none';
+  document.getElementById('timeline-content').style.display='block';
+
+  let rows = D.timeline;
+  if(view==='24') rows = rows.slice(0,24);
+  else if(view==='fire' && D.fireMonth) {
+    const fi = D.fireMonth-1;
+    rows = rows.slice(Math.max(0,fi-3), Math.min(rows.length,fi+6));
+  }
+
+  const tbody = document.getElementById('timeline-tbody');
+  tbody.innerHTML = rows.map(r=>{
+    const isFire = D.fireMonth && r.mo===D.fireMonth;
+    const cls = r.isToday?'today':isFire?'fire-month':'';
+    const fpPct = Math.round(r.firePct*100);
+    const fpCls = fpPct>=100?'pos':fpPct>=70?'amb':'neg';
+    return `<tr class="${cls}">
+      <td>${r.mo}${r.isToday?' ★':''}${isFire?' 🎯':''}</td>
+      <td>${r.date}</td>
+      <td>${r.w2>0?f$(r.w2):'—'}</td>
+      <td>${r.pto>0?f$(r.pto):'—'}</td>
+      <td>${r.sdi>0?f$(r.sdi):'—'}</td>
+      <td>${r.biz>0?f$(r.biz):'—'}</td>
+      <td>${r.rent>0?f$(r.rent):'—'}</td>
+      <td>${f$(r.gift)}</td>
+      <td><b>${f$(r.totalIn)}</b></td>
+      <td>${f$(r.spend)}</td>
+      <td>${f$(r.vmort)}</td>
+      <td>${r.pmort>0?f$(r.pmort):'—'}</td>
+      <td>${f$(r.helocInt)}</td>
+      <td><b>${f$(r.totalOut)}</b></td>
+      <td class="${r.cf>=0?'pos':'neg'}">${fc(r.cf)}</td>
+      <td>${f$(r.heloc)}</td>
+      <td>${f$(r.hf)}</td>
+      <td>${r.tiaa>0?f$(r.tiaa):'→HF'}</td>
+      <td>${f$(r.nw)}</td>
+      <td class="${fpCls}"><b>${fpPct}%</b></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── ACTUALS ──────────────────────────────────────────────────
+function renderActuals() {
+  const actuals = D.actuals;
+  if(!D.imported) return;
+
+  if(!actuals.length) {
+    document.getElementById('actuals-empty').style.display='block';
+    document.getElementById('actuals-content').style.display='none';
+    return;
+  }
+
+  document.getElementById('actuals-empty').style.display='none';
+  document.getElementById('actuals-content').style.display='block';
+  document.getElementById('actuals-count').textContent = actuals.length+' month'+(actuals.length===1?'':'s')+' of real data';
+
+  const onTrackCount = actuals.filter(a=>a.varD>=-0.05*a.proj).length;
+  const avgVar = actuals.reduce((s,a)=>s+a.varP,0)/actuals.length;
+  const lastActual = actuals[actuals.length-1];
+
+  document.getElementById('actuals-pills').innerHTML = [
+    {lbl:'Months Tracked',  val:actuals.length,            cls:'b', sub:'real HF entries'},
+    {lbl:'On Track',        val:onTrackCount+'/'+actuals.length, cls:onTrackCount===actuals.length?'g':'a', sub:'within 5% of projection'},
+    {lbl:'Latest Actual HF',val:f$(lastActual?.actual),    cls:'b', sub:lastActual?.date||'—'},
+  ].map(p=>`<div class="pill ${p.cls}"><span class="pill-lbl">${p.lbl}</span><span class="pill-val ${p.cls}">${p.val}</span><span class="pill-sub">${p.sub}</span></div>`).join('');
+
+  document.getElementById('actuals-tbody').innerHTML = actuals.map(a=>{
+    const onTrack = a.varD >= -0.05*a.proj;
+    return `<tr class="${!onTrack?'off-track':''}">
+      <td>${a.mo}</td><td>${a.date}</td>
+      <td class="pos"><b>${f$(a.actual)}</b></td>
+      <td style="color:var(--mut)">${f$(a.proj)}</td>
+      <td class="${a.varD>=0?'pos':'neg'}">${fc(a.varD)}</td>
+      <td class="${a.varD>=0?'pos':'neg'}">${(a.varD>=0?'+':'')+a.varP.toFixed(1)}%</td>
+      <td style="text-align:center"><span class="badge ${onTrack?'badge-g':'badge-r'}">${onTrack?'ON TRACK':'OFF TRACK'}</span></td>
+      <td style="text-align:left;font-size:10px;color:var(--mut)">${esc(a.notes)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── SCENARIOS ────────────────────────────────────────────────
+function renderScenarios() {
+  if(!D.imported) return;
+  document.getElementById('scenarios-empty').style.display='none';
+  document.getElementById('scenarios-content').style.display='block';
+  document.getElementById('active-sc-label').textContent = 'Active: Scenario '+D.scenarioNum+' — '+D.scenario;
+
+  const scNames = D.scNames;
+  if(!scNames.length) {
+    document.getElementById('sc-thead').innerHTML='<tr><th>No scenario data found</th></tr>';
+    return;
+  }
+
+  document.getElementById('sc-thead').innerHTML = '<tr><th style="text-align:left">Parameter</th>'
+    + scNames.map((n,i)=>`<th>${n}<br><span style="font-size:7px;color:var(--mut2)">#${i+1}</span></th>`).join('')+'</tr>';
+
+  document.getElementById('sc-tbody').innerHTML = D.scData.map(r=>{
+    const isActive = D.scenarioNum-1 < scNames.length;
+    const label = r[1] ? String(r[1]).trim() : '';
+    const unit = r[3] ? String(r[3]).trim() : '';
+    const vals = r.slice(4, 4+scNames.length);
+    return `<tr class="${isActive&&r[0]?'':''}">
+      <td>${label} <span style="font-size:9px;color:var(--mut)">${unit}</span></td>
+      ${vals.map((v,i)=>`<td class="${i===D.scenarioNum-1?'pos':''}" style="${i===D.scenarioNum-1?'color:#b080ff;font-weight:700':''}">${v==null?'—':typeof v==='number'?v.toLocaleString():v}</td>`).join('')}
+    </tr>`;
+  }).join('');
+}
+
+// ── AI ───────────────────────────────────────────────────────
+function saveKey() {
+  const k = document.getElementById('api-key-input').value.trim();
+  if(!k){alert('Paste your Claude API key first');return;}
+  localStorage.setItem('kcc_claude', k);
+  document.getElementById('key-status').textContent = '✓ Key saved';
+}
+
+async function runAI() {
+  const key = localStorage.getItem('kcc_claude') || document.getElementById('api-key-input').value.trim();
+  if(!key){alert('Add your Claude API key above');return;}
+  if(!D.imported){alert('Import your spreadsheet first');return;}
+
+  const tx = document.getElementById('ai-text');
+  const st = document.getElementById('ai-status');
+  tx.textContent='Analyzing your FIRE data…'; tx.classList.add('loading');
+  st.textContent='✦ Thinking…';
+
+  const today = D.todayRow;
+  const fire  = D.fireMonthRow;
+  const inc   = D.income;
+  const ex    = D.expenses;
+  const kd    = D.keyDates;
+  const act   = D.actuals;
+
+  const prompt = `You are the FIRE advisor for Sonny Koliwad. Analyze his real spreadsheet data and give specific strategic advice.
+
+ACTIVE SCENARIO: ${D.scenario} (Scenario #${D.scenarioNum})
+FIRE DATE: ${D.fireDate}
+NET WORTH at Month 120: ${f$(D.netWorth)}
+
+CURRENT STATUS (today):
+- Total Income: ${f$(today?.totalIn)}/mo
+- Total Expenses: ${f$(today?.totalOut)}/mo  
+- Cash Flow: ${fc(today?.cf)}/mo
+- HF Balance: ${f$(today?.hf)}
+- HELOC Balance: ${f$(today?.heloc)}
+- FIRE Coverage: ${Math.round((today?.firePct||0)*100)}% (passive / expenses)
+
+KEY DATES:
+- JPL Departure: ${kd.jplDeparture}
+- PTO Ends: ${kd.ptoEnds}
+- SDI Ends: ${kd.sdiEnds}
+- TIAA Transfers: ${kd.tiaaTransfers}
+- Business Starts: ${kd.bizStarts}
+
+INCOME AT END STATE (Mo.120):
+- Business: ${f$(inc.biz)}/mo
+- Paulette Rent: ${f$(inc.rent)}/mo
+- HF Return: ${f$(inc.hfReturn)}/mo
+- Total Passive: ${f$(inc.total)}/mo
+
+ACTUALS TRACKED: ${act.length} months
+${act.length>0 ? act.map(a=>`Mo.${a.mo} ${a.date}: Actual ${f$(a.actual)} vs Projected ${f$(a.proj)} (${a.varD>=0?'+':''}${a.varP.toFixed(1)}%)`).join('\n') : 'No actuals entered yet'}
+
+Provide a 5-6 sentence analysis covering:
+1. Overall trajectory — on track or not, and by how much in dollars and months
+2. The single biggest risk to this plan right now
+3. The single highest-leverage action this month
+4. One thing that looks better than expected (or a warning if nothing does)
+5. Specific recommendation for this week with a dollar amount or deadline
+
+Be direct, specific, use real numbers from the data. No fluff.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':key,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-5',
+        max_tokens:600,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error.message);
+    tx.textContent = data.content[0].text;
+    tx.classList.remove('loading');
+    st.textContent = '✦ Generated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  } catch(err) {
+    tx.textContent = 'Error: '+err.message;
+    tx.classList.remove('loading');
+    st.textContent = 'Error';
+  }
+}
+
+// ── TABS ─────────────────────────────────────────────────────
+function setTab(t, btn) {
+  ['dashboard','timeline','actuals','scenarios','ai'].forEach(v=>{
+    const el=document.getElementById('tab-'+v);
+    if(el) el.style.display=v===t?'block':'none';
+  });
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+window.addEventListener('load', ()=>{
+  // Load any previously imported data from localStorage
+  const saved = localStorage.getItem('kcc_firelab_last');
+  if(saved) {
+    try {
+      const d = JSON.parse(saved);
+      D = {...D, ...d};
+      if(D.imported) renderAll();
+    } catch(e) {}
+  }
+  // Pre-fill API key
+  const k = localStorage.getItem('kcc_claude');
+  if(k) {
+    document.getElementById('api-key-input').value = k;
+    document.getElementById('key-status').textContent = '✓ Key loaded from Command Center';
+  }
+});
+</script>
+
+        </div>
+      </div>
+
       <!-- PORTFOLIO PAGE -->
       <div class="page" id="p-portfolio">
         <div style="padding:22px 26px;">
@@ -1415,6 +2173,7 @@ function nav(pg){
     [1,2,3].forEach(n=>{if(S.gtc&&S.gtc[n]!==undefined)toggleGTC(n);});}
   if(pg==='exec') rExec();
   if(pg==='playbook') renderPlaybook();
+  if(pg==='firelab') flRender();
   if(pg==='playbook') renderPlaybook();
 }
 
@@ -1625,7 +2384,7 @@ function renderAll(){
   _safe('rTickets', rTickets);
   _safe('rBadges', rBadges);
   _safe('renderManBills', renderManBills);
-  if(S.page==='fire') rFire();
+  rFire();
   if(S.page==='financials') rFin();
   if(S.page==='business') rBiz();
   if(S.page==='exec') rExec();
@@ -2430,7 +3189,7 @@ function toggleGTC(n){
   if(el){el.style.borderColor=S.gtc[n]?'#4a9c5c':'#d04040';el.style.color=S.gtc[n]?'#4a9c5c':'#d04040';el.style.background=S.gtc[n]?'rgba(74,156,92,0.1)':'rgba(208,64,64,0.1)';}
 }
 
-function openFireLab(){window.open("fire-lab.html","_blank");}
+function openFireLab(){nav('firelab');}
 
 function el(id){return document.getElementById(id);}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
@@ -3129,7 +3888,8 @@ async function importAllExcel(evt) {
         } catch(te) { console.error('Ticket parse error:',te); }
         status.push('🎟 ' + file.name + ' → Tickets');
       } else if(sheets.includes('Projection') || sheets.includes('Scenarios')) {
-        // FIRE Lab
+        // FIRE Lab — use fire-lab's own parser to populate FIRE LAB page
+        try { flParseWorkbook(wb, file.name); } catch(e) { console.warn('flParseWorkbook:', e); }
         // Save inputs for FIRE Lab
         const inp = wb.Sheets['Inputs'];
         // Always attempt FIRE Lab parse regardless of inp
@@ -3224,6 +3984,9 @@ async function importAllExcel(evt) {
   rFire();  // always refresh FIRE PATH regardless of current page
   if(S.page==='financials') rFin();
   if(S.page==='tickets') rTickets();
+
+  // Re-render FIRE PATH with fresh data
+  rFire();
 
   // Run auto-alerts
   autoAlerts();
@@ -3532,7 +4295,117 @@ function downloadDocx() {
     /* Quick summary grid */
     .qs-grid { display: table; width: 100%; }
     .qs-cell { display: table-cell; width: 33%; padding-right: 8px; font-size: 7pt; }
-  </style>
+  
+/* ══ FIRE LAB ══ */
+
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#080a08;--surf:#101310;--surf2:#161916;--brd:#364036;--brd2:#424e42;
+  --txt:#f5faf5;--txt2:#dceadc;--mut:#9abf9a;--mut2:#5a725a;
+  --red:#e05050;--grn:#52b066;--amb:#d4a030;--blu:#5a8acc;--pur:#7a5cb8;
+}
+html,body{min-height:100%;background:var(--bg);color:var(--txt);font-family:'JetBrains Mono',monospace;}
+
+/* TOP BAR */
+.topbar{height:44px;background:#060806;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:100;}
+.logo{font-size:11px;font-weight:700;color:var(--red);letter-spacing:3px;}
+.back-btn{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:5px 14px;border:1px solid var(--brd2);background:transparent;color:var(--mut);cursor:pointer;text-decoration:none;}
+.back-btn:hover{color:var(--txt);border-color:var(--mut);}
+.topbar-center{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--txt2);}
+
+/* IMPORT BAR */
+.import-bar{background:#0d100d;border-bottom:1px solid var(--brd);padding:10px 20px;display:flex;align-items:center;gap:12px;}
+.import-bar label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:6px 16px;border:1px solid var(--grn);color:var(--grn);cursor:pointer;}
+.import-bar label:hover{background:rgba(74,156,92,0.1);}
+.scenario-badge{font-size:10px;font-weight:700;padding:4px 12px;border:1px solid var(--pur);color:var(--pur);background:rgba(122,92,184,0.1);}
+.import-status{font-size:9px;color:var(--mut);margin-left:auto;}
+.last-import{font-size:9px;color:var(--mut2);}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--brd);background:#060806;position:sticky;top:44px;z-index:99;}
+.tab{padding:11px 22px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border:none;background:transparent;color:var(--mut);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;}
+.tab:hover{color:var(--txt);}
+.tab.on{color:#ff6060;border-bottom-color:#ff6060;}
+
+/* CONTENT */
+.wrap{max-width:1200px;margin:0 auto;padding:20px;}
+
+/* CARDS */
+.card{border:1px solid var(--brd);background:var(--surf);}
+.ch{padding:9px 16px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;background:#0f110f;}
+.ct{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
+.ct-r{color:var(--red);}.ct-g{color:var(--grn);}.ct-b{color:var(--blu);}.ct-a{color:var(--amb);}.ct-p{color:var(--pur);}.ct-m{color:var(--mut);}
+
+/* STAT PILLS */
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.pill{border:1px solid var(--brd);background:var(--surf);padding:14px 16px;}
+.pill.r{border-color:rgba(208,64,64,0.4);background:rgba(208,64,64,0.08);}
+.pill.g{border-color:rgba(74,156,92,0.4);background:rgba(74,156,92,0.08);}
+.pill.b{border-color:rgba(74,122,184,0.4);background:rgba(74,122,184,0.08);}
+.pill.a{border-color:rgba(196,144,48,0.4);background:rgba(196,144,48,0.08);}
+.pill-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#b0ccb0;display:block;margin-bottom:6px;}
+.pill-val{font-size:28px;font-weight:700;display:block;line-height:1;}
+.pill-val.r{color:var(--red);}.pill-val.g{color:var(--grn);}.pill-val.b{color:var(--blu);}.pill-val.a{color:var(--amb);}
+.pill-sub{font-size:9px;color:var(--mut);display:block;margin-top:4px;}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:11px;}
+th{font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#b0ccb0;padding:9px 10px;border-bottom:2px solid var(--brd);text-align:right;white-space:nowrap;background:#080a08;}
+th:first-child{text-align:left;}
+td{padding:8px 10px;border-bottom:1px solid #1e231e;text-align:right;color:var(--txt2);font-size:11px;}
+td:first-child{text-align:left;color:var(--txt);font-weight:600;}
+tr:hover td{background:rgba(255,255,255,.04);}
+tr.today td{background:rgba(82,176,102,.1)!important;color:#ffffff!important;}
+tr.fire-month td{background:rgba(90,138,204,.15)!important;font-weight:700;color:#ffffff!important;}
+tr.off-track td:first-child{color:var(--red);}
+.pos{color:var(--grn)!important;}.neg{color:var(--red)!important;}.amb{color:var(--amb)!important;}
+
+/* AI BLOCK */
+.ai-block{border:1px solid #3a2a5a;background:linear-gradient(135deg,#0e0a1a,#160e22);padding:14px 16px;margin-bottom:16px;}
+.ai-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.ai-title{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9a78cc;}
+.ai-status{font-size:9px;color:#6a5a8a;font-style:italic;}
+.ai-text{font-size:12px;color:#ddd0f0;line-height:1.8;}
+.ai-text.loading{color:#6a5a8a;font-style:italic;}
+.ai-btn{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border:1px solid #4a3a6a;background:linear-gradient(135deg,#1a1a3a,#2a1a3a);color:#c8a8ff;cursor:pointer;}
+.ai-btn:hover{border-color:#8a6aaa;color:#e8c8ff;}
+
+/* SCENARIO TABLE */
+.sc-table{width:100%;border-collapse:collapse;font-size:11px;}
+.sc-table th{font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);padding:8px 10px;border-bottom:1px solid var(--brd);text-align:right;background:#0f110f;white-space:nowrap;}
+.sc-table th:first-child{text-align:left;}
+.sc-table td{padding:8px 10px;border-bottom:1px solid #1a1e1a;text-align:right;font-size:11px;}
+.sc-table td:first-child{text-align:left;color:var(--txt);font-weight:600;}
+.sc-table tr.active-sc td{background:rgba(122,92,184,0.1);color:var(--txt);}
+.sc-table tr.active-sc td:first-child{color:#b080ff;}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:60px 20px;}
+.empty-state .icon{font-size:48px;margin-bottom:16px;}
+.empty-state h2{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--txt);margin-bottom:8px;}
+.empty-state p{font-size:12px;color:var(--mut);line-height:1.7;max-width:400px;margin:0 auto 20px;}
+.empty-state label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:10px 24px;border:1px solid var(--grn);color:var(--grn);cursor:pointer;display:inline-block;}
+
+/* KEY DATES */
+.dates-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--brd);}
+.date-item{padding:12px 16px;border-right:1px solid var(--brd);border-bottom:1px solid var(--brd);}
+.date-item:nth-child(3n){border-right:none;}
+.date-item:nth-last-child(-n+3){border-bottom:none;}
+.date-lbl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#b0ccb0;display:block;margin-bottom:4px;}
+.date-val{font-size:14px;font-weight:700;color:var(--txt);}
+.date-sub{font-size:9px;color:var(--mut2);margin-top:2px;}
+
+/* BADGE */
+.badge{font-size:8px;font-weight:700;padding:2px 8px;letter-spacing:.5px;white-space:nowrap;}
+.badge-g{background:rgba(74,156,92,0.15);color:var(--grn);}
+.badge-r{background:rgba(208,64,64,0.15);color:var(--red);}
+.badge-a{background:rgba(196,144,48,0.15);color:var(--amb);}
+.badge-b{background:rgba(74,122,184,0.15);color:var(--blu);}
+
+</style>
   <!--[if gte mso 9]>
   <xml><w:WordDocument><w:View>Print</w:View><w:Zoom>90</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument></xml>
   <![endif]-->
@@ -4215,6 +5088,556 @@ function renderPlaybookToday() {
     el.innerHTML = '<div class="empty" style="color:var(--red)">Error: ' + e.message + '</div>';
   }
 }
+
+
+// ══ FIRE LAB (embedded) ════════════════════════════
+
+// ── STATE ────────────────────────────────────────────────────
+let FL_D = {
+  imported: false,
+  scenario: '',
+  scenarioNum: 0,
+  lastImport: '',
+  // Dashboard
+  fireDate: '—',
+  netWorth: 0,
+  firePct: 0,
+  helocAvail: 0,
+  hfFinal: 0,
+  keyDates: {},
+  income: {},
+  expenses: {},
+  realEstate: {},
+  // Timeline
+  timeline: [],
+  fireMonth: 0,
+  todayMonth: 1,
+  // Actuals
+  actuals: [],
+  // Scenarios
+  scenarios: [],
+  scHeaders: [],
+  scRows: [],
+};
+
+
+// ── IMPORT ───────────────────────────────────────────────────
+function flImport(evt) {
+  const file = evt.target.files[0];
+  if(!file) return;
+  if(document.getElementById('fl-import-status')) document.getElementById('fl-import-status').textContent = 'Reading ' + file.name + '…';
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
+      flParseWorkbook(wb, file.name);
+    } catch(err) {
+      if(document.getElementById('fl-import-status')) document.getElementById('fl-import-status').textContent = 'Error: ' + err.message;
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function flParseWorkbook(wb, fname) {
+  // ── INPUTS ──
+  const inp = wb.Sheets['Inputs'];
+  const inpRows = inp ? XLSX.utils.sheet_to_json(inp, {header:1}) : [];
+  const iv = {};
+  inpRows.forEach(r => { if(r[0] && r[1]!==undefined) iv[String(r[0]).trim()] = r[1]; });
+
+  // ── DASHBOARD ──
+  const dash = wb.Sheets['Dashboard'];
+  const drows = dash ? XLSX.utils.sheet_to_json(dash, {header:1}) : [];
+
+  // Parse dashboard - look for key labels
+  let activeScenarioName = 'Base·Keep';
+  let activeScenarioNum = 1;
+  drows.forEach(r => {
+    for(let i=0;i<r.length;i++) {
+      const v = r[i];
+      if(typeof v === 'string') {
+        const t = v.trim();
+        if(t.includes('ACTIVE SCENARIO')) {
+          // Find the number and name
+          for(let j=i+1;j<r.length;j++) {
+            if(typeof r[j] === 'number') { activeScenarioNum = r[j]; }
+            if(typeof r[j] === 'string' && r[j].length > 2 && !r[j].includes('Change')) {
+              activeScenarioName = r[j]; break;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Extract key dashboard values by scanning all cells
+  const dv = {};
+  drows.forEach(r => {
+    for(let i=0;i<r.length;i++) {
+      if(typeof r[i]==='string' && r[i].trim()) {
+        // Look ahead for values
+        for(let j=i+1;j<Math.min(i+12,r.length);j++) {
+          if(r[j]!==null && r[j]!==undefined && r[j]!=='') {
+            dv[r[i].trim()] = r[j];
+            break;
+          }
+        }
+      }
+    }
+  });
+
+  // ── PROJECTION ──
+  const proj = wb.Sheets['Projection'];
+  const prows = proj ? XLSX.utils.sheet_to_json(proj, {header:1}) : [];
+  // Row 2 = column headers, Row 3+ = data
+  const phdr = prows[2] || [];
+  const ci = name => phdr.findIndex(h=>h&&String(h).trim()===name);
+  const moI=ci('Mo'), dtI=ci('Date'), w2I=ci('W2'), ptoI=ci('PTO'), sdiI=ci('SDI');
+  const bizI=ci('Business'), rentI=ci('Rent'), giftI=ci('Gift'), detI=ci('Detroit');
+  const trI=ci('TaxRet'), totInI=ci('TotIncome');
+  const spI=ci('Spend'), vmI=ci('VMort'), pmI=ci('PMort'), hiI=ci('HELOCInt');
+  const otI=ci('OneTime'), totExI=ci('TotExpense'), cfI=ci('CashFlow');
+  const helocI=ci('HELOCDrawn'), hfI=ci('HF'), tiaaI=ci('TIAA');
+  const nwI=ci('NetWorth'), fpI=ci('FIRE%'), paI=ci('Passive');
+
+  const timeline = [];
+  const now = new Date();
+  const startDate = new Date(2026, 5, 1); // Jun 2026
+
+  for(let i=3;i<prows.length;i++) {
+    const r=prows[i];
+    if(!r[moI]) continue;
+    const dt = r[dtI];
+    let dateStr = '—';
+    if(dt instanceof Date) dateStr = MONTHS[dt.getMonth()]+' '+dt.getFullYear();
+    else if(typeof dt==='string') dateStr = dt;
+
+    const firePctVal = r[fpI] || 0;
+    const moNum = r[moI];
+    // Today's month
+    const rowDate = dt instanceof Date ? dt : new Date(2026, 5+moNum-1, 1);
+    const isToday = rowDate.getFullYear()===now.getFullYear() && rowDate.getMonth()===now.getMonth();
+
+    timeline.push({
+      mo: moNum, date: dateStr,
+      w2: r[w2I]||0, pto: r[ptoI]||0, sdi: r[sdiI]||0,
+      biz: r[bizI]||0, rent: r[rentI]||0, gift: r[giftI]||0,
+      totalIn: r[totInI]||0,
+      spend: r[spI]||0, vmort: r[vmI]||0, pmort: r[pmI]||0,
+      helocInt: r[hiI]||0, oneTime: r[otI]||0, totalOut: r[totExI]||0,
+      cf: r[cfI]||0, heloc: r[helocI]||0, hf: r[hfI]||0,
+      tiaa: r[tiaaI]||0, nw: r[nwI]||0,
+      firePct: firePctVal, passive: r[paI]||0,
+      isToday,
+    });
+  }
+
+  // Find FIRE month (first month FIRE% >= 1.0)
+  const fireMonthRow = timeline.find(r=>r.firePct>=1.0);
+  const todayRow = timeline.find(r=>r.isToday) || timeline[0];
+
+  // ── ACTUALS ──
+  const act = wb.Sheets['Actuals'];
+  const actuals = [];
+  if(act) {
+    const arows = XLSX.utils.sheet_to_json(act, {header:1});
+    for(let i=2;i<arows.length;i++) {
+      const r=arows[i];
+      if(!r[0]) continue;
+      const actual = r[2];
+      if(actual!==null && actual!==undefined && actual!=='' && actual!=='-') {
+        const dt = r[1];
+        let dateStr = '—';
+        if(dt instanceof Date) dateStr = MONTHS[dt.getMonth()]+' '+dt.getFullYear();
+        const proj = r[3]||0;
+        const varD = actual - proj;
+        const varP = proj>0 ? (varD/proj*100) : 0;
+        actuals.push({mo:r[0], date:dateStr, actual, proj, varD, varP, notes:r[6]||''});
+      }
+    }
+  }
+
+  // ── SCENARIOS ──
+  const sc = wb.Sheets['Scenarios'];
+  const scRows = sc ? XLSX.utils.sheet_to_json(sc, {header:1}) : [];
+  // Find scenario names row (row 3 in 0-index)
+  let scNames = [], scData = [];
+  scRows.forEach(r => {
+    if(typeof r[4]==='string' && r[4].includes('Keep') || r[4]==='Base·Keep') {
+      scNames = r.slice(4).filter(v=>v&&typeof v==='string');
+    }
+    if(typeof r[0]==='number' && r[0]>=1) {
+      scData.push(r);
+    }
+  });
+
+  // ── SAVE STATE ──
+  FL_D = {
+    imported: true,
+    scenario: activeScenarioName,
+    scenarioNum: activeScenarioNum,
+    lastImport: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + ' · ' + fname,
+    fireDate: fireMonthRow ? fireMonthRow.date : 'Beyond '+timeline[timeline.length-1]?.date,
+    netWorth: timeline[timeline.length-1]?.nw || 0,
+    firePct: fireMonthRow ? 100 : Math.round((todayRow?.firePct||0)*100),
+    hfFinal: timeline[timeline.length-1]?.hf || 0,
+    helocFinal: timeline[timeline.length-1]?.heloc || 0,
+    todayRow, fireMonthRow,
+    keyDates: {
+      jplDeparture: dv['JPL Departure'] || ('Month '+(iv['Leave JPL (month # from Jun 26)']||3)),
+      ptoEnds:      dv['PTO Ends']      || '—',
+      sdiEnds:      dv['SDI Ends']      || '—',
+      tiaaTransfers:dv['TIAA Transfers']|| '—',
+      bizStarts:    dv['Business Starts']||'—',
+      detroitFirst: dv['Detroit 1st Buy']||'Disabled',
+    },
+    income: {
+      biz:     dv['Business Income']  || 0,
+      rent:    dv['Paulette Rent']    || 0,
+      detroit: dv['Detroit Rental']   || 0,
+      hfReturn:dv['HF Return']        || 0,
+      gift:    dv['Parents Gift']     || 0,
+      total:   dv['TOTAL PASSIVE']    || 0,
+    },
+    expenses: {
+      spend:   iv['Base monthly spend']          || 22000,
+      vmort:   iv['Vineta mortgage / month']     || 7900,
+      pmort:   iv['Paulette mortgage / month']   || 3477,
+      helocInt:(iv['HELOC drawn balance']||700000)*(iv['HELOC interest rate (annual)']||0.065)/12,
+      total:   todayRow?.totalOut || 0,
+    },
+    realEstate: {
+      vinetaVal:  dv['Vineta Value']   || 0,
+      vinetaEq:   dv['Vineta Equity 45%'] || 0,
+      paulVal:    dv['Paulette Value'] || 0,
+      paulEq:     dv['Paulette Equity']|| 0,
+      helocDrawn: dv['HELOC Drawn']    || 0,
+    },
+    timeline,
+    fireMonth: fireMonthRow?.mo || 0,
+    actuals,
+    scNames, scData,
+    iv, // raw inputs for AI
+  };
+
+  // Save actuals and inputs for Command Center / FIRE Path
+  try {
+    localStorage.setItem('kcc_fire_actuals', JSON.stringify(actuals));
+    localStorage.setItem('kcc_firelab_last', JSON.stringify(FL_D));
+  localStorage.setItem('kcc_firelab_inputs', JSON.stringify({
+      jpl_net: iv['JPL net monthly income']||17500,
+      jpl_months: iv['Leave JPL (month # from Jun 26)']||3,
+      pto_months: iv['PTO duration (months)']||1,
+      pto_lump: iv['PTO lump sum (0 = take monthly)']||0,
+      sdi_months: iv['SDI duration (months)']||0,
+      biz: iv['Business monthly income']||17500,
+      bizstart: iv['Business start (month #)']||6,
+      spend: iv['Base monthly spend']||22000,
+      vmort: iv['Vineta mortgage / month']||7900,
+      pmort: iv['Paulette mortgage / month']||3477,
+      heloc_balance: iv['HELOC drawn balance']||700000,
+      heloc_rate: ((iv['HELOC interest rate (annual)']||0.065)*100),
+      hfbal: todayRow?.hf || 150000,
+      tiaabal: todayRow?.tiaa || 420000,
+    }));
+  } catch(e) {}
+
+  flRender();
+
+  if(document.getElementById('fl-import-status')) document.getElementById('fl-import-status').textContent = '✓ Imported · ' + timeline.length + ' months · ' + actuals.length + ' actuals';
+  document.getElementById('active-scenario').textContent = 'Scenario ' + FL_D.scenarioNum + ': ' + FL_D.scenario;
+  if(document.getElementById('fl-import-status')) document.getElementById('fl-import-status').textContent = FL_D.lastImport;
+}
+
+// ── RENDER ALL ───────────────────────────────────────────────
+function flRender() {
+  renderDashboard();
+  renderTimeline('all');
+  renderActuals();
+  renderScenarios();
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────
+function renderDashboard() {
+  document.getElementById('dash-empty').style.display = 'none';
+  document.getElementById('dash-content').style.display = 'block';
+
+  const firePctNow = FL_D.todayRow ? Math.round(FL_D.todayRow.firePct*100) : 0;
+
+  document.getElementById('dash-pills').innerHTML = [
+    {lbl:'FIRE Date',    val: FL_D.fireDate,                    cls:FL_D.fireMonth?'g':'a', sub:'first month FIRE% ≥ 100%'},
+    {lbl:'Net Worth',    val: f$(FL_D.netWorth),                cls:'b',                 sub:'at month 120'},
+    {lbl:'FIRE Coverage',val: firePctNow+'%',                cls:firePctNow>=100?'g':firePctNow>=70?'a':'r', sub:'passive / expenses today'},
+    {lbl:'HF at End',    val: f$(FL_D.hfFinal),                 cls:'b',                 sub:'month 120 balance'},
+  ].map(p=>`<div class="pill ${p.cls}"><span class="pill-lbl">${p.lbl}</span><span class="pill-val ${p.cls}">${p.val}</span><span class="pill-sub">${p.sub}</span></div>`).join('');
+
+  // Key dates
+  const kd = FL_D.keyDates;
+  document.getElementById('dash-dates').innerHTML = [
+    {lbl:'JPL Departure',  val:kd.jplDeparture, sub:'leave date'},
+    {lbl:'PTO Ends',       val:kd.ptoEnds,      sub:'last PTO payment'},
+    {lbl:'SDI Ends',       val:kd.sdiEnds,      sub:'state disability'},
+    {lbl:'TIAA Transfers', val:kd.tiaaTransfers,sub:'→ HF account'},
+    {lbl:'Business Starts',val:kd.bizStarts,    sub:'Throwzone income'},
+    {lbl:'Detroit 1st Buy',val:kd.detroitFirst, sub:'rental expansion'},
+  ].map(d=>`<div class="date-item"><span class="date-lbl">${d.lbl}</span><div class="date-val">${d.val||'—'}</div><div class="date-sub">${d.sub}</div></div>`).join('');
+
+  // Income
+  const inc = FL_D.income;
+  document.getElementById('dash-income').innerHTML = [
+    ['Business Income',  inc.biz,     'var(--grn)'],
+    ['Paulette Rent',    inc.rent,    'var(--grn)'],
+    ['Detroit Rental',   inc.detroit, inc.detroit>0?'var(--grn)':'var(--mut)'],
+    ['HF Return (4%)',   inc.hfReturn,'var(--blu)'],
+    ['Parents Gift',     inc.gift,    'var(--mut)'],
+    ['TOTAL PASSIVE',    inc.total,   'var(--amb)'],
+  ].map(([l,v,c])=>`<div style="display:flex;align-items:center;padding:8px 16px;border-bottom:1px solid #1a1e1a;"><span style="flex:1;font-size:12px;color:var(--txt2)">${l}</span><span style="font-size:14px;font-weight:700;color:${c}">${f$(v)}</span></div>`).join('');
+
+  // Expenses
+  const ex = FL_D.expenses;
+  document.getElementById('dash-expenses').innerHTML = [
+    ['Base Monthly Spend', ex.spend,    'var(--red)'],
+    ['Vineta Mortgage',    ex.vmort,    'var(--mut)'],
+    ['Paulette Mortgage',  ex.pmort,    'var(--mut)'],
+    ['HELOC Interest',     ex.helocInt, 'var(--mut)'],
+    ['TOTAL FIXED',        ex.total,    'var(--amb)'],
+  ].map(([l,v,c])=>`<div style="display:flex;align-items:center;padding:8px 16px;border-bottom:1px solid #1a1e1a;"><span style="flex:1;font-size:12px;color:var(--txt2)">${l}</span><span style="font-size:14px;font-weight:700;color:${c}">${f$(v)}</span></div>`).join('');
+
+  // Real estate
+  const re = FL_D.realEstate;
+  document.getElementById('dash-realestate').innerHTML = [
+    {lbl:'Vineta Value',    val:re.vinetaVal, sub:'5% annual growth'},
+    {lbl:'Vineta Equity',   val:re.vinetaEq,  sub:'45% share'},
+    {lbl:'Paulette Value',  val:re.paulVal,   sub:'5% annual growth'},
+    {lbl:'HELOC Drawn',     val:re.helocDrawn,sub:'outstanding balance'},
+  ].map(p=>`<div style="padding:12px 16px;border-right:1px solid var(--brd);"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block;margin-bottom:4px">${p.lbl}</span><span style="font-size:18px;font-weight:700;display:block">${f$(p.val)}</span><span style="font-size:9px;color:var(--mut2)">${p.sub}</span></div>`).join('');
+}
+
+// ── TIMELINE ─────────────────────────────────────────────────
+let timelineView = 'all';
+function setTimelineView(v) {
+  timelineView = v;
+  ['all','24','fire'].forEach(t=>{
+    const b=document.getElementById('tv-'+t);
+    if(b){b.style.background=t===v?'var(--red)':'transparent';b.style.color=t===v?'#fff':'var(--mut)';}
+  });
+  renderTimeline(v);
+}
+
+function renderTimeline(view) {
+  if(!FL_D.imported) return;
+  document.getElementById('timeline-empty').style.display='none';
+  document.getElementById('timeline-content').style.display='block';
+
+  let rows = FL_D.timeline;
+  if(view==='24') rows = rows.slice(0,24);
+  else if(view==='fire' && FL_D.fireMonth) {
+    const fi = FL_D.fireMonth-1;
+    rows = rows.slice(Math.max(0,fi-3), Math.min(rows.length,fi+6));
+  }
+
+  const tbody = document.getElementById('timeline-tbody');
+  tbody.innerHTML = rows.map(r=>{
+    const isFire = FL_D.fireMonth && r.mo===FL_D.fireMonth;
+    const cls = r.isToday?'today':isFire?'fire-month':'';
+    const fpPct = Math.round(r.firePct*100);
+    const fpCls = fpPct>=100?'pos':fpPct>=70?'amb':'neg';
+    return `<tr class="${cls}">
+      <td>${r.mo}${r.isToday?' ★':''}${isFire?' 🎯':''}</td>
+      <td>${r.date}</td>
+      <td>${r.w2>0?f$(r.w2):'—'}</td>
+      <td>${r.pto>0?f$(r.pto):'—'}</td>
+      <td>${r.sdi>0?f$(r.sdi):'—'}</td>
+      <td>${r.biz>0?f$(r.biz):'—'}</td>
+      <td>${r.rent>0?f$(r.rent):'—'}</td>
+      <td>${f$(r.gift)}</td>
+      <td><b>${f$(r.totalIn)}</b></td>
+      <td>${f$(r.spend)}</td>
+      <td>${f$(r.vmort)}</td>
+      <td>${r.pmort>0?f$(r.pmort):'—'}</td>
+      <td>${f$(r.helocInt)}</td>
+      <td><b>${f$(r.totalOut)}</b></td>
+      <td class="${r.cf>=0?'pos':'neg'}">${fc(r.cf)}</td>
+      <td>${f$(r.heloc)}</td>
+      <td>${f$(r.hf)}</td>
+      <td>${r.tiaa>0?f$(r.tiaa):'→HF'}</td>
+      <td>${f$(r.nw)}</td>
+      <td class="${fpCls}"><b>${fpPct}%</b></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── ACTUALS ──────────────────────────────────────────────────
+function renderActuals() {
+  const actuals = FL_D.actuals;
+  if(!FL_D.imported) return;
+
+  if(!actuals.length) {
+    document.getElementById('actuals-empty').style.display='block';
+    document.getElementById('actuals-content').style.display='none';
+    return;
+  }
+
+  document.getElementById('actuals-empty').style.display='none';
+  document.getElementById('actuals-content').style.display='block';
+  document.getElementById('actuals-count').textContent = actuals.length+' month'+(actuals.length===1?'':'s')+' of real data';
+
+  const onTrackCount = actuals.filter(a=>a.varD>=-0.05*a.proj).length;
+  const avgVar = actuals.reduce((s,a)=>s+a.varP,0)/actuals.length;
+  const lastActual = actuals[actuals.length-1];
+
+  document.getElementById('actuals-pills').innerHTML = [
+    {lbl:'Months Tracked',  val:actuals.length,            cls:'b', sub:'real HF entries'},
+    {lbl:'On Track',        val:onTrackCount+'/'+actuals.length, cls:onTrackCount===actuals.length?'g':'a', sub:'within 5% of projection'},
+    {lbl:'Latest Actual HF',val:f$(lastActual?.actual),    cls:'b', sub:lastActual?.date||'—'},
+  ].map(p=>`<div class="pill ${p.cls}"><span class="pill-lbl">${p.lbl}</span><span class="pill-val ${p.cls}">${p.val}</span><span class="pill-sub">${p.sub}</span></div>`).join('');
+
+  document.getElementById('actuals-tbody').innerHTML = actuals.map(a=>{
+    const onTrack = a.varD >= -0.05*a.proj;
+    return `<tr class="${!onTrack?'off-track':''}">
+      <td>${a.mo}</td><td>${a.date}</td>
+      <td class="pos"><b>${f$(a.actual)}</b></td>
+      <td style="color:var(--mut)">${f$(a.proj)}</td>
+      <td class="${a.varD>=0?'pos':'neg'}">${fc(a.varD)}</td>
+      <td class="${a.varD>=0?'pos':'neg'}">${(a.varD>=0?'+':'')+a.varP.toFixed(1)}%</td>
+      <td style="text-align:center"><span class="badge ${onTrack?'badge-g':'badge-r'}">${onTrack?'ON TRACK':'OFF TRACK'}</span></td>
+      <td style="text-align:left;font-size:10px;color:var(--mut)">${esc(a.notes)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── SCENARIOS ────────────────────────────────────────────────
+function renderScenarios() {
+  if(!FL_D.imported) return;
+  document.getElementById('scenarios-empty').style.display='none';
+  document.getElementById('scenarios-content').style.display='block';
+  document.getElementById('active-sc-label').textContent = 'Active: Scenario '+FL_D.scenarioNum+' — '+FL_D.scenario;
+
+  const scNames = FL_D.scNames;
+  if(!scNames.length) {
+    document.getElementById('sc-thead').innerHTML='<tr><th>No scenario data found</th></tr>';
+    return;
+  }
+
+  document.getElementById('sc-thead').innerHTML = '<tr><th style="text-align:left">Parameter</th>'
+    + scNames.map((n,i)=>`<th>${n}<br><span style="font-size:7px;color:var(--mut2)">#${i+1}</span></th>`).join('')+'</tr>';
+
+  document.getElementById('sc-tbody').innerHTML = FL_D.scData.map(r=>{
+    const isActive = FL_D.scenarioNum-1 < scNames.length;
+    const label = r[1] ? String(r[1]).trim() : '';
+    const unit = r[3] ? String(r[3]).trim() : '';
+    const vals = r.slice(4, 4+scNames.length);
+    return `<tr class="${isActive&&r[0]?'':''}">
+      <td>${label} <span style="font-size:9px;color:var(--mut)">${unit}</span></td>
+      ${vals.map((v,i)=>`<td class="${i===FL_D.scenarioNum-1?'pos':''}" style="${i===FL_D.scenarioNum-1?'color:#b080ff;font-weight:700':''}">${v==null?'—':typeof v==='number'?v.toLocaleString():v}</td>`).join('')}
+    </tr>`;
+  }).join('');
+}
+
+// ── AI ───────────────────────────────────────────────────────
+function saveKey() {
+  const k = document.getElementById('api-key-input').value.trim();
+  if(!k){alert('Paste your Claude API key first');return;}
+  localStorage.setItem('kcc_claude', k);
+  document.getElementById('key-status').textContent = '✓ Key saved';
+}
+
+async function runAI() {
+  const key = localStorage.getItem('kcc_claude') || document.getElementById('api-key-input').value.trim();
+  if(!key){alert('Add your Claude API key above');return;}
+  if(!FL_D.imported){alert('Import your spreadsheet first');return;}
+
+  const tx = document.getElementById('ai-text');
+  const st = document.getElementById('ai-status');
+  tx.textContent='Analyzing your FIRE data…'; tx.classList.add('loading');
+  st.textContent='✦ Thinking…';
+
+  const today = FL_D.todayRow;
+  const fire  = FL_D.fireMonthRow;
+  const inc   = FL_D.income;
+  const ex    = FL_D.expenses;
+  const kd    = FL_D.keyDates;
+  const act   = FL_D.actuals;
+
+  const prompt = `You are the FIRE advisor for Sonny Koliwad. Analyze his real spreadsheet data and give specific strategic advice.
+
+ACTIVE SCENARIO: ${FL_D.scenario} (Scenario #${FL_D.scenarioNum})
+FIRE DATE: ${FL_D.fireDate}
+NET WORTH at Month 120: ${f$(FL_D.netWorth)}
+
+CURRENT STATUS (today):
+- Total Income: ${f$(today?.totalIn)}/mo
+- Total Expenses: ${f$(today?.totalOut)}/mo  
+- Cash Flow: ${fc(today?.cf)}/mo
+- HF Balance: ${f$(today?.hf)}
+- HELOC Balance: ${f$(today?.heloc)}
+- FIRE Coverage: ${Math.round((today?.firePct||0)*100)}% (passive / expenses)
+
+KEY DATES:
+- JPL Departure: ${kd.jplDeparture}
+- PTO Ends: ${kd.ptoEnds}
+- SDI Ends: ${kd.sdiEnds}
+- TIAA Transfers: ${kd.tiaaTransfers}
+- Business Starts: ${kd.bizStarts}
+
+INCOME AT END STATE (Mo.120):
+- Business: ${f$(inc.biz)}/mo
+- Paulette Rent: ${f$(inc.rent)}/mo
+- HF Return: ${f$(inc.hfReturn)}/mo
+- Total Passive: ${f$(inc.total)}/mo
+
+ACTUALS TRACKED: ${act.length} months
+${act.length>0 ? act.map(a=>`Mo.${a.mo} ${a.date}: Actual ${f$(a.actual)} vs Projected ${f$(a.proj)} (${a.varD>=0?'+':''}${a.varP.toFixed(1)}%)`).join('\n') : 'No actuals entered yet'}
+
+Provide a 5-6 sentence analysis covering:
+1. Overall trajectory — on track or not, and by how much in dollars and months
+2. The single biggest risk to this plan right now
+3. The single highest-leverage action this month
+4. One thing that looks better than expected (or a warning if nothing does)
+5. Specific recommendation for this week with a dollar amount or deadline
+
+Be direct, specific, use real numbers from the data. No fluff.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':key,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-5',
+        max_tokens:600,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error.message);
+    tx.textContent = data.content[0].text;
+    tx.classList.remove('loading');
+    st.textContent = '✦ Generated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  } catch(err) {
+    tx.textContent = 'Error: '+err.message;
+    tx.classList.remove('loading');
+    st.textContent = 'Error';
+  }
+}
+
+// ── TABS ─────────────────────────────────────────────────────
+function setTab(t, btn) {
+  ['dashboard','timeline','actuals','scenarios','ai'].forEach(v=>{
+    const el=document.getElementById('tab-'+v);
+    if(el) el.style.display=v===t?'block':'none';
+  });
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+;
 
 </script>
 </body>

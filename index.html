@@ -463,7 +463,11 @@ localStorage.setItem = function(key, value) {
 
         
           
-          <!-- PLAYBOOK TODAY -->
+          
+
+          </div>
+
+        <!-- PLAYBOOK TODAY -->
         <div style="border:1px solid var(--brd);background:var(--surf);margin-top:16px;">
           <div class="ch" style="background:#080a08;display:flex;align-items:center;justify-content:space-between;">
             <span class="ct" style="color:var(--grn)">📋 Playbook</span>
@@ -471,8 +475,6 @@ localStorage.setItem = function(key, value) {
           </div>
           <div id="t-playbook" style="padding:6px 14px;"><div class="empty">Loading...</div></div>
         </div>
-
-          </div>
         <!-- URGENT EMAILS -->
         <div class="card" style="margin-bottom:12px" id="emails-card">
           <div class="ch">
@@ -4202,7 +4204,6 @@ function renderPlaybookToday() {
     el.innerHTML = '<div class="empty" style="color:var(--red)">Playbook error: ' + e.message + '</div>';
   }
 }
-
 </script>
 </body>
 </html>

@@ -78,7 +78,7 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 .sbft{padding:10px 16px;border-top:1px solid var(--brd);margin-top:auto;font-size:8px;color:var(--mut2);}
 
 /* ── CONTENT ── */
-.content{flex:1;min-height:0;min-width:0;height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+.content{flex:1;min-height:0;min-width:0;overflow-y:scroll;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
 .page{display:none;padding:22px 26px;animation:fi .15s ease;width:100%;box-sizing:border-box;}
 .page.on{display:block;min-height:100px;}
 @keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
@@ -345,11 +345,16 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 
 
 
+/* [scroll-fix-v2] force visible scrollbar so scrolling is obvious & never silently disabled */
+.content{scrollbar-width:auto !important;scrollbar-color:#5a8acc #0c0f0c !important;overflow-y:scroll !important;}
+.content::-webkit-scrollbar{width:14px !important;display:block !important;}
+.content::-webkit-scrollbar-track{background:#0c0f0c !important;}
+.content::-webkit-scrollbar-thumb{background:#5a8acc !important;border-radius:7px !important;border:3px solid #0c0f0c !important;}
 /* [scroll-fix] guaranteed scroll fallback — content area never traps overflow */
 #shell.on{display:flex;}
 .main{min-height:0;}
-.content{max-height:calc(100vh - 44px);max-height:calc(100dvh - 44px);}
-@supports not (height: 100dvh){ #shell{height:100vh;} .content{max-height:calc(100vh - 44px);} }
+
+ .content{max-height:calc(100vh - 44px);} }
 </style>
 
 <!-- Firebase SDK -->
@@ -463,7 +468,7 @@ localStorage.setItem = function(key, value) {
       <button id="bbrf" onclick="setM('brf')">📄 Briefing</button>
     </div>
     <div class="tr">
-      <span class="tst" id="tst">Not synced</span>
+      <span class="tst" id="tst" title="BUILD scroll-v2">Not synced</span>
       <button class="tbtn" id="sbtn" onclick="doSync()">↻ Sync</button>
       <label class="tbtn" title="Import all Excel files at once" style="cursor:pointer;">
         ⬆ Import Excel
@@ -751,7 +756,6 @@ localStorage.setItem = function(key, value) {
             </div>
           </div>
                 </div>
-</div>
 
       </div>
       <!-- PLAYBOOK -->

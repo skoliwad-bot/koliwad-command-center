@@ -42,7 +42,7 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 .snote a{color:var(--red);text-decoration:none;}
 
 /* ── SHELL ── */
-#shell{display:none;height:100vh;height:-webkit-fill-available;height:100dvh;flex-direction:column;}
+#shell{display:none;height:100vh;height:100dvh;max-height:100vh;max-height:100dvh;flex-direction:column;overflow:hidden;}
 #shell.on{display:flex;}
 
 /* ── TOPBAR ── */
@@ -59,7 +59,7 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 .tbtn.spin{color:var(--amb);border-color:var(--amb);}
 
 /* ── LAYOUT ── */
-.main{display:flex;flex:1;overflow:hidden;}
+.main{display:flex;flex:1;min-height:0;overflow:hidden;}
 .sidebar{width:200px;background:#0c0f0c;border-right:1px solid var(--brd);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
 .sbhdr{padding:14px 16px 10px;border-bottom:1px solid var(--brd);}
 .sbhdr .d{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut2);}
@@ -78,7 +78,7 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 .sbft{padding:10px 16px;border-top:1px solid var(--brd);margin-top:auto;font-size:8px;color:var(--mut2);}
 
 /* ── CONTENT ── */
-.content{flex:1;min-height:0;min-width:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+.content{flex:1;min-height:0;min-width:0;height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
 .page{display:none;padding:22px 26px;animation:fi .15s ease;width:100%;box-sizing:border-box;}
 .page.on{display:block;min-height:100px;}
 @keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
@@ -344,6 +344,12 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 #p-firelab .ai-btn:hover{border-color:#8a6aaa;color:#e8c8ff;}
 
 
+
+/* [scroll-fix] guaranteed scroll fallback — content area never traps overflow */
+#shell.on{display:flex;}
+.main{min-height:0;}
+.content{max-height:calc(100vh - 44px);max-height:calc(100dvh - 44px);}
+@supports not (height: 100dvh){ #shell{height:100vh;} .content{max-height:calc(100vh - 44px);} }
 </style>
 
 <!-- Firebase SDK -->

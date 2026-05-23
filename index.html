@@ -1825,6 +1825,12 @@ async function fTasks(){
   const r=await fetch('https://tasks.googleapis.com/tasks/v1/users/@me/lists',{headers:{Authorization:'Bearer '+AT}});
   const ls=await r.json();
   for(const l of(ls.items||[])){
+    // List name drives priority: High/Must, Medium/Should, Low. Due-date still stacks as fallback.
+    const ln=(l.title||'').toLowerCase();
+    let listSig=null;
+    if(/\b(high|must|urgent|critical|priority|p1)\b/.test(ln)) listSig='lh';
+    else if(/\b(medium|should|soon|p2)\b/.test(ln)) listSig='lm';
+    else if(/\b(low|could|someday|backlog|later|p3)\b/.test(ln)) listSig='ll';
     const tr=await fetch('https://tasks.googleapis.com/tasks/v1/lists/'+l.id+'/tasks?showCompleted=false&showHidden=false&maxResults=100',{headers:{Authorization:'Bearer '+AT}});
     const td=await tr.json();
     for(const t of(td.items||[])){
@@ -1834,7 +1840,8 @@ async function fTasks(){
       const sig=[],nl=(t.notes||'').toLowerCase();
       MKW.forEach(k=>{if(nl.includes(k)) sig.push('nm');});
       SKW.forEach(k=>{if(nl.includes(k)) sig.push('ns');});
-      items.push({id:t.id,title:t.title,detail:t.notes||'',dd:due?isoD(due):'',dr:due,da,src:'Tasks',sig,category:autoCategory(t.title)});
+      if(listSig) sig.push(listSig);
+      items.push({id:t.id,title:t.title,detail:t.notes||'',dd:due?isoD(due):'',dr:due,da,src:'Tasks',sig,list:l.title||'',category:autoCategory(t.title)});
     }
   }
   return items;
@@ -1887,6 +1894,10 @@ function autoCategory(title) {
 function moscow(item){
   let sc=0; const sig=item.sig||[], da=item.da;
   if(da<=0)sc+=45;else if(da<=1)sc+=38;else if(da<=3)sc+=22;else if(da<=7)sc+=12;
+  // List-name priority (Google Tasks list = High/Medium/Low). Due-date still stacks on top.
+  if(sig.includes('lh')) sc+=40;   // High/Must list -> Must
+  if(sig.includes('lm')) sc+=18;   // Medium/Should list -> Should (urgent due date can lift to Must)
+  if(sig.includes('ll')) sc+=6;    // Low list -> Could
   if(sig.includes('st')) sc+=18;
   if(sig.includes('ou')) sc+=12;
   if(sig.includes('sm')) sc+=22;

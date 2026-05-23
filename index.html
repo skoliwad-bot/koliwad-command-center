@@ -1,6 +1,4 @@
-<!DOC
-
-        TYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"><!-- v1779505227 -->
@@ -274,6 +272,77 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 .ai-text.loading{color:#6a5a8a;font-style:italic;}
 .aibtn{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border:1px solid #4a3a6a;background:linear-gradient(135deg,#1a1a3a,#2a1a3a);color:#c8a8ff;cursor:pointer;transition:all .15s;}
 .aibtn:hover{border-color:#8a6aaa;color:#e8c8ff;}
+
+/* ══ FIRE LAB PAGE STYLES (scoped to #p-firelab) ══ */
+#p-firelab .import-bar{background:#0d100d;border:1px solid var(--brd);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:0;}
+#p-firelab .import-bar label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:6px 16px;border:1px solid var(--grn);color:var(--grn);cursor:pointer;}
+#p-firelab .import-bar label:hover{background:rgba(74,156,92,0.1);}
+#p-firelab .scenario-badge{font-size:10px;font-weight:700;padding:4px 12px;border:1px solid #7a5cb8;color:#9a7cd8;background:rgba(122,92,184,0.1);}
+#p-firelab .import-status{font-size:9px;color:var(--mut);margin-left:auto;}
+#p-firelab .last-import{font-size:9px;color:var(--mut2);}
+#p-firelab .tabs{display:flex;border-bottom:1px solid var(--brd);background:#060806;flex-wrap:wrap;}
+#p-firelab .tab{padding:11px 22px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border:none;background:transparent;color:var(--mut);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;}
+#p-firelab .tab:hover{color:var(--txt);}
+#p-firelab .tab.on{color:#ff6060;border-bottom-color:#ff6060;}
+#p-firelab .wrap{max-width:100%;margin:0;padding:20px 0;}
+#p-firelab .card{border:1px solid var(--brd);background:var(--surf);}
+#p-firelab .ch{padding:9px 16px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;background:#0f110f;}
+#p-firelab .ct{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
+#p-firelab .ct-r{color:var(--red);}#p-firelab .ct-g{color:var(--grn);}#p-firelab .ct-b{color:var(--blu);}#p-firelab .ct-a{color:var(--amb);}#p-firelab .ct-p{color:#9a7cd8;}#p-firelab .ct-m{color:var(--mut);}
+#p-firelab .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+#p-firelab .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+#p-firelab .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+#p-firelab .pill{border:1px solid var(--brd);background:var(--surf);padding:14px 16px;}
+#p-firelab .pill.r{border-color:rgba(208,64,64,0.4);background:rgba(208,64,64,0.08);}
+#p-firelab .pill.g{border-color:rgba(74,156,92,0.4);background:rgba(74,156,92,0.08);}
+#p-firelab .pill.b{border-color:rgba(74,122,184,0.4);background:rgba(74,122,184,0.08);}
+#p-firelab .pill.a{border-color:rgba(196,144,48,0.4);background:rgba(196,144,48,0.08);}
+#p-firelab .pill-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#b0ccb0;display:block;margin-bottom:6px;}
+#p-firelab .pill-val{font-size:28px;font-weight:700;display:block;line-height:1;color:#ffffff;}
+#p-firelab .pill-val.r{color:var(--red);}#p-firelab .pill-val.g{color:var(--grn);}#p-firelab .pill-val.b{color:var(--blu);}#p-firelab .pill-val.a{color:var(--amb);}
+#p-firelab .pill-sub{font-size:9px;color:var(--mut);display:block;margin-top:4px;}
+#p-firelab .tbl-wrap{overflow-x:auto;}
+#p-firelab table{width:100%;border-collapse:collapse;font-size:11px;}
+#p-firelab th{font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#b0ccb0;padding:9px 10px;border-bottom:2px solid var(--brd);text-align:right;white-space:nowrap;background:#080a08;}
+#p-firelab th:first-child{text-align:left;}
+#p-firelab td{padding:8px 10px;border-bottom:1px solid #1e231e;text-align:right;color:var(--txt2);font-size:11px;}
+#p-firelab td:first-child{text-align:left;color:var(--txt);font-weight:600;}
+#p-firelab tr:hover td{background:rgba(255,255,255,.04);}
+#p-firelab tr.today td{background:rgba(82,176,102,.1)!important;color:#ffffff!important;}
+#p-firelab tr.fire-month td{background:rgba(90,138,204,.15)!important;font-weight:700;color:#ffffff!important;}
+#p-firelab tr.off-track td:first-child{color:var(--red);}
+#p-firelab .pos{color:var(--grn)!important;}#p-firelab .neg{color:var(--red)!important;}#p-firelab .amb{color:var(--amb)!important;}
+#p-firelab .sc-table{width:100%;border-collapse:collapse;font-size:11px;}
+#p-firelab .sc-table th{font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);padding:8px 10px;border-bottom:1px solid var(--brd);text-align:right;background:#0f110f;white-space:nowrap;}
+#p-firelab .sc-table th:first-child{text-align:left;}
+#p-firelab .sc-table td{padding:8px 10px;border-bottom:1px solid #1a1e1a;text-align:right;font-size:11px;}
+#p-firelab .sc-table td:first-child{text-align:left;color:var(--txt);font-weight:600;}
+#p-firelab .empty-state{text-align:center;padding:60px 20px;}
+#p-firelab .empty-state .icon{font-size:48px;margin-bottom:16px;}
+#p-firelab .empty-state h2{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--txt);margin-bottom:8px;}
+#p-firelab .empty-state p{font-size:12px;color:var(--mut);line-height:1.7;max-width:400px;margin:0 auto 20px;}
+#p-firelab .empty-state label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:10px 24px;border:1px solid var(--grn);color:var(--grn);cursor:pointer;display:inline-block;}
+#p-firelab .dates-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--brd);}
+#p-firelab .date-item{padding:12px 16px;border-right:1px solid var(--brd);border-bottom:1px solid var(--brd);}
+#p-firelab .date-item:nth-child(3n){border-right:none;}
+#p-firelab .date-item:nth-last-child(-n+3){border-bottom:none;}
+#p-firelab .date-lbl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#b0ccb0;display:block;margin-bottom:4px;}
+#p-firelab .date-val{font-size:14px;font-weight:700;color:var(--txt);}
+#p-firelab .date-sub{font-size:9px;color:var(--mut2);margin-top:2px;}
+#p-firelab .badge{font-size:8px;font-weight:700;padding:2px 8px;letter-spacing:.5px;white-space:nowrap;}
+#p-firelab .badge-g{background:rgba(74,156,92,0.15);color:var(--grn);}
+#p-firelab .badge-r{background:rgba(208,64,64,0.15);color:var(--red);}
+#p-firelab .badge-a{background:rgba(196,144,48,0.15);color:var(--amb);}
+#p-firelab .badge-b{background:rgba(74,122,184,0.15);color:var(--blu);}
+#p-firelab .ai-block{border:1px solid #3a2a5a;background:linear-gradient(135deg,#0e0a1a,#160e22);padding:14px 16px;margin-bottom:16px;display:block;}
+#p-firelab .ai-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+#p-firelab .ai-title{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9a78cc;}
+#p-firelab .ai-status{font-size:9px;color:#6a5a8a;font-style:italic;}
+#p-firelab .ai-text{font-size:12px;color:#ddd0f0;line-height:1.8;}
+#p-firelab .ai-text.loading{color:#6a5a8a;font-style:italic;}
+#p-firelab .ai-btn{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border:1px solid #4a3a6a;background:linear-gradient(135deg,#1a1a3a,#2a1a3a);color:#c8a8ff;cursor:pointer;}
+#p-firelab .ai-btn:hover{border-color:#8a6aaa;color:#e8c8ff;}
+
 
 </style>
 

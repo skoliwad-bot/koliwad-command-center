@@ -2706,7 +2706,7 @@ function openFireLab(){nav('firelab');}
 
 function el(id){return document.getElementById(id);}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function f$(n){return n!=null?'$'+Number(n).toLocaleString():'—';}
+function f$(n){return n!=null?'$'+Math.round(Number(n)||0).toLocaleString():'—';}
 function isoD(d){return d.toISOString().split('T')[0];}
 function sameD(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
 function fd(s){if(!s)return'';const d=new Date(s+(s.length===10?'T12:00:00':''));return SM[d.getMonth()]+' '+d.getDate();}
@@ -4652,6 +4652,11 @@ function flImport(evt) {
   reader.readAsArrayBuffer(file);
 }
 
+// [merge-fix] global helpers for FIRE Lab (were only defined locally in other render fns)
+if(typeof MONTHS==='undefined'){var MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];}
+if(typeof window.f$!=='function'){window.f$=function(n){return n!=null?'$'+Math.round(Number(n)||0).toLocaleString():'$0';};}
+if(typeof window.fc!=='function'){window.fc=function(n){n=Number(n)||0;return (n>=0?'+':'-')+'$'+Math.abs(Math.round(n)).toLocaleString();};}
+if(typeof window.esc!=='function'){window.esc=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};}
 function flParseWorkbook(wb, fname) {
   // ── INPUTS ──
   const inp = wb.Sheets['Inputs'];

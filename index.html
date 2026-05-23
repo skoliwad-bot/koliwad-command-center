@@ -472,8 +472,7 @@ localStorage.setItem = function(key, value) {
           <div id="t-playbook" style="padding:6px 14px;"><div class="empty">Loading...</div></div>
         </div>
 
-          <div class="card"><div class="ch"><span class="ct o">🎟 Sell Zone</span></div><div id="t-tk"><div class="empty" style="color:var(--grn)">✅ None needed</div></div></div>
-        </div>
+          </div>
         <!-- URGENT EMAILS -->
         <div class="card" style="margin-bottom:12px" id="emails-card">
           <div class="ch">
@@ -4166,50 +4165,41 @@ function getWeekNum(d) {
 function renderPlaybookToday() {
   const el = document.getElementById('t-playbook');
   if(!el) return;
-  const now = new Date();
-  const todayKey = now.toISOString().split('T')[0];
-  const thisMonth = now.getFullYear() + '-' + (now.getMonth()+1);
-  const checks = JSON.parse(localStorage.getItem('kcc_playbook_checks')||'{}');
-
-  const items = [];
-
-  // Daily items not yet done
-  PLAYBOOK.daily.forEach(item => {
-    const key = item.id+'_'+todayKey;
-    if(!checks[key]) items.push({...item, freq:'Daily', color:'var(--grn)', key});
-  });
-
-  // Weekly items not done this week
-  PLAYBOOK.weekly.forEach(item => {
-    const key = item.id+'_week'+getWeekNum(now);
-    if(!checks[key]) items.push({...item, freq:'Weekly', color:'var(--blu)', key});
-  });
-
-  // Monthly items not done this month (only show 1st-7th)
-  if(now.getDate() <= 7) {
-    PLAYBOOK.monthly.forEach(item => {
-      const key = item.id+'_'+thisMonth;
-      if(!checks[key]) items.push({...item, freq:'Monthly', color:'var(--amb)', key});
+  try {
+    const now = new Date();
+    const todayKey = now.toISOString().split('T')[0];
+    const thisMonth = now.getFullYear() + '-' + (now.getMonth()+1);
+    const checks = JSON.parse(localStorage.getItem('kcc_playbook_checks')||'{}');
+    const items = [];
+    PLAYBOOK.daily.forEach(item => {
+      const key = item.id+'_'+todayKey;
+      if(!checks[key]) items.push({...item, freq:'Daily', color:'var(--grn)', key});
     });
+    PLAYBOOK.weekly.forEach(item => {
+      const key = item.id+'_week'+getWeekNum(now);
+      if(!checks[key]) items.push({...item, freq:'Weekly', color:'var(--blu)', key});
+    });
+    if(now.getDate() <= 7) {
+      PLAYBOOK.monthly.forEach(item => {
+        const key = item.id+'_'+thisMonth;
+        if(!checks[key]) items.push({...item, freq:'Monthly', color:'var(--amb)', key});
+      });
+    }
+    if(!items.length) {
+      el.innerHTML = '<div class="empty" style="color:var(--grn);padding:8px 0">✅ All Playbook items complete</div>';
+      return;
+    }
+    el.innerHTML = items.slice(0,6).map(item =>
+      '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #1e231e">'
+      +'<input type="checkbox" onchange="pbCheck(''+item.key+'', this.checked)" style="width:14px;height:14px;accent-color:var(--grn);flex-shrink:0;cursor:pointer">'
+      +'<div style="flex:1;min-width:0">'
+      +'<div class="rtl">'+item.icon+' '+esc(item.label)+'</div>'
+      +'<div style="font-size:8px;color:'+item.color+'">'+item.freq+'</div>'
+      +'</div></div>'
+    ).join('')
+    + (items.length > 6 ? '<div style="font-size:9px;color:var(--mut2);padding:4px 0">+' + (items.length-6) + ' more</div>' : '');
+  } catch(e) {
+    el.innerHTML = '<div class="empty" style="color:var(--red)">Playbook error: ' + e.message + '</div>';
   }
-
-  if(!items.length) {
-    el.innerHTML = '<div class="empty" style="color:var(--grn)">✅ All Playbook items complete</div>';
-    return;
-  }
-
-  el.innerHTML = items.slice(0,6).map(item =>
-    `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #1e231e">
-      <input type="checkbox" onchange="pbCheck('${item.key}', this.checked)"
-        style="width:14px;height:14px;accent-color:var(--grn);flex-shrink:0;cursor:pointer">
-      <div style="flex:1;min-width:0">
-        <div class="rtl">${item.icon} ${esc(item.label)}</div>
-        <div class="rsb" style="color:${item.color}">${item.freq}</div>
-      </div>
-    </div>`
-  ).join('') + (items.length > 6 ? `<div style="font-size:9px;color:var(--mut2);padding:4px 0">+${items.length-6} more — see Playbook</div>` : '');
 }
-
-</script>
-</body>
-</html>
+>

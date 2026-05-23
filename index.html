@@ -4191,7 +4191,7 @@ function renderPlaybookToday() {
     }
     el.innerHTML = items.slice(0,6).map(item =>
       '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #1e231e">'
-      +'<input type="checkbox" onchange="pbCheck(''+item.key+'', this.checked)" style="width:14px;height:14px;accent-color:var(--grn);flex-shrink:0;cursor:pointer">'
+      +'<input type="checkbox" onchange="pbCheck(\'' + item.key + '\', this.checked)" style="width:14px;height:14px;accent-color:var(--grn);flex-shrink:0;cursor:pointer">'
       +'<div style="flex:1;min-width:0">'
       +'<div class="rtl">'+item.icon+' '+esc(item.label)+'</div>'
       +'<div style="font-size:8px;color:'+item.color+'">'+item.freq+'</div>'
@@ -4202,4 +4202,7 @@ function renderPlaybookToday() {
     el.innerHTML = '<div class="empty" style="color:var(--red)">Playbook error: ' + e.message + '</div>';
   }
 }
->
+
+</script>
+</body>
+</html>

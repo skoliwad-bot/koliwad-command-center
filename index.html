@@ -42,7 +42,7 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 .snote a{color:var(--red);text-decoration:none;}
 
 /* ── SHELL ── */
-#shell{display:none;height:100vh;height:-webkit-fill-available;flex-direction:column;}
+#shell{display:none;height:100vh;height:-webkit-fill-available;height:100dvh;flex-direction:column;}
 #shell.on{display:flex;}
 
 /* ── TOPBAR ── */
@@ -78,7 +78,7 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 .sbft{padding:10px 16px;border-top:1px solid var(--brd);margin-top:auto;font-size:8px;color:var(--mut2);}
 
 /* ── CONTENT ── */
-.content{flex:1;overflow-y:auto;overflow-x:hidden;}
+.content{flex:1;min-height:0;min-width:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
 .page{display:none;padding:22px 26px;animation:fi .15s ease;width:100%;box-sizing:border-box;}
 .page.on{display:block;min-height:100px;}
 @keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}

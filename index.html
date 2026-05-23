@@ -1213,6 +1213,7 @@ localStorage.setItem = function(key, value) {
 </div>
 
 <script>
+
 // ── CONSTANTS ────────────────────────────────────────────────
 const MKW=['urgent','asap','eod','end of day','deadline','action required','due today','overdue','critical','time sensitive'];
 const SKW=['follow up','follow-up','reminder','please review','waiting on','your input','needed by','this week'];
@@ -3176,7 +3177,7 @@ async function importAllExcel(evt) {
             if(actuals.length) localStorage.setItem('kcc_fire_actuals',JSON.stringify(actuals));
           }
           localStorage.setItem('kcc_firelab_inputs', JSON.stringify({
-            hfbal:hfBal, tiaabal:tiaaBal, heloc_balance:helocBal,
+            hfbal:iv['HF starting balance']||hfBal, tiaabal:iv['TIAA starting balance']||tiaaBal, heloc_balance:iv['HELOC drawn balance']||helocBal,
             spend:iv['Base monthly spend']||22000,
             vmort:iv['Vineta mortgage / month']||7900,
             pmort:iv['Paulette mortgage / month']||3477,
@@ -4156,47 +4157,50 @@ function getWeekNum(d) {
   const onejan = new Date(d.getFullYear(), 0, 1);
   return Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
 }
-
 function renderPlaybookToday() {
-  const el = document.getElementById('t-playbook');
+  var el = document.getElementById('t-playbook');
   if(!el) return;
   try {
-    const now = new Date();
-    const todayKey = now.toISOString().split('T')[0];
-    const thisMonth = now.getFullYear() + '-' + (now.getMonth()+1);
-    const checks = JSON.parse(localStorage.getItem('kcc_playbook_checks')||'{}');
-    const items = [];
-    PLAYBOOK.daily.forEach(item => {
-      const key = item.id+'_'+todayKey;
-      if(!checks[key]) items.push({...item, freq:'Daily', color:'var(--grn)', key});
+    var now = new Date();
+    var todayKey = now.toISOString().split('T')[0];
+    var thisMonth = now.getFullYear() + '-' + (now.getMonth()+1);
+    var checks = JSON.parse(localStorage.getItem('kcc_playbook_checks')||'{}');
+    var items = [];
+    PLAYBOOK.daily.forEach(function(item) {
+      var key = item.id+'_'+todayKey;
+      if(!checks[key]) items.push({icon:item.icon,label:item.label,freq:'Daily',color:'var(--grn)',key:key});
     });
-    PLAYBOOK.weekly.forEach(item => {
-      const key = item.id+'_week'+getWeekNum(now);
-      if(!checks[key]) items.push({...item, freq:'Weekly', color:'var(--blu)', key});
+    PLAYBOOK.weekly.forEach(function(item) {
+      var key = item.id+'_week'+getWeekNum(now);
+      if(!checks[key]) items.push({icon:item.icon,label:item.label,freq:'Weekly',color:'var(--blu)',key:key});
     });
     if(now.getDate() <= 7) {
-      PLAYBOOK.monthly.forEach(item => {
-        const key = item.id+'_'+thisMonth;
-        if(!checks[key]) items.push({...item, freq:'Monthly', color:'var(--amb)', key});
+      PLAYBOOK.monthly.forEach(function(item) {
+        var key = item.id+'_'+thisMonth;
+        if(!checks[key]) items.push({icon:item.icon,label:item.label,freq:'Monthly',color:'var(--amb)',key:key});
       });
     }
     if(!items.length) {
-      el.innerHTML = '<div class="empty" style="color:var(--grn);padding:8px 0">✅ All Playbook items complete</div>';
+      el.innerHTML = '<div class="empty" style="color:var(--grn);padding:8px 0">\u2705 All Playbook items complete</div>';
       return;
     }
-    el.innerHTML = items.slice(0,6).map(item =>
-      '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #1e231e">'
-      +'<input type="checkbox" onchange="pbCheck(\'' + item.key + '\', this.checked)" style="width:14px;height:14px;accent-color:var(--grn);flex-shrink:0;cursor:pointer">'
-      +'<div style="flex:1;min-width:0">'
-      +'<div class="rtl">'+item.icon+' '+esc(item.label)+'</div>'
-      +'<div style="font-size:8px;color:'+item.color+'">'+item.freq+'</div>'
-      +'</div></div>'
-    ).join('')
-    + (items.length > 6 ? '<div style="font-size:9px;color:var(--mut2);padding:4px 0">+' + (items.length-6) + ' more</div>' : '');
+    var out = '';
+    for(var i=0; i<Math.min(items.length,8); i++) {
+      var it = items[i];
+      out += '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #1e231e">'
+           + '<input type="checkbox" onchange="pbCheck(\'' + it.key + '\', this.checked)" style="width:14px;height:14px;accent-color:var(--grn);flex-shrink:0;cursor:pointer">'
+           + '<div style="flex:1;min-width:0">'
+           + '<div class="rtl">' + it.icon + ' ' + esc(it.label) + '</div>'
+           + '<div style="font-size:8px;color:' + it.color + '">' + it.freq + '</div>'
+           + '</div></div>';
+    }
+    if(items.length > 8) out += '<div style="font-size:9px;color:var(--mut2);padding:4px 0">+' + (items.length-8) + ' more</div>';
+    el.innerHTML = out;
   } catch(e) {
-    el.innerHTML = '<div class="empty" style="color:var(--red)">Playbook error: ' + e.message + '</div>';
+    el.innerHTML = '<div class="empty" style="color:var(--red)">Error: ' + e.message + '</div>';
   }
 }
+
 </script>
 </body>
 </html>

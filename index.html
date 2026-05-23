@@ -3221,7 +3221,7 @@ async function importAllExcel(evt) {
 
   // Re-render everything
   renderAll();
-  if(S.page==='fire') rFire();
+  rFire();  // always refresh FIRE PATH regardless of current page
   if(S.page==='financials') rFin();
   if(S.page==='tickets') rTickets();
 
@@ -3232,7 +3232,7 @@ async function importAllExcel(evt) {
   fbSaveAll();
 
   // Show summary
-  alert('✅ Import Complete\n\n' + status.join('\n') + '\n\nAll data saved and synced to cloud.');
+  alert('\u2705 Import Complete\n\n' + status.join('\n') + '\n\nAll data saved and synced to cloud.');
 }
 
 // ══ AI + EXEC SUMMARY ═══════════════════════════════════════

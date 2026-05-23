@@ -1038,7 +1038,7 @@ localStorage.setItem = function(key, value) {
     <div class="icon">📊</div>
     <h2>No Data Yet</h2>
     <p>Import your FIRE Lab Excel spreadsheet to see your Dashboard, Timeline, Actuals, and get AI analysis of your financial independence trajectory.</p>
-    <label>⬆ Import Excel Spreadsheet<input type="file" accept=".xlsx,.xls" onchange="importExcel(event)" style="display:none"></label>
+    <label>⬆ Import Excel Spreadsheet<input type="file" accept=".xlsx,.xls" onchange="flImport(event)" style="display:none"></label>
   </div>
   <div id="dash-content" style="display:none">
     <!-- Status pills -->
@@ -1073,7 +1073,7 @@ localStorage.setItem = function(key, value) {
     <div class="icon">📈</div>
     <h2>No Timeline Data</h2>
     <p>Import your spreadsheet to see the 120-month projection.</p>
-    <label>⬆ Import Excel<input type="file" accept=".xlsx,.xls" onchange="importExcel(event)" style="display:none"></label>
+    <label>⬆ Import Excel<input type="file" accept=".xlsx,.xls" onchange="flImport(event)" style="display:none"></label>
   </div>
   <div id="timeline-content" style="display:none">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
@@ -1109,7 +1109,7 @@ localStorage.setItem = function(key, value) {
     <div class="icon">✅</div>
     <h2>No Actuals Yet</h2>
     <p>Enter your real HF balance each month in column C of the Actuals sheet in your Excel file, then import to track actual vs projected performance.</p>
-    <label>⬆ Import Excel<input type="file" accept=".xlsx,.xls" onchange="importExcel(event)" style="display:none"></label>
+    <label>⬆ Import Excel<input type="file" accept=".xlsx,.xls" onchange="flImport(event)" style="display:none"></label>
   </div>
   <div id="actuals-content" style="display:none">
     <div class="g3" id="actuals-pills" style="margin-bottom:16px"></div>
@@ -1135,7 +1135,7 @@ localStorage.setItem = function(key, value) {
     <div class="icon">🎯</div>
     <h2>No Scenario Data</h2>
     <p>Import your spreadsheet to compare all 10 scenarios.</p>
-    <label>⬆ Import Excel<input type="file" accept=".xlsx,.xls" onchange="importExcel(event)" style="display:none"></label>
+    <label>⬆ Import Excel<input type="file" accept=".xlsx,.xls" onchange="flImport(event)" style="display:none"></label>
   </div>
   <div id="scenarios-content" style="display:none">
     <div class="card" style="margin-bottom:16px">

@@ -3132,21 +3132,32 @@ async function importAllExcel(evt) {
         // FIRE Lab
         // Save inputs for FIRE Lab
         const inp = wb.Sheets['Inputs'];
-        if(inp) {
-          const rows = XLSX.utils.sheet_to_json(inp, {header:1});
+        // Always attempt FIRE Lab parse regardless of inp
+        {
+          // Parse Inputs sheet
           const iv = {};
-          rows.forEach(r => { if(r[0]&&r[1]!==undefined) iv[String(r[0]).trim()]=r[1]; });
+          if(inp) {
+            const inpRows = XLSX.utils.sheet_to_json(inp, {header:1, defval:null});
+            inpRows.forEach(r => { if(r[0]&&r[1]!=null) iv[String(r[0]).trim()]=r[1]; });
+          }
+          // Parse Projection - find header row dynamically (look for 'Mo' in col 0)
           const proj = wb.Sheets['Projection'];
-          const prows = proj ? XLSX.utils.sheet_to_json(proj,{header:1}) : [];
-          const phdr = prows[2]||[];
-          const ci = n => phdr.findIndex(h=>h&&String(h).trim()===n);
-          const m1 = prows[3]||[];
-          const hfBal   = m1[ci('HF')]||0;
-          const tiaaBal = m1[ci('TIAA')]||0;
-          const helocBal= m1[ci('HELOCDrawn')]||0;
-          const firePct = Math.round((m1[ci('FIRE%')]||0)*100);
-          const totalIn = m1[ci('TotIncome')]||0;
-          const totalOut= m1[ci('TotExpense')]||0;
+          const prows = proj ? XLSX.utils.sheet_to_json(proj,{header:1, defval:null}) : [];
+          let hdrIdx = -1;
+          for(let ri=0; ri<Math.min(prows.length,10); ri++) {
+            if(prows[ri]&&String(prows[ri][0]||'').trim()==='Mo') { hdrIdx=ri; break; }
+          }
+          const phdr = hdrIdx>=0 ? prows[hdrIdx] : (prows[2]||[]);
+          const m1 = hdrIdx>=0 ? (prows[hdrIdx+1]||[]) : (prows[3]||[]);
+          const ci = n => { for(let i=0;i<phdr.length;i++) if(phdr[i]&&String(phdr[i]).trim()===n) return i; return -1; };
+          const gv = (row,col) => { const i=ci(col); return (i>=0&&row[i]!=null)?row[i]:0; };
+          const hfBal   = gv(m1,'HF');
+          const tiaaBal = gv(m1,'TIAA');
+          const helocBal= gv(m1,'HELOCDrawn');
+          const firePct = Math.round((gv(m1,'FIRE%'))*100);
+          const totalIn = gv(m1,'TotIncome');
+          const totalOut= gv(m1,'TotExpense');
+          console.log('[FIRE Lab] hdrIdx='+hdrIdx+' HF='+hfBal+' TIAA='+tiaaBal+' HELOC='+helocBal+' FIRE%='+firePct+' Income='+totalIn);
           // Update FIRE state
           const fireData = {
             need: iv['Base monthly spend']||22000,

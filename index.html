@@ -1662,23 +1662,7 @@ function setTab(t, btn) {
 }
 
 // ── INIT ─────────────────────────────────────────────────────
-window.addEventListener('load', ()=>{
-  // Load any previously imported data from localStorage
-  const saved = localStorage.getItem('kcc_firelab_last');
-  if(saved) {
-    try {
-      const d = JSON.parse(saved);
-      D = {...D, ...d};
-      if(D.imported) renderAll();
-    } catch(e) {}
-  }
-  // Pre-fill API key
-  const k = localStorage.getItem('kcc_claude');
-  if(k) {
-    document.getElementById('api-key-input').value = k;
-    document.getElementById('key-status').textContent = '✓ Key loaded from Command Center';
-  }
-});
+// fire-lab load listener removed - handled by main app launch();
 </script>
 
         </div>
@@ -2101,6 +2085,15 @@ function launch(){
   S.cal      = JSON.parse(localStorage.getItem('kcc_cal')||'[]');
   renderAll();
   loadGSI();
+  // Restore FIRE Lab data from localStorage
+  try {
+    const flSaved = localStorage.getItem('kcc_firelab_last');
+    if(flSaved) {
+      const flD = JSON.parse(flSaved);
+      Object.assign(FL_D, flD);
+      if(FL_D.imported) flRender();
+    }
+  } catch(e) {}
   // Try Firebase in background — never blocks launch
   try {
     fbLoad().then(loaded => {
@@ -2121,6 +2114,8 @@ function launch(){
         S.fins     = JSON.parse(localStorage.getItem('kcc_fins')||'null');
         renderAll();
         autoAlerts();
+        // Restore FIRE Lab after Firebase sync
+        try { const fls=localStorage.getItem('kcc_firelab_last'); if(fls){Object.assign(FL_D,JSON.parse(fls));if(FL_D.imported)flRender();} } catch(e) {}
         // If user is on financials page, re-render it with fresh data
         if(S.page==='financials') rFin();
         // Re-apply paid checkboxes after Firebase loads (overwrites localStorage)

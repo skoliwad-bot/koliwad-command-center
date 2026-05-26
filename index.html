@@ -1512,7 +1512,7 @@ const MONS=['January','February','March','April','May','June','July','August','S
 const SM=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 // ── FIRE PHASES ──────────────────────────────────────────────
-const FP=[
+const FP_DEFAULT=[
   {id:'pre',n:'00',t:'Before You Leave JPL',c:'#b05010',d:'Final tasks before last day',tasks:[
     {id:'p1',t:'Transfer personal cell number off JPL plan',d:'Port your number to a personal carrier BEFORE your last day. JPL-issued numbers can be reclaimed. Everything 2FA is tied to this number.',tag:'critical'},
     {id:'p2',t:'Pay for / finalize Regalis',d:'Settle any outstanding payment or contract for Regalis before separation. Confirm status and close or transfer the account.',tag:'critical'},
@@ -1567,6 +1567,18 @@ const FP=[
     {id:'i6',t:'FIRE declaration',d:'12 months confirmed, TIAA deployed, health covered.',tag:'later'},
   ]},
 ];
+
+// FIRE Path phases/tasks are now editable & persisted. Load saved copy or seed from default.
+let FP;
+(function(){
+  try{
+    const saved=JSON.parse(localStorage.getItem('kcc_fp_phases')||'null');
+    FP = (saved && Array.isArray(saved) && saved.length) ? saved : JSON.parse(JSON.stringify(FP_DEFAULT));
+  }catch(e){ FP = JSON.parse(JSON.stringify(FP_DEFAULT)); }
+})();
+function fpSave(){ localStorage.setItem('kcc_fp_phases', JSON.stringify(FP)); if(typeof fbSaveAll==='function'){try{fbSaveAll();}catch(e){}} }
+function fpReset(){ if(confirm('Reset FIRE Path phases/tasks to the original defaults? This erases your edits.')){ FP=JSON.parse(JSON.stringify(FP_DEFAULT)); fpSave(); rFirePhases(); } }
+
 const TC={critical:'#d04040',asap:'#c49030',when:'#4a7ab8',later:'#4a5e4a'};
 const TL={critical:'CRITICAL',asap:'ASAP',when:'WHEN READY',later:'LATER'};
 
@@ -2382,29 +2394,82 @@ function setFT(t){
 
 function rFirePhases(){
   const e=el('fv-phases'); if(!e) return;
-  e.innerHTML=FP.map(ph=>{
+  let html=FP.map(ph=>{
     const tot=ph.tasks.length, done=ph.tasks.filter(t=>S.fchk[t.id]).length;
-    const pct=Math.round(done/tot*100), open=S.fex[ph.id]!==false;
+    const pct=tot?Math.round(done/tot*100):0, open=S.fex[ph.id]!==false;
     const tasks=ph.tasks.map(t=>{
       const isDone=!!S.fchk[t.id], tc=TC[t.tag]||'#4a5e4a', tl=TL[t.tag]||t.tag;
       return'<div style="display:flex;align-items:flex-start;gap:12px;padding:10px 16px;border-bottom:1px solid #1a1e1a;background:'+(isDone?'rgba(74,156,92,0.03)':'transparent')+'">'
         +'<div onclick="togFC(\''+t.id+'\')" style="width:16px;height:16px;border:1.5px solid '+(isDone?'#4a9c5c':'#4a5e4a')+';flex-shrink:0;margin-top:2px;cursor:pointer;background:'+(isDone?'#4a9c5c':'transparent')+'"></div>'
-        +'<div style="flex:1"><div style="font-size:13px;font-weight:600;color:'+(isDone?'#4a5e4a':'#eef4ee')+';font-family:Libre Baskerville,serif;'+(isDone?'text-decoration:line-through;':'')+'">'+t.t+'</div>'
-        +'<div style="font-size:11px;color:#4a5e4a;margin-top:3px;line-height:1.5;">'+t.d+'</div></div>'
-        +'<span style="font-size:8px;font-weight:700;padding:2px 7px;letter-spacing:1px;white-space:nowrap;border:1px solid '+(isDone?'#252a25':tc)+';color:'+(isDone?'#4a5e4a':tc)+'">'+(isDone?'DONE':tl)+'</span></div>';
+        +'<div style="flex:1"><div style="font-size:13px;font-weight:600;color:'+(isDone?'#4a5e4a':'#eef4ee')+';font-family:Libre Baskerville,serif;'+(isDone?'text-decoration:line-through;':'')+'">'+esc(t.t)+'</div>'
+        +'<div style="font-size:11px;color:#4a5e4a;margin-top:3px;line-height:1.5;">'+esc(t.d||'')+'</div></div>'
+        +'<span style="font-size:8px;font-weight:700;padding:2px 7px;letter-spacing:1px;white-space:nowrap;border:1px solid '+(isDone?'#252a25':tc)+';color:'+(isDone?'#4a5e4a':tc)+'">'+(isDone?'DONE':tl)+'</span>'
+        +'<span onclick="fpEditTask(\''+ph.id+'\',\''+t.id+'\')" title="Edit" style="cursor:pointer;color:#5a6e5a;font-size:11px;padding:0 2px">✎</span>'
+        +'<span onclick="fpDelTask(\''+ph.id+'\',\''+t.id+'\')" title="Delete" style="cursor:pointer;color:#7a3a3a;font-size:12px;padding:0 2px">✕</span></div>';
     }).join('');
     return'<div style="border:1px solid #252a25;margin-bottom:10px;">'
-      +'<div onclick="togFP(\''+ph.id+'\')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;background:#141714;">'
-      +'<div style="display:flex;align-items:center;gap:12px;">'
-      +'<span style="font-size:9px;font-weight:700;padding:2px 8px;background:rgba(255,255,255,0.05);color:'+ph.c+'">'+ph.n+'</span>'
-      +'<span style="font-size:14px;font-weight:700;color:'+ph.c+'">'+ph.t+'</span>'
-      +'<span style="font-size:10px;color:#4a5e4a">'+ph.d+'</span></div>'
-      +'<div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#141714;">'
+      +'<div onclick="togFP(\''+ph.id+'\')" style="display:flex;align-items:center;gap:12px;cursor:pointer;flex:1">'
+      +'<span style="font-size:9px;font-weight:700;padding:2px 8px;background:rgba(255,255,255,0.05);color:'+ph.c+'">'+esc(ph.n)+'</span>'
+      +'<span style="font-size:14px;font-weight:700;color:'+ph.c+'">'+esc(ph.t)+'</span>'
+      +'<span style="font-size:10px;color:#4a5e4a">'+esc(ph.d||'')+'</span></div>'
+      +'<div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">'
       +'<span style="font-size:10px;font-family:JetBrains Mono,monospace;color:#7a967a">'+done+'/'+tot+' '+pct+'%</span>'
-      +'<span style="color:#4a5e4a;font-size:12px">'+(open?'▼':'▶')+'</span></div></div>'
+      +'<span onclick="fpAddTask(\''+ph.id+'\')" title="Add task" style="cursor:pointer;color:#4a9c5c;font-size:14px">＋</span>'
+      +'<span onclick="fpEditPhase(\''+ph.id+'\')" title="Edit phase" style="cursor:pointer;color:#5a6e5a;font-size:11px">✎</span>'
+      +'<span onclick="fpDelPhase(\''+ph.id+'\')" title="Delete phase" style="cursor:pointer;color:#7a3a3a;font-size:12px">✕</span>'
+      +'<span onclick="togFP(\''+ph.id+'\')" style="color:#4a5e4a;font-size:12px;cursor:pointer">'+(open?'▼':'▶')+'</span></div></div>'
       +'<div style="height:3px;background:#1e221e"><div style="height:100%;background:'+ph.c+';width:'+pct+'%;transition:width .3s"></div></div>'
       +'<div id="fp-'+ph.id+'" style="display:'+(open?'block':'none')+'">'+tasks+'</div></div>';
   }).join('');
+  html+='<div style="display:flex;gap:8px;margin-top:8px"><button class="btn" onclick="fpAddPhase()">+ Add Phase</button><button class="btn" style="border-color:#5a3a3a;color:#a06a6a" onclick="fpReset()">Reset to Default</button></div>';
+  e.innerHTML=html;
+}
+
+// ── FIRE Path editing ──
+function fpFindPhase(pid){ return FP.find(p=>p.id===pid); }
+function fpAddTask(pid){
+  const ph=fpFindPhase(pid); if(!ph) return;
+  const t=prompt('New task title:'); if(!t) return;
+  const d=prompt('Detail / description (optional):')||'';
+  const tag=(prompt('Priority tag — critical / asap / when / later:','asap')||'asap').toLowerCase();
+  ph.tasks.push({id:'ft'+Date.now().toString(36),t:t,d:d,tag:['critical','asap','when','later'].includes(tag)?tag:'asap'});
+  fpSave(); rFirePhases();
+}
+function fpEditTask(pid,tid){
+  const ph=fpFindPhase(pid); if(!ph) return; const t=ph.tasks.find(x=>x.id===tid); if(!t) return;
+  const nt=prompt('Task title:',t.t); if(nt===null) return; t.t=nt||t.t;
+  const nd=prompt('Detail / description:',t.d||''); if(nd!==null) t.d=nd;
+  const ntag=prompt('Priority tag — critical / asap / when / later:',t.tag); if(ntag&&['critical','asap','when','later'].includes(ntag.toLowerCase())) t.tag=ntag.toLowerCase();
+  fpSave(); rFirePhases();
+}
+function fpDelTask(pid,tid){
+  const ph=fpFindPhase(pid); if(!ph) return; const t=ph.tasks.find(x=>x.id===tid);
+  if(!confirm('Delete task "'+(t?t.t:'')+'"?')) return;
+  ph.tasks=ph.tasks.filter(x=>x.id!==tid); delete S.fchk[tid];
+  fpSave(); rFirePhases();
+}
+function fpAddPhase(){
+  const n=prompt('Phase number/label (e.g. 01):',''); if(n===null) return;
+  const t=prompt('Phase title:'); if(!t) return;
+  const d=prompt('Phase description (optional):')||'';
+  FP.push({id:'fp'+Date.now().toString(36),n:n||String(FP.length),t:t,c:'#4a7ab8',d:d,tasks:[]});
+  fpSave(); rFirePhases();
+}
+function fpEditPhase(pid){
+  const ph=fpFindPhase(pid); if(!ph) return;
+  const nn=prompt('Phase number/label:',ph.n); if(nn!==null) ph.n=nn;
+  const nt=prompt('Phase title:',ph.t); if(nt) ph.t=nt;
+  const nd=prompt('Phase description:',ph.d||''); if(nd!==null) ph.d=nd;
+  const nc=prompt('Phase color (hex, e.g. #4a7ab8):',ph.c); if(nc) ph.c=nc;
+  fpSave(); rFirePhases();
+}
+function fpDelPhase(pid){
+  const ph=fpFindPhase(pid); if(!ph) return;
+  if(!confirm('Delete entire phase "'+ph.t+'" and all its tasks?')) return;
+  ph.tasks.forEach(t=>delete S.fchk[t.id]);
+  FP=FP.filter(p=>p.id!==pid);
+  fpSave(); rFirePhases();
 }
 
 function togFP(id){S.fex[id]=S.fex[id]===false?true:false;rFirePhases();}

@@ -2024,15 +2024,21 @@ function rToday(){
       fireMIT.push({id:t.id,title:t.t,m:t.tag==='critical'?'Must':'Should',_fire:true,_ph:ph.t.split('·').slice(-1)[0].trim()});
     }
   });});
-  const mit=[...tasks.filter(t=>t.status!=='Done').slice(0,3),...fireMIT.slice(0,3)].slice(0,6);
+  // Portfolio actions due TODAY -> surface in Must Do Today
+  const _todayISO=isoD(new Date());
+  const pfToday=((S.portfolio&&S.portfolio.actions)||[]).filter(a=>a.date===_todayISO)
+    .map(a=>({id:'pfa_'+a.action.replace(/[^a-z0-9]/gi,'').slice(0,16),title:a.action,m:'Must',src:'Portfolio',_pf:true}));
+  const mit=[...pfToday,...tasks.filter(t=>t.status!=='Done').slice(0,3),...fireMIT.slice(0,3)].slice(0,6);
   el('t-mit').innerHTML=mit.length===0?'<div class="empty" style="color:var(--grn)">\u2705 No high-priority tasks</div>':
     mit.map(function(t){
-      var chk=t._fire
+      var chk=t._pf
+        ?'<div class="chk" style="opacity:.5;cursor:default"></div>'
+        :t._fire
         ?'<div class="chk'+(S.fchk[t.id]?' dn':'')+'" onclick="togFC(\'' +t.id+ '\')"></div>'
         :'<div class="chk'+(t.status==='Done'?' dn':'')+'" onclick="toggleT(\'' +t.id+ '\')"></div>';
       var badge='<span class="b '+(t.m==='Must'?'bm':'bs')+'">'+t.m+'</span>';
       var title='<span class="rtl">'+esc(t.title)+'</span>';
-      var sub='<span class="rsb">'+(t._fire?'\uD83C\uDFAF '+t._ph:t.src+(t.dd?' \u00B7 '+fd(t.dd):''))+'</span>';
+      var sub='<span class="rsb">'+(t._pf?'\uD83D\uDCC8 Portfolio':t._fire?'\uD83C\uDFAF '+t._ph:t.src+(t.dd?' \u00B7 '+fd(t.dd):''))+'</span>';
       return '<div class="row">'+chk+badge+title+sub+'</div>';
     }).join('');
   // Alerts

@@ -4406,10 +4406,10 @@ function autoAlerts() {
       // Use dueDay from import first, then manual input
       const dueDay2 = imp && imp.dueDay ? imp.dueDay : parseInt(tkCardsLocal?.[cd.key+'due']||'0');
       const dueStr = String(dueDay2||'');
-      // Skip if marked paid this month
+      // Skip if marked paid this month — read from the SAME key the Tickets page writes (kcc_cc_paid).
       const thisMonthStr = new Date().getFullYear()+'-'+(new Date().getMonth()+1);
-      const paidStatus = tkCardsLocal && tkCardsLocal.paid && tkCardsLocal.paid.month === thisMonthStr;
-      const isPaid = paidStatus && tkCardsLocal.paid[cd.key];
+      const paidRec = JSON.parse(localStorage.getItem('kcc_cc_paid')||'{}');
+      const isPaid = paidRec && paidRec.month === thisMonthStr && paidRec[cd.key];
       if(isPaid) { clear('cc_due_'+cd.key); return; }
       if(!dueStr || min === 0) { clear('cc_due_'+cd.key); return; }
       // Due date is stored as day-of-month (e.g. "3" or "15")

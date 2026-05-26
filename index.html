@@ -2411,7 +2411,7 @@ function rFirePhases(){
         +'<div style="flex:1"><div style="font-size:13px;font-weight:600;color:'+(isDone?'#4a5e4a':'#eef4ee')+';font-family:Libre Baskerville,serif;'+(isDone?'text-decoration:line-through;':'')+'">'+esc(t.t)+'</div>'
         +'<div style="font-size:11px;color:#4a5e4a;margin-top:3px;line-height:1.5;">'+esc(t.d||'')+'</div></div>'
         +'<span style="font-size:8px;font-weight:700;padding:2px 7px;letter-spacing:1px;white-space:nowrap;border:1px solid '+(isDone?'#252a25':tc)+';color:'+(isDone?'#4a5e4a':tc)+'">'+(isDone?'DONE':tl)+'</span>'
-        +(fpIsBlocked(t)?'<span title="Blocked by: '+esc(fpBlockers(t).filter(b=>!S.fchk[b.t.id]).map(b=>b.t.t).join(', '))+'" style="font-size:11px;cursor:help">🔒</span>':'')
+        +(fpIsBlocked(t)?'<span title="Blocked by: '+esc(fpBlockers(t).filter(b=>b.undone).map(b=>b.label).join(', '))+'" style="font-size:11px;cursor:help">🔒</span>':'')
         +'<span onclick="fpOpenDeps(\''+ph.id+'\',\''+t.id+'\')" title="Set blockers" style="cursor:pointer;color:'+((t.dep&&t.dep.length)?'#7a5cb8':'#4a5e4a')+';font-size:11px;padding:0 2px">⛓</span>'
         +'<span onclick="fpEditTask(\''+ph.id+'\',\''+t.id+'\')" title="Edit" style="cursor:pointer;color:#5a6e5a;font-size:11px;padding:0 2px">✎</span>'
         +'<span onclick="fpDelTask(\''+ph.id+'\',\''+t.id+'\')" title="Delete" style="cursor:pointer;color:#7a3a3a;font-size:12px;padding:0 2px">✕</span></div>';
@@ -2440,19 +2440,34 @@ function fpFindPhase(pid){ return FP.find(p=>p.id===pid); }
 // ── FIRE Path DEPENDENCIES ──
 function fpAllTasks(){ const out=[]; FP.forEach(ph=>ph.tasks.forEach(t=>out.push({ph,t}))); return out; }
 function fpFindTask(tid){ for(const ph of FP){ const t=ph.tasks.find(x=>x.id===tid); if(t) return {ph,t}; } return null; }
-function fpBlockers(t){ return (t.dep||[]).map(id=>fpFindTask(id)).filter(Boolean); }
-function fpIsBlocked(t){ return (t.dep||[]).some(id=>{ const f=fpFindTask(id); return f && !S.fchk[id]; }); }
+function fpPhaseDone(pid){ const ph=fpFindPhase(pid); return ph && ph.tasks.length>0 && ph.tasks.every(t=>S.fchk[t.id]); }
+function fpDepLabel(dep){
+  if(dep.indexOf('phase:')===0){ const ph=fpFindPhase(dep.slice(6)); return ph?('All of '+ph.n+' '+ph.t):null; }
+  const f=fpFindTask(dep); return f?f.t.t:null;
+}
+function fpDepUndone(dep){
+  if(dep.indexOf('phase:')===0) return !fpPhaseDone(dep.slice(6));
+  const f=fpFindTask(dep); return f && !S.fchk[dep];
+}
+function fpBlockers(t){ return (t.dep||[]).map(d=>({label:fpDepLabel(d),undone:fpDepUndone(d)})).filter(x=>x.label); }
+function fpIsBlocked(t){ return (t.dep||[]).some(d=>fpDepUndone(d)); }
 function fpOpenDeps(pid,tid){
   const ft=fpFindTask(tid); if(!ft) return;
   const cur=new Set(ft.t.dep||[]);
   // build a checklist of all OTHER tasks grouped by phase
   let body='<div style="max-height:50vh;overflow-y:auto">';
+  const ownPhase=fpFindTask(tid); const ownPid=ownPhase?ownPhase.ph.id:null;
   FP.forEach(ph=>{
     const opts=ph.tasks.filter(x=>x.id!==tid);
-    if(!opts.length) return;
     body+='<div style="font-size:9px;font-weight:700;letter-spacing:1px;color:'+ph.c+';margin:10px 0 4px">'+esc(ph.n)+' · '+esc(ph.t)+'</div>';
+    // entire-phase blocker (not for the task's own phase)
+    if(ph.id!==ownPid){
+      body+='<label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:11px;color:'+ph.c+';font-weight:700">'
+        +'<input type="checkbox" data-dep="phase:'+ph.id+'" '+(cur.has('phase:'+ph.id)?'checked':'')+'>'
+        +'<span>🔒 Entire phase ('+ph.tasks.length+' tasks)</span></label>';
+    }
     opts.forEach(x=>{
-      body+='<label style="display:flex;align-items:flex-start;gap:8px;padding:4px 0;cursor:pointer;font-size:12px;color:#cdd6cd">'
+      body+='<label style="display:flex;align-items:flex-start;gap:8px;padding:4px 0 4px 16px;cursor:pointer;font-size:12px;color:#cdd6cd">'
         +'<input type="checkbox" data-dep="'+x.id+'" '+(cur.has(x.id)?'checked':'')+' style="margin-top:3px">'
         +'<span>'+esc(x.t)+(S.fchk[x.id]?' <span style="color:#4a9c5c;font-size:9px">(done)</span>':'')+'</span></label>';
     });
@@ -2481,7 +2496,12 @@ function fpComputeLevels(){
     const ft=fpFindTask(tid);
     let m=0;
     if(ft && ft.t.dep && ft.t.dep.length){
-      ft.t.dep.forEach(d=>{ if(fpFindTask(d)) m=Math.max(m, calc(d)+1); });
+      ft.t.dep.forEach(d=>{
+        if(d.indexOf('phase:')===0){
+          const ph=fpFindPhase(d.slice(6));
+          if(ph) ph.tasks.forEach(pt=>{ if(pt.id!==tid) m=Math.max(m, calc(pt.id)+1); });
+        } else if(fpFindTask(d)){ m=Math.max(m, calc(d)+1); }
+      });
     }
     visiting[tid]=false; lvl[tid]=m; return m;
   }
@@ -2638,7 +2658,7 @@ function togFC(id){
   const ft=(typeof fpFindTask==='function')?fpFindTask(id):null;
   // Only warn when CHECKING (not unchecking) a blocked task.
   if(ft && !S.fchk[id] && fpIsBlocked(ft.t)){
-    const names=fpBlockers(ft.t).filter(b=>!S.fchk[b.t.id]).map(b=>b.t.t).join(', ');
+    const names=fpBlockers(ft.t).filter(b=>b.undone).map(b=>b.label).join(', ');
     if(!confirm('This task is blocked by: '+names+'\n\nMark it done anyway?')) return;
   }
   S.fchk[id]=!S.fchk[id]; localStorage.setItem('kcc_fchk',JSON.stringify(S.fchk));

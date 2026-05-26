@@ -2158,8 +2158,10 @@ function rToday(){
       const f$=n=>'$'+Math.round(Number(n)||0).toLocaleString();
       // this week's actions: due within next 7 days
       const now=new Date(); now.setHours(0,0,0,0);
-      const wk=new Date(now); wk.setDate(wk.getDate()+7);
-      const acts=(p.actions||[]).filter(a=>{const d=new Date(a.date);return d>=now&&d<=wk;}).sort((a,b)=>new Date(a.date)-new Date(b.date));
+      const wk=new Date(now); wk.setDate(wk.getDate()+14);
+      const upcoming=(p.actions||[]).filter(a=>new Date(a.date)>=now).sort((a,b)=>new Date(a.date)-new Date(b.date));
+      let acts=upcoming.filter(a=>new Date(a.date)<=wk);
+      if(acts.length===0 && upcoming.length) acts=upcoming.slice(0,2); // show next upcoming if none in window
       const MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       const fd=s=>{const d=new Date(s);return MO[d.getMonth()]+' '+d.getDate();};
       let html='<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:'+(acts.length?'8px':'0')+'">'
@@ -2168,7 +2170,7 @@ function rToday(){
         +'<div><span style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#6a886a;display:block">High WM</span><span style="font-size:15px;font-weight:700;color:#4a9c5c">'+f$(p.hwm)+'</span></div>'
         +'</div>';
       if(acts.length){
-        html+='<div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#c49030;margin-bottom:4px">This Week\'s Actions</div>';
+        html+='<div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#c49030;margin-bottom:4px">Upcoming Actions</div>';
         html+=acts.map(a=>'<div style="display:flex;gap:8px;padding:2px 0;font-size:10px;align-items:center"><span style="font-size:8px;font-weight:700;color:#c49030;min-width:42px">'+fd(a.date)+'</span><span style="color:#cdd6cd">'+esc(a.action)+'</span></div>').join('');
       }
       pfEl.innerHTML=html;
@@ -2646,8 +2648,9 @@ function renderBrief(){
       const dd=p.hwm>0?((p.value-p.hwm)/p.hwm*100):0;
       const ddc=dd<-10?'#c03030':dd<-5?'#b07000':'#2a8a3a';
       const money=n=>'$'+Math.round(Number(n)||0).toLocaleString();
-      const now=new Date(); now.setHours(0,0,0,0); const wk=new Date(now); wk.setDate(wk.getDate()+7);
-      const acts=(p.actions||[]).filter(a=>{const d=new Date(a.date);return d>=now&&d<=wk;}).sort((a,b)=>new Date(a.date)-new Date(b.date));
+      const now=new Date(); now.setHours(0,0,0,0); const wk=new Date(now); wk.setDate(wk.getDate()+14);
+      const upc=(p.actions||[]).filter(a=>new Date(a.date)>=now).sort((a,b)=>new Date(a.date)-new Date(b.date));
+      let acts=upc.filter(a=>new Date(a.date)<=wk); if(acts.length===0&&upc.length) acts=upc.slice(0,2);
       const MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       const fd=s=>{const d=new Date(s);return MO[d.getMonth()]+' '+d.getDate();};
       let html='<div style="display:flex;gap:14px;font-size:10px;margin-bottom:'+(acts.length?'5px':'0')+'">'

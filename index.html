@@ -1208,6 +1208,9 @@ localStorage.setItem = function(key, value) {
               <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#6a886a;margin-top:2px;">Version A — Mixed ETF + Futures (Conservative) · Target 20-22%/yr · thinkorswim</div>
             </div>
             <div style="display:flex;gap:8px;">
+              <label style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border:1px solid #4a7c4a;background:transparent;color:#7ec77e;cursor:pointer;">⬆ Import Tracker
+                <input type="file" accept=".xlsx,.xls" style="display:none;" onchange="pfImport(event)">
+              </label>
               <button onclick="om('tradeLog')" style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border:1px solid #2e352e;background:transparent;color:#6a886a;cursor:pointer;">+ Trade Log</button>
               <button onclick="om('portfolio')" style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;background:#d04040;border:1px solid #d04040;color:white;cursor:pointer;">Update Balances</button>
             </div>
@@ -1559,6 +1562,8 @@ const TL={critical:'CRITICAL',asap:'ASAP',when:'WHEN READY',later:'LATER'};
 // ── STATE ────────────────────────────────────────────────────
 let S={
   tasks:   JSON.parse(localStorage.getItem('kcc_tasks')||'[]'),
+  portfolio: JSON.parse(localStorage.getItem('kcc_portfolio')||'null'),
+  tradelogs: JSON.parse(localStorage.getItem('kcc_tradelogs')||'[]'),
   alerts:  JSON.parse(localStorage.getItem('kcc_alerts')||'[]'),
   tickets: JSON.parse(localStorage.getItem('kcc_tickets')||'[]'),
   cal:     JSON.parse(localStorage.getItem('kcc_cal')||'[]'),
@@ -2745,6 +2750,76 @@ function sm(){
 // ── HELPERS ──────────────────────────────────────────────────
 function nav_portfolio(){rPortfolio();}
 
+function pfImport(evt){
+  const file=evt.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
+      const grid=name=>{const ws=wb.Sheets[name]; return ws?XLSX.utils.sheet_to_json(ws,{header:1,defval:null}):[];};
+      // SheetJS strips the leading blank column: labels at col 0, value at col 1.
+      const findVal=(rows,label)=>{
+        for(const r of rows){ if(r&&r[0]&&String(r[0]).trim().toLowerCase()===label.toLowerCase()) return r[1]; }
+        return null;
+      };
+      const num=v=>{ if(v==null) return 0; const n=parseFloat(String(v).replace(/[^0-9.\-]/g,'')); return isNaN(n)?0:n; };
+
+      const dash=grid('Dashboard');
+      const legs=grid('Legs Tracker');
+      const wm=grid('Watermark History');
+      const log=grid('Trade Log');
+
+      const p=S.portfolio||{};
+      p.version = findVal(dash,'Portfolio Version') || p.version || 'A-Conservative';
+      p.value   = num(findVal(dash,'Total Portfolio Value ($)')) || p.value || 0;
+
+      // Watermark History: Date=col0, Closing=col1, High Watermark=col2
+      let hwm=0, lastClose=0;
+      for(const r of wm){ if(r && typeof r[2]==='number'){ hwm=Math.max(hwm,r[2]); } if(r && typeof r[1]==='number'){ lastClose=r[1]; } }
+      p.hwm = hwm || p.value;
+      if(lastClose) p.value = lastClose;
+
+      // Leg 3 = MTUM + DBMF market values (Legs Tracker: instrument=col0, qty=col1, price=col2, mktval=col3)
+      let l3=0;
+      for(const r of legs){ if(r && (r[0]==='MTUM'||r[0]==='DBMF'||r[0]==='/NQ or /MNQ'||r[0]==='/GC or /MGC') && typeof r[3]==='number') l3+=r[3]; }
+      p.l1_val = num(findVal(dash,'Leg 1 — Notional Value ($)')); // MES core (notional)
+      p.l2_val = num(findVal(legs,'Total credit received'));      // short put credit
+      p.l3_val = l3;                                              // trend/momentum
+      p.l4_val = num(findVal(legs,'SGOV Market Value'));          // SGOV yield/collateral
+      p.l5_val = num(findVal(legs,'Total cost'));                 // tail hedge cost basis
+
+      const cash=num(findVal(legs,'Uninvested Cash Balance ($)'));
+      p.cash_pct = p.value>0 ? (cash/p.value*100) : 0;
+      const launch = 100000;
+      p.ytd_pct = launch>0 ? ((p.value-launch)/launch*100) : 0;
+
+      S.portfolio=p;
+
+      // Trade Log -> S.tradelogs. Header "Date" at col1; data: date=col0, leg=col2, action=col3, instr=col4, qty=col5, price=col6, reason=col8
+      const tl=[];
+      let started=false;
+      for(const r of log){
+        if(!r) continue;
+        if(r[1]==='Date'){ started=true; continue; }
+        if(!started) continue;
+        const d=r[0]; const action=r[3]; const instr=r[4]; const qty=r[5]; const price=r[6];
+        if(!action && !instr) continue;
+        tl.push({date: d? (d.toISOString? d.toISOString().slice(0,10): String(d)):'', leg:r[2]||'', action:action||'', instrument:instr||'', qty:qty||'', price:price||'', reason:r[8]||''});
+      }
+      if(tl.length) S.tradelogs=tl;
+
+      localStorage.setItem('kcc_portfolio', JSON.stringify(p));
+      if(tl.length) localStorage.setItem('kcc_tradelogs', JSON.stringify(tl));
+      rPortfolio();
+      alert('Portfolio imported: '+file.name+'  ·  Value $'+Math.round(p.value).toLocaleString());
+    }catch(err){
+      console.error(err);
+      alert('Portfolio import error: '+err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
 function rPortfolio(){
   const p=S.portfolio; const logs=S.tradelogs||[];
   if(!p) return;
@@ -3461,7 +3536,38 @@ async function importAllExcel(evt) {
       const wb = XLSX.read(buf, {type:'array', cellDates:true});
       const sheets = wb.SheetNames;
 
-      if(sheets.includes('Ticket Log') || sheets.includes('Ticket Metrics')) {
+      if(sheets.includes('Legs Tracker') && sheets.includes('Trade Log')) {
+        // Portfolio Tracker
+        try {
+          const grid=n=>wb.Sheets[n]?XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:null}):[];
+          const findVal=(rows,label)=>{for(const r of rows){if(r&&r[0]&&String(r[0]).trim().toLowerCase()===label.toLowerCase())return r[1];}return null;};
+          const num=v=>{if(v==null)return 0;const x=parseFloat(String(v).replace(/[^0-9.\-]/g,''));return isNaN(x)?0:x;};
+          const dash=grid('Dashboard'),legs=grid('Legs Tracker'),wm=grid('Watermark History'),log=grid('Trade Log');
+          const p=S.portfolio||{};
+          p.version=findVal(dash,'Portfolio Version')||p.version||'A-Conservative';
+          p.value=num(findVal(dash,'Total Portfolio Value ($)'))||p.value||0;
+          let hwm=0,lc=0;
+          for(const r of wm){if(r&&typeof r[2]==='number')hwm=Math.max(hwm,r[2]);if(r&&typeof r[1]==='number')lc=r[1];}
+          p.hwm=hwm||p.value; if(lc)p.value=lc;
+          let l3=0; for(const r of legs){if(r&&(r[0]==='MTUM'||r[0]==='DBMF'||r[0]==='/NQ or /MNQ'||r[0]==='/GC or /MGC')&&typeof r[3]==='number')l3+=r[3];}
+          p.l1_val=num(findVal(dash,'Leg 1 — Notional Value ($)'));
+          p.l2_val=num(findVal(legs,'Total credit received'));
+          p.l3_val=l3;
+          p.l4_val=num(findVal(legs,'SGOV Market Value'));
+          p.l5_val=num(findVal(legs,'Total cost'));
+          const cash=num(findVal(legs,'Uninvested Cash Balance ($)'));
+          p.cash_pct=p.value>0?(cash/p.value*100):0;
+          p.ytd_pct=((p.value-100000)/100000*100);
+          S.portfolio=p;
+          const tl=[]; let st=false;
+          for(const r of log){if(!r)continue;if(r[1]==='Date'){st=true;continue;}if(!st)continue;const a=r[3],ins=r[4];if(!a&&!ins)continue;const d=r[0];tl.push({date:d?(d.toISOString?d.toISOString().slice(0,10):String(d)):'',leg:r[2]||'',action:a||'',instrument:ins||'',qty:r[5]||'',price:r[6]||'',reason:r[8]||''});}
+          if(tl.length)S.tradelogs=tl;
+          localStorage.setItem('kcc_portfolio',JSON.stringify(p));
+          if(tl.length)localStorage.setItem('kcc_tradelogs',JSON.stringify(tl));
+          if(typeof rPortfolio==='function')rPortfolio();
+          status.push('Portfolio: $'+Math.round(p.value).toLocaleString());
+        } catch(err){ status.push('Portfolio error: '+err.message); }
+      } else if(sheets.includes('Ticket Log') || sheets.includes('Ticket Metrics')) {
         // Ticket Hub - inline parse (parseTicketWorkbook is in separate script block)
         try {
           const tm = wb.Sheets['Ticket Metrics'];

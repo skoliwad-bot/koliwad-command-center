@@ -2583,20 +2583,43 @@ function rFireTimeline(){
     +'<div style="position:relative;margin-top:6px;height:'+height+'px">'+rows+'</div>'
     +'</div></div>';
 }
-function fpAddTask(pid){
+function fpAddTask(pid){ fpOpenTaskForm(pid,null); }
+function fpOpenTaskForm(pid,tid){
   const ph=fpFindPhase(pid); if(!ph) return;
-  const t=prompt('New task title:'); if(!t) return;
-  const d=prompt('Detail / description (optional):')||'';
-  const tag=(prompt('Priority tag — critical / asap / when / later:','asap')||'asap').toLowerCase();
-  const due=prompt('Due date (YYYY-MM-DD, optional):','')||'';
-  const cost=parseFloat(prompt('Cost $ needed (optional):','')||'')||0;
-  const eff=prompt('Effort (e.g. 2h or 3d, optional):','')||'';
-  const task={id:'ft'+Date.now().toString(36),t:t,d:d,tag:['critical','asap','when','later'].includes(tag)?tag:'asap'};
-  if(/^\d{4}-\d{2}-\d{2}/.test(due)) task.due=due;
-  if(cost>0) task.cost=cost;
-  fpSetEffort(task,eff);
-  ph.tasks.push(task);
-  fpSave(); rFirePhases(); if(el('fv-kanban')&&el('fv-kanban').style.display!=='none') rFireKanban();
+  const t = tid ? ph.tasks.find(x=>x.id===tid) : null;
+  fpFormCtx={pid,tid};
+  const v=(x)=>x==null?'':x;
+  document.getElementById('ftfTitle').textContent = tid?'Edit Task':'Add Task';
+  document.getElementById('ftf_t').value = t?v(t.t):'';
+  document.getElementById('ftf_d').value = t?v(t.d):'';
+  document.getElementById('ftf_tag').value = t?v(t.tag)||'asap':'asap';
+  document.getElementById('ftf_due').value = t&&t.due?t.due:'';
+  document.getElementById('ftf_cost').value = t&&t.cost?t.cost:'';
+  document.getElementById('ftf_eff').value = t&&t.eff?t.eff:'';
+  document.getElementById('ftf_effU').value = t&&t.effU?t.effU:'h';
+  document.getElementById('fpTaskForm').style.display='flex';
+}
+let fpFormCtx=null;
+function fpCloseTaskForm(){ const m=document.getElementById('fpTaskForm'); if(m) m.style.display='none'; fpFormCtx=null; }
+function fpSaveTaskForm(){
+  if(!fpFormCtx) return;
+  const ph=fpFindPhase(fpFormCtx.pid); if(!ph){fpCloseTaskForm();return;}
+  const title=document.getElementById('ftf_t').value.trim();
+  if(!title){ alert('Title is required.'); return; }
+  let t = fpFormCtx.tid ? ph.tasks.find(x=>x.id===fpFormCtx.tid) : null;
+  if(!t){ t={id:'ft'+Date.now().toString(36)}; ph.tasks.push(t); }
+  t.t=title;
+  t.d=document.getElementById('ftf_d').value;
+  t.tag=document.getElementById('ftf_tag').value||'asap';
+  const due=document.getElementById('ftf_due').value;
+  if(/^\d{4}-\d{2}-\d{2}/.test(due)) t.due=due; else delete t.due;
+  const cost=parseFloat(document.getElementById('ftf_cost').value)||0;
+  if(cost>0) t.cost=cost; else delete t.cost;
+  const effN=parseFloat(document.getElementById('ftf_eff').value)||0;
+  if(effN>0){ t.eff=effN; t.effU=document.getElementById('ftf_effU').value||'h'; } else { delete t.eff; delete t.effU; }
+  fpSave(); fpCloseTaskForm(); rFirePhases();
+  if(el('fv-kanban')&&el('fv-kanban').style.display!=='none') rFireKanban();
+  if(el('fv-timeline')&&el('fv-timeline').style.display!=='none') rFireTimeline();
 }
 function fpSetEffort(task,str){
   if(!str){ delete task.eff; delete task.effU; return; }
@@ -2625,16 +2648,7 @@ function fpRollStr(r){
   if(r.hrsT>0) parts.push(fpFmtHours(r.hrsR)+' / '+fpFmtHours(r.hrsT));
   return parts.join(' · ');
 }
-function fpEditTask(pid,tid){
-  const ph=fpFindPhase(pid); if(!ph) return; const t=ph.tasks.find(x=>x.id===tid); if(!t) return;
-  const nt=prompt('Task title:',t.t); if(nt===null) return; t.t=nt||t.t;
-  const nd=prompt('Detail / description:',t.d||''); if(nd!==null) t.d=nd;
-  const ntag=prompt('Priority tag — critical / asap / when / later:',t.tag); if(ntag&&['critical','asap','when','later'].includes(ntag.toLowerCase())) t.tag=ntag.toLowerCase();
-  const ndue=prompt('Due date (YYYY-MM-DD, blank to clear):',t.due||''); if(ndue!==null){ if(/^\d{4}-\d{2}-\d{2}/.test(ndue)) t.due=ndue; else delete t.due; }
-  const ncost=prompt('Cost $ needed (blank to clear):',t.cost||''); if(ncost!==null){ const c=parseFloat(ncost)||0; if(c>0) t.cost=c; else delete t.cost; }
-  const neff=prompt('Effort (e.g. 2h or 3d, blank to clear):', t.eff?(t.eff+(t.effU||'h')):''); if(neff!==null) fpSetEffort(t,neff);
-  fpSave(); rFirePhases(); if(el('fv-kanban')&&el('fv-kanban').style.display!=='none') rFireKanban();
-}
+function fpEditTask(pid,tid){ fpOpenTaskForm(pid,tid); }
 function fpDelTask(pid,tid){
   const ph=fpFindPhase(pid); if(!ph) return; const t=ph.tasks.find(x=>x.id===tid);
   if(!confirm('Delete task "'+(t?t.t:'')+'"?')) return;
@@ -5805,6 +5819,33 @@ function setTab(t, btn) {
     <div style="padding:12px 16px;border-top:1px solid #2e352e;display:flex;gap:8px;justify-content:flex-end">
       <button class="btn" onclick="fpCloseDeps()">Cancel</button>
       <button class="btn p" onclick="fpSaveDeps()">Save Blockers</button></div>
+  </div></div>
+<div id="fpTaskForm" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#0e110e;border:1px solid #2e352e;max-width:440px;width:100%;border-radius:4px">
+    <div style="padding:12px 16px;border-bottom:1px solid #2e352e;display:flex;justify-content:space-between;align-items:center">
+      <span id="ftfTitle" style="font-size:13px;font-weight:700;color:#eef4ee">Add Task</span>
+      <span onclick="fpCloseTaskForm()" style="cursor:pointer;color:#7a967a;font-size:16px">✕</span></div>
+    <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+      <div><label style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6a886a;display:block;margin-bottom:4px">Title *</label>
+        <input id="ftf_t" type="text" style="width:100%;background:#141714;border:1px solid #2e352e;color:#eef4ee;padding:8px;font-size:13px;box-sizing:border-box"></div>
+      <div><label style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6a886a;display:block;margin-bottom:4px">Detail</label>
+        <textarea id="ftf_d" rows="2" style="width:100%;background:#141714;border:1px solid #2e352e;color:#eef4ee;padding:8px;font-size:12px;box-sizing:border-box;resize:vertical"></textarea></div>
+      <div style="display:flex;gap:12px">
+        <div style="flex:1"><label style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6a886a;display:block;margin-bottom:4px">Priority</label>
+          <select id="ftf_tag" style="width:100%;background:#141714;border:1px solid #2e352e;color:#eef4ee;padding:8px;font-size:12px;box-sizing:border-box">
+            <option value="critical">Critical</option><option value="asap">ASAP</option><option value="when">When</option><option value="later">Later</option></select></div>
+        <div style="flex:1"><label style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6a886a;display:block;margin-bottom:4px">Due Date</label>
+          <input id="ftf_due" type="date" style="width:100%;background:#141714;border:1px solid #2e352e;color:#eef4ee;padding:7px;font-size:12px;box-sizing:border-box"></div></div>
+      <div style="display:flex;gap:12px">
+        <div style="flex:1"><label style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6a886a;display:block;margin-bottom:4px">Cost $</label>
+          <input id="ftf_cost" type="number" min="0" step="any" placeholder="optional" style="width:100%;background:#141714;border:1px solid #2e352e;color:#eef4ee;padding:8px;font-size:12px;box-sizing:border-box"></div>
+        <div style="flex:1"><label style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6a886a;display:block;margin-bottom:4px">Effort</label>
+          <div style="display:flex;gap:6px"><input id="ftf_eff" type="number" min="0" step="any" placeholder="0" style="flex:1;background:#141714;border:1px solid #2e352e;color:#eef4ee;padding:8px;font-size:12px;box-sizing:border-box;min-width:0">
+          <select id="ftf_effU" style="background:#141714;border:1px solid #2e352e;color:#eef4ee;padding:8px;font-size:12px"><option value="h">h</option><option value="d">d</option></select></div></div></div>
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid #2e352e;display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="fpCloseTaskForm()">Cancel</button>
+      <button class="btn p" onclick="fpSaveTaskForm()">Save Task</button></div>
   </div></div>
 </body>
 </html>

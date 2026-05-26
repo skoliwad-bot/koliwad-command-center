@@ -855,10 +855,12 @@ localStorage.setItem = function(key, value) {
         </div>
         <div class="ftab">
           <button id="ftb1" onclick="setFT('phases')" class="on">Phases</button>
+          <button id="ftb4" onclick="setFT('kanban')">Kanban</button>
           <button id="ftb2" onclick="setFT('actions')">Actions</button>
           <button id="ftb3" onclick="setFT('goals')">Goals</button>
         </div>
         <div id="fv-phases"></div>
+        <div id="fv-kanban" style="display:none"></div>
         <div id="fv-actions" style="display:none"><div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn p" onclick="om('fireAction')">+ Add Action</button></div><div id="fActList"></div></div>
         <div id="fv-goals" style="display:none"><div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn" onclick="om('fireGoal')">Update Goals</button></div><div id="fGoalBody"></div></div>
       </div>
@@ -2383,11 +2385,13 @@ function rFire(){
 }
 
 function setFT(t){
-  ['phases','actions','goals'].forEach(v=>{
-    const vd=el('fv-'+v), btn=el('ftb'+(v==='phases'?1:v==='actions'?2:3));
+  const map={phases:1,kanban:4,actions:2,goals:3};
+  ['phases','kanban','actions','goals'].forEach(v=>{
+    const vd=el('fv-'+v), btn=el('ftb'+map[v]);
     if(vd) vd.style.display=v===t?'block':'none';
     if(btn){btn.classList.toggle('on',v===t);}
   });
+  if(t==='kanban') rFireKanban();
   if(t==='actions') rFireActions();
   if(t==='goals') rFireGoals();
 }
@@ -2470,6 +2474,48 @@ function fpDelPhase(pid){
   ph.tasks.forEach(t=>delete S.fchk[t.id]);
   FP=FP.filter(p=>p.id!==pid);
   fpSave(); rFirePhases();
+}
+
+// ── FIRE Path KANBAN (drag tasks across phase columns) ──
+let _fpDrag=null;
+function rFireKanban(){
+  const e=el('fv-kanban'); if(!e) return;
+  const cols=FP.map(ph=>{
+    const cards=ph.tasks.map(t=>{
+      const isDone=!!S.fchk[t.id], tc=TC[t.tag]||'#4a5e4a', tl=TL[t.tag]||t.tag;
+      return '<div draggable="true" ondragstart="fpDragStart(event,\''+ph.id+'\',\''+t.id+'\')" ondragend="fpDragEnd(event)" '
+        +'style="border:1px solid '+(isDone?'#252a25':'#2e352e')+';border-left:3px solid '+tc+';background:'+(isDone?'rgba(74,156,92,0.04)':'#141714')+';padding:8px 10px;margin-bottom:8px;cursor:grab;border-radius:2px;">'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">'
+        +'<span style="font-size:11px;font-weight:600;color:'+(isDone?'#4a5e4a':'#eef4ee')+';'+(isDone?'text-decoration:line-through;':'')+'line-height:1.35">'+esc(t.t)+'</span>'
+        +'<span onclick="togFC(\''+t.id+'\')" title="Toggle done" style="cursor:pointer;flex-shrink:0;width:13px;height:13px;border:1.5px solid '+(isDone?'#4a9c5c':'#4a5e4a')+';background:'+(isDone?'#4a9c5c':'transparent')+'"></span></div>'
+        +'<span style="font-size:7px;font-weight:700;letter-spacing:1px;color:'+tc+'">'+tl+'</span></div>';
+    }).join('');
+    const done=ph.tasks.filter(t=>S.fchk[t.id]).length;
+    return '<div ondragover="event.preventDefault()" ondrop="fpDrop(event,\''+ph.id+'\')" '
+      +'style="flex:0 0 230px;border:1px solid #252a25;background:#0e110e;border-radius:3px;display:flex;flex-direction:column;max-height:600px">'
+      +'<div style="padding:8px 10px;border-bottom:1px solid #252a25;background:#141714;position:sticky;top:0">'
+      +'<div style="display:flex;align-items:center;gap:6px"><span style="font-size:8px;font-weight:700;padding:1px 6px;background:rgba(255,255,255,0.05);color:'+ph.c+'">'+esc(ph.n)+'</span>'
+      +'<span style="font-size:11px;font-weight:700;color:'+ph.c+'">'+esc(ph.t)+'</span></div>'
+      +'<div style="font-size:8px;color:#5a6e5a;margin-top:3px">'+done+'/'+ph.tasks.length+' done</div></div>'
+      +'<div style="padding:8px;overflow-y:auto;flex:1;min-height:60px">'+cards+'</div></div>';
+  }).join('');
+  e.innerHTML='<div style="font-size:9px;color:#5a6e5a;margin-bottom:8px">Drag cards between columns to move a task to another phase.</div>'
+    +'<div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:8px">'+cols+'</div>';
+}
+function fpDragStart(ev,pid,tid){ _fpDrag={pid,tid}; ev.dataTransfer.effectAllowed='move'; ev.target.style.opacity='0.4'; }
+function fpDragEnd(ev){ ev.target.style.opacity='1'; }
+function fpDrop(ev,destPid){
+  ev.preventDefault();
+  if(!_fpDrag) return;
+  const {pid,tid}=_fpDrag; _fpDrag=null;
+  if(pid===destPid) return;
+  const src=fpFindPhase(pid), dst=fpFindPhase(destPid);
+  if(!src||!dst) return;
+  const idx=src.tasks.findIndex(t=>t.id===tid);
+  if(idx<0) return;
+  const [moved]=src.tasks.splice(idx,1);
+  dst.tasks.push(moved);
+  fpSave(); rFireKanban(); rFirePhases();
 }
 
 function togFP(id){S.fex[id]=S.fex[id]===false?true:false;rFirePhases();}

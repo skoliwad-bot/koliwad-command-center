@@ -854,14 +854,14 @@ localStorage.setItem = function(key, value) {
           </div>
         </div>
         <div class="ftab">
-          <button id="ftb1" onclick="setFT('phases')" class="on">Phases</button>
-          <button id="ftb4" onclick="setFT('kanban')">Kanban</button>
+          <button id="ftb1" onclick="setFT('phases')">Phases</button>
+          <button id="ftb4" onclick="setFT('kanban')" class="on">Kanban</button>
           <button id="ftb5" onclick="setFT('timeline')">Timeline</button>
           <button id="ftb2" onclick="setFT('actions')">Actions</button>
           <button id="ftb3" onclick="setFT('goals')">Goals</button>
         </div>
-        <div id="fv-phases"></div>
-        <div id="fv-kanban" style="display:none"></div>
+        <div id="fv-phases" style="display:none"></div>
+        <div id="fv-kanban"></div>
         <div id="fv-timeline" style="display:none"></div>
         <div id="fv-actions" style="display:none"><div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn p" onclick="om('fireAction')">+ Add Action</button></div><div id="fActList"></div></div>
         <div id="fv-goals" style="display:none"><div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn" onclick="om('fireGoal')">Update Goals</button></div><div id="fGoalBody"></div></div>
@@ -2384,6 +2384,7 @@ function rFire(){
     el('ftg').textContent='Target: $'+Number(goals.target||0).toLocaleString();
   }
   rFirePhases();
+  if(typeof rFireKanban==='function') rFireKanban();
 }
 
 function setFT(t){

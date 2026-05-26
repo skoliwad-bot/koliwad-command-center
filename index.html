@@ -1438,6 +1438,10 @@ localStorage.setItem = function(key, value) {
             <div class="br-sec">Key Deadlines</div>
             <div id="bDL"></div>
           </div>
+          <div style="margin-top:10px;">
+            <div class="br-sec">Daily Playbook</div>
+            <div id="bPB"></div>
+          </div>
         </div>
 
       </div>
@@ -1447,10 +1451,6 @@ localStorage.setItem = function(key, value) {
         <div class="br-sec">Open Alerts</div>
         <div id="bAlerts"></div>
       </div>
-
-      <!-- DAILY PLAYBOOK -->
-      <div class="br-sec">Daily Playbook</div>
-      <div id="bPB" style="margin-bottom:10px;"></div>
 
       <!-- NOTES -->
       <div class="br-sec">Notes</div>
@@ -2527,13 +2527,15 @@ function renderBrief(){
       <span class="br-ev-n">${esc(e.title)}</span>
     </div>`).join('');
 
-  // Deadlines
+  // Deadlines — exclude Done/past, dedup by title, AND exclude anything already in Priority Tasks.
   const td0=new Date(); td0.setHours(0,0,0,0);
+  const _mitTitles=new Set(mit.map(t=>(t.title||'').trim().toLowerCase()));
   const _seenD=new Set();
   const dls=tasks.filter(t=>{
     if(!t.dd||t.status==='Done') return false;
     if(new Date(t.dd)<td0) return false; // hide past-due-and-gone
     const tk=(t.title||'').trim().toLowerCase();
+    if(_mitTitles.has(tk)) return false; // already shown in Priority Tasks
     if(_seenD.has(tk)) return false; _seenD.add(tk); return true;
   }).sort((a,b)=>new Date(a.dd)-new Date(b.dd)).slice(0,6);
   el('bDL').innerHTML=dls.length===0?'<div style="color:#aaa;font-size:9px;padding:4px 0">No deadlines</div>':

@@ -2425,6 +2425,7 @@ function rFirePhases(){
       +'<div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">'
       +'<span style="font-size:10px;font-family:JetBrains Mono,monospace;color:#7a967a">'+done+'/'+tot+' '+pct+'%</span>'
       +'<span onclick="fpAddTask(\''+ph.id+'\')" title="Add task" style="cursor:pointer;color:#4a9c5c;font-size:14px">＋</span>'
+      +'<span onclick="fpOpenPhaseDeps(\''+ph.id+'\')" title="Set phase blockers (blocks ALL tasks in this phase)" style="cursor:pointer;color:'+((ph.dep&&ph.dep.length)?'#7a5cb8':'#4a5e4a')+';font-size:11px">⛓</span>'
       +'<span onclick="fpEditPhase(\''+ph.id+'\')" title="Edit phase" style="cursor:pointer;color:#5a6e5a;font-size:11px">✎</span>'
       +'<span onclick="fpDelPhase(\''+ph.id+'\')" title="Delete phase" style="cursor:pointer;color:#7a3a3a;font-size:12px">✕</span>'
       +'<span onclick="togFP(\''+ph.id+'\')" style="color:#4a5e4a;font-size:12px;cursor:pointer">'+(open?'▼':'▶')+'</span></div></div>'
@@ -2449,8 +2450,15 @@ function fpDepUndone(dep){
   if(dep.indexOf('phase:')===0) return !fpPhaseDone(dep.slice(6));
   const f=fpFindTask(dep); return f && !S.fchk[dep];
 }
-function fpBlockers(t){ return (t.dep||[]).map(d=>({label:fpDepLabel(d),undone:fpDepUndone(d)})).filter(x=>x.label); }
-function fpIsBlocked(t){ return (t.dep||[]).some(d=>fpDepUndone(d)); }
+function fpTaskPhase(tid){ const f=fpFindTask(tid); return f?f.ph:null; }
+function fpAllDeps(t){
+  // combine the task's own deps with its phase's deps
+  const ph=fpTaskPhase(t.id);
+  const phDeps=(ph&&ph.dep)?ph.dep:[];
+  return [...(t.dep||[]), ...phDeps];
+}
+function fpBlockers(t){ return fpAllDeps(t).map(d=>({label:fpDepLabel(d),undone:fpDepUndone(d)})).filter(x=>x.label); }
+function fpIsBlocked(t){ return fpAllDeps(t).some(d=>fpDepUndone(d)); }
 function fpOpenDeps(pid,tid){
   const ft=fpFindTask(tid); if(!ft) return;
   const cur=new Set(ft.t.dep||[]);
@@ -2478,12 +2486,38 @@ function fpOpenDeps(pid,tid){
 }
 let fpDepCtx=null;
 function fpSaveDeps(){
-  if(!fpDepCtx) return; const ft=fpFindTask(fpDepCtx.tid); if(!ft){fpCloseDeps();return;}
-  const checks=document.querySelectorAll('#fpDepBody input[data-dep]:checked');
-  ft.t.dep=[...checks].map(c=>c.getAttribute('data-dep'));
-  fpSave(); fpCloseDeps(); rFirePhases(); if(el('fv-kanban').style.display!=='none') rFireKanban();
+  if(!fpDepCtx) return;
+  const checks=[...document.querySelectorAll('#fpDepBody input[data-dep]:checked')].map(c=>c.getAttribute('data-dep'));
+  if(fpDepCtx.phase){
+    const ph=fpFindPhase(fpDepCtx.phase); if(ph) ph.dep=checks;
+  } else {
+    const ft=fpFindTask(fpDepCtx.tid); if(ft) ft.t.dep=checks;
+  }
+  fpSave(); fpCloseDeps(); rFirePhases();
+  if(el('fv-kanban')&&el('fv-kanban').style.display!=='none') rFireKanban();
+  if(el('fv-timeline')&&el('fv-timeline').style.display!=='none') rFireTimeline();
 }
 function fpCloseDeps(){ const m=el('fpDepModal'); if(m) m.style.display='none'; fpDepCtx=null; }
+function fpOpenPhaseDeps(pid){
+  const ph=fpFindPhase(pid); if(!ph) return;
+  const cur=new Set(ph.dep||[]);
+  let body='<div style="font-size:10px;color:#c49030;margin-bottom:8px">These block EVERY task in this phase until complete.</div><div style="max-height:50vh;overflow-y:auto">';
+  FP.forEach(o=>{
+    if(o.id===pid) return; // a phase can't block itself
+    body+='<div style="font-size:9px;font-weight:700;letter-spacing:1px;color:'+o.c+';margin:10px 0 4px">'+esc(o.n)+' · '+esc(o.t)+'</div>';
+    body+='<label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:11px;color:'+o.c+';font-weight:700">'
+      +'<input type="checkbox" data-dep="phase:'+o.id+'" '+(cur.has('phase:'+o.id)?'checked':'')+'>'
+      +'<span>🔒 Entire phase ('+o.tasks.length+' tasks)</span></label>';
+    o.tasks.forEach(x=>{
+      body+='<label style="display:flex;align-items:flex-start;gap:8px;padding:4px 0 4px 16px;cursor:pointer;font-size:12px;color:#cdd6cd">'
+        +'<input type="checkbox" data-dep="'+x.id+'" '+(cur.has(x.id)?'checked':'')+' style="margin-top:3px">'
+        +'<span>'+esc(x.t)+(S.fchk[x.id]?' <span style="color:#4a9c5c;font-size:9px">(done)</span>':'')+'</span></label>';
+    });
+  });
+  body+='</div>';
+  fpDepCtx={phase:pid};
+  el('fpDepTitle').textContent='Phase blockers: '+ph.t; el('fpDepBody').innerHTML=body; el('fpDepModal').style.display='flex';
+}
 
 // ── FIRE Path TIMELINE (auto-sequenced from dependencies) ──
 function fpComputeLevels(){
@@ -2495,14 +2529,13 @@ function fpComputeLevels(){
     visiting[tid]=true;
     const ft=fpFindTask(tid);
     let m=0;
-    if(ft && ft.t.dep && ft.t.dep.length){
-      ft.t.dep.forEach(d=>{
-        if(d.indexOf('phase:')===0){
-          const ph=fpFindPhase(d.slice(6));
-          if(ph) ph.tasks.forEach(pt=>{ if(pt.id!==tid) m=Math.max(m, calc(pt.id)+1); });
-        } else if(fpFindTask(d)){ m=Math.max(m, calc(d)+1); }
-      });
-    }
+    const deps = ft ? fpAllDeps(ft.t) : [];
+    deps.forEach(d=>{
+      if(d.indexOf('phase:')===0){
+        const ph=fpFindPhase(d.slice(6));
+        if(ph) ph.tasks.forEach(pt=>{ if(pt.id!==tid) m=Math.max(m, calc(pt.id)+1); });
+      } else if(fpFindTask(d) && d!==tid){ m=Math.max(m, calc(d)+1); }
+    });
     visiting[tid]=false; lvl[tid]=m; return m;
   }
   fpAllTasks().forEach(({t})=>calc(t.id));

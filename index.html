@@ -2848,7 +2848,7 @@ function rPortfolio(){
     if(!logs.length){tlEl.innerHTML='<div style="padding:12px 16px;font-size:11px;color:#4a5e4a;font-style:italic;">No trade log entries yet.</div>';return;}
     tlEl.innerHTML=logs.slice(-8).reverse().map(t=>`<div style="display:grid;grid-template-columns:80px 1fr 1fr;padding:8px 16px;border-bottom:1px solid #1a1e1a;gap:8px;">
       <span style="font-size:9px;color:#6a886a;">${t.date||new Date().toLocaleDateString()}</span>
-      <div><span style="font-size:9px;font-weight:700;padding:1px 6px;background:rgba(74,122,184,0.15);color:#4a7ab8;margin-right:6px;">${(t.leg||'').split(' ')[0]}</span><span style="font-size:11px;color:#eef4ee;">${esc(t.action||'')} ${esc(t.instrument||'')}</span></div>
+      <div><span style="font-size:9px;font-weight:700;padding:1px 6px;background:rgba(74,122,184,0.15);color:#4a7ab8;margin-right:6px;">${String(t.leg||'').split(' ')[0]}</span><span style="font-size:11px;color:#eef4ee;">${esc(t.action||'')} ${esc(t.instrument||'')}</span></div>
       <span style="font-size:9px;color:#6a886a;">${t.price?'$'+Number(t.price).toLocaleString():''} ${esc(t.notes||'')}</span>
     </div>`).join('');
   }

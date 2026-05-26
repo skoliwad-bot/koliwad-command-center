@@ -856,11 +856,13 @@ localStorage.setItem = function(key, value) {
         <div class="ftab">
           <button id="ftb1" onclick="setFT('phases')" class="on">Phases</button>
           <button id="ftb4" onclick="setFT('kanban')">Kanban</button>
+          <button id="ftb5" onclick="setFT('timeline')">Timeline</button>
           <button id="ftb2" onclick="setFT('actions')">Actions</button>
           <button id="ftb3" onclick="setFT('goals')">Goals</button>
         </div>
         <div id="fv-phases"></div>
         <div id="fv-kanban" style="display:none"></div>
+        <div id="fv-timeline" style="display:none"></div>
         <div id="fv-actions" style="display:none"><div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn p" onclick="om('fireAction')">+ Add Action</button></div><div id="fActList"></div></div>
         <div id="fv-goals" style="display:none"><div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn" onclick="om('fireGoal')">Update Goals</button></div><div id="fGoalBody"></div></div>
       </div>
@@ -2385,13 +2387,14 @@ function rFire(){
 }
 
 function setFT(t){
-  const map={phases:1,kanban:4,actions:2,goals:3};
-  ['phases','kanban','actions','goals'].forEach(v=>{
+  const map={phases:1,kanban:4,timeline:5,actions:2,goals:3};
+  ['phases','kanban','timeline','actions','goals'].forEach(v=>{
     const vd=el('fv-'+v), btn=el('ftb'+map[v]);
     if(vd) vd.style.display=v===t?'block':'none';
     if(btn){btn.classList.toggle('on',v===t);}
   });
   if(t==='kanban') rFireKanban();
+  if(t==='timeline') rFireTimeline();
   if(t==='actions') rFireActions();
   if(t==='goals') rFireGoals();
 }
@@ -2466,6 +2469,59 @@ function fpSaveDeps(){
   fpSave(); fpCloseDeps(); rFirePhases(); if(el('fv-kanban').style.display!=='none') rFireKanban();
 }
 function fpCloseDeps(){ const m=el('fpDepModal'); if(m) m.style.display='none'; fpDepCtx=null; }
+
+// ── FIRE Path TIMELINE (auto-sequenced from dependencies) ──
+function fpComputeLevels(){
+  // level = longest chain of blockers leading into a task. Detects cycles safely.
+  const lvl={}, visiting={};
+  function calc(tid){
+    if(lvl[tid]!=null) return lvl[tid];
+    if(visiting[tid]) return 0; // cycle guard
+    visiting[tid]=true;
+    const ft=fpFindTask(tid);
+    let m=0;
+    if(ft && ft.t.dep && ft.t.dep.length){
+      ft.t.dep.forEach(d=>{ if(fpFindTask(d)) m=Math.max(m, calc(d)+1); });
+    }
+    visiting[tid]=false; lvl[tid]=m; return m;
+  }
+  fpAllTasks().forEach(({t})=>calc(t.id));
+  return lvl;
+}
+function rFireTimeline(){
+  const e=el('fv-timeline'); if(!e) return;
+  const all=fpAllTasks();
+  if(!all.length){ e.innerHTML='<div class="empty">No tasks.</div>'; return; }
+  const lvl=fpComputeLevels();
+  const maxL=Math.max(0,...all.map(({t})=>lvl[t.id]||0));
+  // group tasks by level
+  const cols=[]; for(let i=0;i<=maxL;i++) cols.push([]);
+  all.forEach(o=>{ cols[lvl[o.t.id]||0].push(o); });
+  const colW=210, gap=20, rowH=46;
+  const width=(maxL+1)*(colW+gap);
+  let rows='';
+  cols.forEach((group,li)=>{
+    group.forEach((o,ri)=>{
+      const t=o.t, ph=o.ph, isDone=!!S.fchk[t.id], blocked=fpIsBlocked(t);
+      const tc=TC[t.tag]||'#4a5e4a';
+      const x=li*(colW+gap), y=ri*(rowH+8);
+      rows+='<div style="position:absolute;left:'+x+'px;top:'+y+'px;width:'+colW+'px;">'
+        +'<div style="border:1px solid '+(isDone?'#252a25':'#2e352e')+';border-left:4px solid '+tc+';background:'+(isDone?'rgba(74,156,92,0.05)':'#141714')+';padding:7px 9px;border-radius:2px;">'
+        +'<div style="display:flex;justify-content:space-between;gap:4px"><span style="font-size:8px;font-weight:700;color:'+ph.c+'">'+esc(ph.n)+'</span>'+(blocked?'<span style="font-size:9px">🔒</span>':isDone?'<span style="font-size:8px;color:#4a9c5c">✓</span>':'')+'</div>'
+        +'<div style="font-size:10px;font-weight:600;color:'+(isDone?'#4a5e4a':'#eef4ee')+';'+(isDone?'text-decoration:line-through;':'')+'line-height:1.3;margin-top:2px">'+esc(t.t)+'</div>'
+        +'</div></div>';
+    });
+  });
+  const maxRows=Math.max(1,...cols.map(c=>c.length));
+  const height=maxRows*(rowH+8)+30;
+  let heads='';
+  for(let i=0;i<=maxL;i++){ heads+='<div style="position:absolute;left:'+(i*(colW+gap))+'px;top:0;width:'+colW+'px;text-align:center;font-size:8px;font-weight:700;letter-spacing:1px;color:#5a6e5a">'+(i===0?'START':'STEP '+i)+'</div>'; }
+  e.innerHTML='<div style="font-size:9px;color:#5a6e5a;margin-bottom:10px">Auto-sequenced by dependencies. Each column = one step deeper in the blocker chain; tasks in the same column can run in parallel. Set blockers with ⛓ on the Phases or Kanban tab.</div>'
+    +'<div style="overflow-x:auto;padding-bottom:10px"><div style="position:relative;width:'+width+'px;height:'+(height+24)+'px">'
+    +'<div style="position:relative;height:18px">'+heads+'</div>'
+    +'<div style="position:relative;margin-top:6px;height:'+height+'px">'+rows+'</div>'
+    +'</div></div>';
+}
 function fpAddTask(pid){
   const ph=fpFindPhase(pid); if(!ph) return;
   const t=prompt('New task title:'); if(!t) return;

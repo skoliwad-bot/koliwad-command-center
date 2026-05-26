@@ -356,6 +356,11 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 .main{min-height:0;}
 
  .content{max-height:calc(100vh - 44px);} }
+
+/* [date-fix] make native date picker visible on dark theme */
+input[type="date"]{position:relative;cursor:pointer;color-scheme:dark;}
+input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1) brightness(1.4);cursor:pointer;opacity:0.8;}
+input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;}
 </style>
 
 <!-- Firebase SDK -->
@@ -5835,7 +5840,7 @@ function setTab(t, btn) {
           <select id="ftf_tag" style="width:100%;background:#141714;border:1px solid #2e352e;color:#eef4ee;padding:8px;font-size:12px;box-sizing:border-box">
             <option value="critical">Critical</option><option value="asap">ASAP</option><option value="when">When</option><option value="later">Later</option><option value="nice">Nice to Have</option></select></div>
         <div style="flex:1"><label style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6a886a;display:block;margin-bottom:4px">Due Date</label>
-          <input id="ftf_due" type="date" style="width:100%;background:#141714;border:1px solid #2e352e;color:#eef4ee;padding:7px;font-size:12px;box-sizing:border-box"></div></div>
+          <input id="ftf_due" type="date" onclick="try{this.showPicker();}catch(e){}" style="width:100%;background:#141714;border:1px solid #2e352e;color:#eef4ee;padding:7px;font-size:12px;box-sizing:border-box;cursor:pointer"></div></div>
       <div style="display:flex;gap:12px">
         <div style="flex:1"><label style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6a886a;display:block;margin-bottom:4px">Cost $</label>
           <input id="ftf_cost" type="number" min="0" step="any" placeholder="optional" style="width:100%;background:#141714;border:1px solid #2e352e;color:#eef4ee;padding:8px;font-size:12px;box-sizing:border-box"></div>

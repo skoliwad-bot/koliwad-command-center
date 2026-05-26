@@ -2476,39 +2476,61 @@ function fpDelPhase(pid){
   fpSave(); rFirePhases();
 }
 
-// ── FIRE Path KANBAN (drag tasks across phase columns) ──
+// ── FIRE Path KANBAN (drag to move between phases AND reorder within a phase) ──
 let _fpDrag=null;
 function rFireKanban(){
   const e=el('fv-kanban'); if(!e) return;
   const cols=FP.map(ph=>{
-    const cards=ph.tasks.map(t=>{
+    const cards=ph.tasks.map((t,ti)=>{
       const isDone=!!S.fchk[t.id], tc=TC[t.tag]||'#4a5e4a', tl=TL[t.tag]||t.tag;
       return '<div draggable="true" ondragstart="fpDragStart(event,\''+ph.id+'\',\''+t.id+'\')" ondragend="fpDragEnd(event)" '
+        +'ondragover="fpCardOver(event)" ondrop="fpDropCard(event,\''+ph.id+'\',\''+t.id+'\')" '
         +'style="border:1px solid '+(isDone?'#252a25':'#2e352e')+';border-left:3px solid '+tc+';background:'+(isDone?'rgba(74,156,92,0.04)':'#141714')+';padding:8px 10px;margin-bottom:8px;cursor:grab;border-radius:2px;">'
         +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">'
-        +'<span style="font-size:11px;font-weight:600;color:'+(isDone?'#4a5e4a':'#eef4ee')+';'+(isDone?'text-decoration:line-through;':'')+'line-height:1.35">'+esc(t.t)+'</span>'
+        +'<span style="font-size:11px;font-weight:600;color:'+(isDone?'#4a5e4a':'#eef4ee')+';'+(isDone?'text-decoration:line-through;':'')+'line-height:1.35;flex:1">'+esc(t.t)+'</span>'
         +'<span onclick="togFC(\''+t.id+'\')" title="Toggle done" style="cursor:pointer;flex-shrink:0;width:13px;height:13px;border:1.5px solid '+(isDone?'#4a9c5c':'#4a5e4a')+';background:'+(isDone?'#4a9c5c':'transparent')+'"></span></div>'
-        +'<span style="font-size:7px;font-weight:700;letter-spacing:1px;color:'+tc+'">'+tl+'</span></div>';
+        +(t.d?'<div style="font-size:9px;color:#4a5e4a;margin-top:3px;line-height:1.4">'+esc(t.d)+'</div>':'')
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">'
+        +'<span style="font-size:7px;font-weight:700;letter-spacing:1px;color:'+tc+'">'+tl+'</span>'
+        +'<span style="display:flex;gap:6px"><span onclick="fpEditTask(\''+ph.id+'\',\''+t.id+'\')" title="Edit" style="cursor:pointer;color:#5a6e5a;font-size:10px">✎</span>'
+        +'<span onclick="fpDelTask(\''+ph.id+'\',\''+t.id+'\')" title="Delete" style="cursor:pointer;color:#7a3a3a;font-size:11px">✕</span></span></div></div>';
     }).join('');
     const done=ph.tasks.filter(t=>S.fchk[t.id]).length;
     return '<div ondragover="event.preventDefault()" ondrop="fpDrop(event,\''+ph.id+'\')" '
-      +'style="flex:0 0 230px;border:1px solid #252a25;background:#0e110e;border-radius:3px;display:flex;flex-direction:column;max-height:600px">'
-      +'<div style="padding:8px 10px;border-bottom:1px solid #252a25;background:#141714;position:sticky;top:0">'
-      +'<div style="display:flex;align-items:center;gap:6px"><span style="font-size:8px;font-weight:700;padding:1px 6px;background:rgba(255,255,255,0.05);color:'+ph.c+'">'+esc(ph.n)+'</span>'
+      +'style="flex:0 0 230px;border:1px solid #252a25;background:#0e110e;border-radius:3px;display:flex;flex-direction:column;max-height:620px">'
+      +'<div style="padding:8px 10px;border-bottom:1px solid #252a25;background:#141714">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;gap:6px"><div style="display:flex;align-items:center;gap:6px"><span style="font-size:8px;font-weight:700;padding:1px 6px;background:rgba(255,255,255,0.05);color:'+ph.c+'">'+esc(ph.n)+'</span>'
       +'<span style="font-size:11px;font-weight:700;color:'+ph.c+'">'+esc(ph.t)+'</span></div>'
+      +'<span onclick="fpAddTask(\''+ph.id+'\')" title="Add task" style="cursor:pointer;color:#4a9c5c;font-size:14px">＋</span></div>'
       +'<div style="font-size:8px;color:#5a6e5a;margin-top:3px">'+done+'/'+ph.tasks.length+' done</div></div>'
       +'<div style="padding:8px;overflow-y:auto;flex:1;min-height:60px">'+cards+'</div></div>';
   }).join('');
-  e.innerHTML='<div style="font-size:9px;color:#5a6e5a;margin-bottom:8px">Drag cards between columns to move a task to another phase.</div>'
+  e.innerHTML='<div style="font-size:9px;color:#5a6e5a;margin-bottom:8px">Drag a card onto another card to reorder within a phase, or onto a column to move it. ✎ edit · ✕ delete · ＋ add.</div>'
     +'<div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:8px">'+cols+'</div>';
 }
 function fpDragStart(ev,pid,tid){ _fpDrag={pid,tid}; ev.dataTransfer.effectAllowed='move'; ev.target.style.opacity='0.4'; }
 function fpDragEnd(ev){ ev.target.style.opacity='1'; }
+function fpCardOver(ev){ ev.preventDefault(); ev.stopPropagation(); }
+// Drop onto a CARD -> reorder (or move) so dragged task lands right before the target card.
+function fpDropCard(ev,destPid,destTid){
+  ev.preventDefault(); ev.stopPropagation();
+  if(!_fpDrag) return;
+  const {pid,tid}=_fpDrag; _fpDrag=null;
+  if(tid===destTid) return;
+  const src=fpFindPhase(pid), dst=fpFindPhase(destPid);
+  if(!src||!dst) return;
+  const si=src.tasks.findIndex(t=>t.id===tid); if(si<0) return;
+  const [moved]=src.tasks.splice(si,1);
+  let di=dst.tasks.findIndex(t=>t.id===destTid);
+  if(di<0) di=dst.tasks.length;
+  dst.tasks.splice(di,0,moved);
+  fpSave(); rFireKanban(); rFirePhases();
+}
+// Drop onto empty column area -> append to that phase.
 function fpDrop(ev,destPid){
   ev.preventDefault();
   if(!_fpDrag) return;
   const {pid,tid}=_fpDrag; _fpDrag=null;
-  if(pid===destPid) return;
   const src=fpFindPhase(pid), dst=fpFindPhase(destPid);
   if(!src||!dst) return;
   const idx=src.tasks.findIndex(t=>t.id===tid);

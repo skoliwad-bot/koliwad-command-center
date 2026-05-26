@@ -2026,7 +2026,8 @@ function rToday(){
   });});
   // Portfolio actions due TODAY -> surface in Must Do Today
   const _todayISO=isoD(new Date());
-  const pfToday=((S.portfolio&&S.portfolio.actions)||[]).filter(a=>a.date===_todayISO)
+  const _isDaily=a=>/daily|every trading day/i.test((a.when||'')+' '+(a.action||''));
+  const pfToday=((S.portfolio&&S.portfolio.actions)||[]).filter(a=>a.date===_todayISO||_isDaily(a))
     .map(a=>({id:'pfa_'+a.action.replace(/[^a-z0-9]/gi,'').slice(0,16),title:a.action,m:'Must',src:'Portfolio',_pf:true}));
   const mit=[...pfToday,...tasks.filter(t=>t.status!=='Done').slice(0,3),...fireMIT.slice(0,3)].slice(0,6);
   el('t-mit').innerHTML=mit.length===0?'<div class="empty" style="color:var(--grn)">\u2705 No high-priority tasks</div>':

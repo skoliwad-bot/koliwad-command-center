@@ -2410,7 +2410,7 @@ function rFirePhases(){
       return'<div style="display:flex;align-items:flex-start;gap:12px;padding:10px 16px;border-bottom:1px solid #1a1e1a;background:'+(isDone?'rgba(74,156,92,0.03)':'transparent')+'">'
         +'<div onclick="togFC(\''+t.id+'\')" style="width:16px;height:16px;border:1.5px solid '+(isDone?'#4a9c5c':'#4a5e4a')+';flex-shrink:0;margin-top:2px;cursor:pointer;background:'+(isDone?'#4a9c5c':'transparent')+'"></div>'
         +'<div style="flex:1"><div style="font-size:13px;font-weight:600;color:'+(isDone?'#4a5e4a':'#eef4ee')+';font-family:Libre Baskerville,serif;'+(isDone?'text-decoration:line-through;':'')+'">'+esc(t.t)+'</div>'
-        +'<div style="font-size:11px;color:#4a5e4a;margin-top:3px;line-height:1.5;">'+esc(t.d||'')+'</div></div>'
+        +'<div style="font-size:11px;color:#4a5e4a;margin-top:3px;line-height:1.5;">'+esc(t.d||'')+'</div>'+fpMetaLine(t)+'</div>'
         +'<span style="font-size:8px;font-weight:700;padding:2px 7px;letter-spacing:1px;white-space:nowrap;border:1px solid '+(isDone?'#252a25':tc)+';color:'+(isDone?'#4a5e4a':tc)+'">'+(isDone?'DONE':tl)+'</span>'
         +(fpIsBlocked(t)?'<span title="Blocked by: '+esc(fpBlockers(t).filter(b=>b.undone).map(b=>b.label).join(', '))+'" style="font-size:11px;cursor:help">🔒</span>':'')
         +'<span onclick="fpOpenDeps(\''+ph.id+'\',\''+t.id+'\')" title="Set blockers" style="cursor:pointer;color:'+((t.dep&&t.dep.length)?'#7a5cb8':'#4a5e4a')+';font-size:11px;padding:0 2px">⛓</span>'
@@ -2424,7 +2424,7 @@ function rFirePhases(){
       +'<span style="font-size:14px;font-weight:700;color:'+ph.c+'">'+esc(ph.t)+'</span>'
       +'<span style="font-size:10px;color:#4a5e4a">'+esc(ph.d||'')+'</span></div>'
       +'<div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">'
-      +'<span style="font-size:10px;font-family:JetBrains Mono,monospace;color:#7a967a">'+done+'/'+tot+' '+pct+'%</span>'
+      +'<span style="font-size:10px;font-family:JetBrains Mono,monospace;color:#7a967a">'+done+'/'+tot+' '+pct+'%</span>'+(function(){const rs=fpRollStr(fpRollup(ph.tasks));return rs?'<span style="font-size:9px;color:#8a9c8a">'+rs+'</span>':'';})()
       +'<span onclick="fpAddTask(\''+ph.id+'\')" title="Add task" style="cursor:pointer;color:#4a9c5c;font-size:14px">＋</span>'
       +'<span onclick="fpOpenPhaseDeps(\''+ph.id+'\')" title="Set phase blockers (blocks ALL tasks in this phase)" style="cursor:pointer;color:'+((ph.dep&&ph.dep.length)?'#7a5cb8':'#4a5e4a')+';font-size:11px">⛓</span>'
       +'<span onclick="fpEditPhase(\''+ph.id+'\')" title="Edit phase" style="cursor:pointer;color:#5a6e5a;font-size:11px">✎</span>'
@@ -2433,8 +2433,15 @@ function rFirePhases(){
       +'<div style="height:3px;background:#1e221e"><div style="height:100%;background:'+ph.c+';width:'+pct+'%;transition:width .3s"></div></div>'
       +'<div id="fp-'+ph.id+'" style="display:'+(open?'block':'none')+'">'+tasks+'</div></div>';
   }).join('');
+  const allT=[]; FP.forEach(ph=>ph.tasks.forEach(t=>allT.push(t)));
+  const gr=fpRollup(allT); const grStr=fpRollStr(gr);
+  const top = grStr?('<div style="border:1px solid #2e352e;background:#0f130f;padding:10px 14px;margin-bottom:12px;display:flex;gap:20px;flex-wrap:wrap;align-items:center">'
+    +'<span style="font-size:9px;font-weight:700;letter-spacing:1px;color:#5a6e5a">REMAINING / TOTAL</span>'
+    +(gr.costT>0?'<span style="font-size:13px;font-weight:700;color:#eef4ee">💲'+Math.round(gr.costR).toLocaleString()+' <span style="color:#5a6e5a;font-size:10px">/ '+Math.round(gr.costT).toLocaleString()+'</span></span>':'')
+    +(gr.hrsT>0?'<span style="font-size:13px;font-weight:700;color:#eef4ee">⏱ '+fpFmtHours(gr.hrsR)+' <span style="color:#5a6e5a;font-size:10px">/ '+fpFmtHours(gr.hrsT)+'</span></span>':'')
+    +'</div>'):'';
   html+='<div style="display:flex;gap:8px;margin-top:8px"><button class="btn" onclick="fpAddPhase()">+ Add Phase</button><button class="btn" style="border-color:#5a3a3a;color:#a06a6a" onclick="fpReset()">Reset to Default</button></div>';
-  e.innerHTML=html;
+  e.innerHTML=top+html;
 }
 
 // ── FIRE Path editing ──
@@ -2581,15 +2588,52 @@ function fpAddTask(pid){
   const t=prompt('New task title:'); if(!t) return;
   const d=prompt('Detail / description (optional):')||'';
   const tag=(prompt('Priority tag — critical / asap / when / later:','asap')||'asap').toLowerCase();
-  ph.tasks.push({id:'ft'+Date.now().toString(36),t:t,d:d,tag:['critical','asap','when','later'].includes(tag)?tag:'asap'});
-  fpSave(); rFirePhases();
+  const due=prompt('Due date (YYYY-MM-DD, optional):','')||'';
+  const cost=parseFloat(prompt('Cost $ needed (optional):','')||'')||0;
+  const eff=prompt('Effort (e.g. 2h or 3d, optional):','')||'';
+  const task={id:'ft'+Date.now().toString(36),t:t,d:d,tag:['critical','asap','when','later'].includes(tag)?tag:'asap'};
+  if(/^\d{4}-\d{2}-\d{2}/.test(due)) task.due=due;
+  if(cost>0) task.cost=cost;
+  fpSetEffort(task,eff);
+  ph.tasks.push(task);
+  fpSave(); rFirePhases(); if(el('fv-kanban')&&el('fv-kanban').style.display!=='none') rFireKanban();
+}
+function fpSetEffort(task,str){
+  if(!str){ delete task.eff; delete task.effU; return; }
+  const m=String(str).trim().match(/^([\d.]+)\s*([hd]?)/i);
+  if(m){ task.eff=parseFloat(m[1])||0; task.effU=(m[2]||'h').toLowerCase(); if(!task.eff){delete task.eff;delete task.effU;} }
+}
+function fpEffortHours(task){ if(!task.eff) return 0; return task.effU==='d'?task.eff*8:task.eff; }
+function fpFmtHours(hrs){ if(!hrs) return '0h'; if(hrs>=8&&hrs%8===0) return (hrs/8)+'d'; if(hrs>=8) return (hrs/8).toFixed(1)+'d'; return hrs+'h'; }
+function fpRollup(tasks){
+  let costT=0,costR=0,hrsT=0,hrsR=0;
+  tasks.forEach(t=>{ const done=!!S.fchk[t.id], c=t.cost||0, hr=fpEffortHours(t);
+    costT+=c; hrsT+=hr; if(!done){ costR+=c; hrsR+=hr; } });
+  return {costT,costR,hrsT,hrsR};
+}
+function fpMetaLine(t){
+  const meta=[];
+  if(t.due) meta.push('📅 '+t.due);
+  if(t.cost) meta.push('💲'+Math.round(t.cost).toLocaleString());
+  if(t.eff) meta.push('⏱ '+t.eff+(t.effU||'h'));
+  return meta.length?'<div style="font-size:9px;color:#7a967a;margin-top:3px;display:flex;gap:10px;flex-wrap:wrap">'+meta.join('')+'</div>':'';
+}
+function fpRollStr(r){
+  const m=n=>'$'+Math.round(n).toLocaleString();
+  const parts=[];
+  if(r.costT>0) parts.push(m(r.costR)+' / '+m(r.costT));
+  if(r.hrsT>0) parts.push(fpFmtHours(r.hrsR)+' / '+fpFmtHours(r.hrsT));
+  return parts.join(' · ');
 }
 function fpEditTask(pid,tid){
   const ph=fpFindPhase(pid); if(!ph) return; const t=ph.tasks.find(x=>x.id===tid); if(!t) return;
   const nt=prompt('Task title:',t.t); if(nt===null) return; t.t=nt||t.t;
   const nd=prompt('Detail / description:',t.d||''); if(nd!==null) t.d=nd;
   const ntag=prompt('Priority tag — critical / asap / when / later:',t.tag); if(ntag&&['critical','asap','when','later'].includes(ntag.toLowerCase())) t.tag=ntag.toLowerCase();
-  fpSave(); rFirePhases();
+  const ndue=prompt('Due date (YYYY-MM-DD, blank to clear):',t.due||''); if(ndue!==null){ if(/^\d{4}-\d{2}-\d{2}/.test(ndue)) t.due=ndue; else delete t.due; }
+  const ncost=prompt('Cost $ needed (blank to clear):',t.cost||''); if(ncost!==null){ const c=parseFloat(ncost)||0; if(c>0) t.cost=c; else delete t.cost; }
+  const neff=prompt('Effort (e.g. 2h or 3d, blank to clear):', t.eff?(t.eff+(t.effU||'h')):''); if(neff!==null) fpSetEffort(t,neff);
+  fpSave(); rFirePhases(); if(el('fv-kanban')&&el('fv-kanban').style.display!=='none') rFireKanban();
 }
 function fpDelTask(pid,tid){
   const ph=fpFindPhase(pid); if(!ph) return; const t=ph.tasks.find(x=>x.id===tid);
@@ -2633,7 +2677,7 @@ function rFireKanban(){
         +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">'
         +'<span style="font-size:11px;font-weight:600;color:'+(isDone?'#4a5e4a':'#eef4ee')+';'+(isDone?'text-decoration:line-through;':'')+'line-height:1.35;flex:1">'+esc(t.t)+'</span>'
         +'<span onclick="togFC(\''+t.id+'\')" title="Toggle done" style="cursor:pointer;flex-shrink:0;width:13px;height:13px;border:1.5px solid '+(isDone?'#4a9c5c':'#4a5e4a')+';background:'+(isDone?'#4a9c5c':'transparent')+'"></span></div>'
-        +(t.d?'<div style="font-size:9px;color:#4a5e4a;margin-top:3px;line-height:1.4">'+esc(t.d)+'</div>':'')
+        +(t.d?'<div style="font-size:9px;color:#4a5e4a;margin-top:3px;line-height:1.4">'+esc(t.d)+'</div>':'')+fpMetaLine(t)
         +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">'
         +'<span style="font-size:7px;font-weight:700;letter-spacing:1px;color:'+tc+'">'+tl+'</span>'
         +'<span style="display:flex;gap:6px;align-items:center">'
@@ -2649,7 +2693,7 @@ function rFireKanban(){
       +'<div style="display:flex;align-items:center;justify-content:space-between;gap:6px"><div style="display:flex;align-items:center;gap:6px"><span style="font-size:8px;font-weight:700;padding:1px 6px;background:rgba(255,255,255,0.05);color:'+ph.c+'">'+esc(ph.n)+'</span>'
       +'<span style="font-size:11px;font-weight:700;color:'+ph.c+'">'+esc(ph.t)+'</span></div>'
       +'<span style="display:flex;gap:8px;align-items:center">'+'<span onclick="fpOpenPhaseDeps(\''+ph.id+'\')" title="Set phase blockers (blocks ALL tasks in this phase)" style="cursor:pointer;color:'+((ph.dep&&ph.dep.length)?'#7a5cb8':'#4a5e4a')+';font-size:12px">⛓</span>'+'<span onclick="fpAddTask(\''+ph.id+'\')" title="Add task" style="cursor:pointer;color:#4a9c5c;font-size:14px">＋</span></span></div>'
-      +'<div style="font-size:8px;color:#5a6e5a;margin-top:3px">'+done+'/'+ph.tasks.length+' done</div></div>'
+      +'<div style="font-size:8px;color:#5a6e5a;margin-top:3px">'+done+'/'+ph.tasks.length+' done'+(function(){const rs=fpRollStr(fpRollup(ph.tasks));return rs?' · '+rs:'';})()+'</div></div>'
       +'<div style="padding:8px;overflow-y:auto;flex:1;min-height:60px">'+cards+'</div></div>';
   }).join('');
   e.innerHTML='<div style="font-size:9px;color:#5a6e5a;margin-bottom:8px">Drag a card onto another card to reorder within a phase, or onto a column to move it. ✎ edit · ✕ delete · ＋ add.</div>'

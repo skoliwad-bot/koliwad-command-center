@@ -2545,15 +2545,20 @@ function renderBrief(){
     setS('bpv4',label,cls);
   })();
 
-  // Priority tasks — dedup by id and by normalized title (synced tasks can double up), exclude Done.
+  // Priority tasks — portfolio actions due today first, then deduped tasks.
+  const _todayISO2=isoD(new Date());
+  const _isDaily2=a=>/daily|every trading day/i.test((a.when||'')+' '+(a.action||''));
+  const _pfToday=((S.portfolio&&S.portfolio.actions)||[]).filter(a=>a.date===_todayISO2||_isDaily2(a))
+    .map(a=>({title:a.action,m:'Must',src:'Portfolio',_pf:true}));
   const _seen=new Set();
-  const mit=tasks.filter(t=>{
+  const _mitTasks=tasks.filter(t=>{
     if(t.status==='Done') return false;
     const key=(t.id||'')+'|'+((t.title||'').trim().toLowerCase());
     const tkey=((t.title||'').trim().toLowerCase());
     if(_seen.has(key)||_seen.has(tkey)) return false;
     _seen.add(key); _seen.add(tkey); return true;
-  }).sort((a,b)=>{const o={Must:0,Should:1,Could:2,"Won't":3};return (o[a.m]??9)-(o[b.m]??9);}).slice(0,7);
+  }).sort((a,b)=>{const o={Must:0,Should:1,Could:2,"Won't":3};return (o[a.m]??9)-(o[b.m]??9);});
+  const mit=[..._pfToday,..._mitTasks].slice(0,7);
   el('bMIT').innerHTML=mit.length===0?'<div style="color:#aaa;font-size:9px;padding:4px 0">No pending tasks</div>':
     mit.map((t,i)=>`<div class="br-t">
       <span class="br-t-n">${i+1}</span>

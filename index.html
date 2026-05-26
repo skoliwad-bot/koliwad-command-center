@@ -1429,15 +1429,15 @@ localStorage.setItem = function(key, value) {
         <div>
           <div class="br-sec">Priority Tasks</div>
           <div id="bMIT"></div>
+        </div>
+
+        <div>
+          <div class="br-sec">Today's Schedule</div>
+          <div id="bCAL"></div>
           <div style="margin-top:10px;">
             <div class="br-sec">Key Deadlines</div>
             <div id="bDL"></div>
           </div>
-        </div>
-
-        <div>
-          <div class="br-sec">Today's Schedule <span style="font-size:6px;color:#aaa;font-weight:400">(max 8 events)</span></div>
-          <div id="bCAL"></div>
         </div>
 
       </div>
@@ -2476,7 +2476,20 @@ function renderBrief(){
   setS('bpv1',ot.length, ot.length>0?'r':'g');
   setS('bpv2',ht.length, ht.length>0?'r':'g');
   setS('bpv3',oa.length, oa.length>0?'a':'g');
-  setS('bpv4',gap===null?'—':gn?'OFF TRACK':'ON TRACK', gap===null?'':gn?'r':'g');
+  // FIRE status reflects long-term coverage (from spreadsheet) — show % so it doesn't look
+  // contradictory next to the monthly cash-flow gap.
+  (function(){
+    let label, cls;
+    if(typeof FL_D!=='undefined' && FL_D.imported && FL_D.todayRow){
+      const cov=Math.round((FL_D.todayRow.firePct||0)*100);
+      label = cov>=100?'ON TRACK '+cov+'%' : cov+'% COVERAGE';
+      cls = cov>=100?'g':cov>=70?'a':'r';
+    } else {
+      label = gap===null?'—':gn?'OFF TRACK':'ON TRACK';
+      cls = gap===null?'':gn?'r':'g';
+    }
+    setS('bpv4',label,cls);
+  })();
 
   // Priority tasks — dedup by id and by normalized title (synced tasks can double up), exclude Done.
   const _seen=new Set();

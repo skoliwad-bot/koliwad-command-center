@@ -1583,8 +1583,8 @@ let FP;
 function fpSave(){ localStorage.setItem('kcc_fp_phases', JSON.stringify(FP)); if(typeof fbSaveAll==='function'){try{fbSaveAll();}catch(e){}} }
 function fpReset(){ if(confirm('Reset FIRE Path phases/tasks to the original defaults? This erases your edits.')){ FP=JSON.parse(JSON.stringify(FP_DEFAULT)); fpSave(); rFirePhases(); } }
 
-const TC={critical:'#d04040',asap:'#c49030',when:'#4a7ab8',later:'#4a5e4a'};
-const TL={critical:'CRITICAL',asap:'ASAP',when:'WHEN READY',later:'LATER'};
+const TC={critical:'#d04040',asap:'#c49030',when:'#4a7ab8',later:'#4a5e4a',nice:'#5a8a6a'};
+const TL={critical:'CRITICAL',asap:'ASAP',when:'WHEN READY',later:'LATER',nice:'NICE TO HAVE'};
 
 // ── STATE ────────────────────────────────────────────────────
 let S={
@@ -5833,7 +5833,7 @@ function setTab(t, btn) {
       <div style="display:flex;gap:12px">
         <div style="flex:1"><label style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6a886a;display:block;margin-bottom:4px">Priority</label>
           <select id="ftf_tag" style="width:100%;background:#141714;border:1px solid #2e352e;color:#eef4ee;padding:8px;font-size:12px;box-sizing:border-box">
-            <option value="critical">Critical</option><option value="asap">ASAP</option><option value="when">When</option><option value="later">Later</option></select></div>
+            <option value="critical">Critical</option><option value="asap">ASAP</option><option value="when">When</option><option value="later">Later</option><option value="nice">Nice to Have</option></select></div>
         <div style="flex:1"><label style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6a886a;display:block;margin-bottom:4px">Due Date</label>
           <input id="ftf_due" type="date" style="width:100%;background:#141714;border:1px solid #2e352e;color:#eef4ee;padding:7px;font-size:12px;box-sizing:border-box"></div></div>
       <div style="display:flex;gap:12px">

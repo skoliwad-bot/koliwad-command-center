@@ -1971,12 +1971,27 @@ const PLAYBOOK = {
   ]
 };
 
+// [unified] single source of truth for on/off-track gap used by BOTH Command Center and Briefing.
+// If FIRE Lab spreadsheet is imported, on-track is driven by its FIRE coverage (>=100% => on track).
+// Otherwise use a consistent true-need gap (base need + mortgages + HELOC interest).
+function trackGap(fire){
+  if(typeof FL_D!=='undefined' && FL_D.imported && FL_D.todayRow){
+    const cov=(FL_D.todayRow.firePct||0); // 1.0 = 100% coverage
+    // positive when on track (coverage >= 100%), negative when short
+    return Math.round((cov-1)*100);
+  }
+  if(!fire) return null;
+  const helocInt = fire.heloc ? fire.heloc*0.065/12 : 3855;
+  const trueNeed = (fire.need||22000)+(fire.vmort||7900)+(fire.pmort||3477)+helocInt;
+  return Math.round((fire.inc||0)-trueNeed);
+}
+
 function rToday(){
   const tasks=S.tasks||[],alerts=S.alerts||[],tickets=S.tickets||[],cal=S.cal||[],fire=S.fire;
   const oa=alerts.filter(a=>a.status==='Open');
   const ht=tasks.filter(t=>t.m==='Must');
   const ot=tickets.filter(t=>t.status!=='Resolved');
-  const gap=fire?(fire.inc-fire.need):null, gn=gap!==null&&gap<0;
+  const gap=trackGap(fire), gn=gap!==null&&gap<0;
   pill('sp1','sv1',ot.length,ot.length>0?'r':'g');
   pill('sp2','sv2',ht.length,ht.length>0?'r':'g');
   pill('sp3','sv3',oa.length,oa.length>0?'a':'g');
@@ -2447,7 +2462,7 @@ function renderBrief(){
   const oa=alerts.filter(a=>a.status==='Open');
   const ot=tickets.filter(t=>t.status!=='Resolved');
   const ht=tasks.filter(t=>t.m==='Must');
-  const gap=fire?(fire.inc-(fire._trueNeed||fire.need)):null, gn=gap!==null&&gap<0;
+  const gap=trackGap(fire), gn=gap!==null&&gap<0;
   const f$=n=>n!=null?'$'+Math.round(Math.abs(n)).toLocaleString():'—';
 
   // Status bar

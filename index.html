@@ -225,7 +225,7 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 .br-sec{font-size:7px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#c03030;border-bottom:1px solid #c03030;padding-bottom:2px;margin-bottom:6px;}
 
 /* COLUMNS */
-.br-2col{display:grid;grid-template-columns:2.4in 4.3in;gap:12px;margin-bottom:10px;}
+.br-2col{display:grid;grid-template-columns:2.4in 4.3in;gap:12px;margin-bottom:10px;align-items:start;}
 
 /* TASKS */
 .br-t{display:flex;gap:6px;padding:3px 0;border-bottom:1px solid #eee;align-items:baseline;}
@@ -1448,6 +1448,10 @@ localStorage.setItem = function(key, value) {
         <div id="bAlerts"></div>
       </div>
 
+      <!-- DAILY PLAYBOOK -->
+      <div class="br-sec">Daily Playbook</div>
+      <div id="bPB" style="margin-bottom:10px;"></div>
+
       <!-- NOTES -->
       <div class="br-sec">Notes</div>
       <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
@@ -2474,8 +2478,15 @@ function renderBrief(){
   setS('bpv3',oa.length, oa.length>0?'a':'g');
   setS('bpv4',gap===null?'—':gn?'OFF TRACK':'ON TRACK', gap===null?'':gn?'r':'g');
 
-  // Priority tasks
-  const mit=tasks.filter(t=>t.status!=='Done').slice(0,7);
+  // Priority tasks — dedup by id and by normalized title (synced tasks can double up), exclude Done.
+  const _seen=new Set();
+  const mit=tasks.filter(t=>{
+    if(t.status==='Done') return false;
+    const key=(t.id||'')+'|'+((t.title||'').trim().toLowerCase());
+    const tkey=((t.title||'').trim().toLowerCase());
+    if(_seen.has(key)||_seen.has(tkey)) return false;
+    _seen.add(key); _seen.add(tkey); return true;
+  }).sort((a,b)=>{const o={Must:0,Should:1,Could:2,"Won't":3};return (o[a.m]??9)-(o[b.m]??9);}).slice(0,7);
   el('bMIT').innerHTML=mit.length===0?'<div style="color:#aaa;font-size:9px;padding:4px 0">No pending tasks</div>':
     mit.map((t,i)=>`<div class="br-t">
       <span class="br-t-n">${i+1}</span>
@@ -2505,7 +2516,13 @@ function renderBrief(){
 
   // Deadlines
   const td0=new Date(); td0.setHours(0,0,0,0);
-  const dls=tasks.filter(t=>t.dd).sort((a,b)=>new Date(a.dd)-new Date(b.dd)).slice(0,6);
+  const _seenD=new Set();
+  const dls=tasks.filter(t=>{
+    if(!t.dd||t.status==='Done') return false;
+    if(new Date(t.dd)<td0) return false; // hide past-due-and-gone
+    const tk=(t.title||'').trim().toLowerCase();
+    if(_seenD.has(tk)) return false; _seenD.add(tk); return true;
+  }).sort((a,b)=>new Date(a.dd)-new Date(b.dd)).slice(0,6);
   el('bDL').innerHTML=dls.length===0?'<div style="color:#aaa;font-size:9px;padding:4px 0">No deadlines</div>':
     dls.map(t=>{const diff=Math.ceil((new Date(t.dd)-td0)/86400000);
       const bg=diff<=0?'#c03030':diff<=2?'#8b5000':'#ccc';
@@ -2543,6 +2560,21 @@ function renderBrief(){
     </div>`).join('');
   } else if(alertWrap) {
     alertWrap.style.display = 'none';
+  }
+
+  // Daily Playbook (mirror the Playbook page's daily cadence; checkboxes reflect today's saved state)
+  const pbEl=el('bPB');
+  if(pbEl){
+    const daily=(typeof PLAYBOOK!=='undefined'&&PLAYBOOK.daily)?PLAYBOOK.daily:[];
+    const pbChecks=JSON.parse(localStorage.getItem('kcc_playbook_checks')||'{}');
+    const tdKey=(typeof todayKey!=='undefined')?todayKey:isoD(new Date());
+    pbEl.innerHTML = daily.length===0?'<div style="color:#aaa;font-size:9px;padding:4px 0">No daily items</div>':
+      daily.map(d=>{const done=pbChecks[d.id+'_'+tdKey]||false;
+        return `<div style="display:flex;align-items:center;gap:6px;padding:2px 0;font-size:9px;">
+        <span style="font-size:9px;">${done?'☑':'☐'}</span>
+        <span style="font-size:10px;">${d.icon||''}</span>
+        <span style="flex:1;font-weight:600;${done?'text-decoration:line-through;color:#999;':''}">${esc(d.label)}</span>
+      </div>`;}).join('');
   }
 
   // Update sync time in footer

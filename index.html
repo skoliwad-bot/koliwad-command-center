@@ -2471,14 +2471,15 @@ function rFire(){
   // Actual vs Projected sub-lines on FIRE Path boxes (from FIRE Lab Actuals sheet).
   (function renderActVsProj(){
     const al = (typeof FL_D!=='undefined' && FL_D.actLatest) || null;
-    function setSub(id, latest, fmt){
+    function setSub(id, latest, fmt, inverse){
       const host=document.getElementById(id); if(!host) return;
-      // remove old sub-line if present
       const prev=host.parentNode.querySelector('.fav-sub'); if(prev) prev.remove();
       if(!latest || latest.actual==null) return;
       const a=latest.actual, p=latest.proj||0;
       const diff = p ? (a-p)/p*100 : 0;
-      const col = Math.abs(diff)<5 ? '#7a967a' : diff>0 ? '#4a9c5c' : '#c49030';
+      // inverse=true means OVER projection is BAD (expenses, heloc). Default: OVER is good.
+      const good = inverse ? (diff < 0) : (diff > 0);
+      const col = Math.abs(diff)<5 ? '#7a967a' : good ? '#4a9c5c' : '#c49030';
       const sub=document.createElement('span');
       sub.className='fav-sub';
       sub.style.cssText='font-size:9px;color:'+col+';display:block;margin-top:2px;letter-spacing:0.5px;';
@@ -2488,10 +2489,11 @@ function rFire(){
     }
     const $$=n=>'$'+Math.round(Number(n)||0).toLocaleString();
     if(al){
-      setSub('fsv2', al.income, $$);     // Current Income box
-      setSub('fire-hf', al.hf, $$);      // HF Balance box
-      setSub('fire-tiaa', al.tiaa, $$);  // TIAA Balance box
-      setSub('fa-heloc', al.heloc, n=>'-'+$$(Math.abs(n))); // HELOC (negative display)
+      setSub('fsv1', al.expenses, $$, true);    // Monthly Need / Expenses (inverse: over=bad)
+      setSub('fsv2', al.income,   $$);          // Current Income
+      setSub('fire-hf',   al.hf,   $$);
+      setSub('fire-tiaa', al.tiaa, $$);
+      setSub('fa-heloc',  al.heloc, n=>'-'+$$(Math.abs(n)), true);  // HELOC: more drawn = worse
     }
   })();
 }
@@ -5516,21 +5518,22 @@ function flParseWorkbook(wb, fname) {
   const fireMonthRow = timeline.find(r=>r.firePct>=1.0);
   const todayRow = timeline.find(r=>r.isToday) || timeline[0];
 
-  // ── ACTUALS (HF, Income, TIAA, HELOC) ──
+  // ── ACTUALS (HF, Income, TIAA, HELOC, Expenses) ──
   const act = wb.Sheets['Actuals'];
   const actuals = [];
-  // most recent actuals row for each metric -> for FIRE Path actual-vs-proj boxes
-  let actLatest = { hf:null, income:null, tiaa:null, heloc:null };
+  let actLatest = { hf:null, income:null, tiaa:null, heloc:null, expenses:null };
   if(act) {
     const arows = XLSX.utils.sheet_to_json(act, {header:1});
     const isNum = v => typeof v==='number' && !isNaN(v);
-    for(let i=2;i<arows.length;i++) {
+    // Find first data row dynamically (v10 row idx 2 / v11 row idx 3).
+    let startIdx = 2;
+    for(let i=2;i<Math.min(arows.length,5);i++){ if(arows[i] && isNum(arows[i][0])) { startIdx=i; break; } }
+    for(let i=startIdx;i<arows.length;i++) {
       const r=arows[i];
       if(!r[0]) continue;
       const dt = r[1];
       let dateStr = '—';
       if(dt instanceof Date) dateStr = MONTHS[dt.getMonth()]+' '+dt.getFullYear();
-      // HF (existing behavior preserved)
       const hfA = r[2];
       if(hfA!==null && hfA!==undefined && hfA!=='' && hfA!=='-') {
         const proj = r[3]||0;
@@ -5539,10 +5542,10 @@ function flParseWorkbook(wb, fname) {
         actuals.push({mo:r[0], date:dateStr, actual:hfA, proj, varD, varP, notes:r[6]||''});
         if(isNum(hfA)) actLatest.hf = {mo:r[0], date:dateStr, actual:hfA, proj};
       }
-      // Income (col 8), TIAA (col 11), HELOC (col 14)
-      if(isNum(r[8])) actLatest.income = {mo:r[0], date:dateStr, actual:r[8], proj:r[9]||0};
-      if(isNum(r[11])) actLatest.tiaa = {mo:r[0], date:dateStr, actual:r[11], proj:r[12]||0};
-      if(isNum(r[14])) actLatest.heloc = {mo:r[0], date:dateStr, actual:r[14], proj:r[15]||0};
+      if(isNum(r[8]))  actLatest.income   = {mo:r[0], date:dateStr, actual:r[8],  proj:r[9]||0};
+      if(isNum(r[11])) actLatest.tiaa     = {mo:r[0], date:dateStr, actual:r[11], proj:r[12]||0};
+      if(isNum(r[14])) actLatest.heloc    = {mo:r[0], date:dateStr, actual:r[14], proj:r[15]||0};
+      if(isNum(r[17])) actLatest.expenses = {mo:r[0], date:dateStr, actual:r[17], proj:r[18]||0};
     }
   }
   FL_D.actLatest = actLatest;

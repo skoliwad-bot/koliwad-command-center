@@ -395,7 +395,7 @@ const FB_KEYS = [
   'kcc_payplans','kcc_recbills','kcc_playbook_checks','kcc_cc_import','kcc_cc_paid','kcc_manbills',
   'kcc_fire_actuals','kcc_inbox','kcc_emails','kcc_calnames',
   'kcc_fp_phases','kcc_portfolio','kcc_tradelogs',
-  'kcc_bills','kcc_firelab_last','kcc_gtc','kcc_tkr','kcc_vb_bills','kcc_fl_actlatest'
+  'kcc_bills','kcc_firelab_last','kcc_gtc','kcc_tkr','kcc_vb_bills','kcc_fl_actlatest','kcc_fl_actseries'
 ];
 
 async function fbSave(key, value) {
@@ -5411,6 +5411,7 @@ let FL_D = {
   scRows: [],
 };
 try{ const _al=JSON.parse(localStorage.getItem('kcc_fl_actlatest')||'null'); if(_al) FL_D.actLatest=_al; }catch(e){}
+try{ const _as=JSON.parse(localStorage.getItem('kcc_fl_actseries')||'null'); if(_as) FL_D.actSeries=_as; }catch(e){}
 
 
 // ── IMPORT ───────────────────────────────────────────────────
@@ -5592,6 +5593,7 @@ function flParseWorkbook(wb, fname) {
   FL_D.actSeries = actSeries;
   FL_D.actLatest = actLatest;
   try{ localStorage.setItem('kcc_fl_actlatest', JSON.stringify(actLatest)); }catch(e){}
+  try{ localStorage.setItem('kcc_fl_actseries', JSON.stringify(actSeries)); }catch(e){}
 
   // ── SCENARIOS ──
   const sc = wb.Sheets['Scenarios'];
@@ -5712,10 +5714,11 @@ function renderDashboard() {
   let statusVal='—', statusCls='b', statusSub='no actuals yet';
   if(trackedDiffs.length){
     const avg = trackedDiffs.reduce((s,x)=>s+x,0)/trackedDiffs.length;
-    statusVal = (avg>=0?'+':'')+avg.toFixed(1)+'%';
-    statusCls = Math.abs(avg)<=5 ? 'g' : avg>0 ? 'g' : avg>=-10 ? 'a' : 'r';
-    const label = Math.abs(avg)<=5 ? 'on plan' : avg>0 ? 'ahead of plan' : avg>=-10 ? 'slightly behind' : 'behind plan';
-    statusSub = trackedDiffs.length+' metrics · '+label;
+    if(avg>=2){ statusVal='AHEAD'; statusCls='g'; }
+    else if(Math.abs(avg)<=5){ statusVal='ON TRACK'; statusCls='g'; }
+    else if(avg>=-10){ statusVal='AT RISK'; statusCls='a'; }
+    else { statusVal='BEHIND'; statusCls='r'; }
+    statusSub = trackedDiffs.length+' metrics · avg '+(avg>=0?'+':'')+avg.toFixed(1)+'%';
   }
 
   document.getElementById('dash-pills').innerHTML = [

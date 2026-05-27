@@ -2474,35 +2474,55 @@ function rFire(){
     if(!al || !al.hf){
       try{ const s=localStorage.getItem('kcc_fl_actlatest'); if(s){ al=JSON.parse(s); if(typeof FL_D!=='undefined') FL_D.actLatest=al; } }catch(e){}
     }
-    if(!al){ console.log('[FIRE Path] no actLatest available'); return; }
-    console.log('[FIRE Path] rendering actuals:', al);
-    function setSub(id, latest, fmt, inverse){
+    if(!al) return;
+    const $$=n=>(n<0?'-':'')+'$'+Math.round(Math.abs(Number(n)||0)).toLocaleString();
+    // Replace the main number with ACTUAL (bigger), show projection as smaller sub-line.
+    function setBox(id, latest, fmt, inverse){
       const host=document.getElementById(id); if(!host) return;
       const prev=host.parentNode.querySelector('.fav-sub'); if(prev) prev.remove();
       if(!latest || latest.actual==null) return;
       const a=latest.actual, p=latest.proj||0;
+      // Make the main value the ACTUAL, slightly larger
+      host.textContent = fmt ? fmt(a) : $$(a);
+      host.style.fontSize='30px';
       const diff = p ? (a-p)/p*100 : 0;
-      // inverse=true means OVER projection is BAD (expenses, heloc). Default: OVER is good.
       const good = inverse ? (diff < 0) : (diff > 0);
       const col = Math.abs(diff)<5 ? '#7a967a' : good ? '#4a9c5c' : '#c49030';
+      const sign = diff>=0?'+':'';
       const sub=document.createElement('span');
       sub.className='fav-sub';
-      sub.style.cssText='font-size:9px;color:'+col+';display:block;margin-top:2px;letter-spacing:0.5px;';
-      const sign = diff>=0?'+':'';
-      sub.innerHTML='Actual '+fmt(a)+' <span style="color:#5a6e5a">('+sign+diff.toFixed(1)+'% vs proj · '+latest.date+')</span>';
+      sub.style.cssText='font-size:11px;color:#7a8a7a;display:block;margin-top:3px;letter-spacing:0.3px;line-height:1.3;';
+      sub.innerHTML='Plan: <span style="color:#9aae9a;font-weight:600">'+(fmt?fmt(p):$$(p))+'</span> <span style="color:'+col+';margin-left:6px">'+sign+diff.toFixed(1)+'%</span> <span style="color:#5a6e5a">· '+latest.date+'</span>';
       host.parentNode.appendChild(sub);
     }
-    const $$=n=>'$'+Math.round(Number(n)||0).toLocaleString();
-    if(al){
-      setSub('fsv1', al.expenses, $$, true);    // Monthly Need / Expenses (inverse: over=bad)
-      setSub('fsv2', al.income,   $$);          // Current Income
-      setSub('fire-hf',   al.hf,   $$);
-      setSub('fire-tiaa', al.tiaa, $$);
-      setSub('fa-heloc',  al.heloc, n=>'-'+$$(Math.abs(n)), true);  // HELOC: more drawn = worse
+    // Recompute monthly GAP from actual income - actual expenses when both exist.
+    function setGapBox(income, expenses){
+      const host=document.getElementById('fsv3'); if(!host) return;
+      const prev=host.parentNode.querySelector('.fav-sub'); if(prev) prev.remove();
+      if(!income || !expenses || income.actual==null || expenses.actual==null) return;
+      const actGap = income.actual - expenses.actual;
+      const projGap = (income.proj||0) - (expenses.proj||0);
+      host.textContent = (actGap<0?'-':'')+'$'+Math.abs(Math.round(actGap)).toLocaleString();
+      host.style.color = actGap<0 ? 'var(--red)' : 'var(--grn)';
+      host.style.fontSize='30px';
+      const diff = projGap ? (actGap-projGap)/Math.abs(projGap)*100 : 0;
+      const col = Math.abs(diff)<5 ? '#7a967a' : (actGap>projGap) ? '#4a9c5c' : '#c49030';
+      const sign = diff>=0?'+':'';
+      const sub=document.createElement('span');
+      sub.className='fav-sub';
+      sub.style.cssText='font-size:11px;color:#7a8a7a;display:block;margin-top:3px;letter-spacing:0.3px;line-height:1.3;';
+      sub.innerHTML='Plan: <span style="color:#9aae9a;font-weight:600">'+(projGap<0?'-':'')+'$'+Math.abs(Math.round(projGap)).toLocaleString()+'</span> <span style="color:'+col+';margin-left:6px">'+sign+diff.toFixed(1)+'%</span> <span style="color:#5a6e5a">· '+income.date+'</span>';
+      host.parentNode.appendChild(sub);
     }
+    setBox('fsv1', al.expenses, null, true);   // Monthly Need
+    setBox('fsv2', al.income,   null);         // Current Income
+    setBox('fire-hf',   al.hf,   null);
+    setBox('fire-tiaa', al.tiaa, null);
+    setBox('fa-heloc',  al.heloc, n=>'-'+$$(Math.abs(n)), true);
+    setGapBox(al.income, al.expenses);
   }
   renderActVsProj();
-  setTimeout(renderActVsProj, 200);  // re-run after DOM settles
+  setTimeout(renderActVsProj, 200);
 }
 
 function setFT(t){

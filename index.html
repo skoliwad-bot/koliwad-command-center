@@ -2026,6 +2026,36 @@ function moscow(item){
 }
 
 // ── RENDER ALL ───────────────────────────────────────────────
+function restoreAITexts(){
+  try{
+    const saved=JSON.parse(localStorage.getItem('kcc_aitexts')||'{}');
+    Object.keys(saved).forEach(section=>{
+      const text=saved[section]; if(!text) return;
+      // Global runAI() saves with section ids ai-<section>-tx
+      const tx=document.getElementById('ai-'+section+'-tx');
+      const st=document.getElementById('ai-'+section+'-st');
+      const block=document.getElementById('ai-'+section);
+      if(tx){ tx.textContent=text; tx.classList.remove('loading'); }
+      if(st){ st.textContent='✦ Saved analysis'; }
+      if(block){ block.classList.add('visible'); }
+      // FIRE Lab AI uses ai-text/ai-status (no section suffix); store under key 'firelab'
+      if(section==='firelab'){
+        const ft=document.getElementById('ai-text'); const fs=document.getElementById('ai-status');
+        if(ft){ ft.textContent=text; ft.classList.remove('loading'); }
+        if(fs){ fs.textContent='✦ Saved analysis'; }
+        // Also fill the FIRE Lab dashboard inline panel if it exists
+        const dtx=document.getElementById('dash-ai-tx'); const dst=document.getElementById('dash-ai-st');
+        if(dtx){ dtx.textContent=text; dtx.classList.remove('loading'); }
+        if(dst){ dst.textContent='✦ Saved analysis'; }
+        // Make the panel appear if not yet created (FIRE Lab dashboard rendered)
+        if(!document.getElementById('dash-ai-panel') && document.getElementById('dash-content')){
+          if(typeof dashRunFLAI!=='undefined'){} // not auto-run, but the panel will be created next time
+        }
+      }
+    });
+  }catch(e){}
+}
+
 function renderAll(){
   const _safe = (name, fn) => { try { fn(); } catch(e) { console.error('CRASH in '+name+':', e.message, e.stack); } };
   _safe('rToday', rToday);
@@ -2038,6 +2068,8 @@ function renderAll(){
   if(S.page==='financials') rFin();
   if(S.page==='business') rBiz();
   if(S.page==='exec') rExec();
+
+  setTimeout(restoreAITexts, 50);
 }
 
 function rBadges(){
@@ -5977,11 +6009,28 @@ function saveKey() {
 }
 
 function dashRunFLAI(){
-  // Switch to the AI tab visually
-  const aiTabBtn = [...document.querySelectorAll('button.tab')].find(b=>b.textContent.includes('AI Analysis'));
-  if(aiTabBtn && typeof setTab==='function') setTab('ai', aiTabBtn);
-  // Run the analysis (defer so the tab visibly switches first)
-  setTimeout(()=>{ if(typeof runFLAI==='function') runFLAI(); }, 50);
+  // Show an inline AI result panel on the Dashboard so the user doesn't leave the page.
+  let panel=document.getElementById('dash-ai-panel');
+  if(!panel){
+    panel=document.createElement('div');
+    panel.id='dash-ai-panel';
+    panel.className='card';
+    panel.style.cssText='margin-bottom:16px;border-color:#7a5cb8;background:linear-gradient(180deg, rgba(122,92,184,0.08), rgba(122,92,184,0.02))';
+    panel.innerHTML='<div class="ch"><span class="ct ct-p">✦ AI FIRE Analysis</span><span id="dash-ai-st" class="ai-status" style="font-size:9px">✦ Thinking…</span></div><div id="dash-ai-tx" class="ai-text loading" style="padding:14px 16px;font-size:12px;line-height:1.7">Analyzing your FIRE data…</div>';
+    const dc=document.getElementById('dash-content');
+    const pills=document.getElementById('dash-pills');
+    if(dc && pills) dc.insertBefore(panel, pills);
+  }
+  document.getElementById('dash-ai-tx').textContent='Analyzing your full FIRE plan…';
+  document.getElementById('dash-ai-tx').classList.add('loading');
+  document.getElementById('dash-ai-st').textContent='✦ Thinking…';
+  // Run the analysis — it writes to ai-text; mirror it to the dashboard panel when done.
+  runFLAI().then(()=>{
+    const txt=document.getElementById('ai-text')?.textContent||'';
+    document.getElementById('dash-ai-tx').textContent=txt;
+    document.getElementById('dash-ai-tx').classList.remove('loading');
+    document.getElementById('dash-ai-st').textContent='✦ '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  });
 }
 
 async function runFLAI() {
@@ -6078,6 +6127,8 @@ Be direct, specific, use real numbers from the data. No fluff.`;
     const data = await res.json();
     if(data.error) throw new Error(data.error.message);
     tx.textContent = data.content[0].text;
+    tx.classList.remove('loading');
+    try{ const _s=JSON.parse(localStorage.getItem('kcc_aitexts')||'{}'); _s.firelab=data.content[0].text; localStorage.setItem('kcc_aitexts', JSON.stringify(_s)); }catch(e){}
     tx.classList.remove('loading');
     st.textContent = '✦ Generated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   } catch(err) {

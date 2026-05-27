@@ -1242,7 +1242,7 @@ localStorage.setItem = function(key, value) {
       <span class="ai-title">✦ AI FIRE Analysis</span>
       <div style="display:flex;align-items:center;gap:8px;">
         <span class="ai-status" id="ai-status">Click Generate to analyze your FIRE trajectory</span>
-        <button class="ai-btn" onclick="runAI()">✦ Generate Analysis</button>
+        <button class="ai-btn" onclick="runFLAI()">✦ Generate Analysis</button>
       </div>
     </div>
     <div class="ai-text loading" id="ai-text">Claude will analyze your actual spreadsheet data — active scenario, timeline, key dates, income vs expenses, and FIRE trajectory — then give you specific strategic advice for this month.</div>
@@ -5946,7 +5946,7 @@ function saveKey() {
   document.getElementById('key-status').textContent = '✓ Key saved';
 }
 
-async function runAI() {
+async function runFLAI() {
   const key = localStorage.getItem('kcc_claude') || document.getElementById('api-key-input').value.trim();
   if(!key){alert('Add your Claude API key above');return;}
   if(!FL_D.imported){alert('Import your spreadsheet first');return;}

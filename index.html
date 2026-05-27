@@ -5986,7 +5986,27 @@ async function runFLAI() {
   const inc   = FL_D.income;
   const ex    = FL_D.expenses;
   const kd    = FL_D.keyDates;
-  const act   = FL_D.actuals;
+  const act   = FL_D.actuals || [];
+  const series= FL_D.actSeries || {};
+
+  // Build per-metric actuals history string
+  function seriesStr(key,label,inverse){
+    const arr = series[key]||[];
+    if(!arr.length) return label+': no actuals entered';
+    const recent = arr.slice(-6);  // last 6 months max
+    const rows = recent.map(a=>`Mo.${a.mo} ${a.date}: Actual ${(a.actual<0?'-$':'$')+Math.abs(Math.round(a.actual)).toLocaleString()} vs Plan ${(a.proj<0?'-$':'$')+Math.abs(Math.round(a.proj)).toLocaleString()} (${a.varD>=0?'+':''}${a.varP.toFixed(1)}%)`).join('\n');
+    const avgVar = arr.reduce((s,a)=>s+a.varP,0)/arr.length;
+    const trend = inverse ? (avgVar<0?'BETTER than plan':avgVar>5?'WORSE than plan':'on plan')
+                          : (avgVar>0?'BETTER than plan':avgVar<-5?'BEHIND plan':'on plan');
+    return `${label} (${arr.length} months tracked, avg ${avgVar>=0?'+':''}${avgVar.toFixed(1)}% — ${trend}):\n${rows}`;
+  }
+  const actualsBlock = [
+    seriesStr('hf','HF Balance'),
+    seriesStr('income','Income'),
+    seriesStr('tiaa','TIAA'),
+    seriesStr('heloc','HELOC Drawn',true),
+    seriesStr('expenses','Expenses',true),
+  ].join('\n\n');
 
   const prompt = `You are the FIRE advisor for Sonny Koliwad. Analyze his real spreadsheet data and give specific strategic advice.
 
@@ -6015,8 +6035,8 @@ INCOME AT END STATE (Mo.120):
 - HF Return: ${f$(inc.hfReturn)}/mo
 - Total Passive: ${f$(inc.total)}/mo
 
-ACTUALS TRACKED: ${act.length} months
-${act.length>0 ? act.map(a=>`Mo.${a.mo} ${a.date}: Actual ${f$(a.actual)} vs Projected ${f$(a.proj)} (${a.varD>=0?'+':''}${a.varP.toFixed(1)}%)`).join('\n') : 'No actuals entered yet'}
+ACTUALS vs PLAN (per metric):
+${actualsBlock}
 
 Provide a 5-6 sentence analysis covering:
 1. Overall trajectory — on track or not, and by how much in dollars and months

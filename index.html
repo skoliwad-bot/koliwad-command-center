@@ -395,7 +395,7 @@ const FB_KEYS = [
   'kcc_payplans','kcc_recbills','kcc_playbook_checks','kcc_cc_import','kcc_cc_paid','kcc_manbills',
   'kcc_fire_actuals','kcc_inbox','kcc_emails','kcc_calnames',
   'kcc_fp_phases','kcc_portfolio','kcc_tradelogs',
-  'kcc_bills','kcc_firelab_last','kcc_gtc','kcc_tkr','kcc_vb_bills'
+  'kcc_bills','kcc_firelab_last','kcc_gtc','kcc_tkr','kcc_vb_bills','kcc_fl_actlatest'
 ];
 
 async function fbSave(key, value) {
@@ -2469,8 +2469,13 @@ function rFire(){
   if(typeof rFireKanban==='function') rFireKanban();
 
   // Actual vs Projected sub-lines on FIRE Path boxes (from FIRE Lab Actuals sheet).
-  (function renderActVsProj(){
-    const al = (typeof FL_D!=='undefined' && FL_D.actLatest) || null;
+  function renderActVsProj(){
+    let al = (typeof FL_D!=='undefined' && FL_D.actLatest) || null;
+    if(!al || !al.hf){
+      try{ const s=localStorage.getItem('kcc_fl_actlatest'); if(s){ al=JSON.parse(s); if(typeof FL_D!=='undefined') FL_D.actLatest=al; } }catch(e){}
+    }
+    if(!al){ console.log('[FIRE Path] no actLatest available'); return; }
+    console.log('[FIRE Path] rendering actuals:', al);
     function setSub(id, latest, fmt, inverse){
       const host=document.getElementById(id); if(!host) return;
       const prev=host.parentNode.querySelector('.fav-sub'); if(prev) prev.remove();
@@ -2495,7 +2500,9 @@ function rFire(){
       setSub('fire-tiaa', al.tiaa, $$);
       setSub('fa-heloc',  al.heloc, n=>'-'+$$(Math.abs(n)), true);  // HELOC: more drawn = worse
     }
-  })();
+  }
+  renderActVsProj();
+  setTimeout(renderActVsProj, 200);  // re-run after DOM settles
 }
 
 function setFT(t){
@@ -5395,6 +5402,7 @@ let FL_D = {
   scHeaders: [],
   scRows: [],
 };
+try{ const _al=JSON.parse(localStorage.getItem('kcc_fl_actlatest')||'null'); if(_al) FL_D.actLatest=_al; }catch(e){}
 
 
 // ── IMPORT ───────────────────────────────────────────────────
@@ -5549,6 +5557,7 @@ function flParseWorkbook(wb, fname) {
     }
   }
   FL_D.actLatest = actLatest;
+  try{ localStorage.setItem('kcc_fl_actlatest', JSON.stringify(actLatest)); }catch(e){}
 
   // ── SCENARIOS ──
   const sc = wb.Sheets['Scenarios'];

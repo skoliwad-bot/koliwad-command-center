@@ -1205,24 +1205,12 @@ localStorage.setItem = function(key, value) {
   <div id="actuals-empty" class="empty-state">
     <div class="icon">✅</div>
     <h2>No Actuals Yet</h2>
-    <p>Enter your real HF balance each month in column C of the Actuals sheet in your Excel file, then import to track actual vs projected performance.</p>
+    <p>Enter your real numbers each month in the yellow columns of the Actuals sheet (HF, Income, TIAA, HELOC, Expenses), then import to track actual vs projected performance.</p>
     <label>⬆ Import Excel<input type="file" accept=".xlsx,.xls" onchange="flImport(event)" style="display:none"></label>
   </div>
   <div id="actuals-content" style="display:none">
     <div class="g3" id="actuals-pills" style="margin-bottom:16px"></div>
-    <div class="card">
-      <div class="ch"><span class="ct ct-g">📊 Actual vs Projected — HF Balance</span><span id="actuals-count" style="font-size:9px;color:var(--mut)"></span></div>
-      <div class="tbl-wrap">
-        <table>
-          <thead><tr>
-            <th style="text-align:left">Month</th><th style="text-align:left">Date</th>
-            <th>Actual HF</th><th>Projected HF</th><th>Variance $</th><th>Variance %</th>
-            <th style="text-align:center">Status</th><th style="text-align:left">Notes</th>
-          </tr></thead>
-          <tbody id="actuals-tbody"></tbody>
-        </table>
-      </div>
-    </div>
+    <div id="actuals-tables"></div>
   </div>
 </div>
 
@@ -5576,6 +5564,32 @@ function flParseWorkbook(wb, fname) {
       if(isNum(r[17])) actLatest.expenses = {mo:r[0], date:dateStr, actual:r[17], proj:r[18]||0};
     }
   }
+  // Per-metric series for the Actuals tab (only months where actual is entered).
+  const actSeries = { hf:[], income:[], tiaa:[], heloc:[], expenses:[] };
+  if(act) {
+    const arows = XLSX.utils.sheet_to_json(act, {header:1});
+    const isNum2 = v => typeof v==='number' && !isNaN(v);
+    let s2=2; for(let i=2;i<Math.min(arows.length,5);i++){ if(arows[i] && isNum2(arows[i][0])){ s2=i; break; } }
+    for(let i=s2;i<arows.length;i++){
+      const r=arows[i]; if(!r[0]) continue;
+      const dt=r[1]; let dateStr='—';
+      if(dt instanceof Date) dateStr = MONTHS[dt.getMonth()]+' '+dt.getFullYear();
+      function push(key, aCol, pCol, inverse){
+        if(!isNum2(r[aCol])) return;
+        const a=r[aCol], p=r[pCol]||0;
+        const varD=a-p, varP = p ? varD/Math.abs(p)*100 : 0;
+        // For inverse metrics (expenses, heloc), "on track" = actual <= proj
+        const onTrack = inverse ? (varD <= 0.05*Math.abs(p)) : (varD >= -0.05*Math.abs(p));
+        actSeries[key].push({mo:r[0], date:dateStr, actual:a, proj:p, varD, varP, notes:r[6]||'', onTrack, inverse:!!inverse});
+      }
+      push('hf',       2,  3);
+      push('income',   8,  9);
+      push('tiaa',     11, 12);
+      push('heloc',    14, 15, true);
+      push('expenses', 17, 18, true);
+    }
+  }
+  FL_D.actSeries = actSeries;
   FL_D.actLatest = actLatest;
   try{ localStorage.setItem('kcc_fl_actlatest', JSON.stringify(actLatest)); }catch(e){}
 
@@ -5686,8 +5700,27 @@ function renderDashboard() {
 
   const firePctNow = FL_D.todayRow ? Math.round(FL_D.todayRow.firePct*100) : 0;
 
+  // Status from actuals: average % variance across all tracked metrics in latest month.
+  const al = FL_D.actLatest || {};
+  const trackedDiffs = [];
+  ['hf','income','tiaa','heloc','expenses'].forEach(k=>{
+    const m = al[k]; if(!m || m.actual==null || !m.proj) return;
+    let d = (m.actual - m.proj)/Math.abs(m.proj)*100;
+    if(k==='expenses' || k==='heloc') d = -d;  // for these, over=bad — invert so "+" always = good
+    trackedDiffs.push(d);
+  });
+  let statusVal='—', statusCls='b', statusSub='no actuals yet';
+  if(trackedDiffs.length){
+    const avg = trackedDiffs.reduce((s,x)=>s+x,0)/trackedDiffs.length;
+    statusVal = (avg>=0?'+':'')+avg.toFixed(1)+'%';
+    statusCls = Math.abs(avg)<=5 ? 'g' : avg>0 ? 'g' : avg>=-10 ? 'a' : 'r';
+    const label = Math.abs(avg)<=5 ? 'on plan' : avg>0 ? 'ahead of plan' : avg>=-10 ? 'slightly behind' : 'behind plan';
+    statusSub = trackedDiffs.length+' metrics · '+label;
+  }
+
   document.getElementById('dash-pills').innerHTML = [
     {lbl:'FIRE Date',    val: FL_D.fireDate,                    cls:FL_D.fireMonth?'g':'a', sub:'first month FIRE% ≥ 100%'},
+    {lbl:'Actuals vs Plan', val: statusVal,                     cls:statusCls,           sub:statusSub},
     {lbl:'Net Worth',    val: f$(FL_D.netWorth),                cls:'b',                 sub:'at month 120'},
     {lbl:'FIRE Coverage',val: firePctNow+'%',                cls:firePctNow>=100?'g':firePctNow>=70?'a':'r', sub:'passive / expenses today'},
     {lbl:'HF at End',    val: f$(FL_D.hfFinal),                 cls:'b',                 sub:'month 120 balance'},
@@ -5717,13 +5750,23 @@ function renderDashboard() {
 
   // Expenses
   const ex = FL_D.expenses;
+  const expAct = (FL_D.actLatest||{}).expenses;
+  function expTag(isTotal){
+    if(!isTotal || !expAct || expAct.actual==null) return '';
+    const a=expAct.actual, p=expAct.proj||0;
+    const diff = p ? (a-p)/p*100 : 0;
+    const good = diff < 0;
+    const col = Math.abs(diff)<5 ? '#7a967a' : good ? '#4a9c5c' : '#c49030';
+    const sign = diff>=0?'+':'';
+    return `<span style="margin-left:10px;font-size:10px;color:${col};font-weight:600">Actual ${f$(a)} <span style="color:#5a6e5a;font-weight:400">(${sign}${diff.toFixed(1)}% · ${expAct.date})</span></span>`;
+  }
   document.getElementById('dash-expenses').innerHTML = [
-    ['Base Monthly Spend', ex.spend,    'var(--red)'],
-    ['Vineta Mortgage',    ex.vmort,    'var(--mut)'],
-    ['Paulette Mortgage',  ex.pmort,    'var(--mut)'],
-    ['HELOC Interest',     ex.helocInt, 'var(--mut)'],
-    ['TOTAL FIXED',        ex.total,    'var(--amb)'],
-  ].map(([l,v,c])=>`<div style="display:flex;align-items:center;padding:8px 16px;border-bottom:1px solid #1a1e1a;"><span style="flex:1;font-size:12px;color:var(--txt2)">${l}</span><span style="font-size:14px;font-weight:700;color:${c}">${f$(v)}</span></div>`).join('');
+    ['Base Monthly Spend', ex.spend,    'var(--red)', false],
+    ['Vineta Mortgage',    ex.vmort,    'var(--mut)', false],
+    ['Paulette Mortgage',  ex.pmort,    'var(--mut)', false],
+    ['HELOC Interest',     ex.helocInt, 'var(--mut)', false],
+    ['TOTAL FIXED',        ex.total,    'var(--amb)', true],
+  ].map(([l,v,c,isTotal])=>`<div style="display:flex;align-items:center;padding:8px 16px;border-bottom:1px solid #1a1e1a;"><span style="flex:1;font-size:12px;color:var(--txt2)">${l}${expTag(isTotal)}</span><span style="font-size:14px;font-weight:700;color:${c}">${f$(v)}</span></div>`).join('');
 
   // Real estate
   const re = FL_D.realEstate;
@@ -5791,10 +5834,11 @@ function renderTimeline(view) {
 
 // ── ACTUALS ──────────────────────────────────────────────────
 function renderActuals() {
-  const actuals = FL_D.actuals;
   if(!FL_D.imported) return;
+  const series = FL_D.actSeries || {};
+  const totalEntries = Object.values(series).reduce((s,arr)=>s+(arr?arr.length:0),0);
 
-  if(!actuals.length) {
+  if(!totalEntries) {
     document.getElementById('actuals-empty').style.display='block';
     document.getElementById('actuals-content').style.display='none';
     return;
@@ -5802,29 +5846,64 @@ function renderActuals() {
 
   document.getElementById('actuals-empty').style.display='none';
   document.getElementById('actuals-content').style.display='block';
-  document.getElementById('actuals-count').textContent = actuals.length+' month'+(actuals.length===1?'':'s')+' of real data';
 
-  const onTrackCount = actuals.filter(a=>a.varD>=-0.05*a.proj).length;
-  const avgVar = actuals.reduce((s,a)=>s+a.varP,0)/actuals.length;
-  const lastActual = actuals[actuals.length-1];
+  // Top pills: rollup across all metrics for the most recent month with data.
+  const METRICS = [
+    {key:'hf',       label:'HF Balance',      color:'b', emoji:'💎'},
+    {key:'income',   label:'Income',          color:'g', emoji:'📈'},
+    {key:'tiaa',     label:'TIAA',            color:'b', emoji:'🏦'},
+    {key:'heloc',    label:'HELOC Drawn',     color:'r', emoji:'🏠'},
+    {key:'expenses', label:'Expenses',        color:'a', emoji:'💸'},
+  ];
+
+  const al = FL_D.actLatest || {};
+  const trackedDiffs=[];
+  METRICS.forEach(m=>{
+    const x=al[m.key]; if(!x||x.actual==null||!x.proj) return;
+    let d=(x.actual-x.proj)/Math.abs(x.proj)*100;
+    if(m.key==='expenses'||m.key==='heloc') d=-d;
+    trackedDiffs.push(d);
+  });
+  const avg = trackedDiffs.length ? trackedDiffs.reduce((s,x)=>s+x,0)/trackedDiffs.length : 0;
+  const statusCls = !trackedDiffs.length ? 'b' : Math.abs(avg)<=5 ? 'g' : avg>0 ? 'g' : avg>=-10 ? 'a' : 'r';
+  const statusLabel = !trackedDiffs.length ? 'no data' : Math.abs(avg)<=5 ? 'On Plan' : avg>0 ? 'Ahead' : avg>=-10 ? 'Slightly Behind' : 'Behind Plan';
+  const monthsWithAny = Math.max(...METRICS.map(m=>(series[m.key]||[]).length));
 
   document.getElementById('actuals-pills').innerHTML = [
-    {lbl:'Months Tracked',  val:actuals.length,            cls:'b', sub:'real HF entries'},
-    {lbl:'On Track',        val:onTrackCount+'/'+actuals.length, cls:onTrackCount===actuals.length?'g':'a', sub:'within 5% of projection'},
-    {lbl:'Latest Actual HF',val:f$(lastActual?.actual),    cls:'b', sub:lastActual?.date||'—'},
+    {lbl:'Months Tracked',  val:monthsWithAny,                                       cls:'b', sub:'with any actuals entered'},
+    {lbl:'Metrics Tracked', val:trackedDiffs.length+'/5',                            cls:trackedDiffs.length===5?'g':'a', sub:'this month'},
+    {lbl:'Overall Status',  val:statusLabel,                                          cls:statusCls, sub:(trackedDiffs.length?'avg '+(avg>=0?'+':'')+avg.toFixed(1)+'%':'enter actuals to track')},
   ].map(p=>`<div class="pill ${p.cls}"><span class="pill-lbl">${p.lbl}</span><span class="pill-val ${p.cls}">${p.val}</span><span class="pill-sub">${p.sub}</span></div>`).join('');
 
-  document.getElementById('actuals-tbody').innerHTML = actuals.map(a=>{
-    const onTrack = a.varD >= -0.05*a.proj;
-    return `<tr class="${!onTrack?'off-track':''}">
-      <td>${a.mo}</td><td>${a.date}</td>
-      <td class="pos"><b>${f$(a.actual)}</b></td>
-      <td style="color:var(--mut)">${f$(a.proj)}</td>
-      <td class="${a.varD>=0?'pos':'neg'}">${fc(a.varD)}</td>
-      <td class="${a.varD>=0?'pos':'neg'}">${(a.varD>=0?'+':'')+a.varP.toFixed(1)}%</td>
-      <td style="text-align:center"><span class="badge ${onTrack?'badge-g':'badge-r'}">${onTrack?'ON TRACK':'OFF TRACK'}</span></td>
-      <td style="text-align:left;font-size:10px;color:var(--mut)">${esc(a.notes)}</td>
-    </tr>`;
+  // Render one table per metric.
+  document.getElementById('actuals-tables').innerHTML = METRICS.map(m=>{
+    const arr = series[m.key] || [];
+    if(!arr.length) return `<div class="card" style="margin-bottom:14px;opacity:0.5"><div class="ch"><span class="ct ct-${m.color}">${m.emoji} ${m.label}</span><span style="font-size:9px;color:var(--mut)">no actuals entered</span></div></div>`;
+    const onTrackCount = arr.filter(a=>a.onTrack).length;
+    const fmt = v => m.key==='heloc' ? '-'+f$(Math.abs(v)) : f$(v);
+    return `<div class="card" style="margin-bottom:14px">
+      <div class="ch"><span class="ct ct-${m.color}">${m.emoji} Actual vs Projected — ${m.label}</span><span style="font-size:9px;color:var(--mut)">${arr.length} month${arr.length===1?'':'s'} · ${onTrackCount}/${arr.length} on track</span></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr>
+          <th style="text-align:left">Month</th><th style="text-align:left">Date</th>
+          <th>Actual</th><th>Projected</th><th>Variance $</th><th>Variance %</th>
+          <th style="text-align:center">Status</th><th style="text-align:left">Notes</th>
+        </tr></thead>
+        <tbody>${arr.map(a=>{
+          // Color sign: for inverse metrics, lower actual is positive.
+          const goodDir = a.inverse ? (a.varD<=0) : (a.varD>=0);
+          return `<tr class="${!a.onTrack?'off-track':''}">
+            <td>${a.mo}</td><td>${a.date}</td>
+            <td class="pos"><b>${fmt(a.actual)}</b></td>
+            <td style="color:var(--mut)">${fmt(a.proj)}</td>
+            <td class="${goodDir?'pos':'neg'}">${fc(a.varD)}</td>
+            <td class="${goodDir?'pos':'neg'}">${(a.varD>=0?'+':'')+a.varP.toFixed(1)}%</td>
+            <td style="text-align:center"><span class="badge ${a.onTrack?'badge-g':'badge-r'}">${a.onTrack?'ON TRACK':'OFF TRACK'}</span></td>
+            <td style="text-align:left;font-size:10px;color:var(--mut)">${esc(a.notes||'')}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>
+    </div>`;
   }).join('');
 }
 

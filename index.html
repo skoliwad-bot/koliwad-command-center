@@ -395,7 +395,7 @@ const FB_KEYS = [
   'kcc_payplans','kcc_recbills','kcc_playbook_checks','kcc_cc_import','kcc_cc_paid','kcc_manbills',
   'kcc_fire_actuals','kcc_inbox','kcc_emails','kcc_calnames',
   'kcc_fp_phases','kcc_portfolio','kcc_tradelogs',
-  'kcc_bills','kcc_firelab_last','kcc_gtc','kcc_tkr','kcc_vb_bills','kcc_fl_actlatest','kcc_fl_actseries'
+  'kcc_bills','kcc_firelab_last','kcc_gtc','kcc_tkr','kcc_vb_bills','kcc_fl_actlatest','kcc_fl_actseries','kcc_pfchk'
 ];
 
 async function fbSave(key, value) {
@@ -1862,6 +1862,10 @@ async function fetchAll(){
     // Auto-alert if total inbox over 70
     if(inboxTotal > 70) {
       const existing = (S.alerts||[]).find(a=>a._inboxAlert && a.status==='Open');
+      if(existing) {
+        // Refresh title with the current count so it never goes stale
+        existing.title = 'Inbox at '+inboxTotal+' total emails — needs triage';
+      }
       if(!existing) {
         const al = {
           id:'inbox_'+Date.now(), _inboxAlert:true,
@@ -2114,12 +2118,12 @@ function rToday(){
   const _todayISO=isoD(new Date());
   const _isDaily=a=>/daily|every trading day/i.test((a.when||'')+' '+(a.action||''));
   const pfToday=((S.portfolio&&S.portfolio.actions)||[]).filter(a=>a.date===_todayISO||_isDaily(a))
-    .map(a=>({id:'pfa_'+a.action.replace(/[^a-z0-9]/gi,'').slice(0,16),title:a.action,m:'Must',src:'Portfolio',_pf:true}));
+    .map(a=>({id:'pfa_'+a.action.replace(/[^a-z0-9]/gi,'').slice(0,16),title:a.action,m:'Must',src:'Portfolio',_pf:true,_pfKey:_todayISO}));
   const mit=[...pfToday,...tasks.filter(t=>t.status!=='Done').slice(0,3),...fireMIT.slice(0,3)].slice(0,6);
   el('t-mit').innerHTML=mit.length===0?'<div class="empty" style="color:var(--grn)">\u2705 No high-priority tasks</div>':
     mit.map(function(t){
       var chk=t._pf
-        ?'<div class="chk" style="opacity:.5;cursor:default"></div>'
+        ?'<div class="chk'+(togPFDone(t.id,t._pfKey)?' dn':'')+'" onclick="togPF(\'' +t.id+'\',\''+(t._pfKey||'')+'\')"></div>'
         :t._fire
         ?'<div class="chk'+(S.fchk[t.id]?' dn':'')+'" onclick="togFC(\'' +t.id+ '\')"></div>'
         :'<div class="chk'+(t.status==='Done'?' dn':'')+'" onclick="toggleT(\'' +t.id+ '\')"></div>';
@@ -2872,6 +2876,24 @@ function fpDrop(ev,destPid){
 }
 
 function togFP(id){S.fex[id]=S.fex[id]===false?true:false;rFirePhases();}
+function togPFDone(id, dayKey){
+  try{
+    const m=JSON.parse(localStorage.getItem('kcc_pfchk')||'{}');
+    return !!(m[dayKey] && m[dayKey][id]);
+  }catch(e){return false;}
+}
+function togPF(id, dayKey){
+  try{
+    const m=JSON.parse(localStorage.getItem('kcc_pfchk')||'{}');
+    if(!m[dayKey]) m[dayKey]={};
+    m[dayKey][id]=!m[dayKey][id];
+    // garbage-collect: only keep last 7 days
+    const keys=Object.keys(m).sort(); while(keys.length>7){ delete m[keys.shift()]; }
+    localStorage.setItem('kcc_pfchk', JSON.stringify(m));
+  }catch(e){}
+  if(typeof rToday==='function') rToday();
+  if(typeof renderBrief==='function') renderBrief();
+}
 function togFC(id){
   const ft=(typeof fpFindTask==='function')?fpFindTask(id):null;
   // Only warn when CHECKING (not unchecking) a blocked task.
@@ -3022,7 +3044,7 @@ function renderBrief(){
   const _todayISO2=isoD(new Date());
   const _isDaily2=a=>/daily|every trading day/i.test((a.when||'')+' '+(a.action||''));
   const _pfToday=((S.portfolio&&S.portfolio.actions)||[]).filter(a=>a.date===_todayISO2||_isDaily2(a))
-    .map(a=>({title:a.action,m:'Must',src:'Portfolio',_pf:true}));
+    .map(a=>({id:'pfa_'+a.action.replace(/[^a-z0-9]/gi,'').slice(0,16),title:a.action,m:'Must',src:'Portfolio',_pf:true,_pfKey:_todayISO2}));
   const _seen=new Set();
   const _mitTasks=tasks.filter(t=>{
     if(t.status==='Done') return false;

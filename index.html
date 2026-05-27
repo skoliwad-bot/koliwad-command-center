@@ -593,7 +593,7 @@ localStorage.setItem = function(key, value) {
           <div class="sp" id="sp1"><span class="spi">🎟</span><div><span class="spl">Ticket Risk</span><span class="spv" id="sv1">0</span></div></div>
           <div class="sp" id="sp2"><span class="spi">🔥</span><div><span class="spl">High Tasks</span><span class="spv" id="sv2">0</span></div></div>
           <div class="sp" id="sp3"><span class="spi">🚨</span><div><span class="spl">Open Alerts</span><span class="spv" id="sv3">0</span></div></div>
-          <div class="sp" id="sp4"><span class="spi">🎯</span><div><span class="spl">FIRE Status</span><span class="spv" id="sv4">—</span></div></div>
+          <div class="sp" id="sp4"><span class="spi">🎯</span><div><span class="spl">Cash Flow</span><span class="spv" id="sv4">—</span></div></div>
         </div>
         <div class="g2">
           <div class="card"><div class="ch"><span class="ct r">🔥 Must Do Today</span><span style="font-size:8px;color:var(--mut)">MoSCoW ranked</span></div><div id="t-mit"><div class="empty">↻ Sync to load</div></div></div>
@@ -1484,7 +1484,7 @@ localStorage.setItem = function(key, value) {
       <div class="br-stat"><span class="br-stat-l">Ticket Risk</span><span class="br-stat-v" id="bpv1">—</span></div>
       <div class="br-stat"><span class="br-stat-l">Must Tasks</span><span class="br-stat-v" id="bpv2">—</span></div>
       <div class="br-stat"><span class="br-stat-l">Open Alerts</span><span class="br-stat-v" id="bpv3">—</span></div>
-      <div class="br-stat"><span class="br-stat-l">FIRE Status</span><span class="br-stat-v" id="bpv4">—</span></div>
+      <div class="br-stat"><span class="br-stat-l">Cash Flow</span><span class="br-stat-v" id="bpv4">—</span></div>
     </div>
 
     <div class="br-body">
@@ -5723,7 +5723,7 @@ function renderDashboard() {
 
   document.getElementById('dash-pills').innerHTML = [
     {lbl:'FIRE Date',    val: FL_D.fireDate,                    cls:FL_D.fireMonth?'g':'a', sub:'first month FIRE% ≥ 100%'},
-    {lbl:'Actuals vs Plan', val: statusVal,                     cls:statusCls,           sub:statusSub},
+    {lbl:'Plan Status', val: statusVal,                     cls:statusCls,           sub:statusSub},
     {lbl:'Net Worth',    val: f$(FL_D.netWorth),                cls:'b',                 sub:'at month 120'},
     {lbl:'FIRE Coverage',val: firePctNow+'%',                cls:firePctNow>=100?'g':firePctNow>=70?'a':'r', sub:'passive / expenses today'},
     {lbl:'HF at End',    val: f$(FL_D.hfFinal),                 cls:'b',                 sub:'month 120 balance'},

@@ -1141,7 +1141,7 @@ localStorage.setItem = function(key, value) {
     <!-- AI button bar -->
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;align-items:center">
       <span id="dash-ai-status" style="font-size:9px;color:var(--mut);font-style:italic">Click for AI analysis of your full plan</span>
-      <button class="aibtn" onclick="runFLAI(); setTab('ai', document.querySelector('button.tab[onclick*=\"\\\'ai\\\'\"]'));">✦ AI FIRE Analysis</button>
+      <button class="aibtn" onclick="dashRunFLAI()">✦ AI FIRE Analysis</button>
     </div>
     <!-- Status pills -->
     <div class="g4" id="dash-pills"></div>
@@ -5974,6 +5974,14 @@ function saveKey() {
   if(!k){alert('Paste your Claude API key first');return;}
   localStorage.setItem('kcc_claude', k);
   document.getElementById('key-status').textContent = '✓ Key saved';
+}
+
+function dashRunFLAI(){
+  // Switch to the AI tab visually
+  const aiTabBtn = [...document.querySelectorAll('button.tab')].find(b=>b.textContent.includes('AI Analysis'));
+  if(aiTabBtn && typeof setTab==='function') setTab('ai', aiTabBtn);
+  // Run the analysis (defer so the tab visibly switches first)
+  setTimeout(()=>{ if(typeof runFLAI==='function') runFLAI(); }, 50);
 }
 
 async function runFLAI() {

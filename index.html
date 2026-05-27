@@ -423,6 +423,51 @@ async function fbLoad() {
   return false;
 }
 
+function fbListen(){
+  if(!DOC) return;
+  let first=true;
+  DOC.onSnapshot(doc=>{
+    if(!doc.exists) return;
+    // Skip the very first snapshot if startup already loaded it
+    const data=doc.data();
+    let changed=false;
+    FB_KEYS.forEach(k=>{
+      if(data[k]!==undefined && data[k]!==localStorage.getItem(k)){
+        localStorage.setItem(k, data[k]); changed=true;
+      }
+    });
+    if(!changed && !first) return;
+    first=false;
+    // Re-hydrate in-memory state from the freshly updated localStorage
+    try{
+      S.tasks=JSON.parse(localStorage.getItem('kcc_tasks')||'[]');
+      S.alerts=JSON.parse(localStorage.getItem('kcc_alerts')||'[]');
+      S.tickets=JSON.parse(localStorage.getItem('kcc_tickets')||'[]');
+      S.cal=JSON.parse(localStorage.getItem('kcc_cal')||'[]');
+      S.fire=JSON.parse(localStorage.getItem('kcc_fire')||'null');
+      S.fireg=JSON.parse(localStorage.getItem('kcc_fireg')||'null');
+      S.firea=JSON.parse(localStorage.getItem('kcc_firea')||'[]');
+      S.fchk=JSON.parse(localStorage.getItem('kcc_fchk')||'{}');
+      S.fins=JSON.parse(localStorage.getItem('kcc_fins')||'null');
+      S.tb=JSON.parse(localStorage.getItem('kcc_tb')||'null');
+      S.tz=JSON.parse(localStorage.getItem('kcc_tz')||'null');
+      S.manbills=JSON.parse(localStorage.getItem('kcc_manbills')||'[]');
+      S.gtc=JSON.parse(localStorage.getItem('kcc_gtc')||'{}');
+      S.portfolio=JSON.parse(localStorage.getItem('kcc_portfolio')||'null');
+      S.tradelogs=JSON.parse(localStorage.getItem('kcc_tradelogs')||'[]');
+      S.lastSync=localStorage.getItem('kcc_sync')||S.lastSync;
+      const fp=JSON.parse(localStorage.getItem('kcc_fp_phases')||'null'); if(fp&&Array.isArray(fp)&&fp.length) FP=fp;
+      const fls=localStorage.getItem('kcc_firelab_last'); if(fls){Object.assign(FL_D,JSON.parse(fls));}
+    }catch(e){}
+    if(typeof renderAll==='function') renderAll();
+    if(typeof autoAlerts==='function') autoAlerts();
+    if(FL_D&&FL_D.imported&&typeof flRender==='function') flRender();
+    if(S.page==='fire'&&typeof rFire==='function') rFire();
+    if(S.page==='financials'&&typeof rFin==='function') rFin();
+    if(typeof tkUpdateCards==='function') setTimeout(()=>tkUpdateCards(),100);
+  }, err=>console.warn('Firebase listen error:',err.message));
+}
+
 async function fbSaveAll() {
   if(!DOC) return;
   try {
@@ -1700,6 +1745,7 @@ function launch(){
         setTimeout(()=>{ tkUpdateCards(); }, 100);
       }
     }).catch(e => console.warn('Firebase background load failed:', e));
+    if(typeof fbListen==='function') fbListen();
   } catch(e) { console.warn('Firebase init error:', e); }
 }
 

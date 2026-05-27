@@ -4290,18 +4290,21 @@ function buildPrompt(section) {
   // FIRE summary: use FIRE Lab spreadsheet (FL_D) as the gold source so the Command Center
   // and Briefing judge "on track" from IDENTICAL data. Fall back to live tracked numbers only
   // if no spreadsheet has been imported yet.
+  // Always compute trueNeed at function scope so all prompt templates can reference it.
+  const helocInt = fire&&fire.heloc ? fire.heloc*0.065/12 : 3855;
+  let trueNeed = fire ? (fire.need||22000)+(fire.vmort||7900)+(fire.pmort||3477)+helocInt : 37169;
   let fireSum;
   if (typeof FL_D !== 'undefined' && FL_D.imported && FL_D.todayRow) {
     const tr = FL_D.todayRow;
     const gap = (tr.totalIn||0) - (tr.totalOut||0);
+    // When FIRE Lab is imported, prefer its actual expenses as trueNeed for prompts.
+    if(tr.totalOut) trueNeed = Math.round(tr.totalOut);
     fireSum = `[Source: FIRE Lab spreadsheet] FIRE date: ${FL_D.fireDate}, Net Worth @Mo120: ${f$(FL_D.netWorth)}, `
       + `Income: $${Math.round(tr.totalIn||0)}/mo, Expenses: $${Math.round(tr.totalOut||0)}/mo, `
       + `Cash Flow: $${Math.round(gap)}/mo, HF: $${Math.round(tr.hf||0)}, HELOC: $${Math.round(tr.heloc||0)}, `
       + `FIRE Coverage: ${Math.round((tr.firePct||0)*100)}%, Scenario: ${FL_D.scenario||'—'}`;
   } else {
-    const helocInt = fire&&fire.heloc ? fire.heloc*0.065/12 : 3855;
-    const trueNeed = fire ? (fire.need||22000)+(fire.vmort||7900)+(fire.pmort||3477)+helocInt : 37169;
-    fireSum = fire ? `Need: $${Math.round(trueNeed)}/mo, Income: $${fire.inc||0}/mo, Gap: $${Math.round(fire.inc-(trueNeed))}/mo, HF: $${fire.hf||0}, TIAA: $${fire.tiaa||0}, HELOC: $${fire.heloc||0}, FIRE%: ${fire.fire_pct||0}%` : 'No FIRE data (import FIRE Lab spreadsheet)';
+    fireSum = fire ? `Need: $${Math.round(trueNeed)}/mo, Income: $${fire.inc||0}/mo, Gap: $${Math.round((fire.inc||0)-trueNeed)}/mo, HF: $${fire.hf||0}, TIAA: $${fire.tiaa||0}, HELOC: $${fire.heloc||0}, FIRE%: ${fire.fire_pct||0}%` : 'No FIRE data (import FIRE Lab spreadsheet)';
   }
   const finSum   = fins ? `Citi: $${fins.citi||0}, Savings: $${fins.savings||0}, HELOC owed: $${fins.heloc||0}, Available: $${fins.available||0}, Sweep ready: $${fins.totalSweep||0}` : 'No VB data';
   const tkSum    = `Profit MTD: $${tkm['Ticket Profit MTD']||0}, YTD: $${tkm['Ticket Profit YTD']||0}, Open listings: ${tkm['Open Listings']||0}, Pending pmts: $${tkm['Pending Payments']||0}`;

@@ -1138,6 +1138,11 @@ localStorage.setItem = function(key, value) {
     <label>⬆ Import Excel Spreadsheet<input type="file" accept=".xlsx,.xls" onchange="flImport(event)" style="display:none"></label>
   </div>
   <div id="dash-content" style="display:none">
+    <!-- AI button bar -->
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;align-items:center">
+      <span id="dash-ai-status" style="font-size:9px;color:var(--mut);font-style:italic">Click for AI analysis of your full plan</span>
+      <button class="aibtn" onclick="runFLAI(); setTab('ai', document.querySelector('button.tab[onclick*=\"\\\'ai\\\'\"]'));">✦ AI FIRE Analysis</button>
+    </div>
     <!-- Status pills -->
     <div class="g4" id="dash-pills"></div>
     <!-- Key dates -->

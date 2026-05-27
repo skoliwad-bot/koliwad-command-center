@@ -393,7 +393,9 @@ const FB_KEYS = [
   'kcc_firelab_inputs','kcc_firelab_saved',
   'kcc_tkm','kcc_tku','kcc_tkhr','kcc_tkmed','kcc_tk_cards',
   'kcc_payplans','kcc_recbills','kcc_playbook_checks','kcc_cc_import','kcc_cc_paid','kcc_manbills',
-  'kcc_fire_actuals','kcc_inbox','kcc_emails','kcc_calnames'
+  'kcc_fire_actuals','kcc_inbox','kcc_emails','kcc_calnames',
+  'kcc_fp_phases','kcc_portfolio','kcc_tradelogs',
+  'kcc_bills','kcc_firelab_last','kcc_gtc','kcc_tkr','kcc_vb_bills'
 ];
 
 async function fbSave(key, value) {
@@ -1682,8 +1684,14 @@ function launch(){
         S.lastSync = localStorage.getItem('kcc_sync')||null;
         S.manbills = JSON.parse(localStorage.getItem('kcc_manbills')||'[]');
         S.fins     = JSON.parse(localStorage.getItem('kcc_fins')||'null');
+        // Reload FIRE Path phases/tasks, portfolio & trade log from cloud
+        try { const fp=JSON.parse(localStorage.getItem('kcc_fp_phases')||'null'); if(fp&&Array.isArray(fp)&&fp.length) FP=fp; } catch(e){}
+        S.portfolio = JSON.parse(localStorage.getItem('kcc_portfolio')||'null');
+        S.tradelogs = JSON.parse(localStorage.getItem('kcc_tradelogs')||'[]');
+        S.gtc = JSON.parse(localStorage.getItem('kcc_gtc')||'{}');
         renderAll();
         autoAlerts();
+        if(S.page==='fire'){ if(typeof rFire==='function') rFire(); }
         // Restore FIRE Lab after Firebase sync
         try { const fls=localStorage.getItem('kcc_firelab_last'); if(fls){Object.assign(FL_D,JSON.parse(fls));if(FL_D.imported)flRender();} } catch(e) {}
         // If user is on financials page, re-render it with fresh data

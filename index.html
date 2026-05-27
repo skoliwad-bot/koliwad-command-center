@@ -423,8 +423,10 @@ async function fbLoad() {
   return false;
 }
 
+let _fbApplyTimer=null;
 function fbListen(){
   if(!DOC) return;
+  const rawSet=(typeof _origSetItem==='function')?_origSetItem:localStorage.setItem.bind(localStorage);
   let first=true;
   DOC.onSnapshot(doc=>{
     if(!doc.exists) return;
@@ -433,7 +435,7 @@ function fbListen(){
     let changed=false;
     FB_KEYS.forEach(k=>{
       if(data[k]!==undefined && data[k]!==localStorage.getItem(k)){
-        localStorage.setItem(k, data[k]); changed=true;
+        rawSet(k, data[k]); changed=true;   // raw write — must NOT echo back to cloud (prevents sync loop)
       }
     });
     if(!changed && !first) return;
@@ -459,12 +461,15 @@ function fbListen(){
       const fp=JSON.parse(localStorage.getItem('kcc_fp_phases')||'null'); if(fp&&Array.isArray(fp)&&fp.length) FP=fp;
       const fls=localStorage.getItem('kcc_firelab_last'); if(fls){Object.assign(FL_D,JSON.parse(fls));}
     }catch(e){}
-    if(typeof renderAll==='function') renderAll();
-    if(typeof autoAlerts==='function') autoAlerts();
-    if(FL_D&&FL_D.imported&&typeof flRender==='function') flRender();
-    if(S.page==='fire'&&typeof rFire==='function') rFire();
-    if(S.page==='financials'&&typeof rFin==='function') rFin();
-    if(typeof tkUpdateCards==='function') setTimeout(()=>tkUpdateCards(),100);
+    clearTimeout(_fbApplyTimer);
+    _fbApplyTimer=setTimeout(()=>{
+      if(typeof renderAll==='function') renderAll();
+      if(typeof autoAlerts==='function') autoAlerts();
+      if(FL_D&&FL_D.imported&&typeof flRender==='function') flRender();
+      if(S.page==='fire'&&typeof rFire==='function') rFire();
+      if(S.page==='financials'&&typeof rFin==='function') rFin();
+      if(typeof tkUpdateCards==='function') tkUpdateCards();
+    },250);
   }, err=>console.warn('Firebase listen error:',err.message));
 }
 

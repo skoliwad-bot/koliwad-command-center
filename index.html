@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><!-- v1779505227 -->
+<meta charset="UTF-8"><!-- v1780004904 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -2716,39 +2716,150 @@ function fpComputeLevels(){
   fpAllTasks().forEach(({t})=>calc(t.id));
   return lvl;
 }
+// ── FIRE Path TIMELINE (month-based Gantt: dependencies + due dates + Kanban order; drag bars to reschedule) ──
+const FP_HRS_PER_MONTH=160, FP_COLW=58, FP_LW=124, FP_ROWH=30;
+let _fpTL=null; // active timeline drag state
+function fpYmToIdx(s,aY,aM){ if(!s) return null; const m=String(s).match(/^(\d{4})-(\d{2})/); if(!m) return null; return (parseInt(m[1],10)-aY)*12+(parseInt(m[2],10)-1-aM); }
+function fpIdxToYm(idx,aY,aM){ const tot=aM+idx, y=aY+Math.floor(tot/12), m=((tot%12)+12)%12; return y+'-'+String(m+1).padStart(2,'0'); }
+function fpMonLabel(idx,aY,aM){ const tot=aM+idx, y=aY+Math.floor(tot/12), m=((tot%12)+12)%12; const N=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return N[m]+" '"+String(y).slice(2); }
+function fpStartLabel(s){ const m=String(s||'').match(/^(\d{4})-(\d{2})/); if(!m) return s||''; const N=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return N[parseInt(m[2],10)-1]+" '"+m[1].slice(2); }
+function fpDurMonths(t){ const h=fpEffortHours(t); if(!h) return 1; return Math.max(1,Math.ceil(h/FP_HRS_PER_MONTH)); }
+function fpSchedule(){
+  const now=new Date(); const aY=now.getFullYear(), aM=now.getMonth();
+  const lvl=fpComputeLevels();
+  const seq={}; FP.forEach((ph,pi)=>ph.tasks.forEach((t,ti)=>{ seq[t.id]=pi*1000+ti; }));
+  const all=fpAllTasks().slice();
+  all.sort((a,b)=>{
+    const la=lvl[a.t.id]||0, lb=lvl[b.t.id]||0; if(la!==lb) return la-lb;
+    const da=fpYmToIdx(a.t.due,aY,aM), db=fpYmToIdx(b.t.due,aY,aM);
+    if(da!=null&&db!=null&&da!==db) return da-db;
+    if(da!=null&&db==null) return -1; if(da==null&&db!=null) return 1;
+    return (seq[a.t.id]||0)-(seq[b.t.id]||0);
+  });
+  const sched={};
+  function depFinish(t){ let f=-1; fpAllDeps(t).forEach(d=>{ if(d.indexOf('phase:')===0){ const ph=fpFindPhase(d.slice(6)); if(ph) ph.tasks.forEach(pt=>{ if(sched[pt.id]) f=Math.max(f,sched[pt.id].endIdx); }); } else if(sched[d]) f=Math.max(f,sched[d].endIdx); }); return f; }
+  const byId={};
+  all.forEach(({ph,t})=>{
+    const earliest=Math.max(0,depFinish(t)+1);
+    const exp=fpYmToIdx(t.start,aY,aM);
+    const start = exp!=null ? Math.max(earliest,exp) : earliest;
+    const dm=fpDurMonths(t); const end=start+dm-1;
+    sched[t.id]={startIdx:start,endIdx:end};
+    const dueIdx=fpYmToIdx(t.due,aY,aM);
+    byId[t.id]={ph,t,startIdx:start,endIdx:end,earliest,dueIdx,late:(dueIdx!=null&&end>dueIdx),dragged:exp!=null};
+  });
+  let maxEnd=0; Object.values(byId).forEach(o=>{ maxEnd=Math.max(maxEnd,o.endIdx); if(o.dueIdx!=null) maxEnd=Math.max(maxEnd,o.dueIdx); });
+  return {byId,aY,aM,maxEnd};
+}
 function rFireTimeline(){
   const e=el('fv-timeline'); if(!e) return;
   const all=fpAllTasks();
   if(!all.length){ e.innerHTML='<div class="empty">No tasks.</div>'; return; }
-  const lvl=fpComputeLevels();
-  const maxL=Math.max(0,...all.map(({t})=>lvl[t.id]||0));
-  // group tasks by level
-  const cols=[]; for(let i=0;i<=maxL;i++) cols.push([]);
-  all.forEach(o=>{ cols[lvl[o.t.id]||0].push(o); });
-  const colW=210, gap=20, rowH=46;
-  const width=(maxL+1)*(colW+gap);
-  let rows='';
-  cols.forEach((group,li)=>{
-    group.forEach((o,ri)=>{
-      const t=o.t, ph=o.ph, isDone=!!S.fchk[t.id], blocked=fpIsBlocked(t);
-      const tc=TC[t.tag]||'#4a5e4a';
-      const x=li*(colW+gap), y=ri*(rowH+8);
-      rows+='<div style="position:absolute;left:'+x+'px;top:'+y+'px;width:'+colW+'px;">'
-        +'<div style="border:1px solid '+(isDone?'#252a25':'#2e352e')+';border-left:4px solid '+tc+';background:'+(isDone?'rgba(74,156,92,0.05)':'#141714')+';padding:7px 9px;border-radius:2px;">'
-        +'<div style="display:flex;justify-content:space-between;gap:4px"><span style="font-size:8px;font-weight:700;color:'+ph.c+'">'+esc(ph.n)+'</span>'+(blocked?'<span style="font-size:9px">🔒</span>':isDone?'<span style="font-size:8px;color:#4a9c5c">✓</span>':'')+'</div>'
-        +'<div style="font-size:10px;font-weight:600;color:'+(isDone?'#4a5e4a':'#eef4ee')+';'+(isDone?'text-decoration:line-through;':'')+'line-height:1.3;margin-top:2px">'+esc(t.t)+'</div>'
-        +'</div></div>';
+  const SC=fpSchedule(); const byId=SC.byId, aY=SC.aY, aM=SC.aM;
+  const months=SC.maxEnd+3, gridW=months*FP_COLW;
+  let head='';
+  for(let i=0;i<months;i++){ const isJan=((((aM+i)%12)+12)%12)===0; head+='<div style="position:absolute;left:'+(i*FP_COLW)+'px;top:0;width:'+FP_COLW+'px;text-align:center;font-size:8px;font-weight:700;letter-spacing:.5px;color:'+(isJan?'#9abf9a':'#5a6e5a')+';border-left:1px solid '+(isJan?'#2e352e':'#1a1e1a')+';height:100%;padding-top:5px">'+fpMonLabel(i,aY,aM)+'</div>'; }
+  _fpTLrows=[]; let rows='', y=0;
+  FP.forEach(ph=>{
+    const tasks=ph.tasks.map(t=>byId[t.id]).filter(Boolean); // Kanban (manual) order
+    if(!tasks.length) return;
+    rows+='<div style="position:absolute;left:0;top:'+y+'px;height:20px;width:'+(FP_LW+gridW)+'px;background:#0f130f;border-top:1px solid #252a25"></div>'
+      +'<div style="position:absolute;left:8px;top:'+(y+4)+'px;font-size:8px;font-weight:700;letter-spacing:1px;color:'+ph.c+'">'+esc(ph.n)+' · '+esc(ph.t)+'</div>';
+    y+=22;
+    tasks.forEach(o=>{
+      const rowTop=y;
+      const t=o.t, isDone=!!S.fchk[t.id], tc=TC[t.tag]||'#4a5e4a', blocked=fpIsBlocked(t);
+      const barL=FP_LW+o.startIdx*FP_COLW, barW=Math.max(FP_COLW-4,(o.endIdx-o.startIdx+1)*FP_COLW-4);
+      rows+='<div style="position:absolute;left:6px;top:'+(y+6)+'px;width:'+(FP_LW-10)+'px;font-size:9px;color:'+(isDone?'#4a5e4a':'#cdd6cd')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'+(isDone?'text-decoration:line-through':'')+'">'+(blocked?'<span style="color:#c49030">⛓</span> ':'')+esc(t.t)+'</div>';
+      rows+='<div class="fptl-bar" data-tid="'+t.id+'" onpointerdown="fpTLDown(event,\''+t.id+'\')" '
+        +'style="position:absolute;left:'+barL+'px;top:'+(y+3)+'px;width:'+barW+'px;height:'+(FP_ROWH-10)+'px;'
+        +'background:'+(isDone?'rgba(74,156,92,0.12)':o.late?'rgba(208,64,64,0.16)':'#141714')+';'
+        +'border:1px solid '+(o.late?'#d04040':isDone?'#2e3a2e':'#2e352e')+';border-left:3px solid '+tc+';border-radius:3px;'
+        +'cursor:grab;touch-action:none;display:flex;align-items:center;padding:0 6px;overflow:hidden;user-select:none">'
+        +'<span style="font-size:8px;font-weight:700;color:'+(isDone?'#4a5e4a':'#cdd6cd')+';white-space:nowrap;pointer-events:none">'+esc(t.t)+'</span>'
+        +(o.dragged?'<span title="manually scheduled — double-tap to auto" style="margin-left:4px;font-size:8px;color:#7a5cb8;pointer-events:none">▸</span>':'')
+        +'</div>';
+      if(o.dueIdx!=null){ const dx=FP_LW+o.dueIdx*FP_COLW+FP_COLW/2; rows+='<div title="Due '+esc(t.due)+'" style="position:absolute;left:'+(dx-5)+'px;top:'+(y+1)+'px;font-size:9px;color:'+(o.late?'#d04040':'#c49030')+';pointer-events:none">◆</div>'; }
+      _fpTLrows.push({tid:t.id,pid:ph.id,top:rowTop,bot:rowTop+FP_ROWH+2});
+      y+=FP_ROWH+2;
     });
+    y+=4;
   });
-  const maxRows=Math.max(1,...cols.map(c=>c.length));
-  const height=maxRows*(rowH+8)+30;
-  let heads='';
-  for(let i=0;i<=maxL;i++){ heads+='<div style="position:absolute;left:'+(i*(colW+gap))+'px;top:0;width:'+colW+'px;text-align:center;font-size:8px;font-weight:700;letter-spacing:1px;color:#5a6e5a">'+(i===0?'START':'STEP '+i)+'</div>'; }
-  e.innerHTML='<div style="font-size:9px;color:#5a6e5a;margin-bottom:10px">Auto-sequenced by dependencies. Each column = one step deeper in the blocker chain; tasks in the same column can run in parallel. Set blockers with ⛓ on the Phases or Kanban tab.</div>'
-    +'<div style="overflow-x:auto;padding-bottom:10px"><div style="position:relative;width:'+width+'px;height:'+(height+24)+'px">'
-    +'<div style="position:relative;height:18px">'+heads+'</div>'
-    +'<div style="position:relative;margin-top:6px;height:'+height+'px">'+rows+'</div>'
+  const totalH=y+10;
+  e.innerHTML='<div style="font-size:9px;color:#5a6e5a;margin-bottom:8px;line-height:1.5">Rows follow your Kanban order; bars sit on real months from dependencies + due dates + effort. <span style="color:#c49030">◆</span> = due date (red if the bar finishes late). <b>Drag a bar sideways</b> to set its start month; <b>drag it up/down</b> to reorder the sequence — both save to the task and flow to Phases &amp; Kanban. Double-tap a manually-set bar to revert to auto.</div>'
+    +'<div id="fptl-scroll" style="overflow-x:auto;overflow-y:hidden;padding-bottom:8px"><div id="fptl-canvas" style="position:relative;width:'+(FP_LW+gridW)+'px;height:'+(totalH+26)+'px">'
+    +'<div style="position:absolute;left:'+FP_LW+'px;top:0;width:'+gridW+'px;height:22px">'+head+'</div>'
+    +'<div style="position:absolute;left:0;top:0;width:'+FP_LW+'px;height:22px;background:#0e110e;font-size:8px;color:#5a6e5a;display:flex;align-items:center;padding-left:6px;font-weight:700;letter-spacing:1px">TASK</div>'
+    +'<div id="fptl-rows" style="position:absolute;left:0;top:24px;width:'+(FP_LW+gridW)+'px;height:'+totalH+'px">'+rows+'<div id="fptl-ind" style="display:none;position:absolute;left:0;height:2px;background:#7a5cb8;width:100%;z-index:70;box-shadow:0 0 4px #7a5cb8"></div></div>'
     +'</div></div>';
+}
+let _fpTLtap=0, _fpTLrows=[];
+function rerenderFP(){ rFireTimeline(); if(el('fv-kanban')&&el('fv-kanban').style.display!=='none') rFireKanban(); rFirePhases(); }
+function fpTLDown(ev,tid){
+  ev.preventDefault();
+  const bar=ev.currentTarget; if(!el('fptl-canvas')) return;
+  const sch=fpSchedule(); const o=sch.byId[tid]; if(!o) return;
+  _fpTL={tid,startX:ev.clientX,startY:ev.clientY,origStart:o.startIdx,earliest:o.earliest,aY:sch.aY,aM:sch.aM,bar,curStart:o.startIdx,barTop:parseFloat(bar.style.top)||0,mode:null};
+  try{ bar.setPointerCapture(ev.pointerId); }catch(e){}
+  bar.onpointermove=fpTLMove; bar.onpointerup=fpTLUp; bar.onpointercancel=fpTLUp;
+}
+function fpTLMove(ev){
+  if(!_fpTL) return; ev.preventDefault();
+  const dx=ev.clientX-_fpTL.startX, dy=ev.clientY-_fpTL.startY;
+  if(!_fpTL.mode){
+    if(Math.abs(dx)<6&&Math.abs(dy)<6) return;
+    _fpTL.mode=Math.abs(dx)>=Math.abs(dy)?'time':'order';
+    _fpTL.bar.style.cursor='grabbing'; _fpTL.bar.style.opacity='0.9'; _fpTL.bar.style.zIndex='65';
+  }
+  if(_fpTL.mode==='time'){
+    const ns=Math.max(_fpTL.earliest,_fpTL.origStart+Math.round(dx/FP_COLW));
+    _fpTL.curStart=ns; _fpTL.bar.style.left=(FP_LW+ns*FP_COLW)+'px';
+  } else {
+    _fpTL.bar.style.top=(_fpTL.barTop+dy)+'px';
+    const rowsEl=el('fptl-rows'); if(rowsEl){ fpTLIndicator(ev.clientY-rowsEl.getBoundingClientRect().top); }
+  }
+}
+function fpTLIndicator(localY){
+  const ind=el('fptl-ind'); if(!ind) return;
+  let pos=null;
+  for(let i=0;i<_fpTLrows.length;i++){ const r=_fpTLrows[i]; if(localY<(r.top+r.bot)/2){ pos=r.top; break; } }
+  if(pos==null){ const last=_fpTLrows[_fpTLrows.length-1]; pos=last?last.bot:0; }
+  ind.style.top=(pos-1)+'px'; ind.style.display='block';
+}
+function fpTLUp(ev){
+  if(!_fpTL) return; ev.preventDefault();
+  const d=_fpTL; _fpTL=null;
+  try{ d.bar.releasePointerCapture(ev.pointerId); }catch(e){}
+  d.bar.onpointermove=d.bar.onpointerup=d.bar.onpointercancel=null;
+  const ind=el('fptl-ind'); if(ind) ind.style.display='none';
+  if(!d.mode){ // tap (no drag) -> double-tap reverts manual schedule
+    const now=Date.now();
+    if(now-_fpTLtap<350){ _fpTLtap=0; const ft=fpFindTask(d.tid); if(ft&&ft.t.start){ delete ft.t.start; fpSave(); rerenderFP(); } return; }
+    _fpTLtap=now; return;
+  }
+  if(d.mode==='time'){
+    if(d.curStart!==d.origStart){ const ft=fpFindTask(d.tid); if(ft){ if(d.curStart<=d.earliest) delete ft.t.start; else ft.t.start=fpIdxToYm(d.curStart,d.aY,d.aM); fpSave(); } }
+  } else {
+    const rowsEl=el('fptl-rows'); if(rowsEl){ fpTLReorder(d.tid, ev.clientY-rowsEl.getBoundingClientRect().top); }
+  }
+  rerenderFP();
+}
+function fpTLReorder(tid,localY){
+  const rows=_fpTLrows; if(!rows.length) return;
+  let ib=rows.length;
+  for(let i=0;i<rows.length;i++){ if(localY<(rows[i].top+rows[i].bot)/2){ ib=i; break; } }
+  let targetPid,targetTid;
+  if(ib>=rows.length){ targetPid=rows[rows.length-1].pid; targetTid=null; }
+  else { targetPid=rows[ib].pid; targetTid=rows[ib].tid; }
+  if(targetTid===tid) return;
+  const src=fpFindTask(tid); if(!src) return;
+  const srcPh=src.ph; const si=srcPh.tasks.findIndex(x=>x.id===tid); if(si<0) return;
+  const [moved]=srcPh.tasks.splice(si,1);
+  const dstPh=fpFindPhase(targetPid)||srcPh;
+  let di = targetTid ? dstPh.tasks.findIndex(x=>x.id===targetTid) : dstPh.tasks.length;
+  if(di<0) di=dstPh.tasks.length;
+  dstPh.tasks.splice(di,0,moved);
+  fpSave();
 }
 function fpAddTask(pid){ fpOpenTaskForm(pid,null); }
 function fpOpenTaskForm(pid,tid){
@@ -2803,6 +2914,7 @@ function fpRollup(tasks){
 }
 function fpMetaLine(t){
   const meta=[];
+  if(t.start) meta.push('▸ '+fpStartLabel(t.start));
   if(t.due) meta.push('📅 '+t.due);
   if(t.cost) meta.push('💲'+Math.round(t.cost).toLocaleString());
   if(t.eff) meta.push('⏱ '+t.eff+(t.effU||'h'));
@@ -4625,7 +4737,7 @@ function downloadDocx() {
   // Get the rendered HTML
   const execHTML = container ? container.outerHTML : '<p>No data</p>';
 
-  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1779505227 -->
+  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780004904 -->
   <style>
     @page { size: 8.5in 11in; margin: 0.45in 0.45in 0.45in 0.45in; }
     @media print { body { zoom: 1; } }

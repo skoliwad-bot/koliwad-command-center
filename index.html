@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><!-- v1780005904 -->
+<meta charset="UTF-8"><!-- v1780006401 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -2751,43 +2751,72 @@ function fpSchedule(){
   let maxEnd=0; Object.values(byId).forEach(o=>{ maxEnd=Math.max(maxEnd,o.endIdx); if(o.dueIdx!=null) maxEnd=Math.max(maxEnd,o.dueIdx); });
   return {byId,aY,aM,maxEnd};
 }
+let _fptlPack = (function(){ try{ return localStorage.getItem('kcc_fptlpack')!=='0'; }catch(e){ return true; } })();
+function fpTLSetPack(p){ _fptlPack=!!p; try{ localStorage.setItem('kcc_fptlpack', p?'1':'0'); }catch(e){} rFireTimeline(); }
+function fpTLCard(ph,t,o,x,y){
+  const isDone=!!S.fchk[t.id], tc=TC[t.tag]||'#4a5e4a', tl=TL[t.tag]||t.tag, blocked=fpIsBlocked(t);
+  const cardH=FP_ROWH-14, cardL=x+3, cardW=Math.max(FP_COLW-6,(o.endIdx-o.startIdx+1)*FP_COLW-6);
+  const inner='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">'
+    +'<span style="font-size:11px;font-weight:600;color:'+(isDone?'#4a5e4a':'#eef4ee')+';'+(isDone?'text-decoration:line-through;':'')+'line-height:1.3;flex:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'+esc(t.t)+'</span>'
+    +(isDone?'<span style="color:#4a9c5c;font-size:11px;flex-shrink:0">✓</span>':blocked?'<span title="blocked" style="font-size:11px;flex-shrink:0">⛓</span>':'')
+    +'</div>'
+    +(t.d?'<div style="font-size:9px;color:#5a6e5a;margin-top:3px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">'+esc(t.d)+'</div>':'')
+    +fpMetaLine(t)
+    +'<div style="margin-top:5px;display:flex;justify-content:space-between;align-items:center;gap:6px">'
+    +'<span style="display:flex;gap:5px;align-items:center;min-width:0">'
+    +'<span title="'+esc(ph.t)+'" style="font-size:7px;font-weight:700;padding:1px 5px;border-radius:2px;background:rgba(255,255,255,0.05);color:'+ph.c+';flex-shrink:0">'+esc(ph.n)+'</span>'
+    +'<span style="font-size:7px;font-weight:700;letter-spacing:1px;color:'+tc+'">'+tl+'</span></span>'
+    +(o.dragged?'<span title="manually scheduled — double-tap to auto" style="font-size:8px;color:#7a5cb8;flex-shrink:0">▸ set</span>':'')+'</div>';
+  let h='<div class="fptl-bar" data-tid="'+t.id+'" onpointerdown="fpTLDown(event,\''+t.id+'\')" '
+    +'style="position:absolute;left:'+cardL+'px;top:'+(y+4)+'px;width:'+cardW+'px;height:'+cardH+'px;'
+    +'background:'+(isDone?'rgba(74,156,92,0.06)':o.late?'rgba(208,64,64,0.10)':'#141714')+';'
+    +'border:1px solid '+(o.late?'#d04040':isDone?'#252a25':'#2e352e')+';border-left:3px solid '+tc+';border-radius:3px;'
+    +'cursor:grab;touch-action:none;overflow:hidden;user-select:none;padding:7px 9px;box-sizing:border-box">'+inner+'</div>';
+  if(o.dueIdx!=null){ const dx=o.dueIdx*FP_COLW+FP_COLW/2; h+='<div title="Due '+esc(t.due)+'" style="position:absolute;left:'+(dx-6)+'px;top:'+(y-2)+'px;font-size:11px;color:'+(o.late?'#d04040':'#c49030')+';pointer-events:none;z-index:5">◆</div>'; }
+  return h;
+}
 function rFireTimeline(){
   const e=el('fv-timeline'); if(!e) return;
   const all=fpAllTasks();
   if(!all.length){ e.innerHTML='<div class="empty">No tasks.</div>'; return; }
   const SC=fpSchedule(); const byId=SC.byId, aY=SC.aY, aM=SC.aM;
-  const months=SC.maxEnd+3, gridW=months*FP_COLW, cardH=FP_ROWH-14;
+  const months=SC.maxEnd+3, gridW=months*FP_COLW;
   let head='';
   for(let i=0;i<months;i++){ const isJan=((((aM+i)%12)+12)%12)===0; head+='<div style="position:absolute;left:'+(i*FP_COLW)+'px;top:0;width:'+FP_COLW+'px;text-align:center;font-size:9px;font-weight:700;letter-spacing:.5px;color:'+(isJan?'#9abf9a':'#7a967a')+';border-left:1px solid '+(isJan?'#2e352e':'#1a1e1a')+';height:100%;padding-top:5px">'+fpMonLabel(i,aY,aM)+'</div>'; }
-  // flat list in Kanban (manual) order, no phase grouping
   const flat=[]; FP.forEach(ph=>ph.tasks.forEach(t=>{ const o=byId[t.id]; if(o) flat.push({ph,t,o}); }));
-  _fpTLrows=[]; let rows='', y=0;
-  flat.forEach(({ph,t,o})=>{
-    const rowTop=y;
-    const isDone=!!S.fchk[t.id], tc=TC[t.tag]||'#4a5e4a', tl=TL[t.tag]||t.tag, blocked=fpIsBlocked(t);
-    const cardL=o.startIdx*FP_COLW+3, cardW=Math.max(FP_COLW-6,(o.endIdx-o.startIdx+1)*FP_COLW-6);
-    const inner='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">'
-      +'<span style="font-size:11px;font-weight:600;color:'+(isDone?'#4a5e4a':'#eef4ee')+';'+(isDone?'text-decoration:line-through;':'')+'line-height:1.3;flex:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'+esc(t.t)+'</span>'
-      +(isDone?'<span style="color:#4a9c5c;font-size:11px;flex-shrink:0">✓</span>':blocked?'<span title="blocked" style="font-size:11px;flex-shrink:0">⛓</span>':'')
-      +'</div>'
-      +(t.d?'<div style="font-size:9px;color:#5a6e5a;margin-top:3px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">'+esc(t.d)+'</div>':'')
-      +fpMetaLine(t)
-      +'<div style="margin-top:5px;display:flex;justify-content:space-between;align-items:center;gap:6px">'
-      +'<span style="display:flex;gap:5px;align-items:center;min-width:0">'
-      +'<span title="'+esc(ph.t)+'" style="font-size:7px;font-weight:700;padding:1px 5px;border-radius:2px;background:rgba(255,255,255,0.05);color:'+ph.c+';flex-shrink:0">'+esc(ph.n)+'</span>'
-      +'<span style="font-size:7px;font-weight:700;letter-spacing:1px;color:'+tc+'">'+tl+'</span></span>'
-      +(o.dragged?'<span title="manually scheduled — double-tap to auto" style="font-size:8px;color:#7a5cb8;flex-shrink:0">▸ set</span>':'')+'</div>';
-    rows+='<div class="fptl-bar" data-tid="'+t.id+'" onpointerdown="fpTLDown(event,\''+t.id+'\')" '
-      +'style="position:absolute;left:'+cardL+'px;top:'+(y+4)+'px;width:'+cardW+'px;height:'+cardH+'px;'
-      +'background:'+(isDone?'rgba(74,156,92,0.06)':o.late?'rgba(208,64,64,0.10)':'#141714')+';'
-      +'border:1px solid '+(o.late?'#d04040':isDone?'#252a25':'#2e352e')+';border-left:3px solid '+tc+';border-radius:3px;'
-      +'cursor:grab;touch-action:none;overflow:hidden;user-select:none;padding:7px 9px;box-sizing:border-box">'+inner+'</div>';
-    if(o.dueIdx!=null){ const dx=o.dueIdx*FP_COLW+FP_COLW/2; rows+='<div title="Due '+esc(t.due)+'" style="position:absolute;left:'+(dx-6)+'px;top:'+(y-2)+'px;font-size:11px;color:'+(o.late?'#d04040':'#c49030')+';pointer-events:none;z-index:5">◆</div>'; }
-    _fpTLrows.push({tid:t.id,pid:ph.id,top:rowTop,bot:rowTop+FP_ROWH});
-    y+=FP_ROWH;
-  });
-  const totalH=y+10;
-  e.innerHTML='<div style="font-size:9px;color:#5a6e5a;margin-bottom:8px;line-height:1.5">All tasks on one timeline, in your Kanban order; the chip shows each task\u2019s phase. Cards sit on real months from dependencies + due dates + effort. <span style="color:#c49030">◆</span> = due date (red if it finishes late). <b>Drag sideways</b> to set start month; <b>drag up/down</b> to reorder \u2014 both flow to Phases &amp; Kanban. Double-tap a manually-set card (▸) to revert to auto.</div>'
+  _fpTLrows=[]; let rows='', totalH;
+  if(_fptlPack){
+    // lane-pack: tasks whose month spans don't overlap share a row (side by side)
+    const seq={}; let k=0; FP.forEach(ph=>ph.tasks.forEach(t=>{ seq[t.id]=k++; }));
+    const sorted=flat.slice().sort((a,b)=> a.o.startIdx-b.o.startIdx || a.o.endIdx-b.o.endIdx || (seq[a.t.id]-seq[b.t.id]));
+    const laneEnd=[];
+    sorted.forEach(it=>{
+      let lane=-1;
+      for(let li=0;li<laneEnd.length;li++){ if(it.o.startIdx>laneEnd[li]){ lane=li; break; } }
+      if(lane<0){ lane=laneEnd.length; laneEnd.push(-Infinity); }
+      laneEnd[lane]=it.o.endIdx;
+      const y=lane*FP_ROWH;
+      rows+=fpTLCard(it.ph,it.t,it.o,it.o.startIdx*FP_COLW,y);
+    });
+    totalH=Math.max(1,laneEnd.length)*FP_ROWH+10;
+  } else {
+    // one task per row, in Kanban order (supports up/down reorder)
+    let y=0;
+    flat.forEach(({ph,t,o})=>{
+      rows+=fpTLCard(ph,t,o,o.startIdx*FP_COLW,y);
+      _fpTLrows.push({tid:t.id,pid:ph.id,top:y,bot:y+FP_ROWH});
+      y+=FP_ROWH;
+    });
+    totalH=y+10;
+  }
+  const tog='<div style="display:flex;gap:6px;margin-bottom:8px">'
+    +'<button onclick="fpTLSetPack(true)" style="font-size:9px;font-weight:700;letter-spacing:.5px;padding:3px 10px;border:1px solid '+(_fptlPack?'#7a5cb8':'#2e352e')+';background:'+(_fptlPack?'rgba(122,92,184,0.15)':'transparent')+';color:'+(_fptlPack?'#b89cf0':'#7a967a')+';cursor:pointer;border-radius:2px">COMPACT</button>'
+    +'<button onclick="fpTLSetPack(false)" style="font-size:9px;font-weight:700;letter-spacing:.5px;padding:3px 10px;border:1px solid '+(!_fptlPack?'#7a5cb8':'#2e352e')+';background:'+(!_fptlPack?'rgba(122,92,184,0.15)':'transparent')+';color:'+(!_fptlPack?'#b89cf0':'#7a967a')+';cursor:pointer;border-radius:2px">ROWS</button></div>';
+  const help=_fptlPack
+    ? 'Compact: tasks that don\u2019t overlap in time share a row. <b>Drag a card sideways</b> to set its start month. Switch to <b>Rows</b> to reorder the sequence.'
+    : 'Rows: one task per line, in your Kanban order. <b>Drag sideways</b> to reschedule, <b>up/down</b> to reorder \u2014 both flow to Phases &amp; Kanban.';
+  e.innerHTML=tog
+    +'<div style="font-size:9px;color:#5a6e5a;margin-bottom:8px;line-height:1.5">'+help+' The chip shows each task\u2019s phase. <span style="color:#c49030">◆</span> = due date (red if it finishes late). Double-tap a manually-set card (▸) to revert to auto.</div>'
     +'<div id="fptl-scroll" style="overflow-x:auto;overflow-y:hidden;padding-bottom:8px"><div id="fptl-canvas" style="position:relative;width:'+gridW+'px;height:'+(totalH+26)+'px">'
     +'<div style="position:absolute;left:0;top:0;width:'+gridW+'px;height:22px">'+head+'</div>'
     +'<div id="fptl-rows" style="position:absolute;left:0;top:24px;width:'+gridW+'px;height:'+totalH+'px">'+rows+'<div id="fptl-ind" style="display:none;position:absolute;left:0;height:2px;background:#7a5cb8;width:100%;z-index:70;box-shadow:0 0 4px #7a5cb8"></div></div>'
@@ -2808,7 +2837,7 @@ function fpTLMove(ev){
   const dx=ev.clientX-_fpTL.startX, dy=ev.clientY-_fpTL.startY;
   if(!_fpTL.mode){
     if(Math.abs(dx)<6&&Math.abs(dy)<6) return;
-    _fpTL.mode=Math.abs(dx)>=Math.abs(dy)?'time':'order';
+    _fpTL.mode=_fptlPack?'time':(Math.abs(dx)>=Math.abs(dy)?'time':'order');
     _fpTL.bar.style.cursor='grabbing'; _fpTL.bar.style.opacity='0.9'; _fpTL.bar.style.zIndex='65';
   }
   if(_fpTL.mode==='time'){
@@ -4737,7 +4766,7 @@ function downloadDocx() {
   // Get the rendered HTML
   const execHTML = container ? container.outerHTML : '<p>No data</p>';
 
-  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780005904 -->
+  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780006401 -->
   <style>
     @page { size: 8.5in 11in; margin: 0.45in 0.45in 0.45in 0.45in; }
     @media print { body { zoom: 1; } }

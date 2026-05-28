@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><!-- v1780006401 -->
+<meta charset="UTF-8"><!-- v1780007282 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -2813,7 +2813,7 @@ function rFireTimeline(){
     +'<button onclick="fpTLSetPack(true)" style="font-size:9px;font-weight:700;letter-spacing:.5px;padding:3px 10px;border:1px solid '+(_fptlPack?'#7a5cb8':'#2e352e')+';background:'+(_fptlPack?'rgba(122,92,184,0.15)':'transparent')+';color:'+(_fptlPack?'#b89cf0':'#7a967a')+';cursor:pointer;border-radius:2px">COMPACT</button>'
     +'<button onclick="fpTLSetPack(false)" style="font-size:9px;font-weight:700;letter-spacing:.5px;padding:3px 10px;border:1px solid '+(!_fptlPack?'#7a5cb8':'#2e352e')+';background:'+(!_fptlPack?'rgba(122,92,184,0.15)':'transparent')+';color:'+(!_fptlPack?'#b89cf0':'#7a967a')+';cursor:pointer;border-radius:2px">ROWS</button></div>';
   const help=_fptlPack
-    ? 'Compact: tasks that don\u2019t overlap in time share a row. <b>Drag a card sideways</b> to set its start month. Switch to <b>Rows</b> to reorder the sequence.'
+    ? 'Compact: non-overlapping tasks share a row. <b>Drag sideways</b> to reschedule, or <b>onto another card</b> to reorder the sequence \u2014 both flow to Phases &amp; Kanban.'
     : 'Rows: one task per line, in your Kanban order. <b>Drag sideways</b> to reschedule, <b>up/down</b> to reorder \u2014 both flow to Phases &amp; Kanban.';
   e.innerHTML=tog
     +'<div style="font-size:9px;color:#5a6e5a;margin-bottom:8px;line-height:1.5">'+help+' The chip shows each task\u2019s phase. <span style="color:#c49030">◆</span> = due date (red if it finishes late). Double-tap a manually-set card (▸) to revert to auto.</div>'
@@ -2828,65 +2828,70 @@ function fpTLDown(ev,tid){
   ev.preventDefault();
   const bar=ev.currentTarget; if(!el('fptl-canvas')) return;
   const sch=fpSchedule(); const o=sch.byId[tid]; if(!o) return;
-  _fpTL={tid,startX:ev.clientX,startY:ev.clientY,origStart:o.startIdx,earliest:o.earliest,aY:sch.aY,aM:sch.aM,bar,curStart:o.startIdx,barTop:parseFloat(bar.style.top)||0,mode:null};
+  _fpTL={tid,startX:ev.clientX,startY:ev.clientY,origStart:o.startIdx,earliest:o.earliest,aY:sch.aY,aM:sch.aM,bar,curStart:o.startIdx,barTop:parseFloat(bar.style.top)||0,barLeft:parseFloat(bar.style.left)||0,mode:null,hl:null};
   try{ bar.setPointerCapture(ev.pointerId); }catch(e){}
   bar.onpointermove=fpTLMove; bar.onpointerup=fpTLUp; bar.onpointercancel=fpTLUp;
+}
+function fpTLTarget(ev){
+  const prevPE=_fpTL.bar.style.pointerEvents; _fpTL.bar.style.pointerEvents='none';
+  let elx=document.elementFromPoint(ev.clientX,ev.clientY);
+  _fpTL.bar.style.pointerEvents=prevPE;
+  const card=elx?elx.closest('.fptl-bar'):null;
+  if(!card||card===_fpTL.bar) return null;
+  return card;
+}
+function fpTLHighlight(card){
+  if(_fpTL.hl&&_fpTL.hl!==card) _fpTL.hl.style.boxShadow='';
+  _fpTL.hl=card||null;
+  if(card) card.style.boxShadow='0 0 0 2px #7a5cb8';
 }
 function fpTLMove(ev){
   if(!_fpTL) return; ev.preventDefault();
   const dx=ev.clientX-_fpTL.startX, dy=ev.clientY-_fpTL.startY;
   if(!_fpTL.mode){
     if(Math.abs(dx)<6&&Math.abs(dy)<6) return;
-    _fpTL.mode=_fptlPack?'time':(Math.abs(dx)>=Math.abs(dy)?'time':'order');
+    _fpTL.mode=Math.abs(dx)>=Math.abs(dy)?'time':'order';
     _fpTL.bar.style.cursor='grabbing'; _fpTL.bar.style.opacity='0.9'; _fpTL.bar.style.zIndex='65';
   }
   if(_fpTL.mode==='time'){
     const ns=Math.max(_fpTL.earliest,_fpTL.origStart+Math.round(dx/FP_COLW));
-    _fpTL.curStart=ns; _fpTL.bar.style.left=(FP_LW+ns*FP_COLW+3)+'px';
+    _fpTL.curStart=ns; _fpTL.bar.style.left=(_fpTL.barLeft+(ns-_fpTL.origStart)*FP_COLW)+'px';
   } else {
     _fpTL.bar.style.top=(_fpTL.barTop+dy)+'px';
-    const rowsEl=el('fptl-rows'); if(rowsEl){ fpTLIndicator(ev.clientY-rowsEl.getBoundingClientRect().top); }
+    _fpTL.bar.style.left=(_fpTL.barLeft+dx)+'px';
+    fpTLHighlight(fpTLTarget(ev));
   }
-}
-function fpTLIndicator(localY){
-  const ind=el('fptl-ind'); if(!ind) return;
-  let pos=null;
-  for(let i=0;i<_fpTLrows.length;i++){ const r=_fpTLrows[i]; if(localY<(r.top+r.bot)/2){ pos=r.top; break; } }
-  if(pos==null){ const last=_fpTLrows[_fpTLrows.length-1]; pos=last?last.bot:0; }
-  ind.style.top=(pos-1)+'px'; ind.style.display='block';
 }
 function fpTLUp(ev){
   if(!_fpTL) return; ev.preventDefault();
-  const d=_fpTL; _fpTL=null;
+  const d=_fpTL;
   try{ d.bar.releasePointerCapture(ev.pointerId); }catch(e){}
   d.bar.onpointermove=d.bar.onpointerup=d.bar.onpointercancel=null;
-  const ind=el('fptl-ind'); if(ind) ind.style.display='none';
-  if(!d.mode){ // tap (no drag) -> double-tap reverts manual schedule
+  if(d.hl) d.hl.style.boxShadow='';
+  if(!d.mode){ // tap -> double-tap reverts manual schedule
+    _fpTL=null;
     const now=Date.now();
     if(now-_fpTLtap<350){ _fpTLtap=0; const ft=fpFindTask(d.tid); if(ft&&ft.t.start){ delete ft.t.start; fpSave(); rerenderFP(); } return; }
     _fpTLtap=now; return;
   }
   if(d.mode==='time'){
+    _fpTL=null;
     if(d.curStart!==d.origStart){ const ft=fpFindTask(d.tid); if(ft){ if(d.curStart<=d.earliest) delete ft.t.start; else ft.t.start=fpIdxToYm(d.curStart,d.aY,d.aM); fpSave(); } }
   } else {
-    const rowsEl=el('fptl-rows'); if(rowsEl){ fpTLReorder(d.tid, ev.clientY-rowsEl.getBoundingClientRect().top); }
+    const tgt=fpTLTarget(ev);
+    _fpTL=null;
+    if(tgt){ const ttid=tgt.getAttribute('data-tid'); const r=tgt.getBoundingClientRect(); const before=ev.clientY<(r.top+r.height/2); fpTLReorderTo(d.tid,ttid,before); }
   }
   rerenderFP();
 }
-function fpTLReorder(tid,localY){
-  const rows=_fpTLrows; if(!rows.length) return;
-  let ib=rows.length;
-  for(let i=0;i<rows.length;i++){ if(localY<(rows[i].top+rows[i].bot)/2){ ib=i; break; } }
-  let targetPid,targetTid;
-  if(ib>=rows.length){ targetPid=rows[rows.length-1].pid; targetTid=null; }
-  else { targetPid=rows[ib].pid; targetTid=rows[ib].tid; }
-  if(targetTid===tid) return;
-  const src=fpFindTask(tid); if(!src) return;
-  const srcPh=src.ph; const si=srcPh.tasks.findIndex(x=>x.id===tid); if(si<0) return;
+function fpTLReorderTo(dragTid,targetTid,before){
+  if(!targetTid||dragTid===targetTid) return;
+  const src=fpFindTask(dragTid), tgt=fpFindTask(targetTid);
+  if(!src||!tgt) return;
+  const srcPh=src.ph; const si=srcPh.tasks.findIndex(x=>x.id===dragTid); if(si<0) return;
   const [moved]=srcPh.tasks.splice(si,1);
-  const dstPh=fpFindPhase(targetPid)||srcPh;
-  let di = targetTid ? dstPh.tasks.findIndex(x=>x.id===targetTid) : dstPh.tasks.length;
-  if(di<0) di=dstPh.tasks.length;
+  const dstPh=tgt.ph; let di=dstPh.tasks.findIndex(x=>x.id===targetTid);
+  if(di<0) di=dstPh.tasks.length; else if(!before) di+=1;
   dstPh.tasks.splice(di,0,moved);
   fpSave();
 }
@@ -4766,7 +4771,7 @@ function downloadDocx() {
   // Get the rendered HTML
   const execHTML = container ? container.outerHTML : '<p>No data</p>';
 
-  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780006401 -->
+  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780007282 -->
   <style>
     @page { size: 8.5in 11in; margin: 0.45in 0.45in 0.45in 0.45in; }
     @media print { body { zoom: 1; } }

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><!-- v1780065445 -->
+<meta charset="UTF-8"><!-- v1780067482 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -3026,71 +3026,77 @@ function hSparkline(vals,goal,start){
 function hDietCard(H){
   const today=hToday();
   const logs=(H.dietLog||[]).slice().sort((a,b)=>a.d<b.d?-1:1);
-  const todayLog=logs.find(x=>x.d===today);
   const recent=logs.slice(-7).reverse();
   const chk=H.dailyChk||{};
-  const selDate=(typeof el==='function'&&el('h-diet-d')&&el('h-diet-d').value)||today;
-  const todayChk=chk[selDate]||{};
-  const todayEnergy=(H.energy||[]).find(x=>x.d===today);
-  // build med+supp checklist for today
   const rxItems=[...(H.meds||[]).filter(r=>r.name),...(H.supps||[]).filter(r=>r.name)];
+  // NOTE: selDate is resolved at render-time from the DOM if available, else today
+  // We embed it as a JS variable in the card and reference it everywhere
   let h='<div class="card" style="margin-bottom:12px">'
     +'<div class="ch"><span class="ct" style="color:var(--amb)">⚡ Diet & Nutrition</span>'
     +'<button class="btn" onclick="hRunDietAI()" style="font-size:9px;padding:3px 10px">✦ AI Analysis</button></div>'
-    // meds/supps checkboxes
-    +(rxItems.length?'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin:12px 0 6px">Meds & Supplements — '+today+'</div>'
-      +'<div style="display:flex;flex-direction:column;gap:2px;margin-bottom:14px">'
-      +rxItems.map(r=>{
-        const k='rx_'+r.name.replace(/\s+/g,'_');
-        const on=!!todayChk[k];
-        return '<div onclick="hToggleChk(\''+k+'\')" style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--brd2);cursor:pointer">'
-          +'<span style="width:16px;height:16px;border:2px solid '+(on?'var(--grn)':'var(--mut2)')+';background:'+(on?'var(--grn)':'transparent')+';border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#0a0a0a">'+(on?'✓':'')+'</span>'
-          +'<span style="font-size:12px;color:'+(on?'var(--txt)':'var(--txt2)')+'">'+esc(r.name)+'</span>'
-          +'<span style="font-size:10px;color:var(--mut);margin-left:auto">'+esc(r.dose||'')+(r.sched?' · '+esc(r.sched):'')+'</span>'
-          +'</div>';
-      }).join('')+'</div>':'')
-    // energy 1–10
-    +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:6px">Energy</div>'
-    +'<div style="display:flex;gap:6px;align-items:center;margin-bottom:16px;flex-wrap:wrap">'
-    +[1,2,3,4,5,6,7,8,9,10].map(n=>'<span onclick="hSetEnergy('+n+')" style="cursor:pointer;font-size:13px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:3px;border:1px solid '+((todayEnergy&&todayEnergy.rating>=n)?'var(--amb)':'var(--brd2)')+';background:'+((todayEnergy&&todayEnergy.rating>=n)?'rgba(196,144,48,0.2)':'transparent')+';color:'+((todayEnergy&&todayEnergy.rating>=n)?'var(--amb)':'var(--mut2)')+'">'+n+'</span>').join('')
+    // ── DATE PICKER: top, prominent, drives everything ──
+    +'<div style="display:flex;align-items:center;gap:10px;padding:12px 0 14px;border-bottom:2px solid var(--brd)">'
+    +'<span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut)">Date</span>'
+    +'<input id="h-diet-d" type="date" value="'+today+'" onchange="hDietDateChange(this.value)" style="font-size:13px;font-weight:700;width:160px">'
+    +'<span style="font-size:9px;color:var(--mut2)">← change to log or review a past day</span>'
     +'</div>'
-    // free-form daily log
-    +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:6px">Daily Journal</div>'
-    +'<textarea id="h-diet-note" placeholder="What did you eat? How did you feel? GLP-1 side effects, wins, struggles..." style="width:100%;min-height:90px;resize:vertical;box-sizing:border-box;font-size:12px;line-height:1.6;padding:10px;border:1px solid var(--brd2);background:var(--bg);color:var(--txt);font-family:\'JetBrains Mono\',monospace;border-radius:3px;outline:none">'+esc(todayLog?todayLog.raw||'':'')+' </textarea>'
-    +'<div style="display:flex;gap:8px;align-items:center;margin-top:8px;margin-bottom:16px;flex-wrap:wrap">'
-    +'<input id="h-diet-d" type="date" value="'+today+'" onchange="hDietDateChange(this.value)" style="width:150px">'
+    // ── SECTION 1: MEDS & SUPPS ──
+    +'<div style="padding:14px 0;border-bottom:2px solid var(--brd)">'
+    +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Meds & Supplements</div>'
+    +(rxItems.length
+      ? rxItems.map(r=>{
+          const k='rx_'+r.name.replace(/\s+/g,'_');
+          return '<div onclick="hToggleChk(\''+k+'\')" style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--brd2);cursor:pointer" id="hck-'+k+'">'
+            +'<span class="hck-box" data-k="'+k+'" style="width:16px;height:16px;border:2px solid var(--mut2);background:transparent;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#0a0a0a"></span>'
+            +'<span style="font-size:12px;color:var(--txt2)">'+esc(r.name)+'</span>'
+            +'<span style="font-size:10px;color:var(--mut);margin-left:auto">'+esc(r.dose||'')+(r.sched?' · '+esc(r.sched):'')+'</span>'
+            +'</div>';
+        }).join('')
+        +'<div id="h-chk-status" style="font-size:9px;color:var(--mut);margin-top:6px"></div>'
+      : '<div style="font-size:10px;color:var(--mut2);font-style:italic">Add medications & supplements in the card below — they\'ll appear here as checkboxes.</div>')
+    +'</div>'
+    // ── SECTION 2: ENERGY ──
+    +'<div style="padding:14px 0;border-bottom:2px solid var(--brd)">'
+    +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Energy <span id="h-nrg-lbl" style="color:var(--mut2);font-weight:400;letter-spacing:0;text-transform:none"></span></div>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap" id="h-nrg-row">'
+    +[1,2,3,4,5,6,7,8,9,10].map(n=>'<span onclick="hSetEnergy('+n+')" data-n="'+n+'" style="cursor:pointer;font-size:13px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:3px;border:1px solid var(--brd2);background:transparent;color:var(--mut2)">'+n+'</span>').join('')
+    +'</div></div>'
+    // ── SECTION 3: JOURNAL ──
+    +'<div style="padding:14px 0;border-bottom:2px solid var(--brd)">'
+    +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Daily Journal</div>'
+    +'<textarea id="h-diet-note" placeholder="What did you eat? How did you feel? GLP-1 side effects, wins, struggles..." style="width:100%;min-height:90px;resize:vertical;box-sizing:border-box;font-size:12px;line-height:1.6;padding:10px;border:1px solid var(--brd2);background:var(--bg);color:var(--txt);font-family:\'JetBrains Mono\',monospace;border-radius:3px;outline:none"></textarea>'
+    +'<div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">'
     +'<button class="btn" onclick="hSaveDietLog()">Save entry</button>'
     +'<button class="btn" onclick="hFormatDietAI()" style="font-size:9px">✦ AI Format</button>'
     +'<span id="h-diet-status" style="font-size:9px;color:var(--mut)"></span>'
+    +'</div></div>'
+    // ── SECTION 4: AI FORMATTED / ANALYSIS ──
+    +'<div id="h-diet-fmt" style="display:none;padding:14px 0;border-bottom:2px solid var(--brd)">'
+    +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:6px">AI Summary</div>'
+    +'<div id="h-diet-fmt-text" style="font-size:12px;color:var(--txt2);line-height:1.7;white-space:pre-wrap"></div>'
     +'</div>'
-    // AI formatted output for today
-    +(todayLog&&todayLog.formatted
-      ?'<div style="border-top:1px solid var(--brd);padding-top:12px;margin-bottom:16px">'
-       +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:6px">AI Summary — '+today+'</div>'
-       +'<div style="font-size:12px;color:var(--txt2);line-height:1.7;white-space:pre-wrap">'+esc(todayLog.formatted)+'</div>'
-       +'</div>'
-      :'')
-    // AI analysis
-    +'<div id="h-diet-analysis" style="'+(H.dietAnalysis?'':'display:none;')+'border-top:1px solid var(--brd);padding-top:12px;margin-bottom:16px">'
+    +'<div id="h-diet-analysis" style="'+(H.dietAnalysis?'':'display:none;')+'padding:14px 0;border-bottom:2px solid var(--brd)">'
     +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:6px">✦ AI Health Analysis</div>'
     +'<div id="h-diet-analysis-text" style="font-size:12px;color:var(--txt2);line-height:1.7;white-space:pre-wrap">'+esc(H.dietAnalysis||'')+'</div>'
     +'</div>'
-    // log history
-    +(recent.length?'<div style="border-top:1px solid var(--brd);padding-top:12px;margin-bottom:16px">'
+    // ── SECTION 5: LOG HISTORY ──
+    +(recent.length?'<div style="padding:14px 0;border-bottom:2px solid var(--brd)">'
       +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Recent Log</div>'
       +recent.map(e=>'<div style="padding:8px 0;border-bottom:1px solid var(--brd2)">'
         +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
-        +'<span style="font-size:10px;font-weight:700;color:var(--mut)">'+e.d+'</span>'
-        +'<span onclick="hToggleDietCollapse(\''+e.d+'\')" title="Hide entry (does not delete)" style="color:var(--mut2);cursor:pointer;font-size:12px">'+(H._dietCollapsed&&H._dietCollapsed[e.d]?'▶':'▼')+'</span>'
-        +'<span onclick="if(confirm(\'Permanently delete this entry?\'))hDelDietLog(\''+e.d+'\')" title="Delete permanently" style="color:var(--mut2);cursor:pointer;font-size:12px;margin-left:8px">🗑</span></div>'
+        +'<span style="font-size:11px;font-weight:700;color:var(--mut)">'+e.d+'</span>'
+        +'<span style="display:flex;gap:10px">'
+        +'<span onclick="hToggleDietCollapse(\''+e.d+'\')" title="Collapse/expand" style="color:var(--mut2);cursor:pointer;font-size:11px">'+(H._dietCollapsed&&H._dietCollapsed[e.d]?'▶ show':'▼ hide')+'</span>'
+        +'<span onclick="if(confirm(\'Permanently delete '+e.d+' entry?\'))hDelDietLog(\''+e.d+'\')" title="Delete permanently" style="color:var(--mut2);cursor:pointer;font-size:11px">🗑 delete</span>'
+        +'</span></div>'
         +(H._dietCollapsed&&H._dietCollapsed[e.d]?''
           :e.formatted
           ?'<div style="font-size:11px;color:var(--txt2);line-height:1.5;white-space:pre-wrap">'+esc(e.formatted)+'</div>'
           :'<div style="font-size:11px;color:var(--mut);font-style:italic;line-height:1.5">'+esc((e.raw||'').slice(0,120))+(e.raw&&e.raw.length>120?'…':'')+'</div>')
         +'</div>').join('')
       +'</div>':'')
-    // meal template + library
-    +'<div style="border-top:1px solid var(--brd);padding-top:12px">'
+    // ── SECTION 6: MEAL TEMPLATE + LIBRARY ──
+    +'<div style="padding:14px 0;border-bottom:2px solid var(--brd)">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
     +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut)">Meal Template</div>'
     +'<button class="btn" onclick="hAddMeal()">+ Meal</button></div>'
@@ -3101,7 +3107,7 @@ function hDietCard(H){
       +'<span style="font-size:11px;font-weight:700;color:var(--grn);white-space:nowrap">'+(m.pro?m.pro+'g':'')+'</span>'
       +'<span onclick="hDelMeal('+i+')" style="color:var(--mut2);cursor:pointer;font-size:14px">×</span></div>').join('')
     +'</div>'
-    +'<div style="border-top:1px solid var(--brd);padding-top:12px;margin-top:8px">'
+    +'<div style="padding:14px 0">'
     +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Quick Meal Library</div>'
     +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">'
     +MEAL_SUGGESTIONS.map((m,i)=>'<div onclick="hAddSuggestedMeal('+i+')" style="border:1px solid var(--brd2);background:rgba(0,0,0,0.3);padding:9px 10px;border-radius:4px;cursor:pointer">'
@@ -3110,7 +3116,43 @@ function hDietCard(H){
       +'<div style="font-size:9px;color:var(--grn);margin-top:4px;font-weight:700">'+(m.pro?m.pro+'g protein':'')+'</div>'
       +'</div>').join('')
     +'</div></div></div>';
+  // After render, hydrate the date-driven fields from JS
+  setTimeout(()=>hDietHydrate(today),10);
   return h;
+}
+// Called on render and on date change — loads all date-specific state into the DOM
+function hDietHydrate(d){
+  const H=hGet();
+  const log=(H.dietLog||[]).find(x=>x.d===d);
+  const chkDay=(H.dailyChk||{})[d]||{};
+  const nrg=(H.energy||[]).find(x=>x.d===d);
+  const rxItems=[...(H.meds||[]).filter(r=>r.name),...(H.supps||[]).filter(r=>r.name)];
+  // textarea
+  const ta=el('h-diet-note'); if(ta) ta.value=log?log.raw||'':'';
+  // checkboxes
+  rxItems.forEach(r=>{
+    const k='rx_'+r.name.replace(/\s+/g,'_');
+    const box=document.querySelector('.hck-box[data-k="'+k+'"]');
+    if(!box) return;
+    const on=!!chkDay[k];
+    box.style.borderColor=on?'var(--grn)':'var(--mut2)';
+    box.style.background=on?'var(--grn)':'transparent';
+    box.textContent=on?'✓':'';
+    box.closest('div').querySelector('span:nth-child(2)').style.color=on?'var(--txt)':'var(--txt2)';
+  });
+  // energy
+  const nrgRow=el('h-nrg-row');
+  if(nrgRow) nrgRow.querySelectorAll('span[data-n]').forEach(s=>{
+    const n=parseInt(s.getAttribute('data-n'));
+    const on=nrg&&nrg.rating>=n;
+    s.style.borderColor=on?'var(--amb)':'var(--brd2)';
+    s.style.background=on?'rgba(196,144,48,0.2)':'transparent';
+    s.style.color=on?'var(--amb)':'var(--mut2)';
+  });
+  const lbl=el('h-nrg-lbl'); if(lbl) lbl.textContent=nrg?'— '+nrg.rating+'/10':'';
+  // formatted summary
+  const fmtEl=el('h-diet-fmt'); const fmtTxt=el('h-diet-fmt-text');
+  if(fmtEl&&fmtTxt){ if(log&&log.formatted){ fmtTxt.textContent=log.formatted; fmtEl.style.display=''; } else fmtEl.style.display='none'; }
 }
 function hSaveDietLog(){
   const d=el('h-diet-d').value||hToday();
@@ -3124,9 +3166,9 @@ function hSaveDietLog(){
 }
 function hDelDietLog(d){ const H=hGet(); H.dietLog=(H.dietLog||[]).filter(x=>x.d!==d); hSave(); rHealth(); }
 function hToggleDietCollapse(d){ const H=hGet(); H._dietCollapsed=H._dietCollapsed||{}; H._dietCollapsed[d]=!H._dietCollapsed[d]; hSave(); rHealth(); }
-function hDietDateChange(d){ const H=hGet(); const log=(H.dietLog||[]).find(x=>x.d===d); const ta=el('h-diet-note'); if(ta) ta.value=log?log.raw||'':''; rHealth(); }
-function hToggleChk(k){ const H=hGet(), d=(el('h-diet-d')&&el('h-diet-d').value)||hToday(); H.dailyChk=H.dailyChk||{}; H.dailyChk[d]=H.dailyChk[d]||{}; H.dailyChk[d][k]=!H.dailyChk[d][k]; hSave(); rHealth(); }
-function hSetEnergy(n){ const H=hGet(), d=(el('h-diet-d')&&el('h-diet-d').value)||hToday(); H.energy=(H.energy||[]).filter(x=>x.d!==d); H.energy.push({d,rating:n}); hSave(); rHealth(); }
+function hDietDateChange(d){ hDietHydrate(d); }
+function hToggleChk(k){ const H=hGet(), d=(el('h-diet-d')&&el('h-diet-d').value)||hToday(); H.dailyChk=H.dailyChk||{}; H.dailyChk[d]=H.dailyChk[d]||{}; H.dailyChk[d][k]=!H.dailyChk[d][k]; hSave(); hDietHydrate(d); }
+function hSetEnergy(n){ const H=hGet(), d=(el('h-diet-d')&&el('h-diet-d').value)||hToday(); H.energy=(H.energy||[]).filter(x=>x.d!==d); H.energy.push({d,rating:n}); hSave(); hDietHydrate(d); }
 
 function hGetApiKey(){ return localStorage.getItem('kcc_claude')||(typeof el==='function'&&el('api-key-input')?el('api-key-input').value.trim():''); }
 
@@ -5180,7 +5222,7 @@ function downloadDocx() {
   // Get the rendered HTML
   const execHTML = container ? container.outerHTML : '<p>No data</p>';
 
-  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780065445 -->
+  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780067482 -->
   <style>
     @page { size: 8.5in 11in; margin: 0.45in 0.45in 0.45in 0.45in; }
     @media print { body { zoom: 1; } }

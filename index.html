@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><!-- v1780064666 -->
+<meta charset="UTF-8"><!-- v1780065098 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -3028,13 +3028,34 @@ function hDietCard(H){
   const logs=(H.dietLog||[]).slice().sort((a,b)=>a.d<b.d?-1:1);
   const todayLog=logs.find(x=>x.d===today);
   const recent=logs.slice(-7).reverse();
-  const t=H.targets;
+  const chk=H.dailyChk||{};
+  const todayChk=chk[today]||{};
+  const todayEnergy=(H.energy||[]).find(x=>x.d===today);
+  // build med+supp checklist for today
+  const rxItems=[...(H.meds||[]).filter(r=>r.name),...(H.supps||[]).filter(r=>r.name)];
   let h='<div class="card" style="margin-bottom:12px">'
     +'<div class="ch"><span class="ct" style="color:var(--amb)">⚡ Diet & Nutrition</span>'
     +'<button class="btn" onclick="hRunDietAI()" style="font-size:9px;padding:3px 10px">✦ AI Analysis</button></div>'
-    // today log entry
-    +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin:12px 0 6px">Daily Log — '+today+'</div>'
-    +'<textarea id="h-diet-note" placeholder="What did you eat today? How did you feel? Energy level, any GLP-1 side effects, wins or struggles..." style="width:100%;min-height:90px;resize:vertical;box-sizing:border-box;font-size:12px;line-height:1.6;padding:10px;border:1px solid var(--brd2);background:var(--bg);color:var(--txt);font-family:\'JetBrains Mono\',monospace;border-radius:3px;outline:none">'+esc(todayLog?todayLog.raw||'':'')+' </textarea>'
+    // meds/supps checkboxes
+    +(rxItems.length?'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin:12px 0 6px">Meds & Supplements — '+today+'</div>'
+      +'<div style="display:flex;flex-direction:column;gap:2px;margin-bottom:14px">'
+      +rxItems.map(r=>{
+        const k='rx_'+r.name.replace(/\s+/g,'_');
+        const on=!!todayChk[k];
+        return '<div onclick="hToggleChk(\''+k+'\')" style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--brd2);cursor:pointer">'
+          +'<span style="width:16px;height:16px;border:2px solid '+(on?'var(--grn)':'var(--mut2)')+';background:'+(on?'var(--grn)':'transparent')+';border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#0a0a0a">'+(on?'✓':'')+'</span>'
+          +'<span style="font-size:12px;color:'+(on?'var(--txt)':'var(--txt2)')+'">'+esc(r.name)+'</span>'
+          +'<span style="font-size:10px;color:var(--mut);margin-left:auto">'+esc(r.dose||'')+(r.sched?' · '+esc(r.sched):'')+'</span>'
+          +'</div>';
+      }).join('')+'</div>':'')
+    // energy 1–10
+    +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:6px">Energy</div>'
+    +'<div style="display:flex;gap:6px;align-items:center;margin-bottom:16px;flex-wrap:wrap">'
+    +[1,2,3,4,5,6,7,8,9,10].map(n=>'<span onclick="hSetEnergy('+n+')" style="cursor:pointer;font-size:13px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:3px;border:1px solid '+((todayEnergy&&todayEnergy.rating>=n)?'var(--amb)':'var(--brd2)')+';background:'+((todayEnergy&&todayEnergy.rating>=n)?'rgba(196,144,48,0.2)':'transparent')+';color:'+((todayEnergy&&todayEnergy.rating>=n)?'var(--amb)':'var(--mut2)')+'">'+n+'</span>').join('')
+    +'</div>'
+    // free-form daily log
+    +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:6px">Daily Journal</div>'
+    +'<textarea id="h-diet-note" placeholder="What did you eat? How did you feel? GLP-1 side effects, wins, struggles..." style="width:100%;min-height:90px;resize:vertical;box-sizing:border-box;font-size:12px;line-height:1.6;padding:10px;border:1px solid var(--brd2);background:var(--bg);color:var(--txt);font-family:\'JetBrains Mono\',monospace;border-radius:3px;outline:none">'+esc(todayLog?todayLog.raw||'':'')+' </textarea>'
     +'<div style="display:flex;gap:8px;align-items:center;margin-top:8px;margin-bottom:16px;flex-wrap:wrap">'
     +'<input id="h-diet-d" type="date" value="'+today+'" onchange="hDietDateChange(this.value)" style="width:150px">'
     +'<button class="btn" onclick="hSaveDietLog()">Save entry</button>'
@@ -3048,7 +3069,7 @@ function hDietCard(H){
        +'<div style="font-size:12px;color:var(--txt2);line-height:1.7;white-space:pre-wrap">'+esc(todayLog.formatted)+'</div>'
        +'</div>'
       :'')
-    // AI analysis output
+    // AI analysis
     +'<div id="h-diet-analysis" style="'+(H.dietAnalysis?'':'display:none;')+'border-top:1px solid var(--brd);padding-top:12px;margin-bottom:16px">'
     +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:6px">✦ AI Health Analysis</div>'
     +'<div id="h-diet-analysis-text" style="font-size:12px;color:var(--txt2);line-height:1.7;white-space:pre-wrap">'+esc(H.dietAnalysis||'')+'</div>'
@@ -3088,7 +3109,6 @@ function hDietCard(H){
     +'</div></div></div>';
   return h;
 }
-
 function hSaveDietLog(){
   const d=el('h-diet-d').value||hToday();
   const raw=(el('h-diet-note').value||'').trim();
@@ -3101,6 +3121,8 @@ function hSaveDietLog(){
 }
 function hDelDietLog(d){ const H=hGet(); H.dietLog=(H.dietLog||[]).filter(x=>x.d!==d); hSave(); rHealth(); }
 function hDietDateChange(d){ const H=hGet(); const log=(H.dietLog||[]).find(x=>x.d===d); const ta=el('h-diet-note'); if(ta) ta.value=log?log.raw||'':''; }
+function hToggleChk(k){ const H=hGet(), d=hToday(); H.dailyChk=H.dailyChk||{}; H.dailyChk[d]=H.dailyChk[d]||{}; H.dailyChk[d][k]=!H.dailyChk[d][k]; hSave(); rHealth(); }
+function hSetEnergy(n){ const H=hGet(), d=hToday(); H.energy=(H.energy||[]).filter(x=>x.d!==d); H.energy.push({d,rating:n}); hSave(); rHealth(); }
 
 function hGetApiKey(){ return localStorage.getItem('kcc_claude')||(typeof el==='function'&&el('api-key-input')?el('api-key-input').value.trim():''); }
 
@@ -5154,7 +5176,7 @@ function downloadDocx() {
   // Get the rendered HTML
   const execHTML = container ? container.outerHTML : '<p>No data</p>';
 
-  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780064666 -->
+  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780065098 -->
   <style>
     @page { size: 8.5in 11in; margin: 0.45in 0.45in 0.45in 0.45in; }
     @media print { body { zoom: 1; } }

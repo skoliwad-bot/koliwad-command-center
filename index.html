@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><!-- v1780065098 -->
+<meta charset="UTF-8"><!-- v1780065445 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -3029,7 +3029,8 @@ function hDietCard(H){
   const todayLog=logs.find(x=>x.d===today);
   const recent=logs.slice(-7).reverse();
   const chk=H.dailyChk||{};
-  const todayChk=chk[today]||{};
+  const selDate=(typeof el==='function'&&el('h-diet-d')&&el('h-diet-d').value)||today;
+  const todayChk=chk[selDate]||{};
   const todayEnergy=(H.energy||[]).find(x=>x.d===today);
   // build med+supp checklist for today
   const rxItems=[...(H.meds||[]).filter(r=>r.name),...(H.supps||[]).filter(r=>r.name)];
@@ -3080,8 +3081,10 @@ function hDietCard(H){
       +recent.map(e=>'<div style="padding:8px 0;border-bottom:1px solid var(--brd2)">'
         +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
         +'<span style="font-size:10px;font-weight:700;color:var(--mut)">'+e.d+'</span>'
-        +'<span onclick="hDelDietLog(\''+e.d+'\')" style="color:var(--mut2);cursor:pointer;font-size:12px">×</span></div>'
-        +(e.formatted
+        +'<span onclick="hToggleDietCollapse(\''+e.d+'\')" title="Hide entry (does not delete)" style="color:var(--mut2);cursor:pointer;font-size:12px">'+(H._dietCollapsed&&H._dietCollapsed[e.d]?'▶':'▼')+'</span>'
+        +'<span onclick="if(confirm(\'Permanently delete this entry?\'))hDelDietLog(\''+e.d+'\')" title="Delete permanently" style="color:var(--mut2);cursor:pointer;font-size:12px;margin-left:8px">🗑</span></div>'
+        +(H._dietCollapsed&&H._dietCollapsed[e.d]?''
+          :e.formatted
           ?'<div style="font-size:11px;color:var(--txt2);line-height:1.5;white-space:pre-wrap">'+esc(e.formatted)+'</div>'
           :'<div style="font-size:11px;color:var(--mut);font-style:italic;line-height:1.5">'+esc((e.raw||'').slice(0,120))+(e.raw&&e.raw.length>120?'…':'')+'</div>')
         +'</div>').join('')
@@ -3120,9 +3123,10 @@ function hSaveDietLog(){
   hSave(); rHealth();
 }
 function hDelDietLog(d){ const H=hGet(); H.dietLog=(H.dietLog||[]).filter(x=>x.d!==d); hSave(); rHealth(); }
-function hDietDateChange(d){ const H=hGet(); const log=(H.dietLog||[]).find(x=>x.d===d); const ta=el('h-diet-note'); if(ta) ta.value=log?log.raw||'':''; }
-function hToggleChk(k){ const H=hGet(), d=hToday(); H.dailyChk=H.dailyChk||{}; H.dailyChk[d]=H.dailyChk[d]||{}; H.dailyChk[d][k]=!H.dailyChk[d][k]; hSave(); rHealth(); }
-function hSetEnergy(n){ const H=hGet(), d=hToday(); H.energy=(H.energy||[]).filter(x=>x.d!==d); H.energy.push({d,rating:n}); hSave(); rHealth(); }
+function hToggleDietCollapse(d){ const H=hGet(); H._dietCollapsed=H._dietCollapsed||{}; H._dietCollapsed[d]=!H._dietCollapsed[d]; hSave(); rHealth(); }
+function hDietDateChange(d){ const H=hGet(); const log=(H.dietLog||[]).find(x=>x.d===d); const ta=el('h-diet-note'); if(ta) ta.value=log?log.raw||'':''; rHealth(); }
+function hToggleChk(k){ const H=hGet(), d=(el('h-diet-d')&&el('h-diet-d').value)||hToday(); H.dailyChk=H.dailyChk||{}; H.dailyChk[d]=H.dailyChk[d]||{}; H.dailyChk[d][k]=!H.dailyChk[d][k]; hSave(); rHealth(); }
+function hSetEnergy(n){ const H=hGet(), d=(el('h-diet-d')&&el('h-diet-d').value)||hToday(); H.energy=(H.energy||[]).filter(x=>x.d!==d); H.energy.push({d,rating:n}); hSave(); rHealth(); }
 
 function hGetApiKey(){ return localStorage.getItem('kcc_claude')||(typeof el==='function'&&el('api-key-input')?el('api-key-input').value.trim():''); }
 
@@ -5176,7 +5180,7 @@ function downloadDocx() {
   // Get the rendered HTML
   const execHTML = container ? container.outerHTML : '<p>No data</p>';
 
-  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780065098 -->
+  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780065445 -->
   <style>
     @page { size: 8.5in 11in; margin: 0.45in 0.45in 0.45in 0.45in; }
     @media print { body { zoom: 1; } }

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><!-- v1780016186 -->
+<meta charset="UTF-8"><!-- v1780017063 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -2894,14 +2894,28 @@ function fpTLReorderTo(dragTid,targetTid,before){
   dstPh.tasks.splice(di,0,moved);
   fpSave();
 }
+
 // ════════════════════ HEALTH ════════════════════
+const MEAL_SUGGESTIONS=[
+  {time:'~8:00a', name:'Protein shake', detail:'Whey + Greek yogurt + berries + spinach', pro:45},
+  {time:'~8:00a', name:'Scrambled eggs & toast', detail:'3 eggs + whole grain toast + avocado', pro:35},
+  {time:'~12:30p', name:'Chicken salad', detail:'Grilled chicken + mixed greens + olive oil dressing', pro:50},
+  {time:'~12:30p', name:'Turkey sandwich', detail:'Roast beef or turkey + whole grain + cheese + avocado', pro:48},
+  {time:'~12:30p', name:'Tuna salad', detail:'Canned tuna + celery + olive oil + lettuce wrap', pro:40},
+  {time:'~6:30p', name:'Salmon & sweet potato', detail:'Grilled salmon + roasted sweet potato + broccoli', pro:50},
+  {time:'~6:30p', name:'Chicken & rice', detail:'Grilled chicken + brown rice + roasted vegetables', pro:48},
+  {time:'~6:30p', name:'Lean beef steak', detail:'6 oz sirloin + asparagus + mashed cauliflower', pro:52},
+  {time:'Float', name:'Protein bar', detail:'High-protein bar (20g+)', pro:25},
+  {time:'Float', name:'String cheese & almonds', detail:'1-2 oz cheese + small handful almonds', pro:20}
+];
+
 function hDefault(){
   return {
     weight:{ start:178, goal:163, log:[] },
     glp1:{ med:'Zepbound', dose:'', cadence:'Weekly', lastDose:'', site:'' },
     targets:{ cal:2000, protein:170, water:100, fiber:30, meals:3 },
-    dietChecks:{}, // {YYYY-MM-DD:{cal,protein,water,fiber,meals}}
-    energy:[],     // [{d,rating,note}]
+    dietChecks:{}, 
+    energy:[],     
     meals:[
       {time:'~8:00a', name:'Morning smoothie + electrolytes', detail:'Whey isolate + Greek yogurt + frozen berries + ½ banana + flax/chia + spinach', pro:45},
       {time:'~12:30p', name:'Lunch — sandwich', detail:'Turkey/roast-beef on whole-grain, double meat + cheese + avocado; side of fruit', pro:50},
@@ -2909,12 +2923,12 @@ function hDefault(){
       {time:'Float', name:'Backup shake', detail:'30g whey anytime energy dips or a meal gets missed', pro:30}
     ],
     split:[
-      {dow:'Mon',type:'lift',act:'Strength · Lower'},{dow:'Tue',type:'cardio',act:'Zone 2 · 30–45m'},
-      {dow:'Wed',type:'lift',act:'Strength · Push'},{dow:'Thu',type:'lift',act:'Strength · Pull'},
-      {dow:'Fri',type:'cardio',act:'Zone 2 · weigh-in'},{dow:'Sat',type:'lift',act:'Strength · Full'},
-      {dow:'Sun',type:'rest',act:'Rest · yoga'}
+      {dow:'Mon',type:'yoga',act:'Core Power Yoga'},{dow:'Tue',type:'yoga',act:'Yoga (optional)'},
+      {dow:'Wed',type:'yoga',act:'Core Power Yoga'},{dow:'Thu',type:'yoga',act:'Yoga (optional)'},
+      {dow:'Fri',type:'yoga',act:'Core Power Yoga'},{dow:'Sat',type:'rest',act:'Rest or walk'},
+      {dow:'Sun',type:'rest',act:'Rest or stretching'}
     ],
-    workouts:[], // [{d,type,note}]
+    workouts:[],
     meds:[
       {kind:'med', name:'', dose:'', sched:'AM', purpose:'', by:''}
     ],
@@ -2924,7 +2938,7 @@ function hDefault(){
       {name:'Whey isolate (Transparent Labs)', dose:'1–2 scoops', sched:'Meals', purpose:'Hit protein target'},
       {name:'Magnesium glycinate', dose:'400mg', sched:'PM', purpose:'Sleep, energy, constipation'}
     ],
-    bp:[] // [{d,sys,dia,pulse,note}]
+    bp:[]
   };
 }
 function hGet(){ if(!S.health){ S.health=hDefault(); } return S.health; }
@@ -2947,8 +2961,8 @@ function hWeightCard(H){
   const pct = totalDrop>0?Math.max(0,Math.min(100,Math.round((lost/totalDrop)*100))):0;
   const spark = hSparkline(log.map(x=>x.w), goal, start);
   const g=H.glp1;
-  return '<div style="border:1px solid var(--brd);background:var(--surf);margin-bottom:12px">'
-    +'<div class="ch"><span class="ct" style="color:var(--grn)">◆ Weight & GLP-1</span><span style="font-size:9px;color:var(--mut)">'+(g.med?esc(g.med):'GLP-1')+(g.cadence?' · '+esc(g.cadence):'')+'</span></div>'
+  let h='<div style="border:1px solid var(--brd);background:var(--surf);margin-bottom:12px">'
+    +'<div class="ch"><span class="ct" style="color:var(--grn)">◆ Weight & GLP-1</span></div>'
     +'<div style="padding:16px">'
     +'<div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">'
     +hStat('Start',start,'lbs')+hStat('Current',cur,'lbs','var(--txt)')+hStat('Goal',goal,'lbs')
@@ -2957,33 +2971,31 @@ function hWeightCard(H){
     +'<div style="height:8px;background:var(--bg);border:1px solid var(--brd2);border-radius:4px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:'+pct+'%;background:var(--grn)"></div></div>'
     +'<div style="font-size:9px;color:var(--mut);margin-bottom:14px">'+pct+'% of the way · '+lost.toFixed(1)+' of '+totalDrop+' lbs</div>'
     +(spark?'<div style="margin-bottom:14px">'+spark+'</div>':'')
-    // log a weight
     +'<div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">'
     +'<input id="h-wt-d" type="date" value="'+hToday()+'" style="width:150px">'
     +'<input id="h-wt-w" type="number" step="0.1" placeholder="weight (lbs)" style="width:130px">'
     +'<button class="btn" onclick="hAddWeight()">+ Log weight</button></div>'
     +hWeightLog(log)
-    // GLP-1 details — editable
     +'<div style="border-top:1px solid var(--brd);margin-top:14px;padding-top:14px">'
-    +'<div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--mut);margin-bottom:8px">GLP-1 DETAILS</div>'
+    +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">GLP-1 Details</div>'
     +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:8px">'
     +hField('Medication','h-g-med',g.med)+hField('Dose','h-g-dose',g.dose,'e.g. 5mg')
     +hField('Cadence','h-g-cad',g.cadence)+hField('Last dose','h-g-last',g.lastDose,'','date')+hField('Inject site','h-g-site',g.site)
     +'</div>'
-    +'<button class="btn" onclick="hSaveGlp1()">Save GLP-1 details</button>'
-    +'<div style="font-size:9px;color:var(--mut2);margin-top:10px;font-style:italic">Targets, doses & supplements are tracking tools — confirm them with your prescriber.</div>'
+    +'<button class="btn" onclick="hSaveGlp1()">Save GLP-1</button>'
+    +'<div style="font-size:8px;color:var(--mut2);margin-top:8px;font-style:italic">Confirm targets & doses with your prescriber.</div>'
     +'</div></div></div>';
+  return h;
 }
-function hStat(l,v,u,color){ return '<div><div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2)">'+l+'</div><div style="font-size:22px;font-weight:700;color:'+(color||'var(--txt2)')+';font-family:\'JetBrains Mono\',monospace">'+v+' <span style="font-size:11px;color:var(--mut)">'+u+'</span></div></div>'; }
+function hStat(l,v,u,color){ return '<div><div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut2)">'+l+'</div><div style="font-size:22px;font-weight:700;color:'+(color||'var(--txt2)')+';font-family:\'JetBrains Mono\',monospace">'+v+' <span style="font-size:11px;color:var(--mut)">'+u+'</span></div></div>'; }
 function hField(label,id,val,ph,type){ return '<div><div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2);margin-bottom:3px">'+label+'</div><input id="'+id+'" type="'+(type||'text')+'" value="'+esc(val||'')+'" placeholder="'+(ph||'')+'"></div>'; }
 function hWeightLog(log){
   if(!log.length) return '<div style="font-size:10px;color:var(--mut2);font-style:italic">No weigh-ins yet.</div>';
   const recent=log.slice(-8).reverse();
-  let prev=null;
   return '<div style="display:flex;flex-direction:column;gap:2px">'+recent.map((x,i)=>{
     const nxt=log[log.length-1-i-1]; const delta=nxt?(x.w-nxt.w):null;
     const dc=delta==null?'':(delta<0?'var(--grn)':delta>0?'var(--red)':'var(--mut)');
-    return '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:4px 0;border-bottom:1px solid rgba(54,64,54,0.4)"><span style="color:var(--mut)">'+x.d+'</span><span style="font-family:\'JetBrains Mono\',monospace;color:var(--txt2)">'+x.w+' lbs '+(delta!=null?'<span style="color:'+dc+';font-size:9px">'+(delta>0?'+':'')+delta.toFixed(1)+'</span>':'')+' <span onclick="hDelWeight(\''+x.d+'\')" style="color:var(--mut2);cursor:pointer;margin-left:6px">×</span></span></div>';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:4px 0;border-bottom:1px solid var(--brd2)"><span style="color:var(--mut)">'+x.d+'</span><span style="font-family:\'JetBrains Mono\',monospace;color:var(--txt2)">'+x.w+' lbs '+(delta!=null?'<span style="color:'+dc+';font-size:9px">'+(delta>0?'+':'')+delta.toFixed(1)+'</span>':'')+' <span onclick="hDelWeight(\''+x.d+'\')" style="color:var(--mut2);cursor:pointer;margin-left:6px">×</span></span></div>';
   }).join('')+'</div>';
 }
 function hSparkline(vals,goal,start){
@@ -3005,52 +3017,57 @@ function hDietCard(H){
   const chk=(H.dietChecks[today])||{};
   const keys=[['cal','Calories',t.cal,''],['protein','Protein',t.protein,'g'],['water','Water',t.water,'oz'],['fiber','Fiber',t.fiber,'g'],['meals','Meals on clock',t.meals,'']];
   const todayEnergy=(H.energy||[]).find(x=>x.d===today);
-  return '<div style="border:1px solid var(--brd);background:var(--surf);margin-bottom:12px">'
+  let h='<div style="border:1px solid var(--brd);background:var(--surf);margin-bottom:12px">'
     +'<div class="ch"><span class="ct" style="color:var(--amb)">⚡ Diet & Daily Targets</span><span style="font-size:9px;color:var(--mut)">'+today+'</span></div>'
     +'<div style="padding:16px">'
-    +'<div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--mut);margin-bottom:8px">TODAY — TAP TO CHECK OFF</div>'
+    +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Today — Tap to check off</div>'
     +'<div style="display:flex;flex-direction:column;gap:2px;margin-bottom:14px">'
     +keys.map(([k,lbl,val,u])=>{ const on=!!chk[k];
-      return '<div onclick="hToggleDiet(\''+k+'\')" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(54,64,54,0.4);cursor:pointer">'
+      return '<div onclick="hToggleDiet(\''+k+'\')" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--brd2);cursor:pointer">'
       +'<span style="width:18px;height:18px;border:2px solid '+(on?'var(--grn)':'var(--mut2)')+';background:'+(on?'var(--grn)':'transparent')+';border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#0a0a0a">'+(on?'✓':'')+'</span>'
-      +'<span style="font-size:13px;color:'+(on?'var(--txt)':'var(--txt2)')+'"><b style="font-weight:700">'+val+(u?' '+u:'')+'</b> '+lbl+'</span></div>';
+      +'<span style="font-size:13px;color:'+(on?'var(--txt)':'var(--txt2)')+'"><b>'+val+(u?' '+u:'')+' </b>'+lbl+'</span></div>';
     }).join('')+'</div>'
-    // energy rating
     +'<div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap">'
-    +'<span style="font-size:11px;color:var(--mut)">Energy today:</span>'
+    +'<span style="font-size:11px;color:var(--mut)">Energy:</span>'
     +[1,2,3,4,5,6,7,8,9,10].map(n=>'<span onclick="hSetEnergy('+n+')" style="cursor:pointer;font-size:13px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:3px;border:1px solid '+((todayEnergy&&todayEnergy.rating>=n)?'var(--amb)':'var(--brd2)')+';background:'+((todayEnergy&&todayEnergy.rating>=n)?'rgba(196,144,48,0.2)':'transparent')+';color:'+((todayEnergy&&todayEnergy.rating>=n)?'var(--amb)':'var(--mut2)')+'">'+n+'</span>').join('')
     +'</div>'
-    // editable targets
     +'<div style="border-top:1px solid var(--brd);padding-top:14px;margin-bottom:14px">'
-    +'<div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--mut);margin-bottom:8px">TARGETS (EDITABLE)</div>'
+    +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Targets (Editable)</div>'
     +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-bottom:8px">'
     +hField('Calories','h-t-cal',t.cal,'','number')+hField('Protein g','h-t-pro',t.protein,'','number')+hField('Water oz','h-t-wtr',t.water,'','number')+hField('Fiber g','h-t-fib',t.fiber,'','number')+hField('Meals','h-t-meal',t.meals,'','number')
     +'</div><button class="btn" onclick="hSaveTargets()">Save targets</button></div>'
-    // meals template
     +'<div style="border-top:1px solid var(--brd);padding-top:14px">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--mut)">MEAL TEMPLATE</div><button class="btn" onclick="hAddMeal()">+ Meal</button></div>'
-    +(H.meals||[]).map((m,i)=>'<div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(54,64,54,0.4)">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut)">Meals</div><button class="btn" onclick="hAddMeal()">+ Meal</button></div>'
+    +(H.meals||[]).map((m,i)=>'<div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--brd2)">'
       +'<span style="font-size:11px;font-weight:700;color:var(--amb);min-width:56px;font-family:\'JetBrains Mono\',monospace">'+esc(m.time)+'</span>'
       +'<div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--txt2)">'+esc(m.name)+'</div><div style="font-size:10px;color:var(--mut);margin-top:1px">'+esc(m.detail)+'</div></div>'
       +'<span style="font-size:11px;font-weight:700;color:var(--grn);white-space:nowrap">'+(m.pro?m.pro+'g':'')+'</span>'
       +'<span onclick="hDelMeal('+i+')" style="color:var(--mut2);cursor:pointer;font-size:14px">×</span></div>').join('')
     +'</div>'
-    +'</div></div>';
+    +'<div style="border-top:1px solid var(--brd);padding-top:14px">'
+    +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Quick Meal Library (click to add)</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">'
+    +MEAL_SUGGESTIONS.map((m,i)=>'<div onclick="hAddSuggestedMeal('+i+')" style="border:1px solid var(--brd2);background:rgba(0,0,0,0.3);padding:9px 10px;border-radius:4px;cursor:pointer">'
+      +'<div style="font-size:10px;font-weight:600;color:var(--txt2);margin-bottom:2px">'+esc(m.name)+'</div>'
+      +'<div style="font-size:9px;color:var(--mut);line-height:1.3">'+esc(m.detail)+'</div>'
+      +'<div style="font-size:9px;color:var(--grn);margin-top:4px;font-weight:700">'+(m.pro?m.pro+'g protein':'')+'</div>'
+      +'</div>').join('')
+    +'</div>'
+    +'</div></div></div>';
+  return h;
 }
 
 // ---------- 3. EXERCISE ----------
 function hExerciseCard(H){
-  const colors={lift:'var(--blu)',cardio:'var(--grn)',rest:'var(--mut2)'};
-  return '<div style="border:1px solid var(--brd);background:var(--surf);margin-bottom:12px">'
-    +'<div class="ch"><span class="ct" style="color:var(--blu)">🏋 Exercise</span><span style="font-size:9px;color:var(--mut)">Resistance-first</span></div>'
+  const colors={lift:'var(--blu)',cardio:'var(--grn)',yoga:'var(--blu)',rest:'var(--mut2)'};
+  let h='<div style="border:1px solid var(--brd);background:var(--surf);margin-bottom:12px">'
+    +'<div class="ch"><span class="ct" style="color:var(--blu)">🏋 Exercise</span></div>'
     +'<div style="padding:16px">'
     +'<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:14px">'
     +(H.split||[]).map((d,i)=>'<div onclick="hCycleSplit('+i+')" style="background:var(--surf2);border-top:2px solid '+(colors[d.type]||'var(--mut2)')+';border-radius:6px;padding:9px 4px;text-align:center;cursor:pointer">'
       +'<div style="font-size:9px;font-weight:700;letter-spacing:.5px;color:var(--mut2);text-transform:uppercase">'+esc(d.dow)+'</div>'
       +'<div style="font-size:10px;font-weight:600;color:var(--txt2);margin-top:5px;line-height:1.3">'+esc(d.act)+'</div></div>').join('')
     +'</div>'
-    +'<div style="font-size:9px;color:var(--mut2);margin-bottom:14px;font-style:italic">Tap a day to cycle lift → cardio → rest. On a deficit + GLP-1, lifting protects muscle better than cardio burns fat.</div>'
-    // log workout
     +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px">'
     +'<input id="h-wo-d" type="date" value="'+hToday()+'" style="width:150px">'
     +'<select id="h-wo-t" style="width:auto"><option>Strength</option><option>Zone 2</option><option>Walk</option><option>Yoga</option><option>Other</option></select>'
@@ -3058,10 +3075,11 @@ function hExerciseCard(H){
     +'<button class="btn" onclick="hAddWorkout()">+ Log</button></div>'
     +hWorkoutLog(H.workouts||[])
     +'</div></div>';
+  return h;
 }
 function hWorkoutLog(w){
   if(!w.length) return '<div style="font-size:10px;color:var(--mut2);font-style:italic">No workouts logged yet.</div>';
-  return '<div style="display:flex;flex-direction:column;gap:2px">'+w.slice(-8).reverse().map((x,i)=>'<div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid rgba(54,64,54,0.4)"><span style="color:var(--mut)">'+x.d+'</span><span style="color:var(--txt2)">'+esc(x.type)+(x.note?' · <span style="color:var(--mut)">'+esc(x.note)+'</span>':'')+' <span onclick="hDelWorkout('+(w.length-1-i)+')" style="color:var(--mut2);cursor:pointer;margin-left:6px">×</span></span></div>').join('')+'</div>';
+  return '<div style="display:flex;flex-direction:column;gap:2px">'+w.slice(-8).reverse().map((x,i)=>'<div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid var(--brd2)"><span style="color:var(--mut)">'+x.d+'</span><span style="color:var(--txt2)">'+esc(x.type)+(x.note?' · <span style="color:var(--mut)">'+esc(x.note)+'</span>':'')+' <span onclick="hDelWorkout('+(w.length-1-i)+')" style="color:var(--mut2);cursor:pointer;margin-left:6px">×</span></span></div>').join('')+'</div>';
 }
 
 // ---------- 4. MEDS + SUPPLEMENTS ----------
@@ -3069,20 +3087,20 @@ function hMedsCard(H){
   return '<div style="border:1px solid var(--brd);background:var(--surf);margin-bottom:12px">'
     +'<div class="ch"><span class="ct" style="color:var(--orn)">💊 Medications & Supplements</span></div>'
     +'<div style="padding:16px">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--mut)">MEDICATIONS</div><button class="btn" onclick="hAddRx(\'meds\')">+ Med</button></div>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut)">Medications</div><button class="btn" onclick="hAddRx(\'meds\')">+ Med</button></div>'
     +hRxTable(H.meds||[],'meds',true)
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 8px"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--mut)">SUPPLEMENTS</div><button class="btn" onclick="hAddRx(\'supps\')">+ Supplement</button></div>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 8px"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut)">Supplements</div><button class="btn" onclick="hAddRx(\'supps\')">+ Supp</button></div>'
     +hRxTable(H.supps||[],'supps',false)
     +'</div></div>';
 }
 function hRxTable(rows,key,isMed){
-  if(!rows.length) return '<div style="font-size:10px;color:var(--mut2);font-style:italic">None yet — add one above.</div>';
+  if(!rows.length) return '<div style="font-size:10px;color:var(--mut2);font-style:italic">None yet.</div>';
   const schColor={AM:'var(--amb)',PM:'#9b7bf0',Meals:'var(--grn)',Weekly:'var(--blu)'};
   let h='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'
     +'<tr style="text-align:left"><th style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2);font-weight:700;padding:0 8px 8px 0">Name</th><th style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2);font-weight:700;padding:0 8px 8px">Dose</th><th style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2);font-weight:700;padding:0 8px 8px">When</th><th style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2);font-weight:700;padding:0 8px 8px">Purpose'+(isMed?'</th><th style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2);font-weight:700;padding:0 8px 8px">Rx by':'')+'</th><th></th></tr>';
   rows.forEach((r,i)=>{
     const sc=(schColor[r.sched]||'var(--mut)');
-    h+='<tr style="border-top:1px solid rgba(54,64,54,0.4)">'
+    h+='<tr style="border-top:1px solid var(--brd2)">'
       +'<td style="padding:9px 8px 9px 0;font-weight:600;color:var(--txt2)">'+esc(r.name||'—')+'</td>'
       +'<td style="padding:9px 8px;color:var(--mut);white-space:nowrap">'+esc(r.dose||'')+'</td>'
       +'<td style="padding:9px 8px"><span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:rgba(255,255,255,0.05);color:'+sc+'">'+esc(r.sched||'')+'</span></td>'
@@ -3115,14 +3133,14 @@ function hBPCard(H){
     +'<input id="h-bp-p" type="number" placeholder="pulse" style="width:80px">'
     +'<button class="btn" onclick="hAddBP()">+ Log</button></div>'
     +hBPLog(bp)
-    +'<div style="font-size:8px;color:var(--mut2);margin-top:10px;font-style:italic">Categories per AHA guidelines. Not a diagnosis — discuss readings with your doctor.</div>'
+    +'<div style="font-size:8px;color:var(--mut2);margin-top:10px;font-style:italic">AHA categories. Not a diagnosis — discuss with your doctor.</div>'
     +'</div></div>';
 }
 function hBPLog(bp){
   if(!bp.length) return '<div style="font-size:10px;color:var(--mut2);font-style:italic">No readings yet.</div>';
   return '<div style="display:flex;flex-direction:column;gap:2px">'+bp.slice(-10).reverse().map((x,i)=>{
     const cat=hBPcat(x.sys,x.dia);
-    return '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:5px 0;border-bottom:1px solid rgba(54,64,54,0.4)">'
+    return '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:5px 0;border-bottom:1px solid var(--brd2)">'
       +'<span style="color:var(--mut)">'+x.d+'</span>'
       +'<span style="display:flex;align-items:center;gap:10px"><span style="font-family:\'JetBrains Mono\',monospace;color:var(--txt2)">'+x.sys+'/'+x.dia+(x.pulse?' <span style="color:var(--mut)">♥'+x.pulse+'</span>':'')+'</span>'
       +'<span style="font-size:8px;font-weight:700;color:'+cat.c+';min-width:54px;text-align:right">'+cat.l+'</span>'
@@ -3137,6 +3155,7 @@ function hSaveGlp1(){ const H=hGet(); H.glp1={med:el('h-g-med').value.trim(),dos
 function hToggleDiet(k){ const H=hGet(), d=hToday(); H.dietChecks[d]=H.dietChecks[d]||{}; H.dietChecks[d][k]=!H.dietChecks[d][k]; hSave(); rHealth(); }
 function hSetEnergy(n){ const H=hGet(), d=hToday(); H.energy=(H.energy||[]).filter(x=>x.d!==d); H.energy.push({d,rating:n,note:''}); hSave(); rHealth(); }
 function hSaveTargets(){ const H=hGet(); H.targets={cal:hNum(el('h-t-cal').value)||0,protein:hNum(el('h-t-pro').value)||0,water:hNum(el('h-t-wtr').value)||0,fiber:hNum(el('h-t-fib').value)||0,meals:hNum(el('h-t-meal').value)||0}; hSave(); rHealth(); }
+function hAddSuggestedMeal(i){ const m=MEAL_SUGGESTIONS[i]; const H=hGet(); if(!H.meals.find(x=>x.name===m.name)){ H.meals.push({...m}); hSave(); rHealth(); } }
 function hAddMeal(){ const name=prompt('Meal name (e.g. Lunch — salad):'); if(!name)return; const time=prompt('Time (e.g. ~12:30p or Float):','')||''; const detail=prompt('Details / options:','')||''; const pro=hNum(prompt('Protein grams (optional):',''))||0; const H=hGet(); H.meals.push({time,name,detail,pro}); hSave(); rHealth(); }
 function hDelMeal(i){ const H=hGet(); H.meals.splice(i,1); hSave(); rHealth(); }
 function hCycleSplit(i){ const H=hGet(); const order=['lift','cardio','rest']; const cur=H.split[i].type; const nxt=order[(order.indexOf(cur)+1)%3]; const labels={lift:'Strength',cardio:'Zone 2',rest:'Rest'}; H.split[i].type=nxt; H.split[i].act=labels[nxt]; hSave(); rHealth(); }
@@ -3155,8 +3174,7 @@ function hEditRxForm(key,i){ const H=hGet(); const isMed=(key==='meds'); const c
 function hDelRx(key,i){ const H=hGet(); if(confirm('Remove this entry?')){ H[key].splice(i,1); hSave(); rHealth(); } }
 function hAddBP(){ const d=el('h-bp-d').value, sys=hNum(el('h-bp-s').value), dia=hNum(el('h-bp-di').value), pulse=hNum(el('h-bp-p').value); if(!d||sys==null||dia==null){alert('Enter date, systolic and diastolic');return;} const H=hGet(); H.bp=H.bp||[]; H.bp.push({d,sys,dia,pulse:pulse||null}); hSave(); rHealth(); }
 function hDelBP(i){ const H=hGet(); H.bp.splice(i,1); hSave(); rHealth(); }
-function hExportPlan(){ window.open('about:blank'); alert('The full GLP-1 plan sheet lives in your dashboard now — this page tracks it. (Printable export can be added if you want it.)'); }
-
+function hExportPlan(){ alert('The full GLP-1 plan sheet lives in your dashboard now — printable export can be added if you need it.'); }
 function fpAddTask(pid){ fpOpenTaskForm(pid,null); }
 function fpOpenTaskForm(pid,tid){
   const ph=fpFindPhase(pid); if(!ph) return;
@@ -5033,7 +5051,7 @@ function downloadDocx() {
   // Get the rendered HTML
   const execHTML = container ? container.outerHTML : '<p>No data</p>';
 
-  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780016186 -->
+  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780017063 -->
   <style>
     @page { size: 8.5in 11in; margin: 0.45in 0.45in 0.45in 0.45in; }
     @media print { body { zoom: 1; } }

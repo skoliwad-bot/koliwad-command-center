@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><!-- v1780027226 -->
+<meta charset="UTF-8"><!-- v1780027630 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -589,7 +589,7 @@ localStorage.setItem = function(key, value) {
       <div class="ndiv"></div>
       <span class="nslbl">Guide</span>
       <div class="ni" id="n-playbook" onclick="nav('playbook')"><span class="ico">📋</span><span class="nlbl">Playbook</span></div>
-      <div class="sbft" id="sbft"><span id="theme-tog" onclick="toggleTheme()" title="Toggle light/dark" style="cursor:pointer;font-size:14px;padding:4px 6px;border-radius:4px;margin-right:4px;opacity:0.7">☀</span>—</div>
+      <div class="sbft" id="sbft" style="display:flex;align-items:center;justify-content:space-between"><span id="sbft-sync" style="font-size:8px;color:var(--mut2)">—</span><span id="theme-tog" onclick="toggleTheme()" title="Toggle light / dark" style="cursor:pointer;font-size:16px;padding:4px 6px;border-radius:4px">☀</span></div>
     </div>
 
     <div class="content">
@@ -1786,7 +1786,7 @@ function setDates(){
   el('bfd').textContent=MONS[n.getMonth()]+' '+n.getDate()+', '+n.getFullYear();
   el('bgen').textContent=S.lastSync?'Synced '+new Date(S.lastSync).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'Not synced';
   el('execMon').textContent=MONS[n.getMonth()]+' '+n.getFullYear()+' Executive Summary';
-  if(S.lastSync){const t=new Date(S.lastSync).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});el('tst').textContent='Synced '+t;el('sbft').textContent='Last sync: '+t;}
+  if(S.lastSync){const t=new Date(S.lastSync).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});el('tst').textContent='Synced '+t;el('sbft-sync').textContent='Last sync: '+t;}
 }
 
 // ── MODE ─────────────────────────────────────────────────────
@@ -1904,7 +1904,7 @@ async function fetchAll(){
     renderAll();
     const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     setSY('✓ Synced '+t,false);
-    el('sbft').textContent='Last sync: '+t;
+    el('sbft-sync').textContent='Last sync: '+t;
     el('bgen').textContent='Synced '+t;
     // Save everything to Firebase so other devices get the update
     fbSaveAll();
@@ -5059,7 +5059,7 @@ function downloadDocx() {
   // Get the rendered HTML
   const execHTML = container ? container.outerHTML : '<p>No data</p>';
 
-  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780027226 -->
+  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780027630 -->
   <style>
     @page { size: 8.5in 11in; margin: 0.45in 0.45in 0.45in 0.45in; }
     @media print { body { zoom: 1; } }

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><!-- v1780026981 -->
+<meta charset="UTF-8"><!-- v1780027226 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Koliwad CC">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#080a08">
+<meta name="theme-color" content="var(--bg)">
 <title>Koliwad Command Center</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=JetBrains+Mono:wght@400;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -23,6 +23,15 @@
   --amb:#d4a030;--adim:rgba(196,144,48,0.12);--abrd:rgba(196,144,48,0.4);
   --blu:#5a8acc;--orn:#c07030;
   --pp:#f5efe0;--pi:#2c2416;--pr:#8b3a2a;--ps:#4a6741;--pa:#b8882a;--prl:#c8bfa8;--pf:#9a8e78;
+}
+body.light{
+  --bg:#f2f4f2;--surf:#ffffff;--surf2:#eaeeea;--brd:#c8d4c8;--brd2:#b0c0b0;
+  --txt:#1a221a;--txt2:#2a382a;--mut:#4a7050;--mut2:#7a9e7a;
+  --red:#c03030;--rdim:rgba(192,48,48,0.08);--rbrd:rgba(192,48,48,0.3);
+  --grn:#2e8042;--gdim:rgba(46,128,66,0.10);--gbrd:rgba(46,128,66,0.3);
+  --amb:#9a6c10;--adim:rgba(154,108,16,0.10);--abrd:rgba(154,108,16,0.3);
+  --blu:#3a68aa;--orn:#a05820;
+  --pp:#3a2e1e;--pi:#f0ece0;--pr:#8b3a2a;--ps:#2e5030;--pa:#8a6010;--prl:#5a4e38;--pf:#6a5e48;
 }
 html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:var(--txt);font-family:'JetBrains Mono',monospace;overflow:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);}
 
@@ -46,7 +55,7 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 #shell.on{display:flex;}
 
 /* ── TOPBAR ── */
-.top{height:44px;background:#0c0f0c;border-bottom:1px solid #3d473d;padding-top:env(safe-area-inset-top,0px);display:flex;align-items:center;justify-content:space-between;padding:0 18px;flex-shrink:0;}
+.top{height:44px;background:var(--surf2);border-bottom:1px solid var(--brd);padding-top:env(safe-area-inset-top,0px);display:flex;align-items:center;justify-content:space-between;padding:0 18px;flex-shrink:0;}
 .logo{font-size:12px;font-weight:700;color:var(--red);letter-spacing:3px;}
 .mtog{display:flex;border:1px solid var(--brd2);overflow:hidden;}
 .mtog button{padding:6px 18px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border:none;cursor:pointer;background:var(--surf);color:var(--mut);transition:all .15s;}
@@ -60,11 +69,11 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 
 /* ── LAYOUT ── */
 .main{display:flex;flex:1;min-height:0;overflow:hidden;}
-.sidebar{width:200px;background:#0c0f0c;border-right:1px solid var(--brd);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
+.sidebar{width:200px;background:var(--surf2);border-right:1px solid var(--brd);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
 .sbhdr{padding:14px 16px 10px;border-bottom:1px solid var(--brd);}
 .sbhdr .d{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut2);}
 .sbhdr .n{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:#f4faf4;letter-spacing:2px;text-transform:uppercase;margin-top:6px;}
-.nslbl{font-size:7px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#b8d8b8;padding:10px 16px 4px;display:block;}
+.nslbl{font-size:7px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--mut);padding:10px 16px 4px;display:block;}
 .ni{display:flex;flex-direction:row;align-items:center;gap:12px;padding:10px 16px;border-left:3px solid transparent;cursor:pointer;color:var(--mut);transition:all .15s;width:100%;}
 .ni:hover{background:var(--surf2);color:var(--txt2);}
 .ni.on{background:rgba(224,80,80,0.2);border-left-color:#e05050;color:#ffffff;}
@@ -89,7 +98,7 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 
 /* ── CARDS ── */
 .card{border:1px solid var(--brd);background:var(--surf);}
-.ch{padding:9px 16px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;background:#0d100d;}
+.ch{padding:9px 16px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;background:var(--surf);}
 .ct{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
 .ct.r{color:#e05050;}.ct.a{color:#d4a040;}.ct.g{color:#5aac6c;}.ct.b{color:#5a8ac8;}.ct.o{color:#d08040;}.ct.m{color:#a0baa0;}
 
@@ -274,7 +283,7 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 .aibtn:hover{border-color:#8a6aaa;color:#e8c8ff;}
 
 /* ══ FIRE LAB PAGE STYLES (scoped to #p-firelab) ══ */
-#p-firelab .import-bar{background:#0d100d;border:1px solid var(--brd);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:0;}
+#p-firelab .import-bar{background:var(--surf);border:1px solid var(--brd);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:0;}
 #p-firelab .import-bar label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:6px 16px;border:1px solid var(--grn);color:var(--grn);cursor:pointer;}
 #p-firelab .import-bar label:hover{background:rgba(74,156,92,0.1);}
 #p-firelab .scenario-badge{font-size:10px;font-weight:700;padding:4px 12px;border:1px solid #7a5cb8;color:#9a7cd8;background:rgba(122,92,184,0.1);}
@@ -303,7 +312,7 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 #p-firelab .pill-sub{font-size:9px;color:var(--mut);display:block;margin-top:4px;}
 #p-firelab .tbl-wrap{overflow-x:auto;}
 #p-firelab table{width:100%;border-collapse:collapse;font-size:11px;}
-#p-firelab th{font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#b0ccb0;padding:9px 10px;border-bottom:2px solid var(--brd);text-align:right;white-space:nowrap;background:#080a08;}
+#p-firelab th{font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#b0ccb0;padding:9px 10px;border-bottom:2px solid var(--brd);text-align:right;white-space:nowrap;background:var(--bg);}
 #p-firelab th:first-child{text-align:left;}
 #p-firelab td{padding:8px 10px;border-bottom:1px solid #1e231e;text-align:right;color:var(--txt2);font-size:11px;}
 #p-firelab td:first-child{text-align:left;color:var(--txt);font-weight:600;}
@@ -346,10 +355,10 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 
 
 /* [scroll-fix-v2] force visible scrollbar so scrolling is obvious & never silently disabled */
-.content{scrollbar-width:auto !important;scrollbar-color:#3a423a #0c0f0c !important;overflow-y:scroll !important;}
+.content{scrollbar-width:auto !important;scrollbar-color:#3a423a var(--surf2) !important;overflow-y:scroll !important;}
 .content::-webkit-scrollbar{width:12px !important;display:block !important;}
-.content::-webkit-scrollbar-track{background:#0c0f0c !important;}
-.content::-webkit-scrollbar-thumb{background:#3a423a !important;border-radius:6px !important;border:3px solid #0c0f0c !important;}
+.content::-webkit-scrollbar-track{background:var(--surf2) !important;}
+.content::-webkit-scrollbar-thumb{background:#3a423a !important;border-radius:6px !important;border:3px solid var(--surf2) !important;}
 .content::-webkit-scrollbar-thumb:hover{background:#4d574d !important;}
 /* [scroll-fix] guaranteed scroll fallback — content area never traps overflow */
 #shell.on{display:flex;}
@@ -580,7 +589,7 @@ localStorage.setItem = function(key, value) {
       <div class="ndiv"></div>
       <span class="nslbl">Guide</span>
       <div class="ni" id="n-playbook" onclick="nav('playbook')"><span class="ico">📋</span><span class="nlbl">Playbook</span></div>
-      <div class="sbft" id="sbft">—</div>
+      <div class="sbft" id="sbft"><span id="theme-tog" onclick="toggleTheme()" title="Toggle light/dark" style="cursor:pointer;font-size:14px;padding:4px 6px;border-radius:4px;margin-right:4px;opacity:0.7">☀</span>—</div>
     </div>
 
     <div class="content">
@@ -5050,7 +5059,7 @@ function downloadDocx() {
   // Get the rendered HTML
   const execHTML = container ? container.outerHTML : '<p>No data</p>';
 
-  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780026981 -->
+  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780027226 -->
   <style>
     @page { size: 8.5in 11in; margin: 0.45in 0.45in 0.45in 0.45in; }
     @media print { body { zoom: 1; } }
@@ -5125,7 +5134,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--txt);font-family:'Jet
 /* TABLE */
 .tbl-wrap{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;font-size:11px;}
-th{font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#b0ccb0;padding:9px 10px;border-bottom:2px solid var(--brd);text-align:right;white-space:nowrap;background:#080a08;}
+th{font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#b0ccb0;padding:9px 10px;border-bottom:2px solid var(--brd);text-align:right;white-space:nowrap;background:var(--bg);}
 th:first-child{text-align:left;}
 td{padding:8px 10px;border-bottom:1px solid #1e231e;text-align:right;color:var(--txt2);font-size:11px;}
 td:first-child{text-align:left;color:var(--txt);font-weight:600;}
@@ -6576,6 +6585,22 @@ function setTab(t, btn) {
 // ── INIT ─────────────────────────────────────────────────────
 ;
 
+
+function toggleTheme(){
+  const isLight=document.body.classList.toggle('light');
+  try{ localStorage.setItem('kcc_theme', isLight?'light':'dark'); }catch(e){}
+  const tog=document.getElementById('theme-tog');
+  if(tog) tog.textContent=isLight?'🌙':'☀';
+}
+(function(){
+  try{
+    if(localStorage.getItem('kcc_theme')==='light'){
+      document.body.classList.add('light');
+      const tog=document.getElementById('theme-tog');
+      if(tog) tog.textContent='🌙';
+    }
+  }catch(e){}
+})();
 </script>
 <div id="fpDepModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;padding:20px">
   <div style="background:#0e110e;border:1px solid #2e352e;max-width:480px;width:100%;border-radius:4px">

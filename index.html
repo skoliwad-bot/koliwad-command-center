@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><!-- v1780067482 -->
+<meta charset="UTF-8"><!-- v1780067929 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -3074,6 +3074,10 @@ function hDietCard(H){
     +'<div id="h-diet-fmt" style="display:none;padding:14px 0;border-bottom:2px solid var(--brd)">'
     +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:6px">AI Summary</div>'
     +'<div id="h-diet-fmt-text" style="font-size:12px;color:var(--txt2);line-height:1.7;white-space:pre-wrap"></div>'
+    +'<div id="h-diet-cal-wrap" style="display:none;margin-top:12px;padding:10px 12px;background:rgba(0,0,0,0.25);border-left:3px solid var(--amb);border-radius:3px">'
+    +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--amb);margin-bottom:6px">Calorie Estimate</div>'
+    +'<div id="h-diet-cal-text" style="font-size:11px;color:var(--txt2);line-height:1.8;white-space:pre-wrap"></div>'
+    +'</div>'
     +'</div>'
     +'<div id="h-diet-analysis" style="'+(H.dietAnalysis?'':'display:none;')+'padding:14px 0;border-bottom:2px solid var(--brd)">'
     +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:6px">✦ AI Health Analysis</div>'
@@ -3092,6 +3096,7 @@ function hDietCard(H){
         +(H._dietCollapsed&&H._dietCollapsed[e.d]?''
           :e.formatted
           ?'<div style="font-size:11px;color:var(--txt2);line-height:1.5;white-space:pre-wrap">'+esc(e.formatted)+'</div>'
+          +(e.calories?'<div style="margin-top:6px;padding:6px 10px;background:rgba(0,0,0,0.2);border-left:2px solid var(--amb);font-size:10px;color:var(--txt2);white-space:pre-wrap">'+esc(e.calories)+'</div>':'')
           :'<div style="font-size:11px;color:var(--mut);font-style:italic;line-height:1.5">'+esc((e.raw||'').slice(0,120))+(e.raw&&e.raw.length>120?'…':'')+'</div>')
         +'</div>').join('')
       +'</div>':'')
@@ -3150,9 +3155,17 @@ function hDietHydrate(d){
     s.style.color=on?'var(--amb)':'var(--mut2)';
   });
   const lbl=el('h-nrg-lbl'); if(lbl) lbl.textContent=nrg?'— '+nrg.rating+'/10':'';
-  // formatted summary
+  // formatted summary + calorie estimate
   const fmtEl=el('h-diet-fmt'); const fmtTxt=el('h-diet-fmt-text');
-  if(fmtEl&&fmtTxt){ if(log&&log.formatted){ fmtTxt.textContent=log.formatted; fmtEl.style.display=''; } else fmtEl.style.display='none'; }
+  const calWrap=el('h-diet-cal-wrap'); const calTxt=el('h-diet-cal-text');
+  if(fmtEl&&fmtTxt){
+    if(log&&log.formatted){ fmtTxt.textContent=log.formatted; fmtEl.style.display=''; }
+    else fmtEl.style.display='none';
+  }
+  if(calWrap&&calTxt){
+    if(log&&log.calories){ calTxt.textContent=log.calories; calWrap.style.display=''; }
+    else calWrap.style.display='none';
+  }
 }
 function hSaveDietLog(){
   const d=el('h-diet-d').value||hToday();
@@ -3178,20 +3191,29 @@ function hFormatDietAI(){
   const d=el('h-diet-d').value||hToday();
   const H=hGet(); const st=el('h-diet-status');
   st.textContent='✦ Formatting…';
-  const prompt=`You are a health assistant helping someone on a GLP-1 (${H.glp1&&H.glp1.med?H.glp1.med:'GLP-1'}) weight-loss protocol, current weight ${H.weight&&H.weight.log&&H.weight.log.length?H.weight.log[H.weight.log.length-1].w:H.weight.start} lbs, goal ${H.weight.goal} lbs.
+  const curW=H.weight&&H.weight.log&&H.weight.log.length?H.weight.log[H.weight.log.length-1].w:H.weight.start;
+  const prompt=`You are a health assistant helping someone on a GLP-1 (${H.glp1&&H.glp1.med?H.glp1.med:'GLP-1'}) weight-loss protocol, current weight ${curW} lbs, goal ${H.weight.goal} lbs. Daily calorie target: ${H.targets&&H.targets.cal?H.targets.cal:2000} cal, protein target: ${H.targets&&H.targets.protein?H.targets.protein:170}g.
 
-Format this raw daily health note into a clean, structured summary. Keep it concise. Include sections for: Nutrition, Energy, Exercise (if mentioned), GLP-1 Notes (if mentioned), and a one-line Win/Concern for the day. Use plain text, no markdown symbols.
+From this raw daily journal entry, produce TWO things separated by exactly the line "---CALORIES---":
+
+PART 1: A clean structured summary with sections for: Nutrition, Energy, Exercise (if mentioned), GLP-1 Notes (if mentioned), and a one-line Win/Concern. Plain text, no markdown symbols.
+
+PART 2: A calorie estimate. List each meal/food mentioned with an estimated calorie count and protein grams, then a TOTAL line like: TOTAL: ~1800 cal | ~145g protein. If food is vague, note the assumption made. Be honest about uncertainty.
 
 Raw entry for ${d}:
 ${raw}`;
-  fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:600,messages:[{role:'user',content:prompt}]})})
+  fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:900,messages:[{role:'user',content:prompt}]})})
   .then(r=>r.json()).then(data=>{
     if(data.error) throw new Error(data.error.message);
-    const formatted=data.content[0].text.trim();
+    const full=data.content[0].text.trim();
+    const parts=full.split('---CALORIES---');
+    const formatted=parts[0].trim();
+    const calories=parts[1]?parts[1].trim():'';
     H.dietLog=H.dietLog||[];
     let ex=H.dietLog.find(x=>x.d===d);
-    if(ex){ ex.raw=raw; ex.formatted=formatted; } else H.dietLog.push({d,raw,formatted});
-    hSave(); st.textContent='✓ Saved'; rHealth();
+    if(ex){ ex.raw=raw; ex.formatted=formatted; ex.calories=calories; }
+    else H.dietLog.push({d,raw,formatted,calories});
+    hSave(); st.textContent='✓ Saved'; hDietHydrate(d);
   }).catch(e=>{ st.textContent='Error: '+e.message; });
 }
 
@@ -5222,7 +5244,7 @@ function downloadDocx() {
   // Get the rendered HTML
   const execHTML = container ? container.outerHTML : '<p>No data</p>';
 
-  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780067482 -->
+  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780067929 -->
   <style>
     @page { size: 8.5in 11in; margin: 0.45in 0.45in 0.45in 0.45in; }
     @media print { body { zoom: 1; } }

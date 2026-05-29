@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><!-- v1780024551 -->
+<meta charset="UTF-8"><!-- v1780026981 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -361,6 +361,9 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 input[type="date"]{position:relative;cursor:pointer;color-scheme:dark;}
 input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1) brightness(1.4);cursor:pointer;opacity:0.8;}
 input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;}
+#p-health input,#p-health select{background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:8px 10px;font-family:'JetBrains Mono',monospace;font-size:11px;outline:none;}
+#p-health input:focus,#p-health select:focus{border-color:var(--grn);}
+#p-health select option{background:var(--surf);}
 </style>
 
 <!-- Firebase SDK -->
@@ -5047,7 +5050,7 @@ function downloadDocx() {
   // Get the rendered HTML
   const execHTML = container ? container.outerHTML : '<p>No data</p>';
 
-  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780024551 -->
+  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780026981 -->
   <style>
     @page { size: 8.5in 11in; margin: 0.45in 0.45in 0.45in 0.45in; }
     @media print { body { zoom: 1; } }

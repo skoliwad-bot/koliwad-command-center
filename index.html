@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><!-- v1780067929 -->
+<meta charset="UTF-8"><!-- v1780069531 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -589,7 +589,7 @@ localStorage.setItem = function(key, value) {
       <div class="ndiv"></div>
       <span class="nslbl">Guide</span>
       <div class="ni" id="n-playbook" onclick="nav('playbook')"><span class="ico">📋</span><span class="nlbl">Playbook</span></div>
-      <div class="sbft" id="sbft" style="display:flex;align-items:center;justify-content:space-between"><span id="sbft-sync" style="font-size:8px;color:var(--mut2)">—</span><span id="theme-tog" onclick="toggleTheme()" title="Toggle light / dark" style="cursor:pointer;font-size:16px;padding:4px 6px;border-radius:4px">☀</span></div>
+      <div class="sbft" id="sbft" style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;align-items:center;justify-content:space-between"><span id="sbft-sync" style="font-size:8px;color:var(--mut2)">—</span><span id="theme-tog" onclick="toggleTheme()" title="Toggle light / dark" style="cursor:pointer;font-size:16px;padding:4px 6px;border-radius:4px">☀</span></div><button onclick="fbLoad().then(loaded=>{if(loaded){FB_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v)try{if(k==='kcc_fp_phases'){const p=JSON.parse(v);if(p&&p.length)FP=p;}else if(k==='kcc_health')S.health=JSON.parse(v);else if(k==='kcc_tickets')S.tickets=JSON.parse(v);else if(k==='kcc_tasks')S.tasks=JSON.parse(v);else if(k==='kcc_bills'){}/*loaded via render*/}catch(e){}});renderAll();alert('Restored from Firebase — check your data now.');}else alert('Could not reach Firebase.');})" style="font-size:8px;padding:4px 8px;background:rgba(208,64,64,0.15);border:1px solid var(--red);color:var(--red);cursor:pointer;border-radius:3px;font-family:'JetBrains Mono',monospace">↺ Restore from Firebase</button></div>
     </div>
 
     <div class="content">
@@ -2954,7 +2954,7 @@ function hDefault(){
   };
 }
 function hGet(){ if(!S.health){ S.health=hDefault(); } return S.health; }
-function hSave(){ localStorage.setItem('kcc_health', JSON.stringify(S.health)); if(typeof fbSaveAll==='function'){try{fbSaveAll();}catch(e){}} }
+function hSave(){ localStorage.setItem('kcc_health', JSON.stringify(S.health)); }
 function hToday(){ return isoD(new Date()); }
 function hNum(v){ const n=parseFloat(v); return isNaN(n)?null:n; }
 
@@ -5244,7 +5244,7 @@ function downloadDocx() {
   // Get the rendered HTML
   const execHTML = container ? container.outerHTML : '<p>No data</p>';
 
-  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780067929 -->
+  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780069531 -->
   <style>
     @page { size: 8.5in 11in; margin: 0.45in 0.45in 0.45in 0.45in; }
     @media print { body { zoom: 1; } }

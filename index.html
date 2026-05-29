@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><!-- v1780035625 -->
+<meta charset="UTF-8"><!-- v1780064666 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -3036,7 +3036,7 @@ function hDietCard(H){
     +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin:12px 0 6px">Daily Log — '+today+'</div>'
     +'<textarea id="h-diet-note" placeholder="What did you eat today? How did you feel? Energy level, any GLP-1 side effects, wins or struggles..." style="width:100%;min-height:90px;resize:vertical;box-sizing:border-box;font-size:12px;line-height:1.6;padding:10px;border:1px solid var(--brd2);background:var(--bg);color:var(--txt);font-family:\'JetBrains Mono\',monospace;border-radius:3px;outline:none">'+esc(todayLog?todayLog.raw||'':'')+' </textarea>'
     +'<div style="display:flex;gap:8px;align-items:center;margin-top:8px;margin-bottom:16px;flex-wrap:wrap">'
-    +'<input id="h-diet-d" type="date" value="'+today+'" style="width:150px">'
+    +'<input id="h-diet-d" type="date" value="'+today+'" onchange="hDietDateChange(this.value)" style="width:150px">'
     +'<button class="btn" onclick="hSaveDietLog()">Save entry</button>'
     +'<button class="btn" onclick="hFormatDietAI()" style="font-size:9px">✦ AI Format</button>'
     +'<span id="h-diet-status" style="font-size:9px;color:var(--mut)"></span>'
@@ -3100,6 +3100,7 @@ function hSaveDietLog(){
   hSave(); rHealth();
 }
 function hDelDietLog(d){ const H=hGet(); H.dietLog=(H.dietLog||[]).filter(x=>x.d!==d); hSave(); rHealth(); }
+function hDietDateChange(d){ const H=hGet(); const log=(H.dietLog||[]).find(x=>x.d===d); const ta=el('h-diet-note'); if(ta) ta.value=log?log.raw||'':''; }
 
 function hGetApiKey(){ return localStorage.getItem('kcc_claude')||(typeof el==='function'&&el('api-key-input')?el('api-key-input').value.trim():''); }
 
@@ -5153,7 +5154,7 @@ function downloadDocx() {
   // Get the rendered HTML
   const execHTML = container ? container.outerHTML : '<p>No data</p>';
 
-  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780035625 -->
+  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780064666 -->
   <style>
     @page { size: 8.5in 11in; margin: 0.45in 0.45in 0.45in 0.45in; }
     @media print { body { zoom: 1; } }

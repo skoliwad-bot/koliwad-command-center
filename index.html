@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><!-- v1780072772 -->
+<meta charset="UTF-8"><!-- v1780072971 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -5295,7 +5295,7 @@ function downloadDocx() {
   // Get the rendered HTML
   const execHTML = container ? container.outerHTML : '<p>No data</p>';
 
-  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780072772 -->
+  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780072971 -->
   <style>
     @page { size: 8.5in 11in; margin: 0.45in 0.45in 0.45in 0.45in; }
     @media print { body { zoom: 1; } }
@@ -5745,7 +5745,16 @@ function renderPaymentPlans() {
         // Calculate payments made and remaining
         const [sm, sy] = (p.start||'01/2026').split('/');
         const startDate = new Date(parseInt(sy), parseInt(sm)-1, p.day||1);
-        const paysMade = Math.max(0, Math.floor((now - startDate) / (30.5*24*3600*1000)));
+        // Count payments made by calendar month: each month where payment date has passed
+        let paysMade = 0;
+        if(now >= startDate) {
+          const yearDiff = now.getFullYear() - startDate.getFullYear();
+          const monthDiff = now.getMonth() - startDate.getMonth();
+          const totalMonths = yearDiff * 12 + monthDiff;
+          // If we're on or past the payment day this month, this month's payment has been made
+          paysMade = totalMonths + (now.getDate() >= startDate.getDate() ? 1 : 0);
+          paysMade = Math.max(0, Math.min(paysMade, parseInt(p.months)||0));
+        }
         const paysTotal = parseInt(p.months)||0;
         const paysLeft = Math.max(0, paysTotal - paysMade);
         const remaining = paysLeft * (p.amount||0);
@@ -5820,8 +5829,15 @@ function renderPaymentPlans() {
   plans.forEach(p => {
     const [sm, sy] = (p.start||'01/2026').split('/');
     const startDate = new Date(parseInt(sy), parseInt(sm)-1, p.day||1);
-    const paysMade = Math.max(0, Math.floor((now - startDate) / (30.5*24*3600*1000)));
     const paysTotal = parseInt(p.months)||0;
+    let paysMade = 0;
+    if(now >= startDate) {
+      const yearDiff = now.getFullYear() - startDate.getFullYear();
+      const monthDiff = now.getMonth() - startDate.getMonth();
+      const totalMonths = yearDiff * 12 + monthDiff;
+      paysMade = totalMonths + (now.getDate() >= startDate.getDate() ? 1 : 0);
+      paysMade = Math.max(0, Math.min(paysMade, paysTotal));
+    }
     let nextPay = new Date(startDate);
     nextPay.setMonth(startDate.getMonth() + paysMade);
     if(nextPay < now) nextPay.setMonth(nextPay.getMonth()+1);

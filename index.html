@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><!-- v1780071338 -->
+<meta charset="UTF-8"><!-- v1780072215 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -4535,9 +4535,11 @@ function importTicketExcel(evt) {
       const rbSheet = wb.Sheets['Recurring Bills'];
       if(rbSheet){
         const rbRows = XLSX.utils.sheet_to_json(rbSheet,{header:1}).slice(3)
-          .filter(r=>r[0]&&String(r[0]).trim()&&parseFloat(r[1])>0&&!String(r[0]).startsWith('MONTHLY'));
-        if(rbRows.length) localStorage.setItem('kcc_recbills', JSON.stringify(rbRows.map(r=>({
-          name:String(r[0]||'').trim(), amount:parseFloat(r[1])||0,
+          .filter(r=>r[0]&&String(r[0]).trim()&&!String(r[0]).startsWith('MONTHLY')&&!String(r[0]).startsWith('Bill'));
+        const parseAmt=v=>{ if(!v) return 0; if(typeof v==='number') return v; return parseFloat(String(v).replace(/[^0-9.]/g,''))||0; };
+        const rbFiltered=rbRows.filter(r=>parseAmt(r[1])>0);
+        if(rbFiltered.length) localStorage.setItem('kcc_recbills', JSON.stringify(rbFiltered.map(r=>({
+          name:String(r[0]||'').trim(), amount:parseAmt(r[1]),
           day:parseInt(r[2])||1, notes:String(r[3]||'').trim()
         }))));
       }
@@ -5267,7 +5269,7 @@ function downloadDocx() {
   // Get the rendered HTML
   const execHTML = container ? container.outerHTML : '<p>No data</p>';
 
-  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780071338 -->
+  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780072215 -->
   <style>
     @page { size: 8.5in 11in; margin: 0.45in 0.45in 0.45in 0.45in; }
     @media print { body { zoom: 1; } }

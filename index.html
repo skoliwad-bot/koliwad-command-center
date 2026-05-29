@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><!-- v1780072424 -->
+<meta charset="UTF-8"><!-- v1780072584 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -4555,6 +4555,7 @@ function importTicketExcel(evt) {
           day:parseInt(r[4])||1, card:String(r[5]||'').trim(), notes:String(r[6]||'').trim()
         }))));
       }
+      S.recbills=null; S.payplans=null;
       rTickets();
       if(st) st.textContent = '✓ ' + file.name + ' · ' + rows.length + ' rows';
     } catch(err) {
@@ -4880,6 +4881,7 @@ async function importAllExcel(evt) {
               day:parseInt(r[4])||1, card:String(r[5]||'').trim(), notes:String(r[6]||'').trim()
             }))));
           }
+          S.recbills=null; S.payplans=null;
           if(typeof rTickets==='function') rTickets();
         } catch(te) { console.error('Ticket parse error:',te); }
         status.push('🎟 ' + file.name + ' → Tickets');
@@ -5291,7 +5293,7 @@ function downloadDocx() {
   // Get the rendered HTML
   const execHTML = container ? container.outerHTML : '<p>No data</p>';
 
-  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780072424 -->
+  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780072584 -->
   <style>
     @page { size: 8.5in 11in; margin: 0.45in 0.45in 0.45in 0.45in; }
     @media print { body { zoom: 1; } }
@@ -5723,8 +5725,8 @@ function autoAlerts() {
 // ══ PAYMENT PLANS & RECURRING BILLS ══════════════════════════
 
 function renderPaymentPlans() {
-  const plans   = S.payplans  || JSON.parse(localStorage.getItem('kcc_payplans')||'[]');
-  const recbills = S.recbills || JSON.parse(localStorage.getItem('kcc_recbills')||'[]');
+  const plans   = JSON.parse(localStorage.getItem('kcc_payplans')||'[]');
+  const recbills = JSON.parse(localStorage.getItem('kcc_recbills')||'[]');
   const f$ = n => '$'+Math.round(n||0).toLocaleString();
   const now = new Date(); now.setHours(0,0,0,0);
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];

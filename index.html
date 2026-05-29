@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><!-- v1780027630 -->
+<meta charset="UTF-8"><!-- v1780027920 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -72,11 +72,11 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 .sidebar{width:200px;background:var(--surf2);border-right:1px solid var(--brd);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
 .sbhdr{padding:14px 16px 10px;border-bottom:1px solid var(--brd);}
 .sbhdr .d{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut2);}
-.sbhdr .n{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:#f4faf4;letter-spacing:2px;text-transform:uppercase;margin-top:6px;}
+.sbhdr .n{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--txt2);letter-spacing:2px;text-transform:uppercase;margin-top:6px;}
 .nslbl{font-size:7px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--mut);padding:10px 16px 4px;display:block;}
 .ni{display:flex;flex-direction:row;align-items:center;gap:12px;padding:10px 16px;border-left:3px solid transparent;cursor:pointer;color:var(--mut);transition:all .15s;width:100%;}
 .ni:hover{background:var(--surf2);color:var(--txt2);}
-.ni.on{background:rgba(224,80,80,0.2);border-left-color:#e05050;color:#ffffff;}
+.ni.on{background:rgba(224,80,80,0.2);border-left-color:#e05050;color:var(--txt);}
 .ni.on .ico{color:var(--red);}
 .ico{font-size:15px;width:20px;text-align:center;flex-shrink:0;}
 .nlbl{font-size:13px;font-weight:600;color:inherit;letter-spacing:0.3px;}
@@ -92,8 +92,8 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 .page.on{display:block;min-height:100px;}
 @keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
 .ph{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px;}
-.pt{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:1px;text-transform:uppercase;}
-.ps{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#8aaa8a;margin-top:2px;}
+.pt{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--txt);letter-spacing:1px;text-transform:uppercase;}
+.ps{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut2);margin-top:2px;}
 .pact{display:flex;gap:8px;align-items:center;}
 
 /* ── CARDS ── */
@@ -109,8 +109,8 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 .row.hi{border-left:2px solid var(--red);background:rgba(208,64,64,.04);}
 .row.mi{border-left:2px solid var(--amb);}
 .rtl{flex:1;font-size:13px;font-weight:600;color:#f8fdf8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.rsb{font-size:9px;color:#8aaa8a;white-space:nowrap;}
-.empty{padding:12px 16px;font-size:11px;color:#9abf9a;font-style:italic;}
+.rsb{font-size:9px;color:var(--mut2);white-space:nowrap;}
+.empty{padding:12px 16px;font-size:11px;color:var(--mut);font-style:italic;}
 
 /* ── BADGES ── */
 .b{font-size:8px;font-weight:700;padding:2px 7px;letter-spacing:.5px;flex-shrink:0;white-space:nowrap;}
@@ -141,7 +141,7 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 .sp.a{border-color:var(--abrd);background:var(--adim);}
 .spi{font-size:20px;line-height:1;}
 .spl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#b8d8b8;display:block;}
-.spv{font-size:24px;font-weight:700;line-height:1.1;display:block;margin-top:2px;color:#ffffff;}
+.spv{font-size:24px;font-weight:700;line-height:1.1;display:block;margin-top:2px;color:var(--txt);}
 .spv.r{color:var(--red);}.spv.g{color:var(--grn);}.spv.a{color:var(--amb);}
 
 /* ── FILTERS ── */
@@ -306,19 +306,19 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 #p-firelab .pill.g{border-color:rgba(74,156,92,0.4);background:rgba(74,156,92,0.08);}
 #p-firelab .pill.b{border-color:rgba(74,122,184,0.4);background:rgba(74,122,184,0.08);}
 #p-firelab .pill.a{border-color:rgba(196,144,48,0.4);background:rgba(196,144,48,0.08);}
-#p-firelab .pill-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#b0ccb0;display:block;margin-bottom:6px;}
-#p-firelab .pill-val{font-size:28px;font-weight:700;display:block;line-height:1;color:#ffffff;}
+#p-firelab .pill-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);display:block;margin-bottom:6px;}
+#p-firelab .pill-val{font-size:28px;font-weight:700;display:block;line-height:1;color:var(--txt);}
 #p-firelab .pill-val.r{color:var(--red);}#p-firelab .pill-val.g{color:var(--grn);}#p-firelab .pill-val.b{color:var(--blu);}#p-firelab .pill-val.a{color:var(--amb);}
 #p-firelab .pill-sub{font-size:9px;color:var(--mut);display:block;margin-top:4px;}
 #p-firelab .tbl-wrap{overflow-x:auto;}
 #p-firelab table{width:100%;border-collapse:collapse;font-size:11px;}
-#p-firelab th{font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#b0ccb0;padding:9px 10px;border-bottom:2px solid var(--brd);text-align:right;white-space:nowrap;background:var(--bg);}
+#p-firelab th{font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);padding:9px 10px;border-bottom:2px solid var(--brd);text-align:right;white-space:nowrap;background:var(--bg);}
 #p-firelab th:first-child{text-align:left;}
 #p-firelab td{padding:8px 10px;border-bottom:1px solid #1e231e;text-align:right;color:var(--txt2);font-size:11px;}
 #p-firelab td:first-child{text-align:left;color:var(--txt);font-weight:600;}
 #p-firelab tr:hover td{background:rgba(255,255,255,.04);}
-#p-firelab tr.today td{background:rgba(82,176,102,.1)!important;color:#ffffff!important;}
-#p-firelab tr.fire-month td{background:rgba(90,138,204,.15)!important;font-weight:700;color:#ffffff!important;}
+#p-firelab tr.today td{background:rgba(82,176,102,.1)!important;color:var(--txt)!important;}
+#p-firelab tr.fire-month td{background:rgba(90,138,204,.15)!important;font-weight:700;color:var(--txt)!important;}
 #p-firelab tr.off-track td:first-child{color:var(--red);}
 #p-firelab .pos{color:var(--grn)!important;}#p-firelab .neg{color:var(--red)!important;}#p-firelab .amb{color:var(--amb)!important;}
 #p-firelab .sc-table{width:100%;border-collapse:collapse;font-size:11px;}
@@ -335,7 +335,7 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 #p-firelab .date-item{padding:12px 16px;border-right:1px solid var(--brd);border-bottom:1px solid var(--brd);}
 #p-firelab .date-item:nth-child(3n){border-right:none;}
 #p-firelab .date-item:nth-last-child(-n+3){border-bottom:none;}
-#p-firelab .date-lbl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#b0ccb0;display:block;margin-bottom:4px;}
+#p-firelab .date-lbl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block;margin-bottom:4px;}
 #p-firelab .date-val{font-size:14px;font-weight:700;color:var(--txt);}
 #p-firelab .date-sub{font-size:9px;color:var(--mut2);margin-top:2px;}
 #p-firelab .badge{font-size:8px;font-weight:700;padding:2px 8px;letter-spacing:.5px;white-space:nowrap;}
@@ -1191,7 +1191,7 @@ localStorage.setItem = function(key, value) {
         <span style="color:#4a7ab8">● FIRE month</span>
       </div>
       <div style="margin-left:auto;display:flex;gap:6px;">
-        <button onclick="setTimelineView('all')" id="tv-all" style="font-size:9px;padding:4px 10px;border:1px solid var(--brd2);background:var(--red);color:#fff;cursor:pointer;">All 120</button>
+        <button onclick="setTimelineView('all')" id="tv-all" style="font-size:9px;padding:4px 10px;border:1px solid var(--brd2);background:var(--red);color:var(--txt2);cursor:pointer;">All 120</button>
         <button onclick="setTimelineView('24')" id="tv-24" style="font-size:9px;padding:4px 10px;border:1px solid var(--brd2);background:transparent;color:var(--mut);cursor:pointer;">First 24</button>
         <button onclick="setTimelineView('fire')" id="tv-fire" style="font-size:9px;padding:4px 10px;border:1px solid var(--brd2);background:transparent;color:var(--mut);cursor:pointer;">Around FIRE</button>
       </div>
@@ -1290,7 +1290,7 @@ localStorage.setItem = function(key, value) {
           <!-- HEADER -->
           <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px;">
             <div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:#f4faf4;letter-spacing:1px;text-transform:uppercase;">Portfolio</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--txt2);letter-spacing:1px;text-transform:uppercase;">Portfolio</div>
               <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#6a886a;margin-top:2px;">Version A — Mixed ETF + Futures (Conservative) · Target 20-22%/yr · thinkorswim</div>
             </div>
             <div style="display:flex;gap:8px;">
@@ -1306,7 +1306,7 @@ localStorage.setItem = function(key, value) {
           <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;">
             <div style="border:1px solid #252a25;background:#141714;padding:14px 16px;">
               <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#6a886a;display:block;">Portfolio Value</span>
-              <span id="pf-value" style="font-size:22px;font-weight:700;display:block;margin-top:4px;color:#eef4ee;">—</span>
+              <span id="pf-value" style="font-size:22px;font-weight:700;display:block;margin-top:4px;color:var(--txt);">—</span>
             </div>
             <div style="border:1px solid #252a25;background:#141714;padding:14px 16px;">
               <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#6a886a;display:block;">High Watermark</span>
@@ -1358,7 +1358,7 @@ localStorage.setItem = function(key, value) {
             <!-- Leg 1 -->
             <div style="display:grid;grid-template-columns:30px 2fr 1fr 1fr 1fr 1fr 1fr;padding:12px 16px;border-bottom:1px solid #1a1e1a;align-items:center;">
               <span style="font-size:11px;font-weight:700;color:#4a7ab8;">1</span>
-              <div><div style="font-size:13px;font-weight:600;color:#eef4ee;font-family:'Libre Baskerville',serif;">MES Core Long</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">/MES Futures · 0.9x S&P · Quarterly roll</div></div>
+              <div><div style="font-size:13px;font-weight:600;color:var(--txt);font-family:'Libre Baskerville',serif;">MES Core Long</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">/MES Futures · 0.9x S&P · Quarterly roll</div></div>
               <span style="font-size:13px;font-weight:700;color:#6a886a;text-align:right;display:block;">10%</span>
               <span id="l1-val" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
               <span id="l1-pct" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
@@ -1368,7 +1368,7 @@ localStorage.setItem = function(key, value) {
             <!-- Leg 2 -->
             <div style="display:grid;grid-template-columns:30px 2fr 1fr 1fr 1fr 1fr 1fr;padding:12px 16px;border-bottom:1px solid #1a1e1a;align-items:center;">
               <span style="font-size:11px;font-weight:700;color:#d04040;">2</span>
-              <div><div style="font-size:13px;font-weight:600;color:#eef4ee;font-family:'Libre Baskerville',serif;">Short Puts (CSP)</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">SPX puts · Delta -0.12 · 38 DTE · 1st Tuesday/mo</div></div>
+              <div><div style="font-size:13px;font-weight:600;color:var(--txt);font-family:'Libre Baskerville',serif;">Short Puts (CSP)</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">SPX puts · Delta -0.12 · 38 DTE · 1st Tuesday/mo</div></div>
               <span style="font-size:13px;font-weight:700;color:#6a886a;text-align:right;display:block;">25%</span>
               <span id="l2-val" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
               <span id="l2-pct" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
@@ -1378,7 +1378,7 @@ localStorage.setItem = function(key, value) {
             <!-- Leg 3 -->
             <div style="display:grid;grid-template-columns:30px 2fr 1fr 1fr 1fr 1fr 1fr;padding:12px 16px;border-bottom:1px solid #1a1e1a;align-items:center;">
               <span style="font-size:11px;font-weight:700;color:#c49030;">3</span>
-              <div><div style="font-size:13px;font-weight:600;color:#eef4ee;font-family:'Libre Baskerville',serif;">Trend / Momentum</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">MTUM 10% + DBMF 5% · Quarterly rebalance</div></div>
+              <div><div style="font-size:13px;font-weight:600;color:var(--txt);font-family:'Libre Baskerville',serif;">Trend / Momentum</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">MTUM 10% + DBMF 5% · Quarterly rebalance</div></div>
               <span style="font-size:13px;font-weight:700;color:#6a886a;text-align:right;display:block;">15%</span>
               <span id="l3-val" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
               <span id="l3-pct" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
@@ -1388,7 +1388,7 @@ localStorage.setItem = function(key, value) {
             <!-- Leg 4 -->
             <div style="display:grid;grid-template-columns:30px 2fr 1fr 1fr 1fr 1fr 1fr;padding:12px 16px;border-bottom:1px solid #1a1e1a;align-items:center;">
               <span style="font-size:11px;font-weight:700;color:#4a9c5c;">4</span>
-              <div><div style="font-size:13px;font-weight:600;color:#eef4ee;font-family:'Libre Baskerville',serif;">Yield — SGOV</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">iShares 0-3M T-Bill ETF · ~5% yield · Put collateral</div></div>
+              <div><div style="font-size:13px;font-weight:600;color:var(--txt);font-family:'Libre Baskerville',serif;">Yield — SGOV</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">iShares 0-3M T-Bill ETF · ~5% yield · Put collateral</div></div>
               <span style="font-size:13px;font-weight:700;color:#6a886a;text-align:right;display:block;">40%</span>
               <span id="l4-val" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
               <span id="l4-pct" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
@@ -1398,7 +1398,7 @@ localStorage.setItem = function(key, value) {
             <!-- Leg 5 -->
             <div style="display:grid;grid-template-columns:30px 2fr 1fr 1fr 1fr 1fr 1fr;padding:12px 16px;align-items:center;">
               <span style="font-size:11px;font-weight:700;color:#7a5cb8;">5</span>
-              <div><div style="font-size:13px;font-weight:600;color:#eef4ee;font-family:'Libre Baskerville',serif;">Tail Hedge</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">SPX put spreads · 75 DTE · -8%/-18% strikes · 1st Wed/qtr</div></div>
+              <div><div style="font-size:13px;font-weight:600;color:var(--txt);font-family:'Libre Baskerville',serif;">Tail Hedge</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">SPX put spreads · 75 DTE · -8%/-18% strikes · 1st Wed/qtr</div></div>
               <span style="font-size:13px;font-weight:700;color:#6a886a;text-align:right;display:block;">10%</span>
               <span id="l5-val" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
               <span id="l5-pct" style="font-size:13px;font-weight:700;text-align:right;display:block;">—</span>
@@ -1418,15 +1418,15 @@ localStorage.setItem = function(key, value) {
               <div id="pf-actions">
                 <div style="padding:10px 16px;border-bottom:1px solid #1a1e1a;display:flex;align-items:center;gap:10px;">
                   <span style="font-size:8px;font-weight:700;padding:2px 7px;background:rgba(196,144,48,0.15);color:#c49030;white-space:nowrap;">WEEKLY</span>
-                  <div style="flex:1"><div style="font-size:12px;color:#eef4ee;font-family:'Libre Baskerville',serif;">Tuesday 11AM — Verify all 3 GTC orders active</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">TOS > Monitor > Working Orders tab</div></div>
+                  <div style="flex:1"><div style="font-size:12px;color:var(--txt);font-family:'Libre Baskerville',serif;">Tuesday 11AM — Verify all 3 GTC orders active</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">TOS > Monitor > Working Orders tab</div></div>
                 </div>
                 <div style="padding:10px 16px;border-bottom:1px solid #1a1e1a;display:flex;align-items:center;gap:10px;">
                   <span style="font-size:8px;font-weight:700;padding:2px 7px;background:rgba(196,144,48,0.15);color:#c49030;white-space:nowrap;">WEEKLY</span>
-                  <div style="flex:1"><div style="font-size:12px;color:#eef4ee;font-family:'Libre Baskerville',serif;">After 4PM — Record closing portfolio value</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">Compare to high watermark. Update if new high.</div></div>
+                  <div style="flex:1"><div style="font-size:12px;color:var(--txt);font-family:'Libre Baskerville',serif;">After 4PM — Record closing portfolio value</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">Compare to high watermark. Update if new high.</div></div>
                 </div>
                 <div style="padding:10px 16px;display:flex;align-items:center;gap:10px;">
                   <span style="font-size:8px;font-weight:700;padding:2px 7px;background:rgba(74,122,184,0.15);color:#4a7ab8;white-space:nowrap;">MONTHLY</span>
-                  <div style="flex:1"><div style="font-size:12px;color:#eef4ee;font-family:'Libre Baskerville',serif;">1st Tuesday — Open new short put if no open position</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">Delta -0.08 to -0.15 · Premium >$1.00 · VIX &lt;35 · No FOMC ±3 days</div></div>
+                  <div style="flex:1"><div style="font-size:12px;color:var(--txt);font-family:'Libre Baskerville',serif;">1st Tuesday — Open new short put if no open position</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">Delta -0.08 to -0.15 · Premium >$1.00 · VIX &lt;35 · No FOMC ±3 days</div></div>
                 </div>
               </div>
             </div>
@@ -1450,11 +1450,11 @@ localStorage.setItem = function(key, value) {
               <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6a886a;">Expected Return Reference — Version A Conservative</span>
             </div>
             <div style="display:grid;grid-template-columns:repeat(5,1fr);">
-              <div style="padding:12px 16px;border-right:1px solid #1a1e1a;text-align:center;"><div style="font-size:10px;font-weight:700;color:#eef4ee;">Flash Crash</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">S&amp;P -35%</div><div style="font-size:20px;font-weight:700;color:#d04040;margin-top:4px;">~-9%</div></div>
-              <div style="padding:12px 16px;border-right:1px solid #1a1e1a;text-align:center;"><div style="font-size:10px;font-weight:700;color:#eef4ee;">Bear Market</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">S&amp;P -20%</div><div style="font-size:20px;font-weight:700;color:#d04040;margin-top:4px;">~-6%</div></div>
-              <div style="padding:12px 16px;border-right:1px solid #1a1e1a;text-align:center;"><div style="font-size:10px;font-weight:700;color:#eef4ee;">Flat Year</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">S&amp;P 0%</div><div style="font-size:20px;font-weight:700;color:#4a9c5c;margin-top:4px;">~+14%</div></div>
-              <div style="padding:12px 16px;border-right:1px solid #1a1e1a;text-align:center;"><div style="font-size:10px;font-weight:700;color:#eef4ee;">Bull Market</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">S&amp;P +15%</div><div style="font-size:20px;font-weight:700;color:#4a9c5c;margin-top:4px;">~+21%</div></div>
-              <div style="padding:12px 16px;text-align:center;"><div style="font-size:10px;font-weight:700;color:#eef4ee;">Strong Bull</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">S&amp;P +25%</div><div style="font-size:20px;font-weight:700;color:#4a9c5c;margin-top:4px;">~+23%</div></div>
+              <div style="padding:12px 16px;border-right:1px solid #1a1e1a;text-align:center;"><div style="font-size:10px;font-weight:700;color:var(--txt);">Flash Crash</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">S&amp;P -35%</div><div style="font-size:20px;font-weight:700;color:#d04040;margin-top:4px;">~-9%</div></div>
+              <div style="padding:12px 16px;border-right:1px solid #1a1e1a;text-align:center;"><div style="font-size:10px;font-weight:700;color:var(--txt);">Bear Market</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">S&amp;P -20%</div><div style="font-size:20px;font-weight:700;color:#d04040;margin-top:4px;">~-6%</div></div>
+              <div style="padding:12px 16px;border-right:1px solid #1a1e1a;text-align:center;"><div style="font-size:10px;font-weight:700;color:var(--txt);">Flat Year</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">S&amp;P 0%</div><div style="font-size:20px;font-weight:700;color:#4a9c5c;margin-top:4px;">~+14%</div></div>
+              <div style="padding:12px 16px;border-right:1px solid #1a1e1a;text-align:center;"><div style="font-size:10px;font-weight:700;color:var(--txt);">Bull Market</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">S&amp;P +15%</div><div style="font-size:20px;font-weight:700;color:#4a9c5c;margin-top:4px;">~+21%</div></div>
+              <div style="padding:12px 16px;text-align:center;"><div style="font-size:10px;font-weight:700;color:var(--txt);">Strong Bull</div><div style="font-size:9px;color:#6a886a;margin-top:2px;">S&amp;P +25%</div><div style="font-size:20px;font-weight:700;color:#4a9c5c;margin-top:4px;">~+23%</div></div>
             </div>
 
           </div>
@@ -2310,13 +2310,13 @@ function rToday(){
       const MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       const fd=s=>{const d=new Date(s);return MO[d.getMonth()]+' '+d.getDate();};
       let html='<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:'+(acts.length?'8px':'0')+'">'
-        +'<div><span style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#6a886a;display:block">Value</span><span style="font-size:15px;font-weight:700;color:#eef4ee">'+f$(p.value)+'</span></div>'
+        +'<div><span style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#6a886a;display:block">Value</span><span style="font-size:15px;font-weight:700;color:var(--txt)">'+f$(p.value)+'</span></div>'
         +'<div><span style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#6a886a;display:block">Drawdown</span><span style="font-size:15px;font-weight:700;color:'+ddc+'">'+dd.toFixed(1)+'%</span></div>'
         +'<div><span style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#6a886a;display:block">High WM</span><span style="font-size:15px;font-weight:700;color:#4a9c5c">'+f$(p.hwm)+'</span></div>'
         +'</div>';
       if(acts.length){
         html+='<div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#c49030;margin-bottom:4px">Upcoming Actions</div>';
-        html+=acts.map(a=>'<div style="display:flex;gap:8px;padding:2px 0;font-size:10px;align-items:center"><span style="font-size:8px;font-weight:700;color:#c49030;min-width:42px">'+fd(a.date)+'</span><span style="color:#cdd6cd">'+esc(a.action)+'</span></div>').join('');
+        html+=acts.map(a=>'<div style="display:flex;gap:8px;padding:2px 0;font-size:10px;align-items:center"><span style="font-size:8px;font-weight:700;color:#c49030;min-width:42px">'+fd(a.date)+'</span><span style="color:var(--txt2)">'+esc(a.action)+'</span></div>').join('');
       }
       pfEl.innerHTML=html;
     }
@@ -2615,8 +2615,8 @@ function rFirePhases(){
   const gr=fpRollup(allT); const grStr=fpRollStr(gr);
   const top = grStr?('<div style="border:1px solid #2e352e;background:#0f130f;padding:10px 14px;margin-bottom:12px;display:flex;gap:20px;flex-wrap:wrap;align-items:center">'
     +'<span style="font-size:9px;font-weight:700;letter-spacing:1px;color:#5a6e5a">REMAINING / TOTAL</span>'
-    +(gr.costT>0?'<span style="font-size:13px;font-weight:700;color:#eef4ee">💲'+Math.round(gr.costR).toLocaleString()+' <span style="color:#5a6e5a;font-size:10px">/ '+Math.round(gr.costT).toLocaleString()+'</span></span>':'')
-    +(gr.hrsT>0?'<span style="font-size:13px;font-weight:700;color:#eef4ee">⏱ '+fpFmtHours(gr.hrsR)+' <span style="color:#5a6e5a;font-size:10px">/ '+fpFmtHours(gr.hrsT)+'</span></span>':'')
+    +(gr.costT>0?'<span style="font-size:13px;font-weight:700;color:var(--txt)">💲'+Math.round(gr.costR).toLocaleString()+' <span style="color:#5a6e5a;font-size:10px">/ '+Math.round(gr.costT).toLocaleString()+'</span></span>':'')
+    +(gr.hrsT>0?'<span style="font-size:13px;font-weight:700;color:var(--txt)">⏱ '+fpFmtHours(gr.hrsR)+' <span style="color:#5a6e5a;font-size:10px">/ '+fpFmtHours(gr.hrsT)+'</span></span>':'')
     +'</div>'):'';
   html+='<div style="display:flex;gap:8px;margin-top:8px"><button class="btn" onclick="fpAddPhase()">+ Add Phase</button><button class="btn" style="border-color:#5a3a3a;color:#a06a6a" onclick="fpReset()">Reset to Default</button></div>';
   e.innerHTML=top+html;
@@ -2661,7 +2661,7 @@ function fpOpenDeps(pid,tid){
         +'<span>🔒 Entire phase ('+ph.tasks.length+' tasks)</span></label>';
     }
     opts.forEach(x=>{
-      body+='<label style="display:flex;align-items:flex-start;gap:8px;padding:4px 0 4px 16px;cursor:pointer;font-size:12px;color:#cdd6cd">'
+      body+='<label style="display:flex;align-items:flex-start;gap:8px;padding:4px 0 4px 16px;cursor:pointer;font-size:12px;color:var(--txt2)">'
         +'<input type="checkbox" data-dep="'+x.id+'" '+(cur.has(x.id)?'checked':'')+' style="margin-top:3px">'
         +'<span>'+esc(x.t)+(S.fchk[x.id]?' <span style="color:#4a9c5c;font-size:9px">(done)</span>':'')+'</span></label>';
     });
@@ -2695,7 +2695,7 @@ function fpOpenPhaseDeps(pid){
       +'<input type="checkbox" data-dep="phase:'+o.id+'" '+(cur.has('phase:'+o.id)?'checked':'')+'>'
       +'<span>🔒 Entire phase ('+o.tasks.length+' tasks)</span></label>';
     o.tasks.forEach(x=>{
-      body+='<label style="display:flex;align-items:flex-start;gap:8px;padding:4px 0 4px 16px;cursor:pointer;font-size:12px;color:#cdd6cd">'
+      body+='<label style="display:flex;align-items:flex-start;gap:8px;padding:4px 0 4px 16px;cursor:pointer;font-size:12px;color:var(--txt2)">'
         +'<input type="checkbox" data-dep="'+x.id+'" '+(cur.has(x.id)?'checked':'')+' style="margin-top:3px">'
         +'<span>'+esc(x.t)+(S.fchk[x.id]?' <span style="color:#4a9c5c;font-size:9px">(done)</span>':'')+'</span></label>';
     });
@@ -3383,7 +3383,7 @@ function rFireActions(){
   if(!actions.length){e.innerHTML='<div class="empty">No strategic actions yet.</div>';return;}
   e.innerHTML=[...open.map(a=>'<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border:1px solid #252a25;background:#141714;margin-bottom:6px;">'
     +'<div onclick="togFA(\''+a.id+'\')" style="width:15px;height:15px;border:1.5px solid #4a5e4a;cursor:pointer;flex-shrink:0;"></div>'
-    +'<span style="flex:1;font-size:13px;color:#eef4ee;font-family:Libre Baskerville,serif;">'+esc(a.title)+'</span>'
+    +'<span style="flex:1;font-size:13px;color:var(--txt);font-family:Libre Baskerville,serif;">'+esc(a.title)+'</span>'
     +'<span style="font-size:8px;font-weight:700;padding:2px 7px;background:'+(a.priority==='High'?'rgba(208,64,64,0.15)':'rgba(196,144,48,0.15)')+';color:'+(a.priority==='High'?'#d04040':'#c49030')+'">'+((a.priority||'').toUpperCase())+'</span></div>'),
     done.length?'<div style="padding:8px 16px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#2a342a;margin-top:8px">Completed</div>':'',
     ...done.map(a=>'<div style="display:flex;align-items:center;gap:12px;padding:8px 16px;opacity:.4"><div style="width:15px;height:15px;background:#4a9c5c;flex-shrink:0"></div><span style="font-size:12px;color:#7a967a;text-decoration:line-through">'+esc(a.title)+'</span></div>')
@@ -3468,7 +3468,7 @@ function rCal(){
     const isT=sameD(dobj,nowCheck);
     return '<div style="margin-bottom:16px">'
       +'<div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:'+(isT?'#e05050':'#a0c0a0')+';padding:8px 0;border-bottom:2px solid '+(isT?'#e05050':'#2e352e')+';margin-bottom:6px">'
-      +(isT?'<span style="background:#e05050;color:#fff;padding:2px 8px;margin-right:8px;font-size:9px">TODAY</span>':'')
+      +(isT?'<span style="background:#e05050;color:var(--txt2);padding:2px 8px;margin-right:8px;font-size:9px">TODAY</span>':'')
       +DAYS[dobj.getDay()]+', '+SM[dobj.getMonth()]+' '+dobj.getDate()+'</div>'
       +evts.map(e=>'<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid #2e352e;background:#181d18;margin-bottom:4px">'
         +'<span style="font-size:10px;color:#8aaa8a;width:65px;flex-shrink:0;font-family:JetBrains Mono,monospace">'+(e.time||'All day')+'</span>'
@@ -3904,7 +3904,7 @@ function rPortfolio(){
     if(!logs.length){tlEl.innerHTML='<div style="padding:12px 16px;font-size:11px;color:#4a5e4a;font-style:italic;">No trade log entries yet.</div>';return;}
     tlEl.innerHTML=logs.slice(-8).reverse().map(t=>`<div style="display:grid;grid-template-columns:80px 1fr 1fr;padding:8px 16px;border-bottom:1px solid #1a1e1a;gap:8px;">
       <span style="font-size:9px;color:#6a886a;">${t.date||new Date().toLocaleDateString()}</span>
-      <div><span style="font-size:9px;font-weight:700;padding:1px 6px;background:rgba(74,122,184,0.15);color:#4a7ab8;margin-right:6px;">${String(t.leg||'').split(' ')[0]}</span><span style="font-size:11px;color:#eef4ee;">${esc(t.action||'')} ${esc(t.instrument||'')}</span></div>
+      <div><span style="font-size:9px;font-weight:700;padding:1px 6px;background:rgba(74,122,184,0.15);color:#4a7ab8;margin-right:6px;">${String(t.leg||'').split(' ')[0]}</span><span style="font-size:11px;color:var(--txt);">${esc(t.action||'')} ${esc(t.instrument||'')}</span></div>
       <span style="font-size:9px;color:#6a886a;">${t.price?'$'+Number(t.price).toLocaleString():''} ${esc(t.notes||'')}</span>
     </div>`).join('');
   }
@@ -4378,7 +4378,7 @@ function rTickets() {
   if(mEl) {
     if(!Object.keys(mv).length) {
       mEl.innerHTML = ['Profit MTD','Profit YTD','Open Listings','High Risk 7d','Pending Pmts'].map(l=>
-        '<div style="border:1px solid #364036;background:#181d18;padding:12px 16px"><span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#9abf9a;display:block;margin-bottom:6px">'+l+'</span><span style="font-size:20px;font-weight:700;display:block;color:#f4faf4">—</span></div>'
+        '<div style="border:1px solid #364036;background:#181d18;padding:12px 16px"><span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#9abf9a;display:block;margin-bottom:6px">'+l+'</span><span style="font-size:20px;font-weight:700;display:block;color:var(--txt2)">—</span></div>'
       ).join('');
     }
   }
@@ -4975,7 +4975,7 @@ function renderExecSummary(d) {
           <text x="7.5" y="18.5" font-family="Arial" font-size="11" font-weight="900" fill="#e05050">K</text>
         </svg>
         <div>
-          <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#fff;">Koliwad — Financial Status</div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--txt2);">Koliwad — Financial Status</div>
           <div style="font-size:8px;color:#6a8aaa;letter-spacing:1px;">Year-to-Date through ${month}  ·  Executive Summary</div>
         </div>
       </div>
@@ -4998,7 +4998,7 @@ function renderExecSummary(d) {
 
     <div style="padding:10px 16px;">
 
-      <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:#0a1628;color:#fff;padding:4px 8px;margin-bottom:4px;">VELOCITY BANKING  ·  HELOC Plan $760,000</div>
+      <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:#0a1628;color:var(--txt2);padding:4px 8px;margin-bottom:4px;">VELOCITY BANKING  ·  HELOC Plan $760,000</div>
       <div style="font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#555;margin-bottom:4px;">MONTHLY SUMMARY</div>
       <table style="width:100%;border-collapse:collapse;margin-bottom:10px;">
         <tr>
@@ -5009,7 +5009,7 @@ function renderExecSummary(d) {
         </tr>
       </table>
 
-      <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:#0a1628;color:#fff;padding:4px 8px;margin-bottom:4px;">CASH FLOW  ·  Monthly Operating Plan</div>
+      <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:#0a1628;color:var(--txt2);padding:4px 8px;margin-bottom:4px;">CASH FLOW  ·  Monthly Operating Plan</div>
       <div style="font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#555;margin-bottom:4px;">MONTHLY SUMMARY</div>
       <table style="width:100%;border-collapse:collapse;margin-bottom:6px;">
         <tr>
@@ -5023,11 +5023,11 @@ function renderExecSummary(d) {
       <div style="font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#555;margin-bottom:3px;">CASH FLOW GAP DRIVERS</div>
       <table style="width:100%;border-collapse:collapse;margin-bottom:10px;">${gapRows}</table>
 
-      <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:#0a1628;color:#fff;padding:4px 8px;margin-bottom:4px;">FIRE PATH  ·  Target: Financial Independence</div>
+      <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:#0a1628;color:var(--txt2);padding:4px 8px;margin-bottom:4px;">FIRE PATH  ·  Target: Financial Independence</div>
       <div style="font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#555;margin-bottom:3px;">INVESTMENT & BUSINESS OUTLOOK</div>
       <table style="width:100%;border-collapse:collapse;margin-bottom:10px;">${invRows}</table>
 
-      <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:#0a1628;color:#fff;padding:4px 8px;margin-bottom:6px;">KEY DECISIONS</div>
+      <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:#0a1628;color:var(--txt2);padding:4px 8px;margin-bottom:6px;">KEY DECISIONS</div>
       <table style="width:100%;border-collapse:collapse;"><tr>${kdCells}</tr></table>
 
     </div>
@@ -5059,7 +5059,7 @@ function downloadDocx() {
   // Get the rendered HTML
   const execHTML = container ? container.outerHTML : '<p>No data</p>';
 
-  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780027630 -->
+  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780027920 -->
   <style>
     @page { size: 8.5in 11in; margin: 0.45in 0.45in 0.45in 0.45in; }
     @media print { body { zoom: 1; } }
@@ -5139,8 +5139,8 @@ th:first-child{text-align:left;}
 td{padding:8px 10px;border-bottom:1px solid #1e231e;text-align:right;color:var(--txt2);font-size:11px;}
 td:first-child{text-align:left;color:var(--txt);font-weight:600;}
 tr:hover td{background:rgba(255,255,255,.04);}
-tr.today td{background:rgba(82,176,102,.1)!important;color:#ffffff!important;}
-tr.fire-month td{background:rgba(90,138,204,.15)!important;font-weight:700;color:#ffffff!important;}
+tr.today td{background:rgba(82,176,102,.1)!important;color:var(--txt)!important;}
+tr.fire-month td{background:rgba(90,138,204,.15)!important;font-weight:700;color:var(--txt)!important;}
 tr.off-track td:first-child{color:var(--red);}
 .pos{color:var(--grn)!important;}.neg{color:var(--red)!important;}.amb{color:var(--amb)!important;}
 
@@ -6605,7 +6605,7 @@ function toggleTheme(){
 <div id="fpDepModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;padding:20px">
   <div style="background:#0e110e;border:1px solid #2e352e;max-width:480px;width:100%;border-radius:4px">
     <div style="padding:12px 16px;border-bottom:1px solid #2e352e;display:flex;justify-content:space-between;align-items:center">
-      <span id="fpDepTitle" style="font-size:12px;font-weight:700;color:#eef4ee">Blockers</span>
+      <span id="fpDepTitle" style="font-size:12px;font-weight:700;color:var(--txt)">Blockers</span>
       <span onclick="fpCloseDeps()" style="cursor:pointer;color:#7a967a;font-size:16px">✕</span></div>
     <div id="fpDepBody" style="padding:8px 16px"></div>
     <div style="padding:12px 16px;border-top:1px solid #2e352e;display:flex;gap:8px;justify-content:flex-end">
@@ -6615,25 +6615,25 @@ function toggleTheme(){
 <div id="fpTaskForm" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;padding:20px">
   <div style="background:#0e110e;border:1px solid #2e352e;max-width:440px;width:100%;border-radius:4px">
     <div style="padding:12px 16px;border-bottom:1px solid #2e352e;display:flex;justify-content:space-between;align-items:center">
-      <span id="ftfTitle" style="font-size:13px;font-weight:700;color:#eef4ee">Add Task</span>
+      <span id="ftfTitle" style="font-size:13px;font-weight:700;color:var(--txt)">Add Task</span>
       <span onclick="fpCloseTaskForm()" style="cursor:pointer;color:#7a967a;font-size:16px">✕</span></div>
     <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
       <div><label style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6a886a;display:block;margin-bottom:4px">Title *</label>
-        <input id="ftf_t" type="text" style="width:100%;background:#141714;border:1px solid #2e352e;color:#eef4ee;padding:8px;font-size:13px;box-sizing:border-box"></div>
+        <input id="ftf_t" type="text" style="width:100%;background:#141714;border:1px solid #2e352e;color:var(--txt);padding:8px;font-size:13px;box-sizing:border-box"></div>
       <div><label style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6a886a;display:block;margin-bottom:4px">Detail</label>
-        <textarea id="ftf_d" rows="2" style="width:100%;background:#141714;border:1px solid #2e352e;color:#eef4ee;padding:8px;font-size:12px;box-sizing:border-box;resize:vertical"></textarea></div>
+        <textarea id="ftf_d" rows="2" style="width:100%;background:#141714;border:1px solid #2e352e;color:var(--txt);padding:8px;font-size:12px;box-sizing:border-box;resize:vertical"></textarea></div>
       <div style="display:flex;gap:12px">
         <div style="flex:1"><label style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6a886a;display:block;margin-bottom:4px">Priority</label>
-          <select id="ftf_tag" style="width:100%;background:#141714;border:1px solid #2e352e;color:#eef4ee;padding:8px;font-size:12px;box-sizing:border-box">
+          <select id="ftf_tag" style="width:100%;background:#141714;border:1px solid #2e352e;color:var(--txt);padding:8px;font-size:12px;box-sizing:border-box">
             <option value="critical">Critical</option><option value="asap">ASAP</option><option value="when">When</option><option value="later">Later</option><option value="nice">Nice to Have</option></select></div>
         <div style="flex:1"><label style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6a886a;display:block;margin-bottom:4px">Due Date</label>
-          <input id="ftf_due" type="date" onclick="try{this.showPicker();}catch(e){}" style="width:100%;background:#141714;border:1px solid #2e352e;color:#eef4ee;padding:7px;font-size:12px;box-sizing:border-box;cursor:pointer"></div></div>
+          <input id="ftf_due" type="date" onclick="try{this.showPicker();}catch(e){}" style="width:100%;background:#141714;border:1px solid #2e352e;color:var(--txt);padding:7px;font-size:12px;box-sizing:border-box;cursor:pointer"></div></div>
       <div style="display:flex;gap:12px">
         <div style="flex:1"><label style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6a886a;display:block;margin-bottom:4px">Cost $</label>
-          <input id="ftf_cost" type="number" min="0" step="any" placeholder="optional" style="width:100%;background:#141714;border:1px solid #2e352e;color:#eef4ee;padding:8px;font-size:12px;box-sizing:border-box"></div>
+          <input id="ftf_cost" type="number" min="0" step="any" placeholder="optional" style="width:100%;background:#141714;border:1px solid #2e352e;color:var(--txt);padding:8px;font-size:12px;box-sizing:border-box"></div>
         <div style="flex:1"><label style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6a886a;display:block;margin-bottom:4px">Effort</label>
-          <div style="display:flex;gap:6px"><input id="ftf_eff" type="number" min="0" step="any" placeholder="0" style="flex:1;background:#141714;border:1px solid #2e352e;color:#eef4ee;padding:8px;font-size:12px;box-sizing:border-box;min-width:0">
-          <select id="ftf_effU" style="background:#141714;border:1px solid #2e352e;color:#eef4ee;padding:8px;font-size:12px"><option value="h">h</option><option value="d">d</option></select></div></div></div>
+          <div style="display:flex;gap:6px"><input id="ftf_eff" type="number" min="0" step="any" placeholder="0" style="flex:1;background:#141714;border:1px solid #2e352e;color:var(--txt);padding:8px;font-size:12px;box-sizing:border-box;min-width:0">
+          <select id="ftf_effU" style="background:#141714;border:1px solid #2e352e;color:var(--txt);padding:8px;font-size:12px"><option value="h">h</option><option value="d">d</option></select></div></div></div>
     </div>
     <div style="padding:12px 16px;border-top:1px solid #2e352e;display:flex;gap:8px;justify-content:flex-end">
       <button class="btn" onclick="fpCloseTaskForm()">Cancel</button>

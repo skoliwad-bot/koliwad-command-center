@@ -407,7 +407,7 @@ const FB_KEYS = [
   'kcc_payplans','kcc_recbills','kcc_playbook_checks','kcc_cc_import','kcc_cc_paid','kcc_manbills',
   'kcc_fire_actuals','kcc_inbox','kcc_emails','kcc_calnames',
   'kcc_fp_phases','kcc_portfolio','kcc_tradelogs',
-  'kcc_bills','kcc_firelab_last','kcc_gtc','kcc_tkr','kcc_vb_bills','kcc_fl_actlatest','kcc_fl_actseries','kcc_pfchk','kcc_health','kcc_heloc_checks'
+  'kcc_bills','kcc_firelab_last','kcc_gtc','kcc_tkr','kcc_vb_bills','kcc_fl_actlatest','kcc_fl_actseries','kcc_pfchk','kcc_health','kcc_heloc_checks','kcc_budget'
 ];
 
 async function fbSave(key, value) {
@@ -487,6 +487,7 @@ function fbListen(){
       if(FL_D&&FL_D.imported&&typeof flRender==='function') flRender();
       if(S.page==='fire'&&typeof rFire==='function') rFire();
       if(S.page==='financials'&&typeof rFin==='function') rFin();
+      if(S.page==='budget'&&typeof rBudget==='function') rBudget();
       if(typeof tkUpdateCards==='function') tkUpdateCards();
     },250);
   }, err=>console.warn('Firebase listen error:',err.message));
@@ -589,6 +590,7 @@ localStorage.setItem = function(key, value) {
       <div class="ndiv"></div>
       <span class="nslbl">Money</span>
       <div class="ni"    id="n-financials" onclick="nav('financials')"><span class="ico">💰</span><span class="nlbl">Velocity Banking</span></div>
+      <div class="ni"    id="n-budget"     onclick="nav('budget')">     <span class="ico">📊</span><span class="nlbl">Financials</span></div>
       <div class="ni"    id="n-fire"       onclick="nav('fire')">      <span class="ico">🎯</span><span class="nlbl">FIRE Path</span></div>
       <div class="ni"    id="n-firelab"    onclick="nav('firelab')">   <span class="ico">🔬</span><span class="nlbl">FIRE Lab</span></div>
       <div class="ndiv"></div>
@@ -910,6 +912,27 @@ localStorage.setItem = function(key, value) {
       </div>
 
       <!-- FIRE -->
+      <!-- FINANCIALS (2026 Budget Planner) -->
+      <div class="page" id="p-budget">
+        <div class="ph" style="margin-bottom:16px;">
+          <div>
+            <div class="pt">Financials</div>
+            <div class="ps" id="budget-last-import">2026 Budget — plan vs actuals · import from the main ⬆ importer</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="aibtn" onclick="runAI('budget')">✦ AI Analysis</button>
+          </div>
+        </div>
+        <div class="ai-block" id="ai-budget" style="margin-bottom:16px;">
+          <div class="ai-hdr">
+            <span class="ai-title">✦ AI Budget Analysis</span>
+            <span class="ai-thinking" id="ai-budget-st">Click "AI Analysis" to generate</span>
+          </div>
+          <div class="ai-text loading" id="ai-budget-tx">Claude will analyze your full-year forecast, plan-vs-actual variance, and the largest category swings, then flag what to act on. Stays until you run the next analysis.</div>
+        </div>
+        <div id="budget-content"><div class="empty">Import the 2026 Budget Planner (main ⬆ importer) to populate.</div></div>
+      </div>
+
       <div class="page" id="p-fire">
         <div class="ph"><div><div class="pt">FIRE Path</div><div class="ps">Financial Independence — import in 🔬 FIRE Lab to sync data</div></div>
           <div style="display:flex;gap:6px">
@@ -1840,6 +1863,7 @@ function nav(pg){
   if(pg==='health') rHealth();
   if(pg==='fire') rFire();
   if(pg==='financials') { try { rFin(); } catch(e) { alert('Financials error: '+e.message); console.error('rFin crash:',e); } }
+  if(pg==='budget') { try { rBudget(); } catch(e) { console.error('rBudget crash:',e); } }
   if(pg==='tickets') { try { rTickets(); } catch(e) { console.error('nav rTickets crash:', e.message, e.stack); alert('Tickets error: ' + e.message); } }
   if(pg==='business') rBiz();
   if(pg==='portfolio'){rPortfolio();// init GTC states
@@ -2479,6 +2503,168 @@ function rFin(){
   const obligBody = document.getElementById('obligBody');
   if(obligBody) obligBody.innerHTML = obs.length===0?'<div class="empty">No financial obligations flagged</div>':
     obs.map(o=>'<div class="row"><div style="flex:1"><div class="rtl">'+esc(o.title)+'</div></div><span class="b '+(o.sev==='High'?'bm':'bs')+'">'+o.sev+'</span></div>').join('');
+}
+
+// ══ 2026 BUDGET PLANNER → FINANCIALS PAGE ════════════════════
+function parseBudgetPlanner(wb){
+  const J = sn => wb.Sheets[sn] ? XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1}) : [];
+  const N = v => (typeof v==='number' && isFinite(v)) ? v
+               : (typeof v==='string' && v.trim()!=='' && !isNaN(+v) ? +v : null);
+  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const find = (rows,test) => rows.findIndex(test);
+
+  const dash = J('Dashboard');
+
+  // Full-year blended top line: header row then values row
+  let projIncome=null, projExpenses=null, projNet=null, netVsPlan=null;
+  const hdr = find(dash, r => String(r&&r[0]||'').toUpperCase().includes('PROJECTED INCOME'));
+  if(hdr>=0 && dash[hdr+1]){ const v=dash[hdr+1]; projIncome=N(v[0]); projExpenses=N(v[2]); projNet=N(v[4]); netVsPlan=N(v[6]); }
+
+  // YTD actuals (closed months)
+  const ytdVal = pfx => { const i=find(dash, r=>String(r&&r[0]||'').toLowerCase().startsWith(pfx)); if(i<0) return null; const r=dash[i]; for(let c=r.length-1;c>=1;c--){ const n=N(r[c]); if(n!==null) return n; } return null; };
+  const ytdIncome    = ytdVal('income (ytd');
+  const ytdExpenses  = ytdVal('expenses (ytd');
+  const ytdNet       = ytdVal('net (ytd');
+  const monthsClosed = ytdVal('months marked');
+
+  // Expense groups + monthly Income/Expense/Net (right-side cols of same table)
+  const groups=[], monthly=[];
+  const gHdr = find(dash, r => String(r&&r[0]||'').toUpperCase()==='EXPENSE GROUP');
+  if(gHdr>=0){
+    for(let i=gHdr+1;i<dash.length;i++){
+      const r=dash[i]; if(!r) continue;
+      const name=r[0];
+      if(typeof name==='string' && name.trim() && N(r[1])!==null && !name.toUpperCase().startsWith('TOTAL')){
+        groups.push({name, plan:N(r[1]), proj:N(r[2]), varD:N(r[3]), varP:N(r[4])});
+      }
+      const mo=r[7];
+      if(typeof mo==='string' && MON.includes(mo)) monthly.push({mo, income:N(r[8])||0, expense:N(r[9])||0, net:N(r[10])||0});
+    }
+  }
+
+  // Plan vs Forecast annual lines
+  const pvfRows = J('Plan vs Forecast');
+  const pvfLine = label => { const i=find(pvfRows, r=>String(r&&r[0]||'').trim().toLowerCase()===label && N(r[1])!==null && N(r[2])!==null); if(i<0) return null; const r=pvfRows[i]; return {plan:N(r[1]), fcst:N(r[2]), varD:N(r[3]), varP:N(r[4])}; };
+  const pvf = { income:pvfLine('income'), expenses:pvfLine('expenses'), net:pvfLine('net') };
+
+  // Variance Analysis: favorable / unfavorable totals + largest swings
+  const varRows = J('Variance Analysis');
+  let favorable=null, unfavorable=null, netVar=null;
+  const fHdr = find(varRows, r=>String(r&&r[0]||'').trim().toUpperCase().startsWith('FAVORABLE'));
+  if(fHdr>=0 && varRows[fHdr+1]){ const v=varRows[fHdr+1]; favorable=N(v[0]); unfavorable=N(v[2]); netVar=N(v[4]); }
+  const swings=[];
+  const sHdr = find(varRows, r=>String(r&&r[0]||'').toLowerCase()==='rank');
+  if(sHdr>=0){ for(let i=sHdr+1;i<varRows.length;i++){ const r=varRows[i]; if(!r||N(r[0])===null) break; swings.push({rank:N(r[0]), cat:r[1], group:r[2], plan:N(r[3]), fcst:N(r[4]), varD:N(r[5]), impact:N(r[6]), varP:N(r[7])}); } }
+
+  const data = {
+    importTime:new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
+    projIncome, projExpenses, projNet, netVsPlan,
+    ytdIncome, ytdExpenses, ytdNet, monthsClosed,
+    pvf, groups, monthly, favorable, unfavorable, netVar, swings:swings.slice(0,12)
+  };
+  localStorage.setItem('kcc_budget', JSON.stringify(data));
+  S.budget = data;
+  if(S.page==='budget') rBudget();
+  return data;
+}
+
+function rBudget(){
+  const root = document.getElementById('budget-content');
+  if(!root) return;
+  const raw = localStorage.getItem('kcc_budget');
+  if(!raw){ root.innerHTML='<div class="empty">Import the 2026 Budget Planner (main ⬆ importer) to populate.</div>'; return; }
+  let b; try{ b=JSON.parse(raw); }catch(e){ return; }
+  const lbl = document.getElementById('budget-last-import');
+  if(lbl && b.importTime) lbl.textContent='Last imported: '+b.importTime;
+
+  const $   = n => n!=null ? '$'+Math.round(Math.abs(n)).toLocaleString() : '—';
+  const sg  = n => (n||0)>=0?'+':'-';
+  const colS= n => (n||0)>=0?'var(--grn)':'var(--red)';
+  const pct = n => n!=null ? ((n>=0?'+':'')+(n*100).toFixed(1)+'%') : '—';
+  const card=(label,val,sub,color)=>`<div style="border:1px solid var(--brd);background:var(--surf);padding:14px 16px;"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">${label}</span><span style="font-size:23px;font-weight:700;color:${color||'var(--txt)'};display:block;margin-top:6px">${val}</span>${sub?`<span style="font-size:9px;color:var(--mut)">${sub}</span>`:''}</div>`;
+
+  // Row 1 — full-year blended
+  const row1 = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px;">
+    ${card('Projected Income',$(b.projIncome),'full-year, blended','var(--grn)')}
+    ${card('Projected Expenses',$(b.projExpenses),'full-year, blended','var(--red)')}
+    ${card('Projected Net',sg(b.projNet)+$(b.projNet),'income − expenses',colS(b.projNet))}
+    ${card('Net vs Plan',sg(b.netVsPlan)+$(b.netVsPlan),'favorable if positive',colS(b.netVsPlan))}
+  </div>`;
+
+  // Row 2 — YTD actuals
+  const row2 = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;">
+    ${card('Income (YTD actual)',$(b.ytdIncome),(b.monthsClosed!=null?b.monthsClosed+' closed months':''),'var(--grn)')}
+    ${card('Expenses (YTD actual)',$(b.ytdExpenses),'closed months only','var(--red)')}
+    ${card('Net (YTD actual)',sg(b.ytdNet)+$(b.ytdNet),'closed months only',colS(b.ytdNet))}
+    ${card('Months Closed',(b.monthsClosed!=null?b.monthsClosed:'—'),'marked Actual','var(--txt)')}
+  </div>`;
+
+  // Plan vs Forecast table (favorable: income/net +, expenses −)
+  const pvfRow=(name,o,goodWhenPositive)=>{ if(!o) return ''; const good = goodWhenPositive ? (o.varD>=0) : (o.varD<=0); const vc = good?'var(--grn)':'var(--red)';
+    return `<tr><td style="padding:7px 12px;border-top:1px solid var(--brd);font-weight:600">${name}</td>
+      <td style="padding:7px 12px;border-top:1px solid var(--brd);text-align:right;color:var(--mut2)">${$(o.plan)}</td>
+      <td style="padding:7px 12px;border-top:1px solid var(--brd);text-align:right;font-weight:700">${$(o.fcst)}</td>
+      <td style="padding:7px 12px;border-top:1px solid var(--brd);text-align:right;color:${vc}">${sg(o.varD)}${$(o.varD)}</td>
+      <td style="padding:7px 12px;border-top:1px solid var(--brd);text-align:right;color:${vc}">${pct(o.varP)}</td></tr>`; };
+  const pvf = `<div style="border:1px solid var(--brd);background:var(--surf);margin-bottom:16px;">
+    <div style="padding:9px 16px;border-bottom:1px solid var(--brd);background:#0f110f;"><span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--blu);">📊 Plan vs Forecast (annual)</span></div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <thead><tr style="color:var(--mut);font-size:8px;letter-spacing:1px;text-transform:uppercase;">
+        <th style="padding:7px 12px;text-align:left"></th><th style="padding:7px 12px;text-align:right">Plan</th><th style="padding:7px 12px;text-align:right">Forecast</th><th style="padding:7px 12px;text-align:right">Variance $</th><th style="padding:7px 12px;text-align:right">Var %</th></tr></thead>
+      <tbody>${pvfRow('Income',b.pvf&&b.pvf.income,true)}${pvfRow('Expenses',b.pvf&&b.pvf.expenses,false)}${pvfRow('Net',b.pvf&&b.pvf.net,true)}</tbody>
+    </table></div>`;
+
+  // Monthly net mini-bars
+  let bars='';
+  if(b.monthly && b.monthly.length){
+    const mx = Math.max(1, ...b.monthly.map(m=>Math.abs(m.net||0)));
+    bars = `<div style="border:1px solid var(--brd);background:var(--surf);margin-bottom:16px;padding:12px 16px;">
+      <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);display:block;margin-bottom:10px;">Monthly Net (forecast)</span>
+      <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px;align-items:end;height:84px;">
+        ${b.monthly.map(m=>{const h=Math.max(3,Math.round(Math.abs(m.net||0)/mx*64));const c=(m.net||0)>=0?'var(--grn)':'var(--red)';return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;"><div title="${m.mo}: ${sg(m.net)}${$(m.net)}" style="width:100%;height:${h}px;background:${c};opacity:.85;"></div></div>`;}).join('')}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px;margin-top:5px;">${b.monthly.map(m=>`<span style="font-size:8px;color:var(--mut2);text-align:center">${m.mo[0]}</span>`).join('')}</div>
+    </div>`;
+  }
+
+  // Largest swings vs plan
+  let swings='';
+  if(b.swings && b.swings.length){
+    const rows = b.swings.map(s=>{ const ic = (s.impact||0)>=0?'var(--grn)':'var(--red)';
+      return `<tr><td style="padding:6px 12px;border-top:1px solid var(--brd);"><span style="font-weight:600">${esc(String(s.cat||''))}</span> <span style="color:var(--mut2);font-size:10px">${esc(String(s.group||''))}</span></td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right;color:var(--mut2)">${$(s.plan)}</td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right">${$(s.fcst)}</td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right;color:${colS(s.varD)}">${sg(s.varD)}${$(s.varD)}</td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right;color:${ic};font-weight:700">${(s.impact||0)>=0?'▲ favorable':'▼ unfavorable'}</td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right;color:var(--mut2)">${pct(s.varP)}</td></tr>`; }).join('');
+    swings = `<div style="border:1px solid var(--brd);background:var(--surf);margin-bottom:16px;">
+      <div style="padding:9px 16px;border-bottom:1px solid var(--brd);background:#0f110f;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--amb);">⚖ Largest Swings vs Plan</span>
+        <span style="font-size:10px;color:var(--mut)">Favorable ${$(b.favorable)} · Unfavorable ${$(b.unfavorable)} · Net ${sg(b.netVar)}${$(b.netVar)}</span></div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="color:var(--mut);font-size:8px;letter-spacing:1px;text-transform:uppercase;">
+          <th style="padding:7px 12px;text-align:left">Category</th><th style="padding:7px 12px;text-align:right">Plan</th><th style="padding:7px 12px;text-align:right">Forecast</th><th style="padding:7px 12px;text-align:right">Var $</th><th style="padding:7px 12px;text-align:right">Impact</th><th style="padding:7px 12px;text-align:right">Var %</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>`;
+  }
+
+  // Expense groups
+  let groups='';
+  if(b.groups && b.groups.length){
+    const rows = b.groups.map(g=>{ const vc=(g.varD||0)<=0?'var(--grn)':'var(--red)';
+      return `<tr><td style="padding:6px 12px;border-top:1px solid var(--brd);font-weight:600">${esc(String(g.name||''))}</td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right;color:var(--mut2)">${$(g.plan)}</td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right">${$(g.proj)}</td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right;color:${vc}">${sg(g.varD)}${$(g.varD)}</td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right;color:${vc}">${pct(g.varP)}</td></tr>`; }).join('');
+    groups = `<div style="border:1px solid var(--brd);background:var(--surf);">
+      <div style="padding:9px 16px;border-bottom:1px solid var(--brd);background:#0f110f;"><span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);">📂 Expense Groups — Plan vs Projected</span></div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="color:var(--mut);font-size:8px;letter-spacing:1px;text-transform:uppercase;">
+          <th style="padding:7px 12px;text-align:left">Group</th><th style="padding:7px 12px;text-align:right">Annual Plan</th><th style="padding:7px 12px;text-align:right">Projected</th><th style="padding:7px 12px;text-align:right">Var $</th><th style="padding:7px 12px;text-align:right">Var %</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>`;
+  }
+
+  root.innerHTML = row1 + row2 + pvf + bars + swings + groups;
 }
 
 function rFire(){
@@ -5002,10 +5188,14 @@ async function importAllExcel(evt) {
           if(S.page==='fire') rFire();
           status.push('🔥 ' + file.name + ' → FIRE Lab ✓');
         }
+      } else if(sheets.includes('Annual View') || sheets.includes('Plan vs Forecast') || sheets.includes('Variance Analysis')) {
+        // 2026 Budget Planner → Financials page
+        try { parseBudgetPlanner(wb); status.push('📊 ' + file.name + ' → Financials ✓'); }
+        catch(e){ status.push('❌ ' + file.name + ' budget parse: ' + e.message); console.error(e); }
       } else if(sheets.includes('Dashboard') || sheets.includes('Monthly Budget') || sheets.includes('Citi Pending')) {
         // VB Dashboard
         importVBExcel({target:{files:[file], value:''}});
-        status.push('💰 ' + file.name + ' → Financials');
+        status.push('💰 ' + file.name + ' → Velocity Banking');
       } else {
         status.push('❓ ' + file.name + ' → unrecognized (skipped)');
       }
@@ -5114,6 +5304,17 @@ Give a 5-point cash distribution plan for the WF Checking balance:
 BALANCES: ${finSum}
 FIRE GAP: ${fire?'$'+Math.abs(Math.round(fire.inc-trueNeed))+'/mo '+(fire.inc>=trueNeed?'surplus':'deficit'):'Unknown'}
 Recommend this week's money moves in 4-5 sentences. Exact amounts, sequencing, what to sweep, what to hold.`,
+
+    budget: (()=>{ let b=null; try{ b=JSON.parse(localStorage.getItem('kcc_budget')||'null'); }catch(e){}
+      if(!b) return 'No 2026 Budget Planner imported yet. Tell the user to import it from the main importer.';
+      const sw = (b.swings||[]).slice(0,8).map(s=>`- ${s.cat} (${s.group}): plan $${Math.round(s.plan||0)} → fcst $${Math.round(s.fcst||0)}, ${(s.impact||0)>=0?'favorable':'unfavorable'} $${Math.abs(Math.round(s.impact||0))}`).join('\n');
+      return `You are the household budget analyst for Sonny Koliwad — 2026 annual budget (blended actuals + plan).
+FULL-YEAR FORECAST: Income $${Math.round(b.projIncome||0)}, Expenses $${Math.round(b.projExpenses||0)}, Net $${Math.round(b.projNet||0)}, Net vs Plan $${Math.round(b.netVsPlan||0)} (favorable if positive).
+YTD ACTUAL (${b.monthsClosed||0} closed months): Income $${Math.round(b.ytdIncome||0)}, Expenses $${Math.round(b.ytdExpenses||0)}, Net $${Math.round(b.ytdNet||0)}.
+PLAN vs FORECAST: Expenses plan $${Math.round(b.pvf&&b.pvf.expenses?b.pvf.expenses.plan:0)} → forecast $${Math.round(b.pvf&&b.pvf.expenses?b.pvf.expenses.fcst:0)}.
+LARGEST SWINGS vs PLAN:
+${sw}
+In 5-6 sentences: assess whether the year is trending favorable or unfavorable vs plan, name the 2-3 categories doing the most damage and the biggest wins, and give 2 specific actions to close the gap. Be concrete with dollar amounts.`; })(),
 
     exec: `You are writing the monthly executive summary for Sonny Koliwad — ${month}.
 FIRE: ${fireSum}

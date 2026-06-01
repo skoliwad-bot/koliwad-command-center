@@ -4206,14 +4206,25 @@ function importVBExcel(evt) {
       }
 
       // ── READ Monthly Budget sheet ──
+      // Used range starts at col B (!ref "B1:D40"), so each data row is [label, value, desc].
+      // Read offset-proof: label = first non-formula text cell, value = first finite number.
       const mb = wb.Sheets['Monthly Budget'];
       const mbv = {};
+      let mbIncomeLive = null;
       if(mb) {
         const rows = XLSX.utils.sheet_to_json(mb, {header:1});
-        rows.forEach(r => {
-          if(typeof r[1]==='string' && r[1].trim() && typeof r[2]==='number')
-            mbv[r[1].trim()] = r[2];
-        });
+        const rLabel = r => { for(const c of r){ if(typeof c==='string' && c.trim() && c.trim().charAt(0)!=='=') return c.trim(); } return ''; };
+        const rNum   = r => { for(const c of r){ if(typeof c==='number' && isFinite(c)) return c; } return null; };
+        rows.forEach(r => { const l=rLabel(r), v=rNum(r); if(l && v!==null && mbv[l]===undefined) mbv[l]=v; });
+        // Recompute income live by summing the input line items between the INCOME header
+        // and the TOTAL row. Stays correct even if the TOTAL formula wasn't recalculated
+        // before the workbook was saved (e.g. edited via a tool that doesn't recalc).
+        const hdr = rows.findIndex(r => /income/i.test(rLabel(r)) && rNum(r)===null);
+        const tot = rows.findIndex(r => rLabel(r).toUpperCase()==='TOTAL MONTHLY INCOME');
+        if(hdr>=0 && tot>hdr){
+          let s=0; for(let i=hdr+1;i<tot;i++){ const v=rNum(rows[i]); if(v!==null) s+=v; }
+          mbIncomeLive = s;
+        }
       }
 
       // Helper: get value from App_Data first, fallback to Dashboard/MB
@@ -4241,16 +4252,19 @@ function importVBExcel(evt) {
       const totalSweep = get('total_sweep',   dv['TOTAL SWEEP TO HELOC AVAILABLE'] || 0);
 
       // ── MONTHLY BUDGET ──
-      const income     = get('monthly_income',  mbv['TOTAL MONTHLY INCOME']  || 0);
-      const spend      = get('base_spend',       mbv['Base monthly spend']    || 22000);
-      const vmort      = get('vineta_mort',      mbv['Vineta mortgage']       || 7900);
-      const pmort      = get('paulette_mort',    mbv['Paulette mortgage']     || 3477);
-      const totalExp   = get('total_expenses',   0);
-      const cashFlow   = get('cash_flow',        income - totalExp);
-      const helocInt   = trueHeloc * 0.065 / 12;
-      const hfBal      = get('hf_balance',       mbv['HF Balance ($)']        || 0);
-      const tiaaBal    = get('tiaa_balance',      mbv['TIAA Balance ($)']      || 0);
-      const firePct    = get('fire_pct',          mbv['FIRE % (from FIRE Lab)']|| 0);
+      // Prefer LIVE Monthly Budget input cells over App_Data: App_Data mirrors them via
+      // formulas that go stale if the workbook is saved without recalculation, so the
+      // raw input cells are the real source of truth.
+      const income   = mbIncomeLive!=null ? mbIncomeLive : get('monthly_income', 0);
+      const spend    = mbv['Base monthly spend'] != null ? mbv['Base monthly spend'] : get('base_spend', 22000);
+      const vmort    = mbv['Vineta mortgage']    != null ? mbv['Vineta mortgage']    : get('vineta_mort', 7900);
+      const pmort    = mbv['Paulette mortgage']  != null ? mbv['Paulette mortgage']  : get('paulette_mort', 3477);
+      const helocInt = trueHeloc * 0.065 / 12;
+      const totalExp = spend + vmort + pmort + helocInt;
+      const cashFlow = income - totalExp;
+      const hfBal    = mbv['HF Balance ($)']         != null ? mbv['HF Balance ($)']          : get('hf_balance', 0);
+      const tiaaBal  = mbv['TIAA Balance ($)']       != null ? mbv['TIAA Balance ($)']        : get('tiaa_balance', 0);
+      const firePct  = mbv['FIRE % (from FIRE Lab)'] != null ? mbv['FIRE % (from FIRE Lab)']  : get('fire_pct', 0);
 
       // ── UPDATE HERO CARDS ──
       const setEl = (id, val, color) => {

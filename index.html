@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><!-- v1780327768 -->
+<meta charset="UTF-8"><!-- v1780328030 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -494,6 +494,15 @@ function fbListen(){
 
 async function fbSaveAll() {
   if(!DOC) return;
+  // Ensure _inboxAlert has live count before saving to Firebase
+  if(S.inboxCount>0){
+    const alerts=JSON.parse(localStorage.getItem('kcc_alerts')||'[]');
+    const patched=alerts.map(a=>a._inboxAlert?{...a,title:'Inbox at '+S.inboxCount+' total emails — needs triage'}:a);
+    if(JSON.stringify(patched)!==JSON.stringify(alerts)){
+      localStorage.setItem('kcc_alerts',JSON.stringify(patched));
+      S.alerts=patched;
+    }
+  }
   try {
     const payload = {};
     FB_KEYS.forEach(k => {
@@ -5357,7 +5366,7 @@ function downloadDocx() {
   // Get the rendered HTML
   const execHTML = container ? container.outerHTML : '<p>No data</p>';
 
-  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780327768 -->
+  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780328030 -->
   <style>
     @page { size: 8.5in 11in; margin: 0.45in 0.45in 0.45in 0.45in; }
     @media print { body { zoom: 1; } }
@@ -5509,6 +5518,10 @@ function autoAlerts() {
   const fire  = S.fire;
   const fins  = S.fins;
   const tasks = S.tasks||[];
+  // Always patch _inboxAlert with live count before processing
+  if(S.inboxCount>0){
+    S.alerts=(S.alerts||[]).map(a=>a._inboxAlert?{...a,title:'Inbox at '+S.inboxCount+' total emails — needs triage'}:a);
+  }
   const existing = S.alerts||[];
 
   // Helper: add alert if not already present (match by _autoKey)

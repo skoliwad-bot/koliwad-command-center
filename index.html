@@ -588,7 +588,7 @@ localStorage.setItem = function(key, value) {
       <div class="ni"    id="n-calendar" onclick="nav('calendar')"><span class="ico">📅</span><span class="nlbl">Calendar</span></div>
       <div class="ndiv"></div>
       <span class="nslbl">Money</span>
-      <div class="ni"    id="n-financials" onclick="nav('financials')"><span class="ico">💰</span><span class="nlbl">Financials</span></div>
+      <div class="ni"    id="n-financials" onclick="nav('financials')"><span class="ico">💰</span><span class="nlbl">Velocity Banking</span></div>
       <div class="ni"    id="n-fire"       onclick="nav('fire')">      <span class="ico">🎯</span><span class="nlbl">FIRE Path</span></div>
       <div class="ni"    id="n-firelab"    onclick="nav('firelab')">   <span class="ico">🔬</span><span class="nlbl">FIRE Lab</span></div>
       <div class="ndiv"></div>
@@ -739,8 +739,8 @@ localStorage.setItem = function(key, value) {
         <div style="padding:0 0 22px 0;">
           <div class="ph" style="margin-bottom:16px;">
             <div>
-              <div class="pt">Financials</div>
-              <div class="ps" id="vb-last-import">Velocity Banking · Import spreadsheet to populate</div>
+              <div class="pt">Velocity Banking</div>
+              <div class="ps" id="vb-last-import">Citi · Savings · HELOC sweeps · Bills · Cards — import spreadsheet to populate</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;">
               <button class="aibtn" onclick="runAI('financials')">✦ AI Money Move</button>
@@ -838,13 +838,7 @@ localStorage.setItem = function(key, value) {
               </div>
             </div>
 
-            <!-- MONTHLY BUDGET SUMMARY -->
-            <div style="border:1px solid var(--brd);background:var(--surf);">
-              <div style="padding:9px 16px;border-bottom:1px solid var(--brd);background:#0f110f;">
-                <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--blu);">📊 Monthly Budget Summary</span>
-              </div>
-              <div id="budget-summary"><div class="empty">Import spreadsheet to see budget summary</div></div>
-            </div>
+            <!-- Monthly Budget Summary removed — actuals are tracked in the FIRE Lab; this page is velocity banking only -->
 
           </div>
           <!-- MANUAL BILLS & PAYMENTS -->
@@ -2468,26 +2462,7 @@ function rFin(){
     </div>`).join('');
   }
 
-  // Budget summary
-  if(f.income || f.spend) {
-    const bsEl = document.getElementById('budget-summary');
-    const _exp = (f.spend||0)+(f.vmort||0)+(f.pmort||0)+(f.helocInt||0);
-    const _cf  = (f.cf!=null) ? f.cf : ((f.income||0) - _exp);
-    if(bsEl) bsEl.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-bottom:1px solid var(--brd)">
-        <div style="padding:14px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Total Income</span><span style="font-size:24px;font-weight:700;color:var(--grn);display:block;margin-top:6px">${f$(f.income)}</span></div>
-        <div style="padding:14px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Total Fixed Expenses</span><span style="font-size:24px;font-weight:700;color:var(--red);display:block;margin-top:6px">${f$(_exp)}</span><span style="font-size:9px;color:var(--mut)">spend + vmort + pmort + HELOC int</span></div>
-        <div style="padding:14px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Cash Flow</span><span style="font-size:24px;font-weight:700;color:${_cf>=0?'var(--grn)':'var(--red)'};display:block;margin-top:6px">${_cf>=0?'+':'-'}${f$(_cf)}</span></div>
-        <div style="padding:14px 16px"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">HELOC Interest / Mo</span><span style="font-size:24px;font-weight:700;display:block;margin-top:6px">${f$(f.helocInt)}</span><span style="font-size:9px;color:var(--mut)">6.5% on ${f$(f.heloc)}</span></div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--brd)">
-        <div style="padding:10px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;text-transform:uppercase;color:var(--mut);display:block">Base Spend</span><span style="font-size:16px;font-weight:700;display:block;margin-top:4px">${f$(f.spend)}</span></div>
-        <div style="padding:10px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;text-transform:uppercase;color:var(--mut);display:block">Vineta Mort</span><span style="font-size:16px;font-weight:700;display:block;margin-top:4px">${f$(f.vmort)}</span></div>
-        <div style="padding:10px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;text-transform:uppercase;color:var(--mut);display:block">Paulette Mort</span><span style="font-size:16px;font-weight:700;display:block;margin-top:4px">${f$(f.pmort)}</span></div>
-        <div style="padding:10px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;text-transform:uppercase;color:var(--mut);display:block">HF Balance</span><span style="font-size:16px;font-weight:700;display:block;margin-top:4px">${f$(f.hf)}</span></div>
-        <div style="padding:10px 16px"><span style="font-size:8px;text-transform:uppercase;color:var(--mut);display:block">FIRE %</span><span style="font-size:16px;font-weight:700;display:block;margin-top:4px">${f.firePct||'—'}${f.firePct?'%':''}</span></div>
-      </div>`;
-  }
+  // Budget summary panel removed (actuals live in FIRE Lab; this page is velocity banking only)
 
   // Velocity banking action recommendation
   if(f.heloc && f.citi) {

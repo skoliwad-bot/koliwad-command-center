@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><!-- v1780325375 -->
+<meta charset="UTF-8"><!-- v1780327768 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -476,6 +476,12 @@ function fbListen(){
     }catch(e){}
     clearTimeout(_fbApplyTimer);
     _fbApplyTimer=setTimeout(()=>{
+      S.inboxCount=parseInt(localStorage.getItem('kcc_inbox')||'0')||0;
+      if(S.inboxCount>0){
+        let p=false;
+        S.alerts=(S.alerts||[]).map(a=>{if(a._inboxAlert){p=true;return{...a,title:'Inbox at '+S.inboxCount+' total emails — needs triage'};}return a;});
+        if(p) localStorage.setItem('kcc_alerts',JSON.stringify(S.alerts));
+      }
       if(typeof renderAll==='function') renderAll();
       if(typeof autoAlerts==='function') autoAlerts();
       if(FL_D&&FL_D.imported&&typeof flRender==='function') flRender();
@@ -1733,6 +1739,7 @@ function launch(){
   S.fchk     = JSON.parse(localStorage.getItem('kcc_fchk')||'{}');
   S.cal      = JSON.parse(localStorage.getItem('kcc_cal')||'[]');
   S.health   = JSON.parse(localStorage.getItem('kcc_health')||'null');
+  S.inboxCount = parseInt(localStorage.getItem('kcc_inbox')||'0')||0;
   renderAll();
   loadGSI();
   // Restore FIRE Lab data from localStorage
@@ -1767,6 +1774,16 @@ function launch(){
         S.portfolio = JSON.parse(localStorage.getItem('kcc_portfolio')||'null');
         S.tradelogs = JSON.parse(localStorage.getItem('kcc_tradelogs')||'[]');
         S.gtc = JSON.parse(localStorage.getItem('kcc_gtc')||'{}');
+        S.inboxCount = parseInt(localStorage.getItem('kcc_inbox')||'0')||0;
+        // Patch stale _inboxAlert title in memory + storage so Firebase never re-applies the old count
+        if(S.inboxCount>0){
+          let patched=false;
+          S.alerts=(S.alerts||[]).map(a=>{
+            if(a._inboxAlert){patched=true;return {...a,title:'Inbox at '+S.inboxCount+' total emails — needs triage'};}
+            return a;
+          });
+          if(patched){ localStorage.setItem('kcc_alerts',JSON.stringify(S.alerts)); }
+        }
         renderAll();
         autoAlerts();
         if(S.page==='fire'){ if(typeof rFire==='function') rFire(); }
@@ -5340,7 +5357,7 @@ function downloadDocx() {
   // Get the rendered HTML
   const execHTML = container ? container.outerHTML : '<p>No data</p>';
 
-  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780325375 -->
+  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780327768 -->
   <style>
     @page { size: 8.5in 11in; margin: 0.45in 0.45in 0.45in 0.45in; }
     @media print { body { zoom: 1; } }

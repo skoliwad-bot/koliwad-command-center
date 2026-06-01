@@ -5331,8 +5331,14 @@ function buildPrompt(section) {
   const tzSum    = tz ? `Revenue: $${tz.rev||0}/mo, Members: ${tz.mem||0}, Capacity: ${tz.cap||0}%` : 'Not yet launched';
   const doneCount = Object.values(fchk).filter(Boolean).length;
   const totalFP   = FP.reduce((s,p)=>s+p.tasks.length,0);
-  const dang = tkcards ? tkcards.dang||0 : 0;
-  const totalCC = tkcards ? (tkcards.c1b||0)+(tkcards.c2b||0)+(tkcards.c3b||0)+(tkcards.c4b||0) : 0;
+  // Randy Dang + CC total: prefer the IMPORTED data (kcc_cc_import) — the same source the
+  // Tickets card renders from — so the AI never sees a stale manual figure. The manual
+  // kcc_tk_cards key is fallback only (used before any Excel import has run).
+  const ccImp = JSON.parse(localStorage.getItem('kcc_cc_import')||'null');
+  const dang = ccImp && ccImp.dangOwed!=null ? ccImp.dangOwed
+             : (tkcards ? tkcards.dang||0 : 0);
+  const totalCC = ccImp && ccImp.cards && ccImp.cards.length ? ccImp.cards.reduce((s,c)=>s+(c.bal||0),0)
+                : (tkcards ? (tkcards.c1b||0)+(tkcards.c2b||0)+(tkcards.c3b||0)+(tkcards.c4b||0) : 0);
 
   const prompts = {
     today: `You are the AI advisor for Sonny Koliwad. Today is ${DAYS[now.getDay()]}, ${MONS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}.

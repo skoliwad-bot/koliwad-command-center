@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><!-- v1780116339 -->
+<meta charset="UTF-8"><!-- v1780324974 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -407,7 +407,7 @@ const FB_KEYS = [
   'kcc_payplans','kcc_recbills','kcc_playbook_checks','kcc_cc_import','kcc_cc_paid','kcc_manbills',
   'kcc_fire_actuals','kcc_inbox','kcc_emails','kcc_calnames',
   'kcc_fp_phases','kcc_portfolio','kcc_tradelogs',
-  'kcc_bills','kcc_firelab_last','kcc_gtc','kcc_tkr','kcc_vb_bills','kcc_fl_actlatest','kcc_fl_actseries','kcc_pfchk','kcc_health'
+  'kcc_bills','kcc_firelab_last','kcc_gtc','kcc_tkr','kcc_vb_bills','kcc_fl_actlatest','kcc_fl_actseries','kcc_pfchk','kcc_health','kcc_heloc_checks'
 ];
 
 async function fbSave(key, value) {
@@ -789,6 +789,7 @@ localStorage.setItem = function(key, value) {
                 <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--red);display:block;">True HELOC Balance</span>
                 <span id="fa-heloc" style="font-size:22px;font-weight:700;color:var(--red);display:block;margin-top:6px;">—</span>
                 <span id="fa-heloc-avail" style="font-size:9px;color:var(--mut)">available: —</span>
+                <span id="fa-heloc-checks" style="display:none;font-size:9px;color:var(--red)"></span>
               </div>
               <div style="border:1px solid var(--brd);background:var(--surf);padding:14px 16px;">
                 <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);display:block;">Knight Balance</span>
@@ -797,8 +798,8 @@ localStorage.setItem = function(key, value) {
               </div>
             </div>
 
-            <!-- PENDING + BILLS -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+            <!-- PENDING + BILLS + HELOC CHECKS -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;">
               <div style="border:1px solid var(--brd);background:var(--surf);">
                 <div style="padding:9px 16px;border-bottom:1px solid var(--brd);background:#0f110f;display:flex;align-items:center;justify-content:space-between;">
                   <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--amb);">⏳ Citi Pending Outflows</span>
@@ -812,6 +813,13 @@ localStorage.setItem = function(key, value) {
                   <span id="bills-total" style="font-size:11px;font-weight:700;color:var(--red);">—</span>
                 </div>
                 <div id="bills-list"><div class="empty">Import spreadsheet to see bills</div></div>
+              </div>
+              <div style="border:1px solid rgba(208,64,64,0.4);background:rgba(208,64,64,0.04);">
+                <div style="padding:9px 16px;border-bottom:1px solid rgba(208,64,64,0.3);background:#110d0d;display:flex;align-items:center;justify-content:space-between;">
+                  <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);">🏦 HELOC Checks Out</span>
+                  <span id="heloc-checks-total" style="font-size:11px;font-weight:700;color:var(--red);">—</span>
+                </div>
+                <div id="heloc-checks-list"><div class="empty">Import spreadsheet to see outstanding checks</div></div>
               </div>
             </div>
 
@@ -4286,6 +4294,31 @@ function importVBExcel(evt) {
         }
       }
 
+      // ── HELOC CHECKS ──
+      const hc = wb.Sheets['HELOC Checks'];
+      if(hc) {
+        const hcRows = XLSX.utils.sheet_to_json(hc,{header:1,cellDates:true}).slice(6)
+          .filter(r=>r[4]&&r[5]!=='Y');
+        const hcItems = hcRows.map(r=>({
+          date: r[0] instanceof Date ? r[0].toLocaleDateString('en-US',{month:'short',day:'numeric'}) : (r[0]||''),
+          payee: r[2]||'', desc: r[3]||'', amount: parseFloat(r[4])||0
+        }));
+        const hcTotal=hcItems.reduce((s,i)=>s+i.amount,0);
+        const hcEl=document.getElementById('heloc-checks-list');
+        if(hcEl) hcEl.innerHTML=!hcItems.length
+          ? '<div class="empty" style="color:var(--grn)">✓ No outstanding checks</div>'
+          : hcItems.map(i=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--brd2)">
+              <span style="flex:1;font-size:12px;color:var(--txt)">${esc(i.payee)}${i.desc?' · <span style=\"color:var(--mut);font-size:10px\">${esc(i.desc)}</span>':''}</span>
+              <span style="font-size:9px;color:var(--mut)">${i.date}</span>
+              <span style="font-size:13px;font-weight:700;color:var(--red)">$${Number(i.amount).toLocaleString()}</span>
+            </div>`).join('');
+        const hcTotEl=document.getElementById('heloc-checks-total');
+        if(hcTotEl) hcTotEl.textContent=hcTotal>0?'-$'+Math.round(hcTotal).toLocaleString():'$0';
+        const hcBadge=document.getElementById('fa-heloc-checks');
+        if(hcBadge){ if(hcTotal>0){hcBadge.textContent='$'+Math.round(hcTotal).toLocaleString()+' in outstanding checks';hcBadge.style.display='block';}else hcBadge.style.display='none'; }
+        localStorage.setItem('kcc_heloc_checks', JSON.stringify(hcItems));
+      }
+
       // ── BUDGET SUMMARY ──
       if(income > 0 || spend > 0) {
         const cf = cashFlow || (income - (spend+vmort+pmort+helocInt));
@@ -5307,7 +5340,7 @@ function downloadDocx() {
   // Get the rendered HTML
   const execHTML = container ? container.outerHTML : '<p>No data</p>';
 
-  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780116339 -->
+  const docContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><!-- v1780324974 -->
   <style>
     @page { size: 8.5in 11in; margin: 0.45in 0.45in 0.45in 0.45in; }
     @media print { body { zoom: 1; } }

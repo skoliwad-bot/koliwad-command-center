@@ -2471,12 +2471,14 @@ function rFin(){
   // Budget summary
   if(f.income || f.spend) {
     const bsEl = document.getElementById('budget-summary');
+    const _exp = (f.spend||0)+(f.vmort||0)+(f.pmort||0)+(f.helocInt||0);
+    const _cf  = (f.cf!=null) ? f.cf : ((f.income||0) - _exp);
     if(bsEl) bsEl.innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-bottom:1px solid var(--brd)">
         <div style="padding:14px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Total Income</span><span style="font-size:24px;font-weight:700;color:var(--grn);display:block;margin-top:6px">${f$(f.income)}</span></div>
-        <div style="padding:14px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Total Fixed Expenses</span><span style="font-size:24px;font-weight:700;color:var(--red);display:block;margin-top:6px">${f$(f.totalExp)}</span><span style="font-size:9px;color:var(--mut)">spend + vmort + pmort + HELOC int</span></div>
-        <div style="padding:14px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Cash Flow</span><span style="font-size:24px;font-weight:700;color:var(--red);display:block;margin-top:6px">${f$(f.cf)}</span></div>
-        <div style="padding:14px 16px"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">HELOC Interest / Mo</span><span style="font-size:24px;font-weight:700;display:block;margin-top:6px">${f$(f.helocInt)}</span><span style="font-size:9px;color:var(--mut)">${((f.heloc||0)*0.065/12/1000).toFixed(1)}% on ${f$(f.heloc)}</span></div>
+        <div style="padding:14px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Total Fixed Expenses</span><span style="font-size:24px;font-weight:700;color:var(--red);display:block;margin-top:6px">${f$(_exp)}</span><span style="font-size:9px;color:var(--mut)">spend + vmort + pmort + HELOC int</span></div>
+        <div style="padding:14px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Cash Flow</span><span style="font-size:24px;font-weight:700;color:${_cf>=0?'var(--grn)':'var(--red)'};display:block;margin-top:6px">${_cf>=0?'+':'-'}${f$(_cf)}</span></div>
+        <div style="padding:14px 16px"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">HELOC Interest / Mo</span><span style="font-size:24px;font-weight:700;display:block;margin-top:6px">${f$(f.helocInt)}</span><span style="font-size:9px;color:var(--mut)">6.5% on ${f$(f.heloc)}</span></div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--brd)">
         <div style="padding:10px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;text-transform:uppercase;color:var(--mut);display:block">Base Spend</span><span style="font-size:16px;font-weight:700;display:block;margin-top:4px">${f$(f.spend)}</span></div>
@@ -4215,8 +4217,12 @@ function importVBExcel(evt) {
       }
 
       // Helper: get value from App_Data first, fallback to Dashboard/MB
+      // Reject uncalculated formula strings (e.g. "='Monthly Budget'!C15" from a
+      // workbook saved without recalc) and NaN, so we fall through to the live sheet.
       const get = (adKey, fallback) => {
-        const v = av[adKey];
+        let v = av[adKey];
+        if(typeof v === 'string' && v.trim().charAt(0) === '=') v = undefined;
+        if(typeof v === 'number' && isNaN(v)) v = undefined;
         return (v !== undefined && v !== null && v !== '') ? v : fallback;
       };
 
@@ -4345,38 +4351,7 @@ function importVBExcel(evt) {
         localStorage.setItem('kcc_heloc_checks', JSON.stringify(hcItems));
       }
 
-      // ── BUDGET SUMMARY ──
-      if(income > 0 || spend > 0) {
-        const cf = cashFlow || (income - (spend+vmort+pmort+helocInt));
-        document.getElementById('budget-summary').innerHTML = `
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-bottom:1px solid var(--brd)">
-            <div style="padding:14px 16px;border-right:1px solid var(--brd)">
-              <span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Total Income</span>
-              <span style="font-size:24px;font-weight:700;color:var(--grn);display:block;margin-top:6px">${f$(income)}</span>
-            </div>
-            <div style="padding:14px 16px;border-right:1px solid var(--brd)">
-              <span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Total Fixed Expenses</span>
-              <span style="font-size:24px;font-weight:700;color:var(--red);display:block;margin-top:6px">${f$(spend+vmort+pmort+helocInt)}</span>
-              <span style="font-size:9px;color:var(--mut)">spend + vmort + pmort + HELOC int</span>
-            </div>
-            <div style="padding:14px 16px;border-right:1px solid var(--brd)">
-              <span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Cash Flow</span>
-              <span style="font-size:24px;font-weight:700;color:${cf>=0?'var(--grn)':'var(--red)'};display:block;margin-top:6px">${cf>=0?'+':''}${f$(Math.abs(cf))}</span>
-            </div>
-            <div style="padding:14px 16px">
-              <span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">HELOC Interest / mo</span>
-              <span style="font-size:24px;font-weight:700;display:block;margin-top:6px">${f$(helocInt)}</span>
-              <span style="font-size:9px;color:var(--mut)">6.5% on ${f$(Math.round(trueHeloc/1000)+'K')}</span>
-            </div>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(5,1fr)">
-            ${[['Base Spend',f$(spend)],['Vineta Mort',f$(vmort)],['Paulette Mort',f$(pmort)],['HF Balance',f$(hfBal)],['FIRE %',firePct?Math.round(firePct*100)+'%':'—']].map(([l,v])=>`
-            <div style="padding:10px 16px;border-right:1px solid var(--brd);border-top:1px solid var(--brd)">
-              <span style="font-size:9px;color:var(--mut);display:block">${l}</span>
-              <span style="font-size:15px;font-weight:700;display:block;margin-top:3px">${v}</span>
-            </div>`).join('')}
-          </div>`;
-      }
+      // ── BUDGET SUMMARY ── rendered by rFin() after kcc_fins is saved (single render path)
 
       // ── READ CREDIT CARDS SHEET ──
       const ccSheet = wb.Sheets['Credit Cards'];
@@ -4462,6 +4437,7 @@ function importVBExcel(evt) {
       if(S.fins && typeof billsData !== 'undefined') S.fins.billItems = billsData;
       localStorage.setItem('kcc_fins', JSON.stringify(S.fins));
       fbSaveAll();
+      if(typeof rFin === 'function') rFin();  // single render path for budget summary
 
       // ── RENDER CC SECTION ──
       if(ccData && document.getElementById('cc-content')) {

@@ -2547,6 +2547,43 @@ function parseBudgetPlanner(wb){
   const pvfLine = label => { const i=find(pvfRows, r=>String(r&&r[0]||'').trim().toLowerCase()===label && N(r[1])!==null && N(r[2])!==null); if(i<0) return null; const r=pvfRows[i]; return {plan:N(r[1]), fcst:N(r[2]), varD:N(r[3]), varP:N(r[4])}; };
   const pvf = { income:pvfLine('income'), expenses:pvfLine('expenses'), net:pvfLine('net') };
 
+  // Monthly Plan vs Forecast (fcst = actual for closed months)
+  const monthlyPVF=[];
+  const mHdr = find(pvfRows, r=>String(r&&r[0]||'').trim()==='Month');
+  if(mHdr>=0){ for(let i=mHdr+1;i<pvfRows.length;i++){ const r=pvfRows[i]; if(!r||!MON.includes(String(r[0]||'').trim())) break;
+    monthlyPVF.push({mo:String(r[0]).trim(), planInc:N(r[1]), fcstInc:N(r[2]), planExp:N(r[3]), fcstExp:N(r[4]), planNet:N(r[5]), fcstNet:N(r[6])}); } }
+
+  // Latest closed month — per-category actual vs plan (from Plan + Actuals sheets)
+  const catMap = rows => { const out=[]; let section='';
+    for(const r of rows){ const name=r&&r[0];
+      if(typeof name!=='string' || !name.trim()) continue;
+      const hasNum = r.slice(1,13).some(x=>N(x)!==null);
+      if(!hasNum){ const t=name.trim(); if(t.toUpperCase()===t && !t.toUpperCase().startsWith('TOTAL') && t.toUpperCase()!=='CATEGORY') section=t; continue; }
+      const up=name.trim().toUpperCase(); if(up.startsWith('TOTAL')||up.startsWith('NET ')||up.startsWith('NET(')||up==='CATEGORY') continue;
+      out.push({name:name.trim(), group:section, vals:r.slice(1,13).map(N)}); }
+    return out; };
+  let prevMonth=null;
+  const mc = monthsClosed;
+  if(mc && mc>=1 && mc<=12){
+    const pMap=catMap(J('Plan')), aMap=catMap(J('Actuals'));
+    const aByName={}; aMap.forEach(x=>{ aByName[x.name]=x; });
+    const cats=[];
+    pMap.forEach(p=>{ const a=aByName[p.name]; if(!a) return;
+      const plan=p.vals[mc-1], actual=a.vals[mc-1];
+      if(plan==null && actual==null) return;
+      const isInc = (p.group||'').toUpperCase()==='INCOME';
+      const varD=(actual||0)-(plan||0);
+      cats.push({cat:p.name, group:p.group, isInc, plan:plan||0, actual:actual||0, varD, fav: isInc ? varD>=0 : varD<=0}); });
+    const pm = monthlyPVF[mc-1]||{};
+    prevMonth = {
+      idx:mc, name:MON[mc-1],
+      income:  {plan:pm.planInc, actual:pm.fcstInc, varD:(pm.fcstInc||0)-(pm.planInc||0)},
+      expenses:{plan:pm.planExp, actual:pm.fcstExp, varD:(pm.fcstExp||0)-(pm.planExp||0)},
+      net:     {plan:pm.planNet, actual:pm.fcstNet, varD:(pm.fcstNet||0)-(pm.planNet||0)},
+      swings: cats.sort((x,y)=>Math.abs(y.varD)-Math.abs(x.varD)).slice(0,10)
+    };
+  }
+
   // Variance Analysis: favorable / unfavorable totals + largest swings
   const varRows = J('Variance Analysis');
   let favorable=null, unfavorable=null, netVar=null;
@@ -2560,7 +2597,7 @@ function parseBudgetPlanner(wb){
     importTime:new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
     projIncome, projExpenses, projNet, netVsPlan,
     ytdIncome, ytdExpenses, ytdNet, monthsClosed,
-    pvf, groups, monthly, favorable, unfavorable, netVar, swings:swings.slice(0,12)
+    pvf, groups, monthly, monthlyPVF, prevMonth, favorable, unfavorable, netVar, swings:swings.slice(0,12)
   };
   localStorage.setItem('kcc_budget', JSON.stringify(data));
   S.budget = data;
@@ -2664,7 +2701,32 @@ function rBudget(){
         <tbody>${rows}</tbody></table></div>`;
   }
 
-  root.innerHTML = row1 + row2 + pvf + bars + swings + groups;
+  // Last closed month — actual vs plan
+  let prev='';
+  if(b.prevMonth && b.prevMonth.name){
+    const p=b.prevMonth;
+    const tile=(label,o,goodPos)=>{ const good=goodPos?((o.varD||0)>=0):((o.varD||0)<=0); const c=good?'var(--grn)':'var(--red)';
+      const val = goodPos===null ? (sg(o.actual)+$(o.actual)) : $(o.actual);
+      return `<div style="padding:12px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">${label}</span><span style="font-size:21px;font-weight:700;display:block;margin-top:5px">${val}</span><span style="font-size:10px;color:${c}">${sg(o.varD)}${$(o.varD)} vs plan</span></div>`; };
+    const swRows = (p.swings||[]).map(s=>{ const c=s.fav?'var(--grn)':'var(--red)';
+      return `<tr><td style="padding:6px 12px;border-top:1px solid var(--brd)"><span style="font-weight:600">${esc(String(s.cat||''))}</span> <span style="color:var(--mut2);font-size:10px">${esc(String(s.group||''))}</span></td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right;color:var(--mut2)">${$(s.plan)}</td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right">${$(s.actual)}</td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right;color:${c}">${sg(s.varD)}${$(s.varD)}</td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right;color:${c};font-weight:700">${s.fav?'▲':'▼'}</td></tr>`; }).join('');
+    prev = `<div style="border:1px solid var(--brd);background:var(--surf);margin-bottom:16px;">
+      <div style="padding:9px 16px;border-bottom:1px solid var(--brd);background:#0f110f;"><span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--grn);">📅 Last Closed Month — ${p.name} 2026 · actual vs plan</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--brd)">
+        ${tile('Income',p.income,true)}${tile('Expenses',p.expenses,false)}${tile('Net',p.net,null)}
+      </div>
+      ${swRows?`<table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="color:var(--mut);font-size:8px;letter-spacing:1px;text-transform:uppercase;">
+          <th style="padding:7px 12px;text-align:left">Category (${p.name})</th><th style="padding:7px 12px;text-align:right">Plan</th><th style="padding:7px 12px;text-align:right">Actual</th><th style="padding:7px 12px;text-align:right">Var $</th><th style="padding:7px 12px;text-align:right"></th></tr></thead>
+        <tbody>${swRows}</tbody></table>`:''}
+    </div>`;
+  }
+
+  root.innerHTML = row1 + row2 + prev + pvf + bars + swings + groups;
 }
 
 function rFire(){

@@ -2220,17 +2220,27 @@ function rToday(){
   const _isDaily=a=>/daily|every trading day/i.test((a.when||'')+' '+(a.action||''));
   const pfToday=((S.portfolio&&S.portfolio.actions)||[]).filter(a=>a.date===_todayISO||_isDaily(a))
     .map(a=>({id:'pfa_'+a.action.replace(/[^a-z0-9]/gi,'').slice(0,16),title:a.action,m:'Must',src:'Portfolio',_pf:true,_pfKey:_todayISO}));
-  const mit=[...pfToday,...tasks.filter(t=>t.status!=='Done').slice(0,3),...fireMIT.slice(0,3)].slice(0,6);
+  // GLP-1 shot — surfaces in Must Do Today only on its scheduled weekday (default Tuesday)
+  const _pbc=JSON.parse(localStorage.getItem('kcc_playbook_checks')||'{}');
+  const _gh=S.health||JSON.parse(localStorage.getItem('kcc_health')||'null');
+  const _gg=_gh&&_gh.glp1?_gh.glp1:null;
+  const _gShotDay=_gg&&_gg.day!=null?_gg.day:2;
+  const glp1MIT=(_gg && new Date().getDay()===_gShotDay)
+    ? [{id:'glp1shot', title:'GLP-1 shot'+(_gg.med?' ('+_gg.med+')':'')+(_gg.dose?' · '+_gg.dose:''), m:'Must', _glp1:true, _gkey:'glp1shot_'+_todayISO}]
+    : [];
+  const mit=[...glp1MIT,...pfToday,...tasks.filter(t=>t.status!=='Done').slice(0,3),...fireMIT.slice(0,3)].slice(0,6);
   el('t-mit').innerHTML=mit.length===0?'<div class="empty" style="color:var(--grn)">\u2705 No high-priority tasks</div>':
     mit.map(function(t){
-      var chk=t._pf
+      var chk=t._glp1
+        ?'<div class="chk'+(_pbc[t._gkey]?' dn':'')+'" onclick="togGlp1(\'' +t._gkey+'\')"></div>'
+        :t._pf
         ?'<div class="chk'+(togPFDone(t.id,t._pfKey)?' dn':'')+'" onclick="togPF(\'' +t.id+'\',\''+(t._pfKey||'')+'\')"></div>'
         :t._fire
         ?'<div class="chk'+(S.fchk[t.id]?' dn':'')+'" onclick="togFC(\'' +t.id+ '\')"></div>'
         :'<div class="chk'+(t.status==='Done'?' dn':'')+'" onclick="toggleT(\'' +t.id+ '\')"></div>';
       var badge='<span class="b '+(t.m==='Must'?'bm':'bs')+'">'+t.m+'</span>';
       var title='<span class="rtl">'+esc(t.title)+'</span>';
-      var sub='<span class="rsb">'+(t._pf?'\uD83D\uDCC8 Portfolio':t._fire?'\uD83C\uDFAF '+t._ph:t.src+(t.dd?' \u00B7 '+fd(t.dd):''))+'</span>';
+      var sub='<span class="rsb">'+(t._glp1?'\uD83D\uDC89 Health':t._pf?'\uD83D\uDCC8 Portfolio':t._fire?'\uD83C\uDFAF '+t._ph:t.src+(t.dd?' \u00B7 '+fd(t.dd):''))+'</span>';
       return '<div class="row">'+chk+badge+title+sub+'</div>';
     }).join('');
   // Alerts
@@ -6452,6 +6462,11 @@ function pbCheck(key, checked) {
   renderPlaybookToday();
 }
 
+function togGlp1(key){
+  const checks=JSON.parse(localStorage.getItem('kcc_playbook_checks')||'{}');
+  pbCheck(key, !checks[key]);
+  if(typeof rToday==='function') rToday();
+}
 function getWeekNum(d) {
   const onejan = new Date(d.getFullYear(), 0, 1);
   return Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
@@ -6465,16 +6480,6 @@ function renderPlaybookToday() {
     var thisMonth = now.getFullYear() + '-' + (now.getMonth()+1);
     var checks = JSON.parse(localStorage.getItem('kcc_playbook_checks')||'{}');
     var items = [];
-    // GLP-1 shot — surfaces only on its scheduled weekday (default Tuesday)
-    try {
-      var _h = S.health || JSON.parse(localStorage.getItem('kcc_health')||'null');
-      var _g = _h && _h.glp1 ? _h.glp1 : null;
-      var _shotDay = _g && _g.day!=null ? _g.day : 2;
-      if(_g && now.getDay()===_shotDay){
-        var gk = 'glp1shot_'+todayKey;
-        if(!checks[gk]) items.push({icon:'💉',label:'GLP-1 shot'+(_g.med?' ('+_g.med+')':'')+(_g.dose?' · '+_g.dose:''),freq:'Weekly · today',color:'var(--grn)',key:gk});
-      }
-    } catch(e){}
     PLAYBOOK.daily.forEach(function(item) {
       var key = item.id+'_'+todayKey;
       if(!checks[key]) items.push({icon:item.icon,label:item.label,freq:'Daily',color:'var(--grn)',key:key});

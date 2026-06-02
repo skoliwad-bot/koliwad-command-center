@@ -373,6 +373,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;}
 #p-health input,#p-health select{background:var(--bg);border:1px solid var(--brd2);color:var(--txt);padding:8px 10px;font-family:'JetBrains Mono',monospace;font-size:11px;outline:none;}
 #p-health input:focus,#p-health select:focus{border-color:var(--grn);}
 #p-health select option{background:var(--surf);}
+#p-health .hfl{font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2);margin-bottom:3px;}
 </style>
 
 <!-- Firebase SDK -->
@@ -3188,7 +3189,7 @@ const MEAL_SUGGESTIONS=[
 function hDefault(){
   return {
     weight:{ start:178, goal:163, log:[] },
-    glp1:{ med:'Zepbound', dose:'', cadence:'Weekly', lastDose:'', site:'' },
+    glp1:{ med:'Zepbound', dose:'', cadence:'Weekly', day:2, lastDose:'', site:'' },
     targets:{ cal:2000, protein:170, water:100, fiber:30, meals:3 },
     dietChecks:{}, 
     energy:[],     
@@ -3257,7 +3258,9 @@ function hWeightCard(H){
     +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">GLP-1 Details</div>'
     +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:8px">'
     +hField('Medication','h-g-med',g.med)+hField('Dose','h-g-dose',g.dose,'e.g. 5mg')
-    +hField('Cadence','h-g-cad',g.cadence)+hField('Last dose','h-g-last',g.lastDose,'','date')+hField('Inject site','h-g-site',g.site)
+    +hField('Cadence','h-g-cad',g.cadence)
+    +'<div><div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2);margin-bottom:3px">Shot day</div><select id="h-g-day" style="width:100%;box-sizing:border-box">'+['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].map((dn,di)=>'<option value="'+di+'"'+(((g.day==null?2:g.day))===di?' selected':'')+'>'+dn+'</option>').join('')+'</select></div>'
+    +hField('Last dose','h-g-last',g.lastDose,'','date')+hField('Inject site','h-g-site',g.site)
     +'</div>'
     +'<button class="btn" onclick="hSaveGlp1()">Save GLP-1</button>'
     +'<div style="font-size:8px;color:var(--mut2);margin-top:8px;font-style:italic">Confirm targets & doses with your prescriber.</div>'
@@ -3330,8 +3333,23 @@ function hDietCard(H){
     +'</div></div>'
     // ── SECTION 3: JOURNAL ──
     +'<div style="padding:14px 0;border-bottom:2px solid var(--brd)">'
-    +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Daily Journal</div>'
-    +'<textarea id="h-diet-note" placeholder="What did you eat? How did you feel? GLP-1 side effects, wins, struggles..." style="width:100%;min-height:90px;resize:vertical;box-sizing:border-box;font-size:12px;line-height:1.6;padding:10px;border:1px solid var(--brd2);background:var(--bg);color:var(--txt);font-family:\'JetBrains Mono\',monospace;border-radius:3px;outline:none"></textarea>'
+    +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Daily Journal <span style="color:var(--mut2);font-weight:400;letter-spacing:0;text-transform:none">— all optional</span></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:9px">'
+    +'<div><div class="hfl">Breakfast</div><input id="h-f-bfast" type="text" style="width:100%;box-sizing:border-box"></div>'
+    +'<div><div class="hfl">Lunch</div><input id="h-f-lunch" type="text" style="width:100%;box-sizing:border-box"></div>'
+    +'<div><div class="hfl">Dinner</div><input id="h-f-dinner" type="text" style="width:100%;box-sizing:border-box"></div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:9px">'
+    +'<div><div class="hfl">Water (oz)</div><input id="h-f-water" type="number" step="1" style="width:100%;box-sizing:border-box"></div>'
+    +'<div><div class="hfl">Diet Cokes</div><input id="h-f-cokes" type="number" step="1" style="width:100%;box-sizing:border-box"></div>'
+    +'<div><div class="hfl">Energy Drinks</div><input id="h-f-edrinks" type="number" step="1" style="width:100%;box-sizing:border-box"></div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:9px">'
+    +'<div><div class="hfl">Bowel Movement</div><select id="h-f-bowel" style="width:100%;box-sizing:border-box"><option value="">—</option><option>Good</option><option>OK</option><option>Bad</option></select></div>'
+    +'<div><div class="hfl">Sleep</div><select id="h-f-sleep" style="width:100%;box-sizing:border-box"><option value="">—</option><option>Good</option><option>OK</option><option>Bad</option></select></div>'
+    +'<div><div class="hfl">Exercise</div><input id="h-f-exercise" type="text" style="width:100%;box-sizing:border-box"></div>'
+    +'</div>'
+    +'<textarea id="h-diet-note" placeholder="Free-form notes — how you felt, GLP-1 side effects, wins, struggles..." style="width:100%;min-height:80px;resize:vertical;box-sizing:border-box;font-size:12px;line-height:1.6;padding:10px;border:1px solid var(--brd2);background:var(--bg);color:var(--txt);font-family:\'JetBrains Mono\',monospace;border-radius:3px;outline:none"></textarea>'
     +'<div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">'
     +'<button class="btn" onclick="hSaveDietLog()">Save entry</button>'
     +'<button class="btn" onclick="hFormatDietAI()" style="font-size:9px">✦ AI Format</button>'
@@ -3361,10 +3379,11 @@ function hDietCard(H){
         +'<span onclick="if(confirm(\'Permanently delete '+e.d+' entry?\'))hDelDietLog(\''+e.d+'\')" title="Delete permanently" style="color:var(--mut2);cursor:pointer;font-size:11px">🗑 delete</span>'
         +'</span></div>'
         +(H._dietCollapsed&&H._dietCollapsed[e.d]?''
-          :e.formatted
+          :hFieldsLine(e.f)
+          +(e.formatted
           ?'<div style="font-size:11px;color:var(--txt2);line-height:1.5;white-space:pre-wrap">'+esc(e.formatted)+'</div>'
           +(e.calories?'<div style="margin-top:6px;padding:6px 10px;background:rgba(0,0,0,0.2);border-left:2px solid var(--amb);font-size:10px;color:var(--txt2);white-space:pre-wrap">'+esc(e.calories)+'</div>':'')
-          :'<div style="font-size:11px;color:var(--mut);font-style:italic;line-height:1.5">'+esc((e.raw||'').slice(0,120))+(e.raw&&e.raw.length>120?'…':'')+'</div>')
+          :(e.raw?'<div style="font-size:11px;color:var(--mut);font-style:italic;line-height:1.5">'+esc((e.raw||'').slice(0,120))+(e.raw&&e.raw.length>120?'…':'')+'</div>':'')))
         +'</div>').join('')
       +'</div>':'')
     // ── SECTION 6: MEAL TEMPLATE + LIBRARY ──
@@ -3401,6 +3420,12 @@ function hDietHydrate(d){
   const rxItems=[...(H.meds||[]).filter(r=>r.name),...(H.supps||[]).filter(r=>r.name)];
   // textarea
   const ta=el('h-diet-note'); if(ta) ta.value=log?log.raw||'':'';
+  // structured fields
+  const f=(log&&log.f)||{};
+  const setV=(id,v)=>{ const e=el(id); if(e) e.value=(v==null?'':v); };
+  setV('h-f-bfast',f.bfast); setV('h-f-lunch',f.lunch); setV('h-f-dinner',f.dinner);
+  setV('h-f-water',f.water); setV('h-f-cokes',f.cokes); setV('h-f-edrinks',f.edrinks);
+  setV('h-f-bowel',f.bowel); setV('h-f-sleep',f.sleep); setV('h-f-exercise',f.exercise);
   // checkboxes
   rxItems.forEach(r=>{
     const k='rx_'+r.name.replace(/\s+/g,'_');
@@ -3434,14 +3459,49 @@ function hDietHydrate(d){
     else calWrap.style.display='none';
   }
 }
+function hGatherEntry(){
+  const gv=id=>{ const e=el(id); return e?e.value.trim():''; };
+  const gn=id=>{ const e=el(id); if(!e) return null; const n=parseFloat(e.value); return isNaN(n)?null:n; };
+  const raw=(el('h-diet-note')?el('h-diet-note').value:'').trim();
+  const f={ bfast:gv('h-f-bfast'), lunch:gv('h-f-lunch'), dinner:gv('h-f-dinner'),
+            water:gn('h-f-water'), cokes:gn('h-f-cokes'), edrinks:gn('h-f-edrinks'),
+            bowel:gv('h-f-bowel'), sleep:gv('h-f-sleep'), exercise:gv('h-f-exercise') };
+  const fl=[];
+  if(f.bfast) fl.push('Breakfast: '+f.bfast);
+  if(f.lunch) fl.push('Lunch: '+f.lunch);
+  if(f.dinner) fl.push('Dinner: '+f.dinner);
+  if(f.water!=null) fl.push('Water: '+f.water+' oz');
+  if(f.cokes!=null) fl.push('Diet Cokes: '+f.cokes);
+  if(f.edrinks!=null) fl.push('Energy Drinks: '+f.edrinks);
+  if(f.bowel) fl.push('Bowel movement: '+f.bowel);
+  if(f.sleep) fl.push('Sleep: '+f.sleep);
+  if(f.exercise) fl.push('Exercise: '+f.exercise);
+  const anyF=Object.values(f).some(v=>v!==''&&v!=null);
+  const combined=(fl.join('\n')+(raw?(fl.length?'\n\nNotes: ':'')+raw:'')).trim();
+  return {f, raw, anyF, combined};
+}
+function hFieldsLine(f){
+  if(!f) return '';
+  const p=[];
+  if(f.bfast) p.push('B: '+f.bfast);
+  if(f.lunch) p.push('L: '+f.lunch);
+  if(f.dinner) p.push('D: '+f.dinner);
+  if(f.water!=null) p.push('💧 '+f.water+'oz');
+  if(f.cokes!=null) p.push('🥤 '+f.cokes);
+  if(f.edrinks!=null) p.push('⚡ '+f.edrinks);
+  if(f.bowel) p.push('BM: '+f.bowel);
+  if(f.sleep) p.push('😴 '+f.sleep);
+  if(f.exercise) p.push('🏃 '+f.exercise);
+  return p.length?'<div style="font-size:10px;color:var(--txt2);line-height:1.6;margin-bottom:4px">'+p.map(esc).join(' · ')+'</div>':'';
+}
 function hSaveDietLog(){
   const d=el('h-diet-d').value||hToday();
-  const raw=(el('h-diet-note').value||'').trim();
-  if(!raw){alert('Write something first');return;}
+  const g=hGatherEntry();
+  if(!g.raw && !g.anyF){ alert('Enter something first'); return; }
   const H=hGet();
   H.dietLog=H.dietLog||[];
   const ex=H.dietLog.find(x=>x.d===d);
-  if(ex){ ex.raw=raw; ex.formatted=''; } else H.dietLog.push({d,raw,formatted:''});
+  if(ex){ ex.raw=g.raw; ex.f=g.f; ex.formatted=''; } else H.dietLog.push({d,raw:g.raw,f:g.f,formatted:''});
   hSave(); rHealth();
 }
 function hDelDietLog(d){ const H=hGet(); H.dietLog=(H.dietLog||[]).filter(x=>x.d!==d); hSave(); rHealth(); }
@@ -3454,7 +3514,7 @@ function hGetApiKey(){ return localStorage.getItem('kcc_claude')||(typeof el==='
 
 function hFormatDietAI(){
   const key=hGetApiKey(); if(!key){alert('Add your Claude API key in Settings');return;}
-  const raw=(el('h-diet-note').value||'').trim(); if(!raw){alert('Write your log entry first');return;}
+  const g=hGatherEntry(); const raw=g.combined; if(!raw){alert('Write your log entry first');return;}
   const d=el('h-diet-d').value||hToday();
   const H=hGet(); const st=el('h-diet-status');
   st.textContent='✦ Formatting…';
@@ -3478,8 +3538,8 @@ ${raw}`;
     const calories=parts[1]?parts[1].trim():'';
     H.dietLog=H.dietLog||[];
     let ex=H.dietLog.find(x=>x.d===d);
-    if(ex){ ex.raw=raw; ex.formatted=formatted; ex.calories=calories; }
-    else H.dietLog.push({d,raw,formatted,calories});
+    if(ex){ ex.raw=g.raw; ex.f=g.f; ex.formatted=formatted; ex.calories=calories; }
+    else H.dietLog.push({d,raw:g.raw,f:g.f,formatted,calories});
     hSave(); st.textContent='✓ Saved'; hDietHydrate(d);
   }).catch(e=>{ st.textContent='Error: '+e.message; });
 }
@@ -3622,7 +3682,7 @@ function hBPLog(bp){
 // ════════════ HEALTH HANDLERS ════════════
 function hAddWeight(){ const d=el('h-wt-d').value, w=hNum(el('h-wt-w').value); if(!d||w==null){alert('Enter a date and weight');return;} const H=hGet(); H.weight.log=H.weight.log.filter(x=>x.d!==d); H.weight.log.push({d,w}); hSave(); rHealth(); }
 function hDelWeight(d){ const H=hGet(); H.weight.log=H.weight.log.filter(x=>x.d!==d); hSave(); rHealth(); }
-function hSaveGlp1(){ const H=hGet(); H.glp1={med:el('h-g-med').value.trim(),dose:el('h-g-dose').value.trim(),cadence:el('h-g-cad').value.trim(),lastDose:el('h-g-last').value,site:el('h-g-site').value.trim()}; hSave(); rHealth(); }
+function hSaveGlp1(){ const H=hGet(); H.glp1={med:el('h-g-med').value.trim(),dose:el('h-g-dose').value.trim(),cadence:el('h-g-cad').value.trim(),day:parseInt(el('h-g-day').value),lastDose:el('h-g-last').value,site:el('h-g-site').value.trim()}; hSave(); rHealth(); if(typeof renderPlaybookToday==='function') renderPlaybookToday(); }
 function hAddMeal(){ const name=prompt('Meal name (e.g. Lunch — salad):'); if(!name)return; const time=prompt('Time (e.g. ~12:30p or Float):','')||''; const detail=prompt('Details / options:','')||''; const pro=hNum(prompt('Protein grams (optional):',''))||0; const H=hGet(); H.meals.push({time,name,detail,pro}); hSave(); rHealth(); }
 function hDelMeal(i){ const H=hGet(); H.meals.splice(i,1); hSave(); rHealth(); }
 function hAddSuggestedMeal(i){ const m=MEAL_SUGGESTIONS[i]; const H=hGet(); if(!H.meals.find(x=>x.name===m.name)){ H.meals.push({...m}); hSave(); rHealth(); } }
@@ -6405,6 +6465,16 @@ function renderPlaybookToday() {
     var thisMonth = now.getFullYear() + '-' + (now.getMonth()+1);
     var checks = JSON.parse(localStorage.getItem('kcc_playbook_checks')||'{}');
     var items = [];
+    // GLP-1 shot — surfaces only on its scheduled weekday (default Tuesday)
+    try {
+      var _h = S.health || JSON.parse(localStorage.getItem('kcc_health')||'null');
+      var _g = _h && _h.glp1 ? _h.glp1 : null;
+      var _shotDay = _g && _g.day!=null ? _g.day : 2;
+      if(_g && now.getDay()===_shotDay){
+        var gk = 'glp1shot_'+todayKey;
+        if(!checks[gk]) items.push({icon:'💉',label:'GLP-1 shot'+(_g.med?' ('+_g.med+')':'')+(_g.dose?' · '+_g.dose:''),freq:'Weekly · today',color:'var(--grn)',key:gk});
+      }
+    } catch(e){}
     PLAYBOOK.daily.forEach(function(item) {
       var key = item.id+'_'+todayKey;
       if(!checks[key]) items.push({icon:item.icon,label:item.label,freq:'Daily',color:'var(--grn)',key:key});

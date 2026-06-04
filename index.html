@@ -5452,6 +5452,16 @@ function buildPrompt(section) {
   const totalCC = ccImp && ccImp.cards && ccImp.cards.length ? ccImp.cards.reduce((s,c)=>s+(c.bal||0),0)
                 : (tkcards ? (tkcards.c1b||0)+(tkcards.c2b||0)+(tkcards.c3b||0)+(tkcards.c4b||0) : 0);
 
+  const _ccImp = JSON.parse(localStorage.getItem('kcc_cc_import')||'{}');
+  const _thisMonth = new Date().getFullYear()+'-'+(new Date().getMonth()+1);
+  const _paidRaw = JSON.parse(localStorage.getItem('kcc_cc_paid')||'{}');
+  const _paid = (_paidRaw.month===_thisMonth) ? _paidRaw : {};
+  const _ckeys = ['c1','c2','c3','c4','c5'];
+  const _ccCards = _ccImp.cards||[];
+  const _ccLine = _ccCards.map((c,i)=>{ const pd=_paid[_ckeys[i]]; return '- '+c.name+': $'+Math.round(c.bal).toLocaleString()+' / $'+Math.round(c.lim).toLocaleString()+' limit · min due $'+Math.round(c.minDue||0).toLocaleString()+(pd?' (✓ PAID this month)':((c.minDue||0)>0?' (UNPAID)':'')); }).join('\n');
+  const _totalMin  = _ccCards.reduce((s,c)=>s+(c.minDue||0),0);
+  const _unpaidMin = _ccCards.reduce((s,c,i)=> s + ((_paid[_ckeys[i]] || (c.minDue||0)===0) ? 0 : (c.minDue||0)), 0);
+
   const prompts = {
     today: `You are the AI advisor for Sonny Koliwad. Today is ${DAYS[now.getDay()]}, ${MONS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}.
 TASK STATUS: ${taskCounts}
@@ -5473,20 +5483,22 @@ Judge "on track vs off track" STRICTLY from the FIRE Lab spreadsheet figures abo
 Provide 4-5 sentences: (1) on track or off (cite the coverage % and FIRE date), (2) biggest lever, (3) biggest risk, (4) action this week with dollar amount. Be specific.`,
 
     tickets: `You are the cash flow advisor for Sonny Koliwad's ticket business.
-WF CHECKING: $${JSON.parse(localStorage.getItem('kcc_cc_import')||'{}').wfChecking||0}
+WF CHECKING: $${_ccImp.wfChecking||0}
 TICKET METRICS: ${tkSum}
-CC BALANCES (ALL 0% APR):
-${(JSON.parse(localStorage.getItem('kcc_cc_import')||'{}').cards||[]).map(c=>c.name+': $'+Math.round(c.bal).toLocaleString()+' / $'+Math.round(c.lim).toLocaleString()+' limit').join(' | ')}
+CC BALANCES (ALL 0% APR) — balance / limit / minimum due this month:
+${_ccLine||'None'}
+CC MINIMUMS DUE THIS MONTH: $${Math.round(_totalMin).toLocaleString()} total, $${Math.round(_unpaidMin).toLocaleString()} still UNPAID.
 RANDY DANG: Sonny owes him $${Math.round(Math.abs(dang))} — Priority #1 debt to pay down (money Sonny owes, not a receivable)
 UPCOMING SEASON TICKET PAYMENTS: ${(S.upcomingPayments||[]).filter(u=>u.type==='plan').map(u=>u.label+' $'+u.amount+' on '+u.date?.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' via '+u.sub).join(' | ')||'None'}
 RECURRING BILLS: ${(S.recbills||[]).map(b=>b.name+' $'+b.amount+' on '+b.day+'th').join(' | ')||'None'}
-All credit cards are 0% APR — no interest cost to carrying balances. Do NOT recommend paying down CC debt unless needed to create headroom for an upcoming charge.
-Give a 5-point cash distribution plan for the WF Checking balance:
-1. Bills reserve — how much to hold for recurring bills this month
-2. Season ticket headroom — does the charge card have enough room? If not, pay just enough to create headroom
-3. Randy Dang — how much to pay from remaining balance (Priority #1 obligation)
-4. Remaining cash — what to do with leftover
-5. One specific action TODAY with exact dollar amount`,
+All credit cards are 0% APR — carrying a balance costs no interest, so do NOT pay down CC principal beyond the required minimums except to create headroom for an upcoming charge. BUT the monthly MINIMUM payments are still required — always reserve the unpaid minimums first; skipping them risks late fees and forfeiting the 0% promo.
+Give a cash distribution plan for the WF Checking balance, in this priority order:
+1. Bills reserve — how much to hold for recurring bills due this month
+2. CC minimum payments — reserve the total UNPAID minimums due this month ($${Math.round(_unpaidMin).toLocaleString()}); name which cards still need their minimum and the amount each
+3. Season ticket headroom — does the charge card have enough room for the upcoming payment? If not, pay just enough to create headroom
+4. Randy Dang — how much to pay from the remaining balance (Priority #1 obligation)
+5. Remaining cash — what to do with leftover
+6. One specific action TODAY with exact dollar amount`,
 
     financials: `You are the velocity banking advisor for Sonny Koliwad.
 BALANCES: ${finSum}

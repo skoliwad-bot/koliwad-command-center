@@ -5403,7 +5403,21 @@ function buildPrompt(section) {
   const tkcards= JSON.parse(localStorage.getItem('kcc_tk_cards')||'null');
 
   const month  = MONS[now.getMonth()]+' '+now.getFullYear();
-  const taskSum  = tasks.slice(0,8).map(t=>`- ${t.title} [${t.m}] due:${t.dd||'none'}`).join('\n');
+  const _td0 = new Date(); _td0.setHours(0,0,0,0);
+  const _pDD = s => { if(!s) return null; const d=new Date(s); return isNaN(d.getTime())?null:(d.setHours(0,0,0,0),d); };
+  const _open = tasks.filter(t=>t.status!=='Done');
+  const _overdue  = _open.filter(t=>{const d=_pDD(t.dd); return d && d<_td0;});
+  const _dueToday = _open.filter(t=>{const d=_pDD(t.dd); return d && d.getTime()===_td0.getTime();});
+  const _future   = _open.filter(t=>{const d=_pDD(t.dd); return d && d>_td0;});
+  const _noDate   = _open.filter(t=>!_pDD(t.dd));
+  const _fmtT = t=>`- ${t.title} [${t.m}]${t.dd?' (due '+t.dd+')':''}`;
+  const taskCounts = `${_overdue.length} overdue, ${_dueToday.length} due today, ${_future.length} upcoming, ${_noDate.length} undated backlog`;
+  const taskSum = [
+    _overdue.length ? 'OVERDUE ('+_overdue.length+'):\n'+_overdue.slice(0,8).map(_fmtT).join('\n') : '',
+    _dueToday.length ? 'DUE TODAY ('+_dueToday.length+'):\n'+_dueToday.slice(0,8).map(_fmtT).join('\n') : '',
+    _noDate.length ? 'UNDATED BACKLOG ('+_noDate.length+'):\n'+_noDate.slice(0,6).map(_fmtT).join('\n') : '',
+    _future.length ? 'UPCOMING ('+_future.length+'):\n'+_future.slice(0,4).map(_fmtT).join('\n') : ''
+  ].filter(Boolean).join('\n');
   const alertSum = alerts.filter(a=>a.status==='Open').map(a=>`- ${a.title} [${a.sev}]`).join('\n');
   // FIRE summary: use FIRE Lab spreadsheet (FL_D) as the gold source so the Command Center
   // and Briefing judge "on track" from IDENTICAL data. Fall back to live tracked numbers only
@@ -5440,13 +5454,14 @@ function buildPrompt(section) {
 
   const prompts = {
     today: `You are the AI advisor for Sonny Koliwad. Today is ${DAYS[now.getDay()]}, ${MONS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}.
-TASKS: ${taskSum||'None synced'}
+TASK STATUS: ${taskCounts}
+${taskSum||'No open tasks synced.'}
 ALERTS: ${alertSum||'None'}
 FIRE PLAN (use this as the basis for ALL cash-flow / runway statements): ${fireSum}
 OBLIGATIONS — amounts Sonny OWES (liabilities / outflows, NOT income or receivables):
 - Sonny OWES Randy Dang $${Math.round(Math.abs(dang))} — Priority #1 debt to PAY DOWN. Sonny must PAY Randy; Randy does NOT owe Sonny. This is money going OUT.
 - Sonny OWES $${Math.round(Math.abs(totalCC))} in business credit card debt.
-RULES: Randy Dang and the CC balances are debts Sonny owes to others. Never describe them as money to "collect", as "receivables", or as "payment demands" Sonny sends — Sonny is the one who must pay. Never add them to income or cash flow. Base any cash-flow, gap, or runway figure ONLY on the FIRE PLAN line above (income minus monthly need) — do not overstate current cash flow.
+RULES: Randy Dang and the CC balances are debts Sonny owes to others. Never describe them as money to "collect", as "receivables", or as "payment demands" Sonny sends — Sonny is the one who must pay. Never add them to income or cash flow. Base any cash-flow, gap, or runway figure ONLY on the FIRE PLAN line above (income minus monthly need) — do not overstate current cash flow. Only reference tasks that appear in the lists above, and use the exact status shown — a task is "due today" ONLY if it is under DUE TODAY, and "overdue" ONLY if under OVERDUE. Never invent task names, due dates, or counts; use the TASK STATUS counts exactly.
 Write a 3-4 sentence morning brief: (1) most critical action today, (2) key risk, (3) one sharp recommendation. Be direct, use real numbers.`,
 
     firepath: `You are the FIRE advisor for Sonny Koliwad.

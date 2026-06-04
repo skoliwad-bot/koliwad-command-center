@@ -6926,11 +6926,13 @@ function renderDashboard() {
 
   const _avProj = FL_D.todayRow ? FL_D.todayRow.avail : null;
   const _avAct = al.available;
-  const _avSub = (_avAct && _avAct.actual!=null && _avAct.proj)
-    ? ('actual '+f$(_avAct.actual)+' · '+((_avAct.actual-_avAct.proj)>=0?'+':'')+(((_avAct.actual-_avAct.proj)/Math.abs(_avAct.proj))*100).toFixed(1)+'% vs proj')
+  const _hasAvAct = _avAct && _avAct.actual!=null;
+  const _avVal = _hasAvAct ? f$(_avAct.actual) : (_avProj!=null?f$(_avProj):'—');
+  const _avSub = _hasAvAct
+    ? ('proj '+f$(_avAct.proj!=null?_avAct.proj:(_avProj||0))+(_avAct.proj?' · '+((_avAct.actual-_avAct.proj)>=0?'+':'')+(((_avAct.actual-_avAct.proj)/Math.abs(_avAct.proj))*100).toFixed(1)+'% vs proj':''))
     : 'HF + HELOC avail + TIAA (projected)';
   document.getElementById('dash-pills').innerHTML = [
-    {lbl:'Available $$', val: _avProj!=null?f$(_avProj):'—',   cls:'g', sub:_avSub},
+    {lbl:'Available $$', val: _avVal,   cls:'g', sub:_avSub},
     {lbl:'FIRE Date',    val: FL_D.fireDate,                    cls:FL_D.fireMonth?'g':'a', sub:'first month FIRE% ≥ 100%'},
     {lbl:'Plan Status', val: statusVal,                     cls:statusCls,           sub:statusSub},
     {lbl:'Net Worth',    val: f$(FL_D.netWorth),                cls:'b',                 sub:'at month 120'},

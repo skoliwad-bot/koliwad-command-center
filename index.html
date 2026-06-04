@@ -2013,13 +2013,13 @@ async function fTasks(){
     const td=await tr.json();
     for(const t of(td.items||[])){
       if(t.status==='completed'||t.deleted) continue;
-      const due=t.due?new Date(t.due):null;
-      const da=due?Math.ceil((due-now)/86400000):99;
+      let dd='', dr=null, da=99;
+      if(t.due){ dd=String(t.due).slice(0,10); const _p=dd.split('-'); if(_p.length===3){ dr=new Date(+_p[0],+_p[1]-1,+_p[2]); da=Math.ceil((dr-now)/86400000); } }
       const sig=[],nl=(t.notes||'').toLowerCase();
       MKW.forEach(k=>{if(nl.includes(k)) sig.push('nm');});
       SKW.forEach(k=>{if(nl.includes(k)) sig.push('ns');});
       if(listSig) sig.push(listSig);
-      items.push({id:t.id,title:t.title,detail:t.notes||'',dd:due?isoD(due):'',dr:due,da,src:'Tasks',sig,list:l.title||'',category:autoCategory(t.title)});
+      items.push({id:t.id,title:t.title,detail:t.notes||'',dd,dr,da,src:'Tasks',sig,list:l.title||'',category:autoCategory(t.title)});
     }
   }
   return items;
@@ -5404,7 +5404,7 @@ function buildPrompt(section) {
 
   const month  = MONS[now.getMonth()]+' '+now.getFullYear();
   const _td0 = new Date(); _td0.setHours(0,0,0,0);
-  const _pDD = s => { if(!s) return null; const d=new Date(s); return isNaN(d.getTime())?null:(d.setHours(0,0,0,0),d); };
+  const _pDD = s => { if(!s) return null; const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(s)); let d=m?new Date(+m[1],+m[2]-1,+m[3]):new Date(s); if(isNaN(d.getTime())) return null; d.setHours(0,0,0,0); return d; };
   const _open = tasks.filter(t=>t.status!=='Done');
   const _overdue  = _open.filter(t=>{const d=_pDD(t.dd); return d && d<_td0;});
   const _dueToday = _open.filter(t=>{const d=_pDD(t.dd); return d && d.getTime()===_td0.getTime();});

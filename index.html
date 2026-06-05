@@ -3230,7 +3230,16 @@ function hDefault(){
     bp:[]
   };
 }
-function hGet(){ if(!S.health){ const _hs=localStorage.getItem('kcc_health'); S.health=_hs?JSON.parse(_hs):hDefault(); } return S.health; }
+function hGet(){
+  if(!S.health){
+    const _hs=localStorage.getItem('kcc_health');
+    S.health=_hs?JSON.parse(_hs):hDefault();
+    // Backfill any fields added since original save so nothing is undefined
+    const _d=hDefault();
+    for(const k of Object.keys(_d)){ if(S.health[k]==null) S.health[k]=_d[k]; }
+  }
+  return S.health;
+}
 function hSave(){ localStorage.setItem('kcc_health', JSON.stringify(S.health)); }
 function hToday(){ return isoD(new Date()); }
 function hNum(v){ const n=parseFloat(v); return isNaN(n)?null:n; }
@@ -3539,8 +3548,9 @@ function hFormatDietAI(){
   if(taken.length) entryText=(entryText?entryText+'\n':'')+'Meds/supps taken: '+taken.join(', ');
   if(!entryText.trim()){alert('Log some details first — meals, water, sleep, etc. (free-form optional)');return;}
   st.textContent='✦ Formatting…';
-  const curW=H.weight&&H.weight.log&&H.weight.log.length?H.weight.log[H.weight.log.length-1].w:H.weight.start;
-  const prompt=`You are a health assistant helping someone on a GLP-1 (${H.glp1&&H.glp1.med?H.glp1.med:'GLP-1'}) weight-loss protocol, current weight ${curW} lbs, goal ${H.weight.goal} lbs. Daily calorie target: ${H.targets&&H.targets.cal?H.targets.cal:2000} cal, protein target: ${H.targets&&H.targets.protein?H.targets.protein:170}g.
+  const _fw=H.weight||{}, _fg=H.glp1||{}, _ft=H.targets||{};
+  const curW=_fw.log&&_fw.log.length?_fw.log[_fw.log.length-1].w:(_fw.start||0);
+  const prompt=`You are a health assistant helping someone on a GLP-1 (${_fg.med||'GLP-1'}) weight-loss protocol, current weight ${curW} lbs, goal ${_fw.goal||'—'} lbs. Daily calorie target: ${_ft.cal||2000} cal, protein target: ${_ft.protein||170}g.
 
 From this daily journal entry, produce TWO things separated by exactly the line "---CALORIES---":
 
@@ -3595,13 +3605,14 @@ function hRunDietAI(){
     return t ? `${e.d}:\n${t}` : '';
   }).filter(Boolean).join('\n\n---\n\n');
   if(!history){ if(textEl) textEl.textContent='Your recent entries are empty — log a few details (meals, water, sleep, etc.) first.'; return; }
-  const wlog=(H.weight.log||[]).slice(-8).map(x=>`${x.d}: ${x.w} lbs`).join(', ');
+  const _w=H.weight||{}, _g=H.glp1||{};
+  const wlog=(_w.log||[]).slice(-8).map(x=>`${x.d}: ${x.w} lbs`).join(', ');
   const bp=(H.bp||[]).slice(-6).map(x=>`${x.d}: ${x.sys}/${x.dia}`).join(', ');
   const prompt=`You are a health coach reviewing a GLP-1 patient's health journal. Analyze the last ${logs.slice(-14).length} days of logs and provide specific, actionable insights.
 
 PATIENT PROFILE:
-- Medication: ${H.glp1&&H.glp1.med?H.glp1.med:'GLP-1'} ${H.glp1&&H.glp1.dose?'('+H.glp1.dose+')':''}
-- Start weight: ${H.weight.start} lbs → Goal: ${H.weight.goal} lbs
+- Medication: ${_g.med||'GLP-1'}${_g.dose?' ('+_g.dose+')':''}
+- Start weight: ${_w.start||'—'} lbs → Goal: ${_w.goal||'—'} lbs
 - Recent weights: ${wlog||'none logged'}
 - Recent BP: ${bp||'none logged'}
 

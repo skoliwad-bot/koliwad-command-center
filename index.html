@@ -448,6 +448,8 @@ function fbListen(){
     let changed=false;
     FB_KEYS.forEach(k=>{
       if(data[k]!==undefined && data[k]!==localStorage.getItem(k)){
+        // Don't overwrite a key we just wrote locally (within 5s) — prevents stale snapshot clobber
+        if(_localWriteAt[k] && Date.now()-_localWriteAt[k] < 5000) return;
         rawSet(k, data[k]); changed=true;   // raw write — must NOT echo back to cloud (prevents sync loop)
       }
     });
@@ -518,8 +520,10 @@ async function fbSaveAll() {
 
 // Auto-save to Firebase whenever localStorage changes
 const _origSetItem = localStorage.setItem.bind(localStorage);
+const _localWriteAt = {};   // track when each key was last written locally
 localStorage.setItem = function(key, value) {
   _origSetItem(key, value);
+  _localWriteAt[key] = Date.now();
   try {
     if (DOC && FB_KEYS.includes(key)) fbSave(key, JSON.parse(value));
   } catch(e) {}
@@ -3226,7 +3230,7 @@ function hDefault(){
     bp:[]
   };
 }
-function hGet(){ if(!S.health){ S.health=hDefault(); } return S.health; }
+function hGet(){ if(!S.health){ const _hs=localStorage.getItem('kcc_health'); S.health=_hs?JSON.parse(_hs):hDefault(); } return S.health; }
 function hSave(){ localStorage.setItem('kcc_health', JSON.stringify(S.health)); }
 function hToday(){ return isoD(new Date()); }
 function hNum(v){ const n=parseFloat(v); return isNaN(n)?null:n; }
@@ -3580,7 +3584,7 @@ function hRunDietAI(){
   const key=hGetApiKey(); if(!key){alert('Add your Claude API key in Settings');return;}
   const H=hGet();
   const logs=(H.dietLog||[]).slice().sort((a,b)=>a.d<b.d?-1:1);
-  if(logs.length<2){alert('Log at least 2 days first so there\'s something to analyze');return;}
+  if(logs.length<1){alert('Log at least one day first so there\'s something to analyze');return;}
   const analysisEl=el('h-diet-analysis'); const textEl=el('h-diet-analysis-text');
   if(analysisEl) analysisEl.style.display='';
   if(textEl) textEl.textContent='✦ Analyzing your health history…';

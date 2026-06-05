@@ -3356,7 +3356,7 @@ function hDietCard(H){
     +'</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:9px">'
     +'<div><div class="hfl">Bowel Movement</div><select id="h-f-bowel" style="width:100%;box-sizing:border-box"><option value="">—</option><option>Good</option><option>OK</option><option>Bad</option></select></div>'
-    +'<div><div class="hfl">Sleep</div><select id="h-f-sleep" style="width:100%;box-sizing:border-box"><option value="">—</option><option>Good</option><option>OK</option><option>Bad</option></select></div>'
+    +'<div><div class="hfl">Sleep score (1–100)</div><input id="h-f-sleep" type="number" min="1" max="100" step="1" placeholder="Apple Watch" style="width:100%;box-sizing:border-box"></div>'
     +'<div><div class="hfl">Exercise</div><input id="h-f-exercise" type="text" style="width:100%;box-sizing:border-box"></div>'
     +'</div>'
     +'<textarea id="h-diet-note" placeholder="Free-form notes — how you felt, GLP-1 side effects, wins, struggles..." style="width:100%;min-height:80px;resize:vertical;box-sizing:border-box;font-size:12px;line-height:1.6;padding:10px;border:1px solid var(--brd2);background:var(--bg);color:var(--txt);font-family:\'JetBrains Mono\',monospace;border-radius:3px;outline:none"></textarea>'
@@ -3475,7 +3475,7 @@ function hGatherEntry(){
   const raw=(el('h-diet-note')?el('h-diet-note').value:'').trim();
   const f={ bfast:gv('h-f-bfast'), lunch:gv('h-f-lunch'), dinner:gv('h-f-dinner'),
             water:gn('h-f-water'), cokes:gn('h-f-cokes'), edrinks:gn('h-f-edrinks'),
-            bowel:gv('h-f-bowel'), sleep:gv('h-f-sleep'), exercise:gv('h-f-exercise') };
+            bowel:gv('h-f-bowel'), sleep:gn('h-f-sleep'), exercise:gv('h-f-exercise') };
   const fl=[];
   if(f.bfast) fl.push('Breakfast: '+f.bfast);
   if(f.lunch) fl.push('Lunch: '+f.lunch);
@@ -3500,7 +3500,7 @@ function hFieldsLine(f){
   if(f.cokes!=null) p.push('🥤 '+f.cokes);
   if(f.edrinks!=null) p.push('⚡ '+f.edrinks);
   if(f.bowel) p.push('BM: '+f.bowel);
-  if(f.sleep) p.push('😴 '+f.sleep);
+  if(f.sleep!=null && f.sleep!=='') p.push('😴 '+f.sleep+(typeof f.sleep==='number'?'/100':''));
   if(f.exercise) p.push('🏃 '+f.exercise);
   return p.length?'<div style="font-size:10px;color:var(--txt2);line-height:1.6;margin-bottom:4px">'+p.map(esc).join(' · ')+'</div>':'';
 }
@@ -3571,7 +3571,7 @@ function hEntryText(e){
   if(f.cokes!=null) lines.push('Diet Cokes: '+f.cokes);
   if(f.edrinks!=null) lines.push('Energy Drinks: '+f.edrinks);
   if(f.bowel) lines.push('Bowel movement: '+f.bowel);
-  if(f.sleep) lines.push('Sleep: '+f.sleep);
+  if(f.sleep!=null && f.sleep!=='') lines.push('Sleep'+(typeof f.sleep==='number'?' score: '+f.sleep+'/100':': '+f.sleep));
   if(f.exercise) lines.push('Exercise: '+f.exercise);
   if(e&&e.raw) lines.push(lines.length?'Notes: '+e.raw:e.raw);
   return lines.join('\n');

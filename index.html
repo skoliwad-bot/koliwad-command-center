@@ -25,14 +25,70 @@
   --pp:#f5efe0;--pi:#2c2416;--pr:#8b3a2a;--ps:#4a6741;--pa:#b8882a;--prl:#c8bfa8;--pf:#9a8e78;
 }
 body.light{
-  --bg:#f2f4f2;--surf:#ffffff;--surf2:#eaeeea;--brd:#c8d4c8;--brd2:#b0c0b0;
-  --txt:#1a221a;--txt2:#2a382a;--mut:#4a7050;--mut2:#7a9e7a;
-  --red:#c03030;--rdim:rgba(192,48,48,0.08);--rbrd:rgba(192,48,48,0.3);
-  --grn:#2e8042;--gdim:rgba(46,128,66,0.10);--gbrd:rgba(46,128,66,0.3);
-  --amb:#9a6c10;--adim:rgba(154,108,16,0.10);--abrd:rgba(154,108,16,0.3);
-  --blu:#3a68aa;--orn:#a05820;
-  --pp:#3a2e1e;--pi:#f0ece0;--pr:#8b3a2a;--ps:#2e5030;--pa:#8a6010;--prl:#5a4e38;--pf:#6a5e48;
+  --bg:#f6f8fc;--surf:#ffffff;--surf2:#eef1f7;--brd:#dce3ee;--brd2:#c8d2e5;
+  --txt:#0d1b2e;--txt2:#1c334d;--mut:#526880;--mut2:#8099b4;
+  --red:#d92b45;--rdim:rgba(217,43,69,0.07);--rbrd:rgba(217,43,69,0.28);
+  --grn:#0a9e52;--gdim:rgba(10,158,82,0.07);--gbrd:rgba(10,158,82,0.28);
+  --amb:#c97c05;--adim:rgba(201,124,5,0.07);--abrd:rgba(201,124,5,0.28);
+  --blu:#0278c0;--orn:#d14810;--prp:#6d28d9;
+  --pp:#0d1b2e;--pi:#eef1f7;--pr:#b01c38;--ps:#065a42;--pa:#7a3e08;--prl:#3730a3;--pf:#1a3658;
 }
+/* ── LIGHT MODE SURFACE & CARD OVERRIDES ── */
+body.light .card{box-shadow:0 1px 8px rgba(13,27,46,0.07),0 0 0 1px rgba(13,27,46,0.04);border-color:transparent;border-radius:6px;overflow:hidden;}
+body.light .ch{background:var(--surf2);border-bottom:1px solid var(--brd);}
+body.light .row{border-bottom-color:var(--brd);}
+
+/* Active nav — teal instead of red */
+body.light .ni.on{background:rgba(2,120,192,0.10);border-left-color:#0278c0;}
+body.light .ni.on .ico{color:#0278c0;}
+body.light .top{background:#ffffff;border-bottom:1px solid var(--brd);box-shadow:0 1px 4px rgba(13,27,46,0.05);}
+body.light .sidebar{background:#f6f8fc;border-right:1px solid var(--brd);}
+
+/* Badge color-coding */
+body.light .b.bm{background:#d92b45;color:#fff;}
+body.light .b.bs{background:#0278c0;color:#fff;}
+body.light .b.bc{background:#6d28d9;color:#fff;}
+
+/* Card header accent lines by card type */
+body.light .ch:has(.ct.r){border-left:3px solid #d92b45;}
+body.light .ch:has(.ct.g){border-left:3px solid #0a9e52;}
+body.light .ch:has(.ct.b){border-left:3px solid #0278c0;}
+body.light .ch:has(.ct.a){border-left:3px solid #c97c05;}
+body.light .ch:has(.ct.m){border-left:3px solid #6d28d9;}
+
+/* Buttons in light mode */
+body.light .btn{background:#ffffff;border:1px solid var(--brd2);color:var(--txt2);}
+body.light .btn:hover{background:var(--surf2);border-color:#0278c0;color:#0278c0;}
+body.light .aibtn{background:linear-gradient(135deg,#3d2272,#1e1040);color:#c8b0ff;border:1px solid #5c3dba;}
+
+/* Inputs & selects */
+body.light #p-health input,body.light #p-health select{background:var(--surf);border-color:var(--brd2);color:var(--txt);}
+body.light input,body.light select,body.light textarea{background:var(--surf);border-color:var(--brd2);color:var(--txt);}
+
+/* Page title slightly smaller tracking for light mode readability */
+body.light .pt{letter-spacing:0.5px;color:#0d1b2e;}
+
+/* AI block in light mode */
+body.light .ai-block{background:#f0f4ff;border:1px solid #c5d1f0;}
+body.light .ai-text{color:#1c334d;}
+
+/* Pills (FIRE dashboard) in light mode */
+body.light .pill{background:#ffffff;border:1px solid var(--brd);box-shadow:0 1px 4px rgba(13,27,46,0.06);}
+body.light .pill .pill-val.g{color:#0a9e52;}
+body.light .pill .pill-val.r{color:#d92b45;}
+body.light .pill .pill-val.b{color:#0278c0;}
+body.light .pill .pill-val.a{color:#c97c05;}
+
+/* Kiko chat panel in light mode */
+body.light #kcc-panel{background:#ffffff;border-left:1px solid var(--brd);}
+body.light #kcc-ph{background:linear-gradient(135deg,#1e1040,#3d2272);}
+body.light #kcc-bar{background:#f6f8fc;border-top:1px solid var(--brd);}
+body.light #kcc-q{background:#ffffff;border-color:var(--brd2);color:var(--txt);}
+body.light #kcc-msgs{background:#f6f8fc;}
+body.light .kcc-b.kcc-a{background:#ffffff;border-color:var(--brd);color:#0d1b2e;}
+body.light .kcc-b.kcc-u{background:rgba(2,120,192,0.10);border-color:rgba(2,120,192,0.30);color:#0d1b2e;}
+body.light #kcc-fab{box-shadow:0 4px 20px rgba(13,27,46,0.18);}
+body.light #kcc-ctx-lbl{color:#8099b4;}
 html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:var(--txt);font-family:'JetBrains Mono',monospace;overflow:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);}
 
 /* ── SETUP ── */

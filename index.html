@@ -1667,8 +1667,8 @@ localStorage.setItem = function(key, value) {
 
       </div>
 
-      <!-- ALERTS -->
-      <div id="br-alerts-wrap" style="margin-bottom:10px;display:none;">
+      <!-- ALERTS — always rendered, hidden by CSS when empty -->
+      <div id="br-alerts-wrap" style="margin-bottom:10px;">
         <div class="br-sec"><span class="br-sec-dot"></span><span class="br-sec-label">Open Alerts</span><span class="br-sec-line"></span></div>
         <div id="bAlerts"></div>
       </div>
@@ -4302,13 +4302,15 @@ function renderBrief(){
     sv('bf4', expVal3!=null?f$(expVal3):'—', expDelt3!=null?(expDelt3<=0?'g':'r'):'');
     sv('bf5', gapVal3!=null?(gapVal3>=0?'+':'-')+f$(gapVal3):'—', gapVal3!=null?(gapVal3>=0?'g':'r'):'');
     sv('bf6', firePct3!=null?firePct3+'%':'—', firePct3!=null?(firePct3>=100?'g':firePct3>=70?'a':'r'):'');
-    // Source label + favorable note
-    const srcEl=el('br-fire-src'); if(srcEl) srcEl.textContent=src3;
-    const noteEl=el('br-fire-note');
+    // Source label in section header
+    const srcEl=document.getElementById('br-fire-src');
+    if(srcEl) srcEl.textContent = src3 !== 'projected' ? src3 : (hasFLd3 ? 'projected' : 're-import FIRE Lab for projections');
+    // Favorable note below grid
+    const noteEl=document.getElementById('br-fire-note');
     if(noteEl){
       const favs=[];
       if(avDelt3!=null&&avDelt3>0) favs.push('Available $$ +'+f$(avDelt3)+' vs plan');
-      if(expDelt3!=null&&expDelt3<0) favs.push('Expenses '+(f$(expDelt3)).replace('$','-$')+' under plan');
+      if(expDelt3!=null&&expDelt3<0) favs.push('Expenses under plan by '+f$(Math.abs(expDelt3)));
       noteEl.textContent=favs.length?favs.join(' · ')+' ↑':'';
     }
   })();
@@ -4316,19 +4318,19 @@ function renderBrief(){
   // metrics removed - now in status bar
 
   // Alerts
-  const alertWrap = document.getElementById('br-alerts-wrap');
+  // Alerts — always render; wrap hidden via JS when none
   const alertEl = document.getElementById('bAlerts');
-  if(alertWrap && alertEl && oa.length > 0) {
-    alertWrap.style.display = 'block';
-    alertEl.innerHTML = oa.slice(0,4).map(a=>{
-      const isHigh=a.sev==='High'; const isMed=a.sev==='Medium';
-      return `<div class="br-alert${isMed?' med':''}">
-        <span class="br-alert-sev${isMed?' med':''}">${a.sev||'?'}</span>
-        <div><div class="br-alert-title">${esc(a.title)}</div>${a.action?`<div class="br-alert-note">${esc(a.action)}</div>`:''}</div>
-      </div>`;
-    }).join('');
-  } else if(alertWrap) {
-    alertWrap.style.display = 'none';
+  const alertWrap = document.getElementById('br-alerts-wrap');
+  if(alertEl){
+    if(oa.length > 0){
+      if(alertWrap) alertWrap.style.display='block';
+      alertEl.innerHTML = oa.slice(0,4).map(a=>{
+        const isMed=a.sev==='Medium';
+        return '<div class="br-alert'+(isMed?' med':'')+'"><span class="br-alert-sev'+(isMed?' med':'')+'">'+a.sev+'</span><div><div class="br-alert-title">'+esc(a.title)+'</div>'+(a.action?'<div class="br-alert-note">'+esc(a.action)+'</div>':'')+'</div></div>';
+      }).join('');
+    } else {
+      if(alertWrap) alertWrap.style.display='none';
+    }
   }
 
   // Daily Playbook (mirror the Playbook page's daily cadence; checkboxes reflect today's saved state)
@@ -4337,7 +4339,7 @@ function renderBrief(){
     const daily=(typeof PLAYBOOK!=='undefined'&&PLAYBOOK.daily)?PLAYBOOK.daily:[];
     const pbChecks=JSON.parse(localStorage.getItem('kcc_playbook_checks')||'{}');
     const tdKey=(typeof todayKey!=='undefined')?todayKey:isoD(new Date());
-    pbEl.innerHTML = daily.length===0?'<div style="color:#aaa;font-size:9px;padding:4px 0">No daily items</div>':
+    pbEl.innerHTML = daily.length===0?'<div style="color:#888;font-size:9px;padding:4px 0;font-style:italic">No daily items configured</div>':
       daily.map(d=>{const done=pbChecks[d.id+'_'+tdKey]||false;
         return `<div class="br-pb">
           <span class="br-pb-ck">${done?'☑':'☐'}</span>
@@ -4350,7 +4352,7 @@ function renderBrief(){
   const pfb=el('bPF');
   if(pfb){
     const p=S.portfolio;
-    if(!p||!p.value){ pfb.innerHTML='<div style="color:var(--mut2);font-size:9px;padding:4px 0">No portfolio data</div>'; }
+    if(!p||!p.value){ pfb.innerHTML='<div style="color:#888;font-size:9px;padding:4px 0;font-style:italic">No portfolio data — import Portfolio Tracker</div>'; }
     else{
       const dd=p.hwm>0?((p.value-p.hwm)/p.hwm*100):0;
       const ddc=dd<-10?'#c03030':dd<-5?'#b07000':'#2a8a3a';

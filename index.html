@@ -5553,14 +5553,26 @@ function buildPrompt(section) {
   if (typeof FL_D !== 'undefined' && FL_D.imported && FL_D.todayRow) {
     const tr = FL_D.todayRow;
     const gap = (tr.totalIn||0) - (tr.totalOut||0);
-    // When FIRE Lab is imported, prefer its actual expenses as trueNeed for prompts.
     if(tr.totalOut) trueNeed = Math.round(tr.totalOut);
-    const _avAi = FL_D.actLatest && FL_D.actLatest.available;
-    fireSum = `[Source: FIRE Lab spreadsheet] FIRE date: ${FL_D.fireDate}, Net Worth @Mo120: ${f$(FL_D.netWorth)}, `
-      + `Income: $${Math.round(tr.totalIn||0)}/mo, Expenses: $${Math.round(tr.totalOut||0)}/mo, `
-      + `Cash Flow: $${Math.round(gap)}/mo, HF: $${Math.round(tr.hf||0)}, HELOC: $${Math.round(tr.heloc||0)}, `
-      + `Available $$ (HF+HELOC avail+TIAA): $${Math.round(tr.avail||0)} projected${_avAi&&_avAi.actual!=null?' / $'+Math.round(_avAi.actual)+' actual':''}, `
-      + `FIRE Coverage: ${Math.round((tr.firePct||0)*100)}%, Scenario: ${FL_D.scenario||'—'}`;
+    const al3 = FL_D.actLatest || {};
+    const _avAi = al3.available;
+    const _incAi = al3.income;
+    const _expAi = al3.expenses;
+    // FIRE status — same logic as Today pill and FIRE page Plan Status
+    const _keys3=['hf','income','tiaa','heloc','expenses','available'];
+    const _diffs3=[];
+    _keys3.forEach(k=>{const v=al3[k];if(v&&v.actual!=null&&v.proj&&Math.abs(v.proj)>0){const good=(k==='heloc'||k==='expenses')?v.proj-v.actual:v.actual-v.proj;_diffs3.push(good/Math.abs(v.proj)*100);}});
+    const _avg3=_diffs3.length?_diffs3.reduce((a,b)=>a+b,0)/_diffs3.length:null;
+    const _status3=_avg3==null?'Unknown':_avg3>=2?'AHEAD':Math.abs(_avg3)<=5?'ON TRACK':_avg3>=-10?'AT RISK':'BEHIND';
+    fireSum = `[Source: FIRE Lab spreadsheet] FIRE date: ${FL_D.fireDate}, Status: ${_status3}${_avg3!=null?' (avg '+((_avg3>=0?'+':'')+_avg3.toFixed(1))+'% vs proj)':''}, Net Worth @Mo120: ${f$(FL_D.netWorth)}, `
+      + `FIRE Coverage: ${Math.round((tr.firePct||0)*100)}%, Scenario: ${FL_D.scenario||'—'}\n`
+      + `PROJECTED (current month): Income $${Math.round(tr.totalIn||0)}/mo, Expenses $${Math.round(tr.totalOut||0)}/mo, Gap $${Math.round(gap)}/mo\n`
+      + (_incAi&&_incAi.actual!=null ? `ACTUALS (Mo ${_incAi.mo}): Income $${Math.round(_incAi.actual)} (${_incAi.actual>=(_incAi.proj||0)?'+':''} $${Math.round(_incAi.actual-(_incAi.proj||0))} vs proj), ` : '')
+      + (_expAi&&_expAi.actual!=null ? `Expenses $${Math.round(_expAi.actual)} (${_expAi.actual<=(_expAi.proj||0)?'favorable':'unfavorable'} $${Math.round(Math.abs(_expAi.actual-(_expAi.proj||0)))} vs proj), ` : '')
+      + (_incAi&&_incAi.actual!=null&&_expAi&&_expAi.actual!=null ? `Actual gap $${Math.round(_incAi.actual-_expAi.actual)}/mo\n` : '')
+      + `HF: $${Math.round(tr.hf||0)}, HELOC drawn: $${Math.round(tr.heloc||0)}, TIAA: $${Math.round(tr.tiaa||0)}\n`
+      + `Available $$ (HF+HELOC avail+TIAA): $${Math.round(tr.avail||0)} projected`
+      + (_avAi&&_avAi.actual!=null ? ` / $${Math.round(_avAi.actual)} actual (${_avAi.actual>=(_avAi.proj||0)?'+':''} $${Math.round(_avAi.actual-(_avAi.proj||0))} vs proj)` : '');
   } else {
     fireSum = fire ? `Need: $${Math.round(trueNeed)}/mo, Income: $${fire.inc||0}/mo, Gap: $${Math.round((fire.inc||0)-trueNeed)}/mo, HF: $${fire.hf||0}, TIAA: $${fire.tiaa||0}, HELOC: $${fire.heloc||0}, FIRE%: ${fire.fire_pct||0}%` : 'No FIRE data (import FIRE Lab spreadsheet)';
   }
@@ -5652,10 +5664,13 @@ ALERTS: ${alerts.filter(a=>a.status==='Resolved').length} resolved, ${alerts.fil
 CC DEBT: $${totalCC} total · Randy Dang (Sonny owes him, Priority #1): $${Math.round(Math.abs(dang))}
 FIRE PATH: ${doneCount}/${totalFP} tasks complete
 
+IMPORTANT: Use ACTUALS from the FIRE data above wherever available (labeled "ACTUALS (Mo X)"). Only use projected numbers when no actuals exist. The actualIncome, fixedExpenses, and netCashFlow fields must reflect the actual closed-month figures if present, not projections.
+
 Return ONLY valid JSON (no markdown, no backticks):
 {
-  "quickSummary": {"cashFlow": "2 sentences on cash position", "firePath": "2 sentences on FIRE trajectory", "thisMonth": "2 sentences on top priorities"},
+  "quickSummary": {"cashFlow": "2 sentences on cash position using actuals", "firePath": "2 sentences on FIRE trajectory including status label", "thisMonth": "2 sentences on top priorities"},
   "warningNote": "one sentence on biggest current risk",
+  "fireStatus": "AHEAD|ON TRACK|AT RISK|BEHIND",
   "helocBalance": number,
   "helocAvailable": number,
   "sweepReady": number,

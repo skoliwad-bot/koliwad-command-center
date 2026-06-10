@@ -258,68 +258,97 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 .brpg{max-width:7in;margin:0 auto;background:#fff;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#111;line-height:1.4;}
 
 /* HEADER */
-.br-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:2px solid #111;}
-.br-hdr-l{display:flex;align-items:center;gap:8px;}
-.br-logo{font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:#111;}
-.br-logosmall{font-size:7px;letter-spacing:1px;color:#888;margin-top:1px;}
+.br-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 13px;border-bottom:3px solid #111;}
+.br-hdr-l{display:flex;align-items:center;gap:12px;}
+.br-badge{width:42px;height:42px;border-radius:50%;border:3px solid #111;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:900;color:#111;font-family:Georgia,serif;flex-shrink:0;}
+.br-logo{font-size:12px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:#111;}
+.br-logosmall{font-size:8px;color:#777;margin-top:2px;font-style:italic;}
 .br-hdr-r{text-align:right;}
-.br-day{font-size:7px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#c03030;}
-.br-date{font-size:22px;font-weight:900;line-height:1;}
-.br-month{font-size:7px;color:#888;}
+.br-day{font-size:8px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#b82020;}
+.br-date{font-size:36px;font-weight:900;line-height:1;color:#111;font-family:Georgia,serif;}
+.br-month{font-size:8px;color:#777;}
 
-/* STATS */
-.br-stats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid #ccc;background:#f7f7f7;}
-.br-stat{padding:5px 10px;border-right:1px solid #ddd;}
+/* KPI STRIP */
+.br-stats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:2px solid #111;}
+.br-stat{padding:10px 14px;border-right:1.5px solid #ddd;}
 .br-stat:last-child{border-right:none;}
-.br-stat-l{font-size:6px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#999;display:block;}
-.br-stat-v{font-size:13px;font-weight:900;color:#111;display:block;}
-.br-stat-v.r{color:#c03030;}.br-stat-v.g{color:#1a6b2a;}.br-stat-v.a{color:#8b5000;}
+.br-stat-icon{font-size:14px;display:block;margin-bottom:3px;}
+.br-stat-v{font-size:18px;font-weight:900;display:block;color:#111;}
+.br-stat-v.r{color:#b82020;}.br-stat-v.g{color:#157030;}.br-stat-v.a{color:#905000;}
+.br-stat-l{font-size:8px;color:#888;display:block;margin-top:2px;font-weight:600;}
 
 /* BODY */
-.br-body{padding:10px 14px;}
+.br-body{padding:14px 18px;}
 
-/* FIRE */
-.br-fire{display:grid;grid-template-columns:repeat(6,1fr);border:1px solid #ddd;margin-bottom:10px;}
-.br-fc{padding:5px 8px;border-right:1px solid #ddd;}
+/* SECTION HEADERS */
+.br-sec{display:flex;align-items:center;gap:7px;margin-bottom:8px;margin-top:14px;}
+.br-sec-dot{width:7px;height:7px;border-radius:50%;background:#b82020;flex-shrink:0;}
+.br-sec-label{font-size:7px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#555;white-space:nowrap;}
+.br-sec-line{flex:1;height:1.5px;background:#ddd;}
+.br-sec-note{font-size:8px;color:#aaa;font-style:italic;white-space:nowrap;}
+
+/* FIRE METRICS */
+.br-fire{display:grid;grid-template-columns:repeat(6,1fr);border:2px solid #111;border-radius:8px;overflow:hidden;margin-bottom:4px;}
+.br-fc{padding:8px 10px;border-right:1px solid #ddd;background:#fff;}
 .br-fc:last-child{border-right:none;}
-.br-fc-l{font-size:6px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;display:block;}
-.br-fc-v{font-size:13px;font-weight:900;color:#111;display:block;margin-top:1px;}
-.br-fc-v.r{color:#c03030;}.br-fc-v.g{color:#1a6b2a;}
-
-/* SECTION LABEL */
-.br-sec{font-size:7px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#c03030;border-bottom:1px solid #c03030;padding-bottom:2px;margin-bottom:6px;}
+.br-fc.hi{background:#edfff4;}
+.br-fc-l{font-size:6px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#aaa;display:block;margin-bottom:3px;}
+.br-fc-v{font-size:14px;font-weight:900;color:#111;display:block;}
+.br-fc-v.r{color:#b82020;}.br-fc-v.g{color:#157030;}.br-fc-v.a{color:#905000;}
+.br-fire-note{font-size:8px;color:#aaa;margin-bottom:12px;text-align:right;font-style:italic;}
 
 /* COLUMNS */
-.br-2col{display:grid;grid-template-columns:2.4in 4.3in;gap:12px;margin-bottom:10px;align-items:start;}
+.br-2col{display:grid;grid-template-columns:2.2in 4.5in;gap:14px;margin-bottom:10px;align-items:start;}
 
 /* TASKS */
-.br-t{display:flex;gap:6px;padding:3px 0;border-bottom:1px solid #eee;align-items:baseline;}
+.br-t{display:flex;gap:8px;padding:5px 0;border-bottom:1.5px dashed #e0e0e0;align-items:flex-start;}
 .br-t:last-child{border-bottom:none;}
-.br-t-n{font-size:8px;font-weight:700;color:#c03030;min-width:12px;flex-shrink:0;}
-.br-t-txt{flex:1;font-size:9px;font-weight:600;line-height:1.3;}
-.br-t-src{font-size:7px;color:#999;}
-.br-t-b{font-size:6px;font-weight:700;padding:1px 4px;flex-shrink:0;margin-left:4px;}
-.br-t-b.M{background:#c03030;color:#fff;}.br-t-b.S{background:#8b5000;color:#fff;}
+.br-t-n{width:20px;height:20px;border-radius:50%;background:#111;color:#fff;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.br-t-txt{flex:1;font-size:10px;font-weight:700;line-height:1.3;color:#111;}
+.br-t-src{font-size:7px;color:#bbb;display:block;}
+.br-t-b{font-size:7px;font-weight:800;padding:2px 6px;border-radius:4px;flex-shrink:0;margin-top:1px;}
+.br-t-b.M{background:#b82020;color:#fff;}.br-t-b.S{background:#905000;color:#fff;}
 
 /* SCHEDULE */
-.br-ev{display:flex;gap:6px;padding:2px 0;border-bottom:1px solid #eee;align-items:center;}
+.br-ev{display:flex;gap:8px;padding:4px 0;border-bottom:1.5px dashed #e0e0e0;align-items:center;}
 .br-ev:last-child{border-bottom:none;}
-.br-ev-t{font-size:7px;color:#888;width:42px;flex-shrink:0;}
-.br-ev-d{width:2px;height:12px;flex-shrink:0;}
-.br-ev-n{flex:1;font-size:8px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.br-ev-t{font-size:8px;color:#aaa;width:44px;flex-shrink:0;font-weight:600;}
+.br-ev-d{width:4px;height:28px;border-radius:2px;flex-shrink:0;}
+.br-ev-n{flex:1;font-size:9px;font-weight:700;color:#111;line-height:1.3;}
 
 /* DEADLINES */
-.br-dl{display:flex;gap:6px;padding:2px 0;border-bottom:1px solid #eee;align-items:center;}
+.br-dl{display:flex;gap:7px;padding:4px 0;border-bottom:1.5px dashed #e0e0e0;align-items:center;}
 .br-dl:last-child{border-bottom:none;}
-.br-dl-w{font-size:6px;font-weight:700;padding:1px 4px;white-space:nowrap;flex-shrink:0;}
-.br-dl-t{flex:1;font-size:8px;font-weight:600;}
+.br-dl-w{font-size:8px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;background:#b82020;color:#fff;}
+.br-dl-w.near{background:#905000;}
+.br-dl-t{flex:1;font-size:9px;font-weight:700;color:#111;}
+
+/* ALERTS */
+.br-alert{display:flex;gap:9px;padding:7px 11px;border-radius:8px;border:2px solid #f0b0b0;background:#fff8f8;margin-bottom:6px;}
+.br-alert.med{border-color:#f0d0a0;background:#fffaf3;}
+.br-alert-sev{font-size:7px;font-weight:800;padding:3px 7px;border-radius:20px;flex-shrink:0;align-self:flex-start;margin-top:2px;background:#b82020;color:#fff;}
+.br-alert-sev.med{background:#905000;}
+.br-alert-title{font-size:10px;font-weight:800;color:#111;line-height:1.3;}
+.br-alert-note{font-size:8px;color:#777;margin-top:2px;line-height:1.45;}
+
+/* PLAYBOOK */
+.br-pb{display:flex;gap:7px;padding:3px 0;border-bottom:1.5px dashed #e0e0e0;align-items:center;}
+.br-pb:last-child{border-bottom:none;}
+.br-pb-ck{font-size:11px;flex-shrink:0;}
+.br-pb-ico{font-size:11px;flex-shrink:0;}
+.br-pb-lbl{font-size:9px;font-weight:700;color:#111;flex:1;}
+.br-pb-lbl.done{text-decoration:line-through;color:#ccc;}
 
 /* WRITE LINES */
-.br-line{height:20px;border-bottom:1px solid #ccc;}
+.br-line{height:20px;border-bottom:1.5px dashed #ddd;margin-bottom:3px;}
+
+/* WAITING/TOMORROW BOXES */
+.br-box{border:2px dashed #ccc;border-radius:8px;padding:10px 12px;}
+.br-box-hdr{font-size:7px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:8px;}
 
 /* FOOTER */
-.br-foot{border-top:1px solid #ccc;padding:4px 14px;display:flex;justify-content:space-between;background:#f7f7f7;}
-.br-foot span{font-size:7px;color:var(--mut2);}
+.br-foot{border-top:2px solid #111;padding:7px 18px;display:flex;justify-content:space-between;margin-top:12px;}
+.br-foot span{font-size:8px;color:#aaa;font-weight:600;}
 
 @media print{
   #shell{display:none!important;}
@@ -1577,10 +1606,7 @@ localStorage.setItem = function(key, value) {
 
     <div class="br-hdr">
       <div class="br-hdr-l">
-        <svg width="22" height="24" viewBox="0 0 26 28" fill="none">
-          <path d="M13 2L2 6.5V14C2 19.8 7 24.8 13 26.5C19 24.8 24 19.8 24 14V6.5L13 2Z" fill="#111" stroke="#c03030" stroke-width="1.5"/>
-          <text x="7.5" y="18.5" font-family="Arial" font-size="11" font-weight="900" fill="#c03030">K</text>
-        </svg>
+        <div class="br-badge">K</div>
         <div>
           <div class="br-logo">Koliwad Command Center</div>
           <div class="br-logosmall">Daily Operating Brief · <span id="bgen">—</span></div>
@@ -1594,46 +1620,47 @@ localStorage.setItem = function(key, value) {
     </div>
 
     <div class="br-stats">
-      <div class="br-stat"><span class="br-stat-l">Ticket Risk</span><span class="br-stat-v" id="bpv1">—</span></div>
-      <div class="br-stat"><span class="br-stat-l">Must Tasks</span><span class="br-stat-v" id="bpv2">—</span></div>
-      <div class="br-stat"><span class="br-stat-l">Open Alerts</span><span class="br-stat-v" id="bpv3">—</span></div>
-      <div class="br-stat"><span class="br-stat-l">FIRE Status</span><span class="br-stat-v" id="bpv4">—</span></div>
+      <div class="br-stat"><span class="br-stat-icon">🎟</span><span class="br-stat-v" id="bpv1">—</span><span class="br-stat-l">Ticket Risk</span></div>
+      <div class="br-stat"><span class="br-stat-icon">🔥</span><span class="br-stat-v" id="bpv2">—</span><span class="br-stat-l">Must Tasks</span></div>
+      <div class="br-stat"><span class="br-stat-icon">🚨</span><span class="br-stat-v" id="bpv3">—</span><span class="br-stat-l">Open Alerts</span></div>
+      <div class="br-stat"><span class="br-stat-icon">🎯</span><span class="br-stat-v" id="bpv4">—</span><span class="br-stat-l">FIRE Status</span></div>
     </div>
 
     <div class="br-body">
 
       <!-- FIRE -->
-      <div class="br-sec">FIRE Snapshot</div>
+      <div class="br-sec" style="margin-top:0"><span class="br-sec-dot"></span><span class="br-sec-label">FIRE Snapshot</span><span class="br-sec-line"></span><span class="br-sec-note" id="br-fire-src"></span></div>
       <div class="br-fire">
-        <div class="br-fc"><span class="br-fc-l">Available $$</span><span class="br-fc-v g" id="bf1">—</span></div>
-        <div class="br-fc"><span class="br-fc-l">vs Proj</span><span class="br-fc-v" id="bf2">—</span></div>
+        <div class="br-fc hi"><span class="br-fc-l">Available $$</span><span class="br-fc-v g" id="bf1">—</span></div>
+        <div class="br-fc hi"><span class="br-fc-l">vs Proj</span><span class="br-fc-v" id="bf2">—</span></div>
         <div class="br-fc"><span class="br-fc-l">Income/mo</span><span class="br-fc-v" id="bf3">—</span></div>
         <div class="br-fc"><span class="br-fc-l">Expenses/mo</span><span class="br-fc-v" id="bf4">—</span></div>
         <div class="br-fc"><span class="br-fc-l">Gap/mo</span><span class="br-fc-v" id="bf5">—</span></div>
         <div class="br-fc"><span class="br-fc-l">FIRE %</span><span class="br-fc-v" id="bf6">—</span></div>
       </div>
+      <div class="br-fire-note" id="br-fire-note"></div>
 
       <!-- TASKS + SCHEDULE -->
       <div class="br-2col">
 
         <div>
-          <div class="br-sec">Priority Tasks</div>
+          <div class="br-sec" style="margin-top:0"><span class="br-sec-dot"></span><span class="br-sec-label">Priority Tasks</span><span class="br-sec-line"></span></div>
           <div id="bMIT"></div>
         </div>
 
         <div>
-          <div class="br-sec">Today's Schedule</div>
+          <div class="br-sec" style="margin-top:0"><span class="br-sec-dot" style="background:#4a7ab8"></span><span class="br-sec-label">Today's Schedule</span><span class="br-sec-line"></span></div>
           <div id="bCAL"></div>
-          <div style="margin-top:10px;">
-            <div class="br-sec">Key Deadlines</div>
+          <div style="margin-top:10px">
+            <div class="br-sec"><span class="br-sec-dot" style="background:#905000"></span><span class="br-sec-label">Key Deadlines</span><span class="br-sec-line"></span></div>
             <div id="bDL"></div>
           </div>
-          <div style="margin-top:10px;">
-            <div class="br-sec">Daily Playbook</div>
+          <div style="margin-top:10px">
+            <div class="br-sec"><span class="br-sec-dot" style="background:#157030"></span><span class="br-sec-label">Daily Playbook</span><span class="br-sec-line"></span></div>
             <div id="bPB"></div>
           </div>
-          <div style="margin-top:10px;">
-            <div class="br-sec">Portfolio</div>
+          <div style="margin-top:10px">
+            <div class="br-sec"><span class="br-sec-dot" style="background:#555"></span><span class="br-sec-label">Portfolio</span><span class="br-sec-line"></span></div>
             <div id="bPF"></div>
           </div>
         </div>
@@ -1642,22 +1669,22 @@ localStorage.setItem = function(key, value) {
 
       <!-- ALERTS -->
       <div id="br-alerts-wrap" style="margin-bottom:10px;display:none;">
-        <div class="br-sec">Open Alerts</div>
+        <div class="br-sec"><span class="br-sec-dot"></span><span class="br-sec-label">Open Alerts</span><span class="br-sec-line"></span></div>
         <div id="bAlerts"></div>
       </div>
 
       <!-- NOTES -->
-      <div class="br-sec">Notes</div>
+      <div class="br-sec"><span class="br-sec-dot" style="background:#999"></span><span class="br-sec-label">Notes</span><span class="br-sec-line"></span></div>
       <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
       <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px;">
-        <div>
-          <div class="br-sec">Waiting On</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px;">
+        <div class="br-box">
+          <div class="br-box-hdr">⏳ Waiting On</div>
           <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
         </div>
-        <div>
-          <div class="br-sec">Tomorrow</div>
+        <div class="br-box">
+          <div class="br-box-hdr">🌅 Tomorrow</div>
           <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
         </div>
       </div>
@@ -4205,7 +4232,7 @@ function renderBrief(){
     _seen.add(key); _seen.add(tkey); return true;
   }).sort((a,b)=>{const o={Must:0,Should:1,Could:2,"Won't":3};return (o[a.m]??9)-(o[b.m]??9);});
   const mit=[..._pfToday,..._mitTasks].slice(0,7);
-  el('bMIT').innerHTML=mit.length===0?'<div style="color:var(--mut2);font-size:9px;padding:4px 0">No pending tasks</div>':
+  el('bMIT').innerHTML=mit.length===0?'<div style="color:#aaa;font-size:9px;padding:4px 0">No pending tasks</div>':
     mit.map((t,i)=>`<div class="br-t">
       <span class="br-t-n">${i+1}</span>
       <div style="flex:1">
@@ -4225,7 +4252,7 @@ function renderBrief(){
     if(excludeKeywords.some(k => cn.includes(k))) return false;
     return true;
   }).slice(0,8);
-  el('bCAL').innerHTML=tc.length===0?'<div style="color:var(--mut2);font-size:10px;padding:8px 0">No events today</div>':
+  el('bCAL').innerHTML=tc.length===0?'<div style="color:#aaa;font-size:10px;padding:8px 0">No events today</div>':
     tc.map(e=>`<div class="br-ev">
       <span class="br-ev-t">${e.time}</span>
       <div class="br-ev-d" style="background:${e.calColor||'#4a7ab8'}"></div>
@@ -4243,12 +4270,12 @@ function renderBrief(){
     if(_mitTitles.has(tk)) return false; // already shown in Priority Tasks
     if(_seenD.has(tk)) return false; _seenD.add(tk); return true;
   }).sort((a,b)=>new Date(a.dd)-new Date(b.dd)).slice(0,6);
-  el('bDL').innerHTML=dls.length===0?'<div style="color:var(--mut2);font-size:9px;padding:4px 0">No deadlines</div>':
+  el('bDL').innerHTML=dls.length===0?'<div style="color:#aaa;font-size:9px;padding:4px 0">No deadlines</div>':
     dls.map(t=>{const diff=Math.ceil((new Date(t.dd)-td0)/86400000);
-      const bg=diff<=0?'#c03030':diff<=2?'#8b5000':'#ccc';
-      const fg=diff<=0||diff<=2?'#fff':'#555';
+      const cls=diff<=0?'br-dl-w':diff<=2?'br-dl-w near':'br-dl-w near';
+      const label=diff<=0?'TODAY':diff===1?'TMW':fd(t.dd);
       return`<div class="br-dl">
-        <span class="br-dl-w" style="background:${bg};color:${fg}">${diff<=0?'TODAY':diff===1?'TMW':fd(t.dd)}</span>
+        <span class="${cls}">${label}</span>
         <span class="br-dl-t">${esc(t.title)}</span>
       </div>`;
     }).join('');
@@ -4272,12 +4299,18 @@ function renderBrief(){
     sv('bf1', avVal3!=null?f$(avVal3):'—', 'g');
     sv('bf2', avDelt3!=null?(avDelt3>=0?'+':'')+f$(avDelt3):'proj', avDelt3!=null?(avDelt3>=0?'g':'r'):'');
     sv('bf3', incVal3!=null?f$(incVal3):'—', '');
-    sv('bf4', expVal3!=null?f$(expVal3):'—', '');
+    sv('bf4', expVal3!=null?f$(expVal3):'—', expDelt3!=null?(expDelt3<=0?'g':'r'):'');
     sv('bf5', gapVal3!=null?(gapVal3>=0?'+':'-')+f$(gapVal3):'—', gapVal3!=null?(gapVal3>=0?'g':'r'):'');
     sv('bf6', firePct3!=null?firePct3+'%':'—', firePct3!=null?(firePct3>=100?'g':firePct3>=70?'a':'r'):'');
-    // Update FIRE section label to show data source
-    const secEl=document.querySelector('#p-brief .br-sec');
-    if(secEl) secEl.textContent='FIRE Snapshot'+(src3!=='projected'?' · '+src3:'');
+    // Source label + favorable note
+    const srcEl=el('br-fire-src'); if(srcEl) srcEl.textContent=src3;
+    const noteEl=el('br-fire-note');
+    if(noteEl){
+      const favs=[];
+      if(avDelt3!=null&&avDelt3>0) favs.push('Available $$ +'+f$(avDelt3)+' vs plan');
+      if(expDelt3!=null&&expDelt3<0) favs.push('Expenses '+(f$(expDelt3)).replace('$','-$')+' under plan');
+      noteEl.textContent=favs.length?favs.join(' · ')+' ↑':'';
+    }
   })();
 
   // metrics removed - now in status bar
@@ -4287,11 +4320,13 @@ function renderBrief(){
   const alertEl = document.getElementById('bAlerts');
   if(alertWrap && alertEl && oa.length > 0) {
     alertWrap.style.display = 'block';
-    alertEl.innerHTML = oa.slice(0,4).map(a=>`<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid #eee;font-size:9px;">
-      <span style="font-size:6px;font-weight:700;padding:1px 5px;background:${a.sev==='High'?'#c03030':a.sev==='Medium'?'#8b5000':'#ccc'};color:${a.sev==='Low'?'#555':'#fff'};white-space:nowrap;">${a.sev||'?'}</span>
-      <span style="flex:1;font-weight:600;">${esc(a.title)}</span>
-      ${a.action?`<span style="font-size:7px;color:#888;">${esc(a.action)}</span>`:''}
-    </div>`).join('');
+    alertEl.innerHTML = oa.slice(0,4).map(a=>{
+      const isHigh=a.sev==='High'; const isMed=a.sev==='Medium';
+      return `<div class="br-alert${isMed?' med':''}">
+        <span class="br-alert-sev${isMed?' med':''}">${a.sev||'?'}</span>
+        <div><div class="br-alert-title">${esc(a.title)}</div>${a.action?`<div class="br-alert-note">${esc(a.action)}</div>`:''}</div>
+      </div>`;
+    }).join('');
   } else if(alertWrap) {
     alertWrap.style.display = 'none';
   }
@@ -4302,13 +4337,13 @@ function renderBrief(){
     const daily=(typeof PLAYBOOK!=='undefined'&&PLAYBOOK.daily)?PLAYBOOK.daily:[];
     const pbChecks=JSON.parse(localStorage.getItem('kcc_playbook_checks')||'{}');
     const tdKey=(typeof todayKey!=='undefined')?todayKey:isoD(new Date());
-    pbEl.innerHTML = daily.length===0?'<div style="color:var(--mut2);font-size:9px;padding:4px 0">No daily items</div>':
+    pbEl.innerHTML = daily.length===0?'<div style="color:#aaa;font-size:9px;padding:4px 0">No daily items</div>':
       daily.map(d=>{const done=pbChecks[d.id+'_'+tdKey]||false;
-        return `<div style="display:flex;align-items:center;gap:6px;padding:2px 0;font-size:9px;">
-        <span style="font-size:9px;">${done?'☑':'☐'}</span>
-        <span style="font-size:10px;">${d.icon||''}</span>
-        <span style="flex:1;font-weight:600;${done?'text-decoration:line-through;color:var(--mut2);':''}">${esc(d.label)}</span>
-      </div>`;}).join('');
+        return `<div class="br-pb">
+          <span class="br-pb-ck">${done?'☑':'☐'}</span>
+          <span class="br-pb-ico">${d.icon||''}</span>
+          <span class="br-pb-lbl${done?' done':''}">${esc(d.label)}</span>
+        </div>`;}).join('');
   }
 
   // Portfolio snapshot + this week's actions

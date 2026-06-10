@@ -2402,19 +2402,55 @@ function rToday(){
         +'</div></div>').join('');
   }
 
-  // FIRE
-  if(!fire){
+  // FIRE snapshot — use FL_D (FIRE Lab) when available, fall back to basic fire tracker
+  const hasFLd = typeof FL_D !== 'undefined' && FL_D && FL_D.todayRow;
+  if(!fire && !hasFLd){
     el('t-fire').innerHTML='<div class="empty">Go to 🎯 FIRE page to enter your numbers →</div>';
   } else {
-    const gv=fire.inc-fire.need, gn2=gv<0;
-    el('t-fire').innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--brd)">'
-      +'<div style="padding:12px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Monthly Need</span><span style="font-size:20px;font-weight:700;display:block;margin-top:3px">'+f$(fire.need)+'</span></div>'
-      +'<div style="padding:12px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Income</span><span style="font-size:20px;font-weight:700;color:var(--grn);display:block;margin-top:3px">'+f$(fire.inc)+'</span></div>'
-      +'<div style="padding:12px 16px"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Gap</span><span style="font-size:20px;font-weight:700;color:'+(gn2?'var(--red)':'var(--grn)')+';display:block;margin-top:3px">'+(gn2?'-$'+Math.abs(gv).toLocaleString():'$'+gv.toLocaleString())+'</span></div>'
-      +'</div><div style="padding:8px 16px"><span style="font-size:9px;font-weight:700;letter-spacing:2px;color:'+(gn2?'var(--red)':'var(--grn)');+'">'+  (gn2?'⚠ OFF TRACK':'✓ ON TRACK')+'</span></div>';
+    const f2=n=>n!=null?'$'+Math.round(Math.abs(n)).toLocaleString():'—';
+    const al2=(hasFLd&&FL_D.actLatest)?FL_D.actLatest:{};
+    const tr=hasFLd?FL_D.todayRow:null;
+    const avAct=al2.available, hasAv=avAct&&avAct.actual!=null;
+    const avVal=hasAv?avAct.actual:(tr?tr.avail:null);
+    const avDelt=hasAv&&avAct.proj?avAct.actual-avAct.proj:null;
+    const incAct=al2.income, hasInc=incAct&&incAct.actual!=null;
+    const expAct=al2.expenses, hasExp=expAct&&expAct.actual!=null;
+    const incVal=hasInc?incAct.actual:(tr?tr.totalIn:(fire?fire.inc:null));
+    const expVal=hasExp?expAct.actual:(tr?tr.totalOut:(fire?fire.need:null));
+    const gapVal=incVal!=null&&expVal!=null?incVal-expVal:null;
+    const incDelt=hasInc&&incAct.proj?incAct.actual-incAct.proj:null;
+    const expDelt=hasExp&&expAct.proj?expAct.actual-expAct.proj:null;
+    const firePct=tr?Math.round((tr.firePct||0)*100):(fire?Math.round(fire.firePct||0):null);
+    const fireDate=hasFLd?FL_D.fireDate:null;
+    let moLeft=null;
+    if(fireDate&&fireDate!=='—'){const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const pt=fireDate.split(' ');if(pt.length===2){const fd=new Date(+pt[1],mo.indexOf(pt[0]),1);moLeft=Math.max(0,Math.round((fd-new Date())/2629800000));}}
+    const actMo=hasInc?'Mo '+incAct.mo+' actuals':(hasAv?'Mo '+avAct.mo+' actuals':'projected');
+    const tile=(lbl,val,sub,col,last)=>'<div style="padding:10px 14px'+(last?'':';border-right:1px solid var(--brd)')+'">'
+      +'<span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">'+lbl+'</span>'
+      +'<span style="font-size:16px;font-weight:700;color:'+(col||'var(--txt)')+';display:block;margin-top:3px">'+val+'</span>'
+      +(sub?'<span style="font-size:9px;color:var(--mut2)">'+sub+'</span>':'')+'</div>';
+    const avRow='<div style="padding:12px 16px;border-bottom:1px solid var(--brd);display:flex;justify-content:space-between;align-items:center;gap:8px">'
+      +'<div><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">Available $$ '+(hasAv?'('+actMo+')':'(projected)')+'</span>'
+      +'<span style="font-size:22px;font-weight:700;color:var(--grn)">'+(avVal!=null?f2(avVal):'—')+'</span></div>'
+      +(avDelt!=null
+        ?'<div style="text-align:right"><span style="font-size:16px;font-weight:700;color:'+(avDelt>=0?'var(--grn)':'var(--red)')+'\">'+(avDelt>=0?'+':'')+f2(avDelt)+'</span>'
+          +'<span style="font-size:9px;color:var(--mut2);display:block">vs proj '+f2(avAct.proj)+'</span></div>'
+        :(fireDate
+          ?'<div style="text-align:right"><span style="font-size:13px;font-weight:700;color:'+(firePct>=100?'var(--grn)':firePct>=70?'var(--amb)':'var(--red)')+'">'+fireDate+'</span>'+(moLeft!=null?'<span style="font-size:9px;color:var(--mut2);display:block">'+moLeft+' months away</span>':'')+'</div>':''))
+      +'</div>';
+    const row2='<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-bottom:1px solid var(--brd)">'
+      +tile('Income',incVal!=null?f2(incVal):'—',incDelt!=null?(incDelt>=0?'+':'')+f2(incDelt)+' vs proj':(hasInc?'actual':'projected'),hasInc&&incDelt!=null?(incDelt>=0?'var(--grn)':'var(--red)'):'var(--txt)')
+      +tile('Expenses',expVal!=null?f2(expVal):'—',expDelt!=null?(expDelt>=0?'+':'')+f2(expDelt)+' vs proj':(hasExp?'actual':'projected'),hasExp&&expDelt!=null?(expDelt<=0?'var(--grn)':'var(--red)'):'var(--txt)')
+      +tile('Monthly Gap',gapVal!=null?(gapVal>=0?'+$':'-$')+Math.round(Math.abs(gapVal)).toLocaleString():'—',actMo,gapVal!=null?(gapVal>=0?'var(--grn)':'var(--red)'):'var(--txt)')
+      +tile('FIRE %',firePct!=null?firePct+'%':'—',moLeft!=null?moLeft+'mo → '+(fireDate||''):(fireDate||''),firePct!=null?(firePct>=100?'var(--grn)':firePct>=70?'var(--amb)':'var(--red)'):'var(--txt)',true)
+      +'</div>';
+    const foot='<div style="padding:5px 16px 7px;display:flex;justify-content:space-between;align-items:center">'
+      +'<span style="font-size:9px;color:var(--mut2)">'+(hasInc||hasAv?'Latest '+actMo+' · re-import FIRE Lab to refresh':'Projected — import FIRE Lab for actuals')+'</span>'
+      +(avDelt==null&&fireDate?'<span style="font-size:10px;font-weight:700;color:'+(firePct>=100?'var(--grn)':firePct>=70?'var(--amb)':'var(--red)')+'">'+fireDate+(moLeft!=null?' · '+moLeft+'mo':'')+'</span>':'')+'</div>';
+    el('t-fire').innerHTML=avRow+row2+foot;
   }
 
-  // Portfolio snapshot (compact) + this week's portfolio actions
+    // Portfolio snapshot (compact) + this week's portfolio actions
   const pfEl=document.getElementById('t-portfolio');
   if(pfEl){
     const p=S.portfolio;

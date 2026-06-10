@@ -6999,8 +6999,8 @@ function renderDashboard() {
   const _avAct = al.available;
   const _hasAvAct = _avAct && _avAct.actual!=null;
   const _avVal = _hasAvAct ? f$(_avAct.actual) : (_avProj!=null?f$(_avProj):'—');
-  const _avSub = _hasAvAct
-    ? ('proj '+f$(_avAct.proj!=null?_avAct.proj:(_avProj||0))+(_avAct.proj?' · '+((_avAct.actual-_avAct.proj)>=0?'+':'')+(((_avAct.actual-_avAct.proj)/Math.abs(_avAct.proj))*100).toFixed(1)+'% vs proj':''))
+  const _avSub = _hasAvAct && _avAct.proj
+    ? (()=>{ const d=_avAct.actual-_avAct.proj; const pct=((d/Math.abs(_avAct.proj))*100).toFixed(1); return (d>=0?'+':'')+f$(d)+' vs proj '+f$(_avAct.proj)+' ('+( d>=0?'+':'')+pct+'%)'; })()
     : 'HF + HELOC avail + TIAA (projected)';
   document.getElementById('dash-pills').innerHTML = [
     {lbl:'Available $$', val: _avVal,   cls:'g', sub:_avSub},

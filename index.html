@@ -4280,8 +4280,7 @@ function renderBrief(){
       </div>`;
     }).join('');
 
-  // FIRE snapshot — use FL_D actuals when available, matching Today page
-  (function(){
+  try { (function(){
     const hasFLd3 = typeof FL_D !== 'undefined' && FL_D && FL_D.todayRow;
     const al3 = hasFLd3 && FL_D.actLatest ? FL_D.actLatest : {};
     const tr3 = hasFLd3 ? FL_D.todayRow : null;
@@ -4293,6 +4292,7 @@ function renderBrief(){
     const expVal3 = hasExp3 ? expAct3.actual : (tr3 ? tr3.totalOut : (fire ? fire.need : null));
     const gapVal3 = incVal3!=null && expVal3!=null ? incVal3-expVal3 : null;
     const avDelt3 = hasAv3 && avAct3.proj ? avAct3.actual-avAct3.proj : null;
+    const expDelt3 = hasExp3 && expAct3.proj ? expAct3.actual-expAct3.proj : null;
     const firePct3= tr3 ? Math.round((tr3.firePct||0)*100) : (fire ? (fire.fire_pct||0) : null);
     const src3 = hasInc3 ? 'Mo '+incAct3.mo+' actual' : hasAv3 ? 'Mo '+avAct3.mo+' actual' : 'projected';
     const sv=(id,val,cls)=>{const e=el(id);if(!e)return;e.textContent=val;e.className='br-fc-v'+(cls?' '+cls:'');};
@@ -4313,7 +4313,7 @@ function renderBrief(){
       if(expDelt3!=null&&expDelt3<0) favs.push('Expenses under plan by '+f$(Math.abs(expDelt3)));
       noteEl.textContent=favs.length?favs.join(' · ')+' ↑':'';
     }
-  })();
+  })(); } catch(e){ console.error('Brief FIRE snapshot error:',e); }
 
   // metrics removed - now in status bar
 

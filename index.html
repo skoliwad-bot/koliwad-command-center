@@ -684,7 +684,7 @@ localStorage.setItem = function(key, value) {
           <div class="sp" id="sp1"><span class="spi">🎟</span><div><span class="spl">Ticket Risk</span><span class="spv" id="sv1">0</span></div></div>
           <div class="sp" id="sp2"><span class="spi">🔥</span><div><span class="spl">High Tasks</span><span class="spv" id="sv2">0</span></div></div>
           <div class="sp" id="sp3"><span class="spi">🚨</span><div><span class="spl">Open Alerts</span><span class="spv" id="sv3">0</span></div></div>
-          <div class="sp" id="sp4"><span class="spi">🎯</span><div><span class="spl">Cash Flow</span><span class="spv" id="sv4">—</span></div></div>
+          <div class="sp" id="sp4"><span class="spi">🎯</span><div><span class="spl">FIRE Status</span><span class="spv" id="sv4">—</span></div></div>
         </div>
         <div class="g2">
           <div class="card"><div class="ch"><span class="ct r">🔥 Must Do Today</span><span style="font-size:8px;color:var(--mut)">MoSCoW ranked</span></div><div id="t-mit"><div class="empty">↻ Sync to load</div></div></div>
@@ -2266,7 +2266,24 @@ function rToday(){
   pill('sp1','sv1',ot.length,ot.length>0?'r':'g');
   pill('sp2','sv2',ht.length,ht.length>0?'r':'g');
   pill('sp3','sv3',oa.length,oa.length>0?'a':'g');
-  pill('sp4','sv4',gap===null?'—':gn?'OFF TRACK':'ON TRACK',gap===null?'':gn?'r':'g');
+  // FIRE Status pill — match FIRE page Plan Status when FL_D available, else fall back to gap
+  (()=>{
+    const hasFLd2 = typeof FL_D !== 'undefined' && FL_D && FL_D.actLatest;
+    if(hasFLd2){
+      const al3=FL_D.actLatest;
+      const keys=['hf','income','tiaa','heloc','expenses','available'];
+      const diffs=[];
+      keys.forEach(k=>{const v=al3[k];if(v&&v.actual!=null&&v.proj&&Math.abs(v.proj)>0){const good=(k==='heloc'||k==='expenses')?v.proj-v.actual:v.actual-v.proj;diffs.push(good/Math.abs(v.proj)*100);}});
+      if(diffs.length){
+        const avg=diffs.reduce((a,b)=>a+b,0)/diffs.length;
+        const sv=avg>=2?'AHEAD':Math.abs(avg)<=5?'ON TRACK':avg>=-10?'AT RISK':'BEHIND';
+        const sc=avg>=2||Math.abs(avg)<=5?'g':avg>=-10?'a':'r';
+        pill('sp4','sv4',sv,sc);
+      } else { pill('sp4','sv4',gap===null?'—':gn?'OFF TRACK':'ON TRACK',gap===null?'':gn?'r':'g'); }
+    } else {
+      pill('sp4','sv4',gap===null?'—':gn?'OFF TRACK':'ON TRACK',gap===null?'':gn?'r':'g');
+    }
+  })();
   // MIT
   // Merge synced tasks + unchecked FIRE Path Critical/ASAP items into one ranked list
   const fireMIT=[];

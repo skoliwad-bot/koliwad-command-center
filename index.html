@@ -1597,7 +1597,7 @@ localStorage.setItem = function(key, value) {
       <div class="br-stat"><span class="br-stat-l">Ticket Risk</span><span class="br-stat-v" id="bpv1">—</span></div>
       <div class="br-stat"><span class="br-stat-l">Must Tasks</span><span class="br-stat-v" id="bpv2">—</span></div>
       <div class="br-stat"><span class="br-stat-l">Open Alerts</span><span class="br-stat-v" id="bpv3">—</span></div>
-      <div class="br-stat"><span class="br-stat-l">Cash Flow</span><span class="br-stat-v" id="bpv4">—</span></div>
+      <div class="br-stat"><span class="br-stat-l">FIRE Status</span><span class="br-stat-v" id="bpv4">—</span></div>
     </div>
 
     <div class="br-body">
@@ -1605,11 +1605,11 @@ localStorage.setItem = function(key, value) {
       <!-- FIRE -->
       <div class="br-sec">FIRE Snapshot</div>
       <div class="br-fire">
-        <div class="br-fc"><span class="br-fc-l">Need/mo</span><span class="br-fc-v" id="bf1">—</span></div>
-        <div class="br-fc"><span class="br-fc-l">Income/mo</span><span class="br-fc-v g" id="bf2">—</span></div>
-        <div class="br-fc"><span class="br-fc-l">Gap/mo</span><span class="br-fc-v" id="bf3">—</span></div>
-        <div class="br-fc"><span class="br-fc-l">HF Balance</span><span class="br-fc-v" id="bf4">—</span></div>
-        <div class="br-fc"><span class="br-fc-l">HELOC</span><span class="br-fc-v r" id="bf5">—</span></div>
+        <div class="br-fc"><span class="br-fc-l">Available $$</span><span class="br-fc-v g" id="bf1">—</span></div>
+        <div class="br-fc"><span class="br-fc-l">vs Proj</span><span class="br-fc-v" id="bf2">—</span></div>
+        <div class="br-fc"><span class="br-fc-l">Income/mo</span><span class="br-fc-v" id="bf3">—</span></div>
+        <div class="br-fc"><span class="br-fc-l">Expenses/mo</span><span class="br-fc-v" id="bf4">—</span></div>
+        <div class="br-fc"><span class="br-fc-l">Gap/mo</span><span class="br-fc-v" id="bf5">—</span></div>
         <div class="br-fc"><span class="br-fc-l">FIRE %</span><span class="br-fc-v" id="bf6">—</span></div>
       </div>
 
@@ -4177,14 +4177,13 @@ function renderBrief(){
   setS('bpv1',ot.length, ot.length>0?'r':'g');
   setS('bpv2',ht.length, ht.length>0?'r':'g');
   setS('bpv3',oa.length, oa.length>0?'a':'g');
-  // FIRE status reflects long-term coverage (from spreadsheet) — show % so it doesn't look
-  // contradictory next to the monthly cash-flow gap.
   (function(){
     let label, cls;
-    if(typeof FL_D!=='undefined' && FL_D.imported && FL_D.todayRow){
-      const cov=Math.round((FL_D.todayRow.firePct||0)*100);
-      label = cov>=100?'ON TRACK '+cov+'%' : cov+'% COVERAGE';
-      cls = cov>=100?'g':cov>=70?'a':'r';
+    if(typeof FL_D!=='undefined' && FL_D.imported && FL_D.actLatest){
+      const al4=FL_D.actLatest, keys4=['hf','income','tiaa','heloc','expenses','available'], diffs4=[];
+      keys4.forEach(k=>{const v=al4[k];if(v&&v.actual!=null&&v.proj&&Math.abs(v.proj)>0){const good=(k==='heloc'||k==='expenses')?v.proj-v.actual:v.actual-v.proj;diffs4.push(good/Math.abs(v.proj)*100);}});
+      if(diffs4.length){const avg4=diffs4.reduce((a,b)=>a+b,0)/diffs4.length;label=avg4>=2?'AHEAD':Math.abs(avg4)<=5?'ON TRACK':avg4>=-10?'AT RISK':'BEHIND';cls=avg4>=2||Math.abs(avg4)<=5?'g':avg4>=-10?'a':'r';}
+      else{const cov=Math.round((FL_D.todayRow?.firePct||0)*100);label=cov+'% COVERAGE';cls=cov>=100?'g':cov>=70?'a':'r';}
     } else {
       label = gap===null?'—':gn?'OFF TRACK':'ON TRACK';
       cls = gap===null?'':gn?'r':'g';
@@ -4254,18 +4253,32 @@ function renderBrief(){
       </div>`;
     }).join('');
 
-  // FIRE snapshot
-  if(fire){
-    el('bf1').textContent=f$(fire._trueNeed||fire.need);
-    el('bf2').textContent=f$(fire.inc);
-    const gapEl=el('bf3');
-    gapEl.textContent=(gn?'-':'')+f$(gap);
-    gapEl.className='br-fc-v '+(gn?'r':'g');
-    el('bf4').textContent=f$(fire.hf);
-    el('bf5').textContent=fire.heloc?f$(fire.heloc):'—';
-    el('bf6').textContent=(fire.fire_pct||0)+'%';
-    el('bf6').className='br-fc-v '+((fire.fire_pct||0)>=100?'g':(fire.fire_pct||0)>=70?'a':'r');
-  }
+  // FIRE snapshot — use FL_D actuals when available, matching Today page
+  (function(){
+    const hasFLd3 = typeof FL_D !== 'undefined' && FL_D && FL_D.todayRow;
+    const al3 = hasFLd3 && FL_D.actLatest ? FL_D.actLatest : {};
+    const tr3 = hasFLd3 ? FL_D.todayRow : null;
+    const avAct3 = al3.available, hasAv3 = avAct3 && avAct3.actual!=null;
+    const incAct3 = al3.income,   hasInc3 = incAct3 && incAct3.actual!=null;
+    const expAct3 = al3.expenses, hasExp3 = expAct3 && expAct3.actual!=null;
+    const avVal3  = hasAv3  ? avAct3.actual  : (tr3 ? tr3.avail  : null);
+    const incVal3 = hasInc3 ? incAct3.actual : (tr3 ? tr3.totalIn  : (fire ? fire.inc  : null));
+    const expVal3 = hasExp3 ? expAct3.actual : (tr3 ? tr3.totalOut : (fire ? fire.need : null));
+    const gapVal3 = incVal3!=null && expVal3!=null ? incVal3-expVal3 : null;
+    const avDelt3 = hasAv3 && avAct3.proj ? avAct3.actual-avAct3.proj : null;
+    const firePct3= tr3 ? Math.round((tr3.firePct||0)*100) : (fire ? (fire.fire_pct||0) : null);
+    const src3 = hasInc3 ? 'Mo '+incAct3.mo+' actual' : hasAv3 ? 'Mo '+avAct3.mo+' actual' : 'projected';
+    const sv=(id,val,cls)=>{const e=el(id);if(!e)return;e.textContent=val;e.className='br-fc-v'+(cls?' '+cls:'');};
+    sv('bf1', avVal3!=null?f$(avVal3):'—', 'g');
+    sv('bf2', avDelt3!=null?(avDelt3>=0?'+':'')+f$(avDelt3):'proj', avDelt3!=null?(avDelt3>=0?'g':'r'):'');
+    sv('bf3', incVal3!=null?f$(incVal3):'—', '');
+    sv('bf4', expVal3!=null?f$(expVal3):'—', '');
+    sv('bf5', gapVal3!=null?(gapVal3>=0?'+':'-')+f$(gapVal3):'—', gapVal3!=null?(gapVal3>=0?'g':'r'):'');
+    sv('bf6', firePct3!=null?firePct3+'%':'—', firePct3!=null?(firePct3>=100?'g':firePct3>=70?'a':'r'):'');
+    // Update FIRE section label to show data source
+    const secEl=document.querySelector('#p-brief .br-sec');
+    if(secEl) secEl.textContent='FIRE Snapshot'+(src3!=='projected'?' · '+src3:'');
+  })();
 
   // metrics removed - now in status bar
 

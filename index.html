@@ -359,17 +359,85 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
   #brief.on{overflow:visible!important;}
   .brnav{display:none!important;}
   .brpg{box-shadow:none!important;max-width:100%;}
-  .br-alert,.br-alert.med{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  .br-fire .br-fc.hi{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .kcc-fab,#kcc-panel,#kcc-fab{display:none!important;}
+
+  /* Force background colors for alert tints and FIRE green cells */
+  .br-alert,.br-alert.med,.br-fire .br-fc.hi{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+
+  /* ── COMPRESS EVERYTHING TO FIT ONE PAGE ── */
+  /* Header */
+  .br-hdr{padding:10px 18px 9px;}
+  .br-badge{width:34px;height:34px;font-size:15px;}
+  .br-date{font-size:28px;}
+
+  /* KPI strip */
+  .br-stats{border-bottom:1.5px solid #111;}
+  .br-stat{padding:6px 12px;}
+  .br-stat-icon{font-size:12px;margin-bottom:1px;}
+  .br-stat-v{font-size:14px;}
+  .br-stat-l{font-size:7px;}
+
+  /* FIRE metrics */
+  .br-sec{margin-top:9px;margin-bottom:5px;}
+  .br-fc{padding:5px 8px;}
+  .br-fc-v{font-size:11px;}
+  .br-fc-l{font-size:5px;margin-bottom:1px;}
+  .br-fire-note{font-size:7px;margin-bottom:8px;}
+
+  /* Body */
+  .br-body{padding:8px 16px 10px;}
+
+  /* 2-col layout */
+  .br-2col{gap:10px;}
+
+  /* Tasks */
+  .br-t{padding:3px 0;}
+  .br-t-n{width:16px;height:16px;font-size:8px;}
+  .br-t-txt{font-size:9px;}
+  .br-t-src{font-size:6px;}
+  .br-t-b{font-size:6px;padding:1px 4px;}
+
+  /* Schedule */
+  .br-ev{padding:2px 0;}
+  .br-ev-t{font-size:7px;}
+  .br-ev-d{height:22px;}
+  .br-ev-n{font-size:8px;}
+
+  /* Deadlines */
+  .br-dl{padding:2px 0;}
+  .br-dl-w{font-size:7px;padding:2px 6px;}
+  .br-dl-t{font-size:8px;}
+
+  /* Playbook */
+  .br-pb{padding:2px 0;}
+  .br-pb-ck,.br-pb-ico{font-size:9px;}
+  .br-pb-lbl{font-size:8px;}
+
+  /* Portfolio */
+  #bPF{font-size:9px;}
+
+  /* Alerts — tighten padding, smaller text */
+  .br-alert{padding:5px 8px;margin-bottom:4px;border-width:1.5px;}
+  .br-alert-sev{font-size:6px;padding:2px 5px;}
+  .br-alert-title{font-size:9px;}
+  .br-alert-note{font-size:7px;margin-top:1px;}
+
+  /* Notes */
+  .br-line{height:15px;margin-bottom:1px;}
+
+  /* Waiting / Tomorrow boxes */
+  .br-box{padding:6px 10px;}
+  .br-box-hdr{font-size:6px;margin-bottom:5px;}
+
+  /* Footer */
+  .br-foot{padding:5px 16px;margin-top:8px;}
+  .br-foot span{font-size:7px;}
+
+  /* Break rules */
   .br-2col,.br-fire,.br-stats{break-inside:avoid;}
-  .br-t,.br-ev,.br-dl,.br-pb{break-inside:avoid;}
-  .br-alert{break-inside:avoid;}
+  .br-t,.br-ev,.br-dl,.br-pb,.br-alert{break-inside:avoid;}
   .br-sec{break-after:avoid;}
   #br-alerts-wrap{break-inside:avoid;}
-  .kcc-fab,#kcc-panel,#kcc-fab{display:none!important;}
-  /* Compress notes to ensure they fit on one page */
-  .br-line{height:16px;margin-bottom:1px;}
-  .br-body{padding-bottom:8px;}
 }
 
 .ai-block{border:1px solid #3a2a5a;background:linear-gradient(135deg,#0e0a1a,#160e22);padding:12px 16px;margin-bottom:12px;display:none;}
@@ -1698,11 +1766,11 @@ localStorage.setItem = function(key, value) {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px;break-inside:avoid;">
         <div class="br-box">
           <div class="br-box-hdr">⏳ Waiting On</div>
-          <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
+          <div class="br-line"></div><div class="br-line"></div>
         </div>
         <div class="br-box">
           <div class="br-box-hdr">🌅 Tomorrow</div>
-          <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
+          <div class="br-line"></div><div class="br-line"></div>
         </div>
       </div>
 

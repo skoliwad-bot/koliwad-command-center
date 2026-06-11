@@ -278,7 +278,7 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 .br-stat-l{font-size:8px;color:#888;display:block;margin-top:2px;font-weight:600;}
 
 /* BODY */
-.br-body{padding:14px 18px;}
+.br-body{padding:14px 18px 24px;}
 
 /* SECTION HEADERS */
 .br-sec{display:flex;align-items:center;gap:7px;margin-bottom:8px;margin-top:14px;}
@@ -352,6 +352,7 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 .br-foot span{font-size:8px;color:#aaa;font-weight:600;}
 
 @media print{
+  @page{margin:0.55in 0.6in;size:letter portrait;}
   #shell{display:none!important;}
   #brief{display:block!important;padding:0;background:#fff;}
   .brnav{display:none!important;}
@@ -362,9 +363,11 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
   .br-t,.br-ev,.br-dl,.br-pb{break-inside:avoid;}
   .br-alert{break-inside:avoid;}
   .br-sec{break-after:avoid;}
-  .br-body{padding-bottom:0;}
+  .br-alerts-wrap,#br-alerts-wrap{break-inside:avoid;}
+  .br-body > div:last-child{break-inside:avoid;}
   .kcc-fab{display:none!important;}
   #kcc-panel{display:none!important;}
+  #kcc-fab{display:none!important;}
 }
 
 .ai-block{border:1px solid #3a2a5a;background:linear-gradient(135deg,#0e0a1a,#160e22);padding:12px 16px;margin-bottom:12px;display:none;}
@@ -1684,11 +1687,13 @@ localStorage.setItem = function(key, value) {
       </div>
 
       <!-- NOTES -->
-      <div class="br-sec"><span class="br-sec-dot" style="background:#999"></span><span class="br-sec-label">Notes</span><span class="br-sec-line"></span></div>
-      <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
-      <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
+      <div class="br-sec" style="break-after:avoid"><span class="br-sec-dot" style="background:#999"></span><span class="br-sec-label">Notes</span><span class="br-sec-line"></span></div>
+      <div style="break-inside:avoid">
+        <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
+        <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
+      </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px;break-inside:avoid;">
         <div class="br-box">
           <div class="br-box-hdr">⏳ Waiting On</div>
           <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
@@ -1946,7 +1951,10 @@ function setM(m){
   document.getElementById('brief').classList.toggle('on',!isC);
   el('bcmd').className=isC?'cmd':'';
   el('bbrf').className=!isC?'brf':'';
-  if(!isC) renderBrief();
+  // Allow body to scroll in brief mode (body has overflow:hidden for the app)
+  document.documentElement.style.overflow = isC ? '' : 'auto';
+  document.body.style.overflow = isC ? '' : 'auto';
+  if(!isC){ renderBrief(); window.scrollTo(0,0); }
 }
 
 // ── NAV ──────────────────────────────────────────────────────

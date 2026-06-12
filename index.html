@@ -3479,9 +3479,9 @@ function hWeightCard(H){
   return '<div class="card">'
     +'<div class="ch"><span class="ct" style="color:var(--grn)">◆ Weight & GLP-1</span></div>'
     +'<div class="g4" style="margin:14px 0">'
-    +'<div class="card"><span class="spl">Start</span><span class="spv">'+start+'<span style="font-size:12px;color:var(--mut)"> lbs</span></span></div>'
+    +'<div class="card" onclick="hEditWeightStat(\'start\','+start+')" style="cursor:pointer" title="Tap to edit"><span class="spl">Start ✎</span><span class="spv">'+start+'<span style="font-size:12px;color:var(--mut)"> lbs</span></span></div>'
     +'<div class="card"><span class="spl">Current</span><span class="spv" style="color:var(--txt)">'+cur+'<span style="font-size:12px;color:var(--mut)"> lbs</span></span></div>'
-    +'<div class="card"><span class="spl">Goal</span><span class="spv">'+goal+'<span style="font-size:12px;color:var(--mut)"> lbs</span></span></div>'
+    +'<div class="card" onclick="hEditWeightStat(\'goal\','+goal+')" style="cursor:pointer" title="Tap to edit"><span class="spl">Goal ✎</span><span class="spv">'+goal+'<span style="font-size:12px;color:var(--mut)"> lbs</span></span></div>'
     +'<div class="card"><span class="spl">Lost</span><span class="spv '+(lost>0?'g':'r')+'">'+lost+'<span style="font-size:12px;color:var(--mut)"> lbs</span></span></div>'
     +'</div>'
     +'<div style="height:8px;background:var(--bg);border:1px solid var(--brd2);border-radius:4px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:'+pct+'%;background:var(--grn)"></div></div>'
@@ -3950,6 +3950,17 @@ function hBPLog(bp){
 // ════════════ HEALTH HANDLERS ════════════
 function hAddWeight(){ const d=el('h-wt-d').value, w=hNum(el('h-wt-w').value); if(!d||w==null){alert('Enter a date and weight');return;} const H=hGet(); H.weight.log=H.weight.log.filter(x=>x.d!==d); H.weight.log.push({d,w}); hSave(); rHealth(); }
 function hDelWeight(d){ const H=hGet(); H.weight.log=H.weight.log.filter(x=>x.d!==d); hSave(); rHealth(); }
+function hEditWeightStat(field, current){
+  const label = field==='goal' ? 'Goal weight' : 'Start weight';
+  const val = prompt(label+' (lbs):', current);
+  if(val===null) return;
+  const n = parseFloat(val);
+  if(isNaN(n)||n<50||n>500){ alert('Enter a valid weight between 50–500 lbs'); return; }
+  const H = hGet();
+  H.weight[field] = n;
+  hSave();
+  rHealth();
+}
 function hSaveGlp1(){ const H=hGet(); H.glp1={med:el('h-g-med').value.trim(),dose:el('h-g-dose').value.trim(),cadence:el('h-g-cad').value.trim(),day:parseInt(el('h-g-day').value),lastDose:el('h-g-last').value,site:el('h-g-site').value.trim()}; hSave(); rHealth(); if(typeof renderPlaybookToday==='function') renderPlaybookToday(); }
 function hAddMeal(){ const name=prompt('Meal name (e.g. Lunch — salad):'); if(!name)return; const time=prompt('Time (e.g. ~12:30p or Float):','')||''; const detail=prompt('Details / options:','')||''; const pro=hNum(prompt('Protein grams (optional):',''))||0; const H=hGet(); H.meals.push({time,name,detail,pro}); hSave(); rHealth(); }
 function hDelMeal(i){ const H=hGet(); H.meals.splice(i,1); hSave(); rHealth(); }

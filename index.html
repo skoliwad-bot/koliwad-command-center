@@ -3823,25 +3823,38 @@ function hRunDietAI(){
   const _w=H.weight||{}, _g=H.glp1||{};
   const wlog=(_w.log||[]).slice(-8).map(x=>`${x.d}: ${x.w} lbs`).join(', ');
   const bp=(H.bp||[]).slice(-6).map(x=>`${x.d}: ${x.sys}/${x.dia}`).join(', ');
-  const prompt=`You are a health coach reviewing a GLP-1 patient's health journal. Analyze the last ${logs.slice(-14).length} days of logs and provide specific, actionable insights.
+  const prompt=`You are a no-nonsense health coach for a GLP-1 patient working toward ${_w.goal||'their goal'} lbs. Give direct, specific recommendations — not just observations. Every section must end with a concrete action.
 
-PATIENT PROFILE:
-- Medication: ${_g.med||'GLP-1'}${_g.dose?' ('+_g.dose+')':''}
-- Start weight: ${_w.start||'—'} lbs → Goal: ${_w.goal||'—'} lbs
-- Recent weights: ${wlog||'none logged'}
-- Recent BP: ${bp||'none logged'}
+PATIENT: ${_g.med||'GLP-1'}${_g.dose?' '+_g.dose:''} · Current ${((_w.log||[]).slice(-1)[0]||{}).w||(_w.start||'?')} lbs · Goal ${_w.goal||'?'} lbs · Target ${_t.cal||2000} cal / ${_t.protein||170}g protein daily
+RECENT WEIGHTS: ${wlog||'none logged'}
+RECENT BP: ${bp||'none'}
 
-DAILY LOGS (most recent ${logs.slice(-14).length} days):
+LAST ${logs.slice(-14).length} DAYS OF LOGS:
 ${history}
 
-Provide:
-1. PATTERNS — What recurring themes do you see (positive and concerning)?
-2. NUTRITION — How are they doing vs the GLP-1 protocol needs (protein, hydration, fiber)?
-3. ENERGY & SIDE EFFECTS — Any patterns to flag?
-4. WEIGHT TREND — Comment on pace and trajectory.
-5. TOP 3 ACTIONS — The most impactful things to focus on this week.
+Follow this exact structure — be blunt, specific, use real numbers from the logs:
 
-Be specific and reference actual entries. Plain text, no markdown symbols.`;
+🎯 THIS WEEK'S #1 PRIORITY
+One sentence. The single most impactful change they can make right now. Be direct.
+
+💪 3 SPECIFIC RECOMMENDATIONS
+1. [Action verb] — specific, measurable action with a target (e.g. "Drink 80oz water daily — you averaged 42oz last week")
+2. [Action verb] — specific, measurable action with a target
+3. [Action verb] — specific, measurable action with a target
+
+📊 WHAT THE DATA SHOWS
+2-3 sentences. What patterns stand out — wins AND gaps. Reference actual numbers from the logs.
+
+⚡ NUTRITION GAPS
+1-2 sentences on the biggest nutrition issue and exactly what to change.
+
+📉 WEIGHT TREND
+1-2 sentences. On track for the goal? What needs to change if not? Give a projected arrival date at current pace.
+
+🚩 WATCH OUT FOR
+One specific warning based on their logged patterns.
+
+Be direct. No hedging. No "consider" or "might want to." Tell them exactly what to do.`;
   fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1000,messages:[{role:'user',content:prompt}]})})
   .then(r=>r.json()).then(data=>{
     if(data.error) throw new Error(data.error.message);

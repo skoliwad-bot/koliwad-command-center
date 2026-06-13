@@ -3820,9 +3820,11 @@ function hRunDietAI(){
     return t ? `${e.d}:\n${t}` : '';
   }).filter(Boolean).join('\n\n---\n\n');
   if(!history){ if(textEl) textEl.textContent='Your recent entries are empty — log a few details (meals, water, sleep, etc.) first.'; return; }
-  const _w=H.weight||{}, _g=H.glp1||{};
-  const wlog=(_w.log||[]).slice(-8).map(x=>`${x.d}: ${x.w} lbs`).join(', ');
-  const bp=(H.bp||[]).slice(-6).map(x=>`${x.d}: ${x.sys}/${x.dia}`).join(', ');
+  let prompt;
+  try {
+    const _w=H.weight||{}, _g=H.glp1||{}, _t=H.targets||{};
+    const wlog=(_w.log||[]).slice(-8).map(x=>`${x.d}: ${x.w} lbs`).join(', ');
+    const bp=(H.bp||[]).slice(-6).map(x=>`${x.d}: ${x.sys}/${x.dia}`).join(', ');
   const prompt=`You are a no-nonsense health coach for a GLP-1 patient working toward ${_w.goal||'their goal'} lbs. Give direct, specific recommendations — not just observations. Every section must end with a concrete action.
 
 PATIENT: ${_g.med||'GLP-1'}${_g.dose?' '+_g.dose:''} · Current ${((_w.log||[]).slice(-1)[0]||{}).w||(_w.start||'?')} lbs · Goal ${_w.goal||'?'} lbs · Target ${_t.cal||2000} cal / ${_t.protein||170}g protein daily
@@ -3855,6 +3857,10 @@ One sentence. The single most impactful change they can make right now. Be direc
 One specific warning based on their logged patterns.
 
 Be direct. No hedging. No "consider" or "might want to." Tell them exactly what to do.`;
+  } catch(e) {
+    if(textEl) textEl.textContent='Error building prompt: '+e.message;
+    return;
+  }
   fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1000,messages:[{role:'user',content:prompt}]})})
   .then(r=>r.json()).then(data=>{
     if(data.error) throw new Error(data.error.message);

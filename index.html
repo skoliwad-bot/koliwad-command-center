@@ -3825,7 +3825,7 @@ function hRunDietAI(){
     const _w=H.weight||{}, _g=H.glp1||{}, _t=H.targets||{};
     const wlog=(_w.log||[]).slice(-8).map(x=>`${x.d}: ${x.w} lbs`).join(', ');
     const bp=(H.bp||[]).slice(-6).map(x=>`${x.d}: ${x.sys}/${x.dia}`).join(', ');
-  const prompt=`You are a no-nonsense health coach for a GLP-1 patient working toward ${_w.goal||'their goal'} lbs. Give direct, specific recommendations — not just observations. Every section must end with a concrete action.
+  prompt=`You are a no-nonsense health coach for a GLP-1 patient working toward ${_w.goal||'their goal'} lbs. Give direct, specific recommendations — not just observations. Every section must end with a concrete action.
 
 PATIENT: ${_g.med||'GLP-1'}${_g.dose?' '+_g.dose:''} · Current ${((_w.log||[]).slice(-1)[0]||{}).w||(_w.start||'?')} lbs · Goal ${_w.goal||'?'} lbs · Target ${_t.cal||2000} cal / ${_t.protein||170}g protein daily
 RECENT WEIGHTS: ${wlog||'none logged'}

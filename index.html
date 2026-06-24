@@ -3570,29 +3570,7 @@ function hDietCard(H){
     +[1,2,3,4,5,6,7,8,9,10].map(n=>'<span onclick="hSetEnergy('+n+')" data-n="'+n+'" style="cursor:pointer;font-size:13px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:3px;border:1px solid var(--brd2);background:transparent;color:var(--mut2)">'+n+'</span>').join('')
     +'</div></div>'
     // ── SECTION 3: JOURNAL ──
-    +'<div style="padding:14px 0;border-bottom:2px solid var(--brd)">'
-    +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Daily Journal <span style="color:var(--mut2);font-weight:400;letter-spacing:0;text-transform:none">— all optional</span></div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:9px">'
-    +'<div><div class="hfl">Breakfast</div><input id="h-f-bfast" type="text" style="width:100%;box-sizing:border-box"></div>'
-    +'<div><div class="hfl">Lunch</div><input id="h-f-lunch" type="text" style="width:100%;box-sizing:border-box"></div>'
-    +'<div><div class="hfl">Dinner</div><input id="h-f-dinner" type="text" style="width:100%;box-sizing:border-box"></div>'
-    +'</div>'
-    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:9px">'
-    +'<div><div class="hfl">Water (oz)</div><input id="h-f-water" type="number" step="1" style="width:100%;box-sizing:border-box"></div>'
-    +'<div><div class="hfl">Diet Cokes</div><input id="h-f-cokes" type="number" step="1" style="width:100%;box-sizing:border-box"></div>'
-    +'<div><div class="hfl">Energy Drinks</div><input id="h-f-edrinks" type="number" step="1" style="width:100%;box-sizing:border-box"></div>'
-    +'</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:9px">'
-    +'<div><div class="hfl">Bowel Movement</div><select id="h-f-bowel" style="width:100%;box-sizing:border-box"><option value="">—</option><option>Good</option><option>OK</option><option>Bad</option></select></div>'
-    +'<div><div class="hfl">Sleep score (1–100)</div><input id="h-f-sleep" type="number" min="1" max="100" step="1" placeholder="Apple Watch" style="width:100%;box-sizing:border-box"></div>'
-    +'<div><div class="hfl">Exercise</div><input id="h-f-exercise" type="text" style="width:100%;box-sizing:border-box"></div>'
-    +'</div>'
-    +'<textarea id="h-diet-note" placeholder="Free-form notes — how you felt, GLP-1 side effects, wins, struggles..." style="width:100%;min-height:80px;resize:vertical;box-sizing:border-box;font-size:12px;line-height:1.6;padding:10px;border:1px solid var(--brd2);background:var(--bg);color:var(--txt);font-family:\'JetBrains Mono\',monospace;border-radius:3px;outline:none"></textarea>'
-    +'<div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">'
-    +'<button class="btn" onclick="hSaveDietLog()">Save entry</button>'
-    +'<button class="btn" onclick="hFormatDietAI()" style="font-size:9px">✦ AI Format</button>'
-    +'<span id="h-diet-status" style="font-size:9px;color:var(--mut)"></span>'
-    +'</div></div>'
+    +'<div style="padding:10px 0;border-bottom:2px solid var(--brd)">'    +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:7px">Daily Journal <span style="color:var(--mut2);font-weight:400;letter-spacing:0;text-transform:none">— all optional</span></div>'    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px">'    +'<div><div class="hfl">Breakfast</div><input id="h-f-bfast" type="text" style="width:100%;box-sizing:border-box"></div>'    +'<div><div class="hfl">Lunch</div><input id="h-f-lunch" type="text" style="width:100%;box-sizing:border-box"></div>'    +'<div><div class="hfl">Dinner</div><input id="h-f-dinner" type="text" style="width:100%;box-sizing:border-box"></div>'    +'</div>'    +'<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:6px">'    +'<div><div class="hfl">Water oz</div><input id="h-f-water" type="number" step="1" style="width:100%;box-sizing:border-box"></div>'    +'<div><div class="hfl">Diet Coke</div><input id="h-f-cokes" type="number" step="1" style="width:100%;box-sizing:border-box"></div>'    +'<div><div class="hfl">Energy Drk</div><input id="h-f-edrinks" type="number" step="1" style="width:100%;box-sizing:border-box"></div>'    +'<div><div class="hfl">Sleep /100</div><input id="h-f-sleep" type="number" min="1" max="100" step="1" placeholder="Watch" style="width:100%;box-sizing:border-box"></div>'    +'<div><div class="hfl">BM</div><select id="h-f-bowel" style="width:100%;box-sizing:border-box"><option value="">—</option><option>Good</option><option>OK</option><option>Bad</option></select></div>'    +'<div><div class="hfl">Exercise</div><input id="h-f-exercise" type="text" style="width:100%;box-sizing:border-box"></div>'    +'</div>'    +'<div id="h-notes-wrap" style="display:none;margin-bottom:6px"><textarea id="h-diet-note" placeholder="Free-form notes..." style="width:100%;min-height:60px;resize:vertical;box-sizing:border-box;font-size:12px;line-height:1.6;padding:8px;border:1px solid var(--brd2);background:var(--bg);color:var(--txt);font-family:\'JetBrains Mono\',monospace;border-radius:3px;outline:none"></textarea></div>'    +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'    +'<button class="btn" onclick="hSaveDietLog()">Save entry</button>'    +'<button class="btn" onclick="hFormatDietAI()" style="font-size:9px">✦ AI Format</button>'    +'<button class="btn" onclick="hToggleNotes()" id="h-notes-btn" style="font-size:9px">+ Notes</button>'    +'<span id="h-diet-status" style="font-size:9px;color:var(--mut)"></span>'    +'</div></div>'
     // ── SECTION 4: AI FORMATTED / ANALYSIS ──
     +'<div id="h-diet-fmt" style="display:none;padding:14px 0;border-bottom:2px solid var(--brd)">'
     +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:6px">AI Summary</div>'
@@ -3658,6 +3636,9 @@ function hDietHydrate(d){
   const rxItems=[...(H.meds||[]).filter(r=>r.name),...(H.supps||[]).filter(r=>r.name)];
   // textarea
   const ta=el('h-diet-note'); if(ta) ta.value=log?log.raw||'':'';
+  // show notes section if this entry has free-form text
+  const nw=el('h-notes-wrap'), nb=el('h-notes-btn');
+  if(nw&&nb){ const hasRaw=log&&log.raw&&log.raw.trim(); nw.style.display=hasRaw?'':'none'; nb.textContent=hasRaw?'− Notes':'+ Notes'; }
   // structured fields
   const f=(log&&log.f)||{};
   const setV=(id,v)=>{ const e=el(id); if(e) e.value=(v==null?'':v); };
@@ -3731,6 +3712,14 @@ function hFieldsLine(f){
   if(f.sleep!=null && f.sleep!=='') p.push('😴 '+f.sleep+(typeof f.sleep==='number'?'/100':''));
   if(f.exercise) p.push('🏃 '+f.exercise);
   return p.length?'<div style="font-size:10px;color:var(--txt2);line-height:1.6;margin-bottom:4px">'+p.map(esc).join(' · ')+'</div>':'';
+}
+function hToggleNotes(){
+  const w=el('h-notes-wrap'), btn=el('h-notes-btn');
+  if(!w) return;
+  const show=w.style.display==='none';
+  w.style.display=show?'':'none';
+  if(btn) btn.textContent=show?'− Notes':'+ Notes';
+  if(show && el('h-diet-note')) el('h-diet-note').focus();
 }
 function hSaveDietLog(){
   const d=el('h-diet-d').value||hToday();

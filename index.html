@@ -2562,12 +2562,15 @@ function escapeRegex(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
 
 function getPlanVal(bud, grp, sub, selMo, isYtd, closedMos){
   if(!bud) return 0;
-  // Try to find the exact category in the plan
-  // Budget planner stores group-level data in bud.groups
-  const g = (bud.groups||[]).find(x=>x.name.toUpperCase()===grp);
-  if(!g) return 0;
-  const moFrac = isYtd ? (closedMos/12) : (1/12);
-  return (g.plan||0)*moFrac;
+  const key = grp+'::'+sub;
+  const vals = bud.catPlans && bud.catPlans[key];
+  if(!vals) return 0;
+  const N = v => (typeof v==='number'&&isFinite(v))?v:0;
+  if(isYtd){
+    const mo = closedMos||6;
+    return vals.slice(0,mo).reduce((s,v)=>s+N(v),0);
+  }
+  return N(vals[(selMo||1)-1]);
 }
 
 
@@ -3504,100 +3507,127 @@ function rFin(){
 
 // ══ 2026 BUDGET PLANNER → FINANCIALS PAGE ════════════════════
 function parseBudgetPlanner(wb){
-  const J = sn => wb.Sheets[sn] ? XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1}) : [];
-  const N = v => (typeof v==='number' && isFinite(v)) ? v
-               : (typeof v==='string' && v.trim()!=='' && !isNaN(+v) ? +v : null);
-  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const find = (rows,test) => rows.findIndex(test);
+  const J=sn=>wb.Sheets[sn]?XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1}):[];
+  const N=v=>(typeof v==='number'&&isFinite(v))?v:(typeof v==='string'&&v.trim()!==''&&!isNaN(+v)?+v:null);
+  const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const sum=arr=>arr.reduce((s,v)=>{const n=N(v);return n!=null?s+n:s;},0);
 
-  const dash = J('Dashboard');
+  // Read Plan sheet row by row
+  const planRows=J('Plan');
+  let incomeRows=[],expRows=[],currentGroup='',inIncome=false,inExp=false;
+  planRows.forEach(r=>{
+    const lbl=(r[0]||'').trim();
+    if(!lbl) return;
+    if(lbl==='INCOME'){inIncome=true;return;}
+    if(/^[A-Z][A-Z &]+$/.test(lbl)&&lbl!=='INCOME'&&!lbl.startsWith('Total')&&!lbl.startsWith('NET')){inIncome=false;inExp=true;currentGroup=lbl;return;}
+    if(lbl.startsWith('Total ')||lbl.startsWith('TOTAL ')||lbl.includes('Income − Expenses')||lbl.includes('Income - Expenses')) return;
+    const vals=r.slice(1,13).map(N);
+    if(inIncome&&vals.some(v=>v!=null)) incomeRows.push({name:lbl,vals});
+    else if(inExp&&vals.some(v=>v!=null)) expRows.push({name:lbl,group:currentGroup,vals});
+  });
 
-  // Full-year blended top line: header row then values row
-  let projIncome=null, projExpenses=null, projNet=null, netVsPlan=null;
-  const hdr = find(dash, r => String(r&&r[0]||'').toUpperCase().includes('PROJECTED INCOME'));
-  if(hdr>=0 && dash[hdr+1]){ const v=dash[hdr+1]; projIncome=N(v[0]); projExpenses=N(v[2]); projNet=N(v[4]); netVsPlan=N(v[6]); }
+  // Per-category monthly plan map
+  const catPlans={};
+  incomeRows.forEach(r=>{catPlans['INCOME::'+r.name]=r.vals;});
+  expRows.forEach(r=>{catPlans[r.group+'::'+r.name]=r.vals;});
 
-  // YTD actuals (closed months)
-  const ytdVal = pfx => { const i=find(dash, r=>String(r&&r[0]||'').toLowerCase().startsWith(pfx)); if(i<0) return null; const r=dash[i]; for(let c=r.length-1;c>=1;c--){ const n=N(r[c]); if(n!==null) return n; } return null; };
-  const ytdIncome    = ytdVal('income (ytd');
-  const ytdExpenses  = ytdVal('expenses (ytd');
-  const ytdNet       = ytdVal('net (ytd');
-  const monthsClosed = ytdVal('months marked');
+  const projIncome=sum(incomeRows.flatMap(r=>r.vals));
+  const projExpenses=sum(expRows.flatMap(r=>r.vals));
+  const projNet=projIncome-projExpenses;
 
-  // Expense groups + monthly Income/Expense/Net (right-side cols of same table)
-  const groups=[], monthly=[];
-  const gHdr = find(dash, r => String(r&&r[0]||'').toUpperCase()==='EXPENSE GROUP');
-  if(gHdr>=0){
-    for(let i=gHdr+1;i<dash.length;i++){
-      const r=dash[i]; if(!r) continue;
-      const name=r[0];
-      if(typeof name==='string' && name.trim() && N(r[1])!==null && !name.toUpperCase().startsWith('TOTAL')){
-        groups.push({name, plan:N(r[1]), proj:N(r[2]), varD:N(r[3]), varP:N(r[4])});
-      }
-      const mo=r[7];
-      if(typeof mo==='string' && MON.includes(mo)) monthly.push({mo, income:N(r[8])||0, expense:N(r[9])||0, net:N(r[10])||0});
-    }
+  // Read Actuals sheet
+  const actRows=J('Actuals');
+  let actIncRows=[],actExpRows=[],actGroup='',actInInc=false,actInExp=false;
+  actRows.forEach((r,i)=>{
+    if(i<2) return;
+    const lbl=(r[0]||'').trim();
+    if(!lbl) return;
+    if(lbl==='INCOME'){actInInc=true;return;}
+    if(/^[A-Z][A-Z &]+$/.test(lbl)&&lbl!=='INCOME'&&!lbl.startsWith('Total')&&!lbl.startsWith('NET')){actInInc=false;actInExp=true;actGroup=lbl;return;}
+    if(lbl.startsWith('Total ')||lbl.startsWith('TOTAL ')||lbl.includes('Income − Expenses')||lbl.includes('Income - Expenses')) return;
+    const vals=r.slice(1,13).map(N);
+    if(actInInc&&vals.some(v=>v!=null)) actIncRows.push({name:lbl,vals});
+    else if(actInExp&&vals.some(v=>v!=null)) actExpRows.push({name:lbl,group:actGroup,vals});
+  });
+
+  // Count closed months
+  let monthsClosed=0;
+  if(actIncRows.length){
+    const first=actIncRows.find(r=>r.vals.some(v=>v!=null));
+    if(first) monthsClosed=first.vals.filter(v=>v!=null).length;
   }
 
-  // Plan vs Forecast annual lines
-  const pvfRows = J('Plan vs Forecast');
-  const pvfLine = label => { const i=find(pvfRows, r=>String(r&&r[0]||'').trim().toLowerCase()===label && N(r[1])!==null && N(r[2])!==null); if(i<0) return null; const r=pvfRows[i]; return {plan:N(r[1]), fcst:N(r[2]), varD:N(r[3]), varP:N(r[4])}; };
-  const pvf = { income:pvfLine('income'), expenses:pvfLine('expenses'), net:pvfLine('net') };
+  const ytdIncome=sum(actIncRows.flatMap(r=>r.vals.slice(0,monthsClosed)));
+  const ytdExpenses=sum(actExpRows.flatMap(r=>r.vals.slice(0,monthsClosed)));
+  const ytdNet=ytdIncome-ytdExpenses;
 
-  // Monthly Plan vs Forecast (fcst = actual for closed months)
-  const monthlyPVF=[];
-  const mHdr = find(pvfRows, r=>String(r&&r[0]||'').trim()==='Month');
-  if(mHdr>=0){ for(let i=mHdr+1;i<pvfRows.length;i++){ const r=pvfRows[i]; if(!r||!MON.includes(String(r[0]||'').trim())) break;
-    monthlyPVF.push({mo:String(r[0]).trim(), planInc:N(r[1]), fcstInc:N(r[2]), planExp:N(r[3]), fcstExp:N(r[4]), planNet:N(r[5]), fcstNet:N(r[6])}); } }
+  // Per-category actuals map
+  const catActuals={};
+  actIncRows.forEach(r=>{catActuals['INCOME::'+r.name]=r.vals;});
+  actExpRows.forEach(r=>{catActuals[r.group+'::'+r.name]=r.vals;});
 
-  // Latest closed month — per-category actual vs plan (from Plan + Actuals sheets)
-  const catMap = rows => { const out=[]; let section='';
-    for(const r of rows){ const name=r&&r[0];
-      if(typeof name!=='string' || !name.trim()) continue;
-      const hasNum = r.slice(1,13).some(x=>N(x)!==null);
-      if(!hasNum){ const t=name.trim(); if(t.toUpperCase()===t && !t.toUpperCase().startsWith('TOTAL') && t.toUpperCase()!=='CATEGORY') section=t; continue; }
-      const up=name.trim().toUpperCase(); if(up.startsWith('TOTAL')||up.startsWith('NET ')||up.startsWith('NET(')||up==='CATEGORY') continue;
-      out.push({name:name.trim(), group:section, vals:r.slice(1,13).map(N)}); }
-    return out; };
-  let prevMonth=null;
-  const mc = monthsClosed;
-  if(mc && mc>=1 && mc<=12){
-    const pMap=catMap(J('Plan')), aMap=catMap(J('Actuals'));
-    const aByName={}; aMap.forEach(x=>{ aByName[x.name]=x; });
-    const cats=[];
-    pMap.forEach(p=>{ const a=aByName[p.name]; if(!a) return;
-      const plan=p.vals[mc-1], actual=a.vals[mc-1];
-      if(plan==null && actual==null) return;
-      const isInc = (p.group||'').toUpperCase()==='INCOME';
-      const varD=(actual||0)-(plan||0);
-      cats.push({cat:p.name, group:p.group, isInc, plan:plan||0, actual:actual||0, varD, fav: isInc ? varD>=0 : varD<=0}); });
-    const pm = monthlyPVF[mc-1]||{};
-    prevMonth = {
-      idx:mc, name:MON[mc-1],
-      income:  {plan:pm.planInc, actual:pm.fcstInc, varD:(pm.fcstInc||0)-(pm.planInc||0)},
-      expenses:{plan:pm.planExp, actual:pm.fcstExp, varD:(pm.fcstExp||0)-(pm.planExp||0)},
-      net:     {plan:pm.planNet, actual:pm.fcstNet, varD:(pm.fcstNet||0)-(pm.planNet||0)},
-      swings: cats.sort((x,y)=>Math.abs(y.varD)-Math.abs(x.varD)).slice(0,10)
-    };
-  }
+  // Forecast = actuals (closed) + plan (remaining)
+  const fcstIncome=ytdIncome+sum(incomeRows.flatMap(r=>r.vals.slice(monthsClosed)));
+  const fcstExpenses=ytdExpenses+sum(expRows.flatMap(r=>r.vals.slice(monthsClosed)));
 
-  // Variance Analysis: favorable / unfavorable totals + largest swings
-  const varRows = J('Variance Analysis');
-  let favorable=null, unfavorable=null, netVar=null;
-  const fHdr = find(varRows, r=>String(r&&r[0]||'').trim().toUpperCase().startsWith('FAVORABLE'));
-  if(fHdr>=0 && varRows[fHdr+1]){ const v=varRows[fHdr+1]; favorable=N(v[0]); unfavorable=N(v[2]); netVar=N(v[4]); }
+  // Monthly net
+  const monthly=MON.map((mo,mi)=>{
+    const inc=sum(incomeRows.map(r=>N(r.vals[mi])||0));
+    const exp=sum(expRows.map(r=>N(r.vals[mi])||0));
+    return{mo,income:inc,expense:exp,net:inc-exp};
+  });
+
+  // Swings vs plan (YTD)
   const swings=[];
-  const sHdr = find(varRows, r=>String(r&&r[0]||'').toLowerCase()==='rank');
-  if(sHdr>=0){ for(let i=sHdr+1;i<varRows.length;i++){ const r=varRows[i]; if(!r||N(r[0])===null) break; swings.push({rank:N(r[0]), cat:r[1], group:r[2], plan:N(r[3]), fcst:N(r[4]), varD:N(r[5]), impact:N(r[6]), varP:N(r[7])}); } }
+  actExpRows.forEach(r=>{
+    const planRow=expRows.find(p=>p.name===r.name&&p.group===r.group);
+    if(!planRow) return;
+    const act=sum(r.vals.slice(0,monthsClosed));
+    const plan=sum(planRow.vals.slice(0,monthsClosed));
+    const varD=act-plan;
+    if(Math.abs(varD)<1) return;
+    swings.push({cat:r.name,group:r.group,plan,fcst:act,varD,impact:varD<0?Math.abs(varD):-Math.abs(varD),varP:plan?varD/plan:0});
+  });
+  swings.sort((a,b)=>Math.abs(b.varD)-Math.abs(a.varD));
 
-  const data = {
+  // Groups
+  const groupMap={};
+  expRows.forEach(r=>{
+    if(!groupMap[r.group]) groupMap[r.group]={name:r.group,plan:0,proj:0};
+    groupMap[r.group].plan+=sum(r.vals);
+    groupMap[r.group].proj+=(catActuals[r.group+'::'+r.name]?sum(catActuals[r.group+'::'+r.name].slice(0,monthsClosed)):0)+sum(r.vals.slice(monthsClosed));
+  });
+  const groups=Object.values(groupMap);
+
+  // Prev month
+  let prevMonth=null;
+  if(monthsClosed>=1){
+    const mo=monthsClosed-1;
+    const actInc=sum(actIncRows.map(r=>N(r.vals[mo])||0));
+    const actExp=sum(actExpRows.map(r=>N(r.vals[mo])||0));
+    const planInc=sum(incomeRows.map(r=>N(r.vals[mo])||0));
+    const planExp=sum(expRows.map(r=>N(r.vals[mo])||0));
+    const cats=[];
+    actExpRows.forEach(r=>{
+      const planRow=expRows.find(p=>p.name===r.name&&p.group===r.group);
+      if(!planRow) return;
+      const act=N(r.vals[mo])||0,plan=N(planRow.vals[mo])||0;
+      cats.push({cat:r.name,group:r.group,plan,actual:act,varD:act-plan,fav:act<=plan});
+    });
+    cats.sort((a,b)=>Math.abs(b.varD)-Math.abs(a.varD));
+    prevMonth={idx:monthsClosed,name:MON[mo],income:{plan:planInc,actual:actInc,varD:actInc-planInc},expenses:{plan:planExp,actual:actExp,varD:actExp-planExp},net:{plan:planInc-planExp,actual:actInc-actExp,varD:(actInc-actExp)-(planInc-planExp)},swings:cats.slice(0,10)};
+  }
+
+  const data={
     importTime:new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
-    projIncome, projExpenses, projNet, netVsPlan,
-    ytdIncome, ytdExpenses, ytdNet, monthsClosed,
-    pvf, groups, monthly, monthlyPVF, prevMonth, favorable, unfavorable, netVar, swings:swings.slice(0,12)
+    projIncome:fcstIncome,projExpenses:fcstExpenses,projNet:fcstIncome-projExpenses,
+    netVsPlan:fcstIncome-fcstExpenses-(projIncome-projExpenses),
+    ytdIncome,ytdExpenses,ytdNet,monthsClosed,
+    catPlans,catActuals,groups,monthly,swings:swings.slice(0,12),prevMonth,
+    favorable:0,unfavorable:0,netVar:0
   };
-  localStorage.setItem('kcc_budget', JSON.stringify(data));
-  S.budget = data;
+  localStorage.setItem('kcc_budget',JSON.stringify(data));
+  S.budget=data;
   if(S.page==='budget') rBudget();
   return data;
 }

@@ -250,7 +250,7 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 
 
 /* ── FINANCIALS ── */
-.fin-mo{font-size:9px;padding:3px 9px;border:1px solid var(--brd2);background:none;color:var(--mut);cursor:pointer;font-family:inherit;letter-spacing:0.5px;}
+.fin-mo{font-size:9px;padding:3px 9px;border:1px solid var(--brd2);background:none;color:var(--mut);cursor:pointer;font-family:inherit;}
 .fin-mo.on{background:var(--surf2);color:var(--grn);border-color:var(--grn);}
 .fin-mo-future{font-size:9px;padding:3px 9px;border:1px solid var(--brd2);background:none;color:var(--mut2);opacity:0.4;font-family:inherit;}
 .fin-grp td{background:var(--surf2);font-weight:700;padding:6px 8px;border-bottom:0.5px solid var(--brd);}
@@ -1104,9 +1104,7 @@ localStorage.setItem = function(key, value) {
           </div>
           <div class="ai-text loading" id="ai-budget-tx">Claude will analyze your full-year forecast, plan-vs-actual variance, and the largest category swings, then flag what to act on. Stays until you run the next analysis.</div>
         </div>
-        <div id="budget-content"><div class="empty" style="padding:40px;text-align:center">
-  Go to the <strong>Import</strong> tab to load transactions or Monarch history.
-</div></div>
+        <div id="budget-content"><div class="empty">Import the 2026 Budget Planner (main ⬆ importer) to populate.</div></div>
       </div>
 
       <div class="page" id="p-fire">
@@ -2384,7 +2382,7 @@ function rBudget(){
       <td>${gOver?'⚠ ':''}<strong>${grp}</strong></td>
       <td>${f$(gPlan)}</td>
       <td style="color:var(${isInc?(gAct>=gPlan?'--grn':'--red'):(Math.abs(gAct)<=gPlan?'--grn':'--red')})">${f$(isInc?gAct:Math.abs(gAct))}</td>
-      <td>${isInc?delt(gAct,gPlan,false):delt(-Math.abs(gAct),-gPlan,true)}</td>
+      <td>${isInc?remCell(gAct,gPlan,true):remCell(Math.abs(gAct),gPlan,false)}</td>
     </tr>`;
     subs.forEach(sub=>{
       const k=grp+'::'+sub;
@@ -2395,7 +2393,7 @@ function rBudget(){
         <td style="padding-left:22px">${sub}</td>
         <td>${f$(plan)}</td>
         <td style="color:var(${isInc?(act>=plan?'--grn':'--red'):(Math.abs(act)<=plan?'--grn':'--red')})">${f$(isInc?act:Math.abs(act))}</td>
-        <td style="color:var(${over?'--red':'--grn'})">${isInc?delt(act,plan,false):delt(-Math.abs(act),-plan,true)}</td>
+        <td style="color:var(${over?'--red':'--grn'})">${isInc?remCell(act,plan,true):remCell(Math.abs(act),plan,false)}</td>
       </tr>`;
     });
   });
@@ -2484,7 +2482,7 @@ function rBudget(){
         <th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--brd);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut)">Category</th>
         <th style="text-align:right;padding:5px 8px;border-bottom:1px solid var(--brd);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut)">Plan</th>
         <th style="text-align:right;padding:5px 8px;border-bottom:1px solid var(--brd);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut)">Actual</th>
-        <th style="text-align:right;padding:5px 8px;border-bottom:1px solid var(--brd);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut)">vs Plan</th>
+        <th style="text-align:right;padding:5px 8px;border-bottom:1px solid var(--brd);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut)">Remaining</th>
       </tr></thead>
       <tbody>${catRows}</tbody>
     </table>
@@ -2508,7 +2506,7 @@ function rBudget(){
       <label style="cursor:pointer;padding:8px 20px;border:1px solid var(--grn);color:var(--grn);font-size:11px;font-weight:700;letter-spacing:1px">
         Choose file<input type="file" accept=".csv" multiple onchange="[...this.files].forEach(f=>importTxnFile(f))" style="display:none">
       </label>
-      <button onclick="loadMonarchHistory()" style="margin-top:10px;padding:8px 20px;border:1px solid var(--blu);color:var(--blu);background:none;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;font-family:inherit;display:block;width:100%;">↓ Load Monarch History (Jan 2025 – Jun 2026) — one time</button>
+      <button onclick="loadMonarchHistory()" style="margin-top:10px;padding:8px 20px;border:1px solid var(--blu);color:var(--blu);background:none;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;font-family:inherit;display:block;width:100%;">↓ Load Monarch History (Jan 2025 – Jun 2026)</button>
     </div>
     <div style="border:1px solid var(--brd);padding:12px 16px;margin-bottom:10px">
       <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Accounts</div>
@@ -2560,16 +2558,21 @@ function finCatTxn(id, val){
 
 function escapeRegex(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
 
+function remCell(actual, plan, isIncome){
+  // isIncome=true: positive remaining = good (earned more than planned)
+  // isIncome=false (expense): positive remaining = under budget = good
+  const rem = isIncome ? (actual - plan) : (plan - actual);
+  const f$ = n => '$'+Math.round(Math.abs(n)).toLocaleString();
+  if(rem > 0) return `<td style="text-align:right;color:var(--grn)">+${f$(rem)}</td>`;
+  if(rem < 0) return `<td style="text-align:right;color:var(--red)">-${f$(Math.abs(rem))}</td>`;
+  return `<td style="text-align:right;color:var(--mut)">$0</td>`;
+}
 function getPlanVal(bud, grp, sub, selMo, isYtd, closedMos){
   if(!bud) return 0;
-  const key = grp+'::'+sub;
-  const vals = bud.catPlans && bud.catPlans[key];
+  const vals = bud.catPlans && bud.catPlans[grp+'::'+sub];
   if(!vals) return 0;
-  const N = v => (typeof v==='number'&&isFinite(v))?v:0;
-  if(isYtd){
-    const mo = closedMos||6;
-    return vals.slice(0,mo).reduce((s,v)=>s+N(v),0);
-  }
+  const N=v=>(typeof v==='number'&&isFinite(v))?v:0;
+  if(isYtd) return vals.slice(0,closedMos||6).reduce((s,v)=>s+N(v),0);
   return N(vals[(selMo||1)-1]);
 }
 
@@ -3511,8 +3514,6 @@ function parseBudgetPlanner(wb){
   const N=v=>(typeof v==='number'&&isFinite(v))?v:(typeof v==='string'&&v.trim()!==''&&!isNaN(+v)?+v:null);
   const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const sum=arr=>arr.reduce((s,v)=>{const n=N(v);return n!=null?s+n:s;},0);
-
-  // Read Plan sheet row by row
   const planRows=J('Plan');
   let incomeRows=[],expRows=[],currentGroup='',inIncome=false,inExp=false;
   planRows.forEach(r=>{
@@ -3525,17 +3526,11 @@ function parseBudgetPlanner(wb){
     if(inIncome&&vals.some(v=>v!=null)) incomeRows.push({name:lbl,vals});
     else if(inExp&&vals.some(v=>v!=null)) expRows.push({name:lbl,group:currentGroup,vals});
   });
-
-  // Per-category monthly plan map
   const catPlans={};
   incomeRows.forEach(r=>{catPlans['INCOME::'+r.name]=r.vals;});
   expRows.forEach(r=>{catPlans[r.group+'::'+r.name]=r.vals;});
-
   const projIncome=sum(incomeRows.flatMap(r=>r.vals));
   const projExpenses=sum(expRows.flatMap(r=>r.vals));
-  const projNet=projIncome-projExpenses;
-
-  // Read Actuals sheet
   const actRows=J('Actuals');
   let actIncRows=[],actExpRows=[],actGroup='',actInInc=false,actInExp=false;
   actRows.forEach((r,i)=>{
@@ -3549,83 +3544,26 @@ function parseBudgetPlanner(wb){
     if(actInInc&&vals.some(v=>v!=null)) actIncRows.push({name:lbl,vals});
     else if(actInExp&&vals.some(v=>v!=null)) actExpRows.push({name:lbl,group:actGroup,vals});
   });
-
-  // Count closed months
   let monthsClosed=0;
-  if(actIncRows.length){
-    const first=actIncRows.find(r=>r.vals.some(v=>v!=null));
-    if(first) monthsClosed=first.vals.filter(v=>v!=null).length;
-  }
-
+  if(actIncRows.length){const first=actIncRows.find(r=>r.vals.some(v=>v!=null));if(first) monthsClosed=first.vals.filter(v=>v!=null).length;}
   const ytdIncome=sum(actIncRows.flatMap(r=>r.vals.slice(0,monthsClosed)));
   const ytdExpenses=sum(actExpRows.flatMap(r=>r.vals.slice(0,monthsClosed)));
   const ytdNet=ytdIncome-ytdExpenses;
-
-  // Per-category actuals map
   const catActuals={};
   actIncRows.forEach(r=>{catActuals['INCOME::'+r.name]=r.vals;});
   actExpRows.forEach(r=>{catActuals[r.group+'::'+r.name]=r.vals;});
-
-  // Forecast = actuals (closed) + plan (remaining)
   const fcstIncome=ytdIncome+sum(incomeRows.flatMap(r=>r.vals.slice(monthsClosed)));
   const fcstExpenses=ytdExpenses+sum(expRows.flatMap(r=>r.vals.slice(monthsClosed)));
-
-  // Monthly net
-  const monthly=MON.map((mo,mi)=>{
-    const inc=sum(incomeRows.map(r=>N(r.vals[mi])||0));
-    const exp=sum(expRows.map(r=>N(r.vals[mi])||0));
-    return{mo,income:inc,expense:exp,net:inc-exp};
-  });
-
-  // Swings vs plan (YTD)
+  const monthly=MON.map((mo,mi)=>{const inc=sum(incomeRows.map(r=>N(r.vals[mi])||0));const exp=sum(expRows.map(r=>N(r.vals[mi])||0));return{mo,income:inc,expense:exp,net:inc-exp};});
   const swings=[];
-  actExpRows.forEach(r=>{
-    const planRow=expRows.find(p=>p.name===r.name&&p.group===r.group);
-    if(!planRow) return;
-    const act=sum(r.vals.slice(0,monthsClosed));
-    const plan=sum(planRow.vals.slice(0,monthsClosed));
-    const varD=act-plan;
-    if(Math.abs(varD)<1) return;
-    swings.push({cat:r.name,group:r.group,plan,fcst:act,varD,impact:varD<0?Math.abs(varD):-Math.abs(varD),varP:plan?varD/plan:0});
-  });
+  actExpRows.forEach(r=>{const planRow=expRows.find(p=>p.name===r.name&&p.group===r.group);if(!planRow) return;const act=sum(r.vals.slice(0,monthsClosed));const plan=sum(planRow.vals.slice(0,monthsClosed));const varD=act-plan;if(Math.abs(varD)<1) return;swings.push({cat:r.name,group:r.group,plan,fcst:act,varD,impact:varD<0?Math.abs(varD):-Math.abs(varD),varP:plan?varD/plan:0});});
   swings.sort((a,b)=>Math.abs(b.varD)-Math.abs(a.varD));
-
-  // Groups
   const groupMap={};
-  expRows.forEach(r=>{
-    if(!groupMap[r.group]) groupMap[r.group]={name:r.group,plan:0,proj:0};
-    groupMap[r.group].plan+=sum(r.vals);
-    groupMap[r.group].proj+=(catActuals[r.group+'::'+r.name]?sum(catActuals[r.group+'::'+r.name].slice(0,monthsClosed)):0)+sum(r.vals.slice(monthsClosed));
-  });
+  expRows.forEach(r=>{if(!groupMap[r.group]) groupMap[r.group]={name:r.group,plan:0,proj:0};groupMap[r.group].plan+=sum(r.vals);});
   const groups=Object.values(groupMap);
-
-  // Prev month
   let prevMonth=null;
-  if(monthsClosed>=1){
-    const mo=monthsClosed-1;
-    const actInc=sum(actIncRows.map(r=>N(r.vals[mo])||0));
-    const actExp=sum(actExpRows.map(r=>N(r.vals[mo])||0));
-    const planInc=sum(incomeRows.map(r=>N(r.vals[mo])||0));
-    const planExp=sum(expRows.map(r=>N(r.vals[mo])||0));
-    const cats=[];
-    actExpRows.forEach(r=>{
-      const planRow=expRows.find(p=>p.name===r.name&&p.group===r.group);
-      if(!planRow) return;
-      const act=N(r.vals[mo])||0,plan=N(planRow.vals[mo])||0;
-      cats.push({cat:r.name,group:r.group,plan,actual:act,varD:act-plan,fav:act<=plan});
-    });
-    cats.sort((a,b)=>Math.abs(b.varD)-Math.abs(a.varD));
-    prevMonth={idx:monthsClosed,name:MON[mo],income:{plan:planInc,actual:actInc,varD:actInc-planInc},expenses:{plan:planExp,actual:actExp,varD:actExp-planExp},net:{plan:planInc-planExp,actual:actInc-actExp,varD:(actInc-actExp)-(planInc-planExp)},swings:cats.slice(0,10)};
-  }
-
-  const data={
-    importTime:new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
-    projIncome:fcstIncome,projExpenses:fcstExpenses,projNet:fcstIncome-projExpenses,
-    netVsPlan:fcstIncome-fcstExpenses-(projIncome-projExpenses),
-    ytdIncome,ytdExpenses,ytdNet,monthsClosed,
-    catPlans,catActuals,groups,monthly,swings:swings.slice(0,12),prevMonth,
-    favorable:0,unfavorable:0,netVar:0
-  };
+  if(monthsClosed>=1){const mo=monthsClosed-1;const actInc=sum(actIncRows.map(r=>N(r.vals[mo])||0));const actExp=sum(actExpRows.map(r=>N(r.vals[mo])||0));const planInc=sum(incomeRows.map(r=>N(r.vals[mo])||0));const planExp=sum(expRows.map(r=>N(r.vals[mo])||0));const cats=[];actExpRows.forEach(r=>{const planRow=expRows.find(p=>p.name===r.name&&p.group===r.group);if(!planRow) return;const act=N(r.vals[mo])||0,plan=N(planRow.vals[mo])||0;cats.push({cat:r.name,group:r.group,plan,actual:act,varD:act-plan,fav:act<=plan});});cats.sort((a,b)=>Math.abs(b.varD)-Math.abs(a.varD));prevMonth={idx:monthsClosed,name:MON[mo],income:{plan:planInc,actual:actInc,varD:actInc-planInc},expenses:{plan:planExp,actual:actExp,varD:actExp-planExp},net:{plan:planInc-planExp,actual:actInc-actExp,varD:(actInc-actExp)-(planInc-planExp)},swings:cats.slice(0,10)};}
+  const data={importTime:new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),projIncome:fcstIncome,projExpenses:fcstExpenses,projNet:fcstIncome-fcstExpenses,netVsPlan:fcstIncome-fcstExpenses-(projIncome-projExpenses),ytdIncome,ytdExpenses,ytdNet,monthsClosed,catPlans,catActuals,groups,monthly,swings:swings.slice(0,12),prevMonth,favorable:0,unfavorable:0,netVar:0};
   localStorage.setItem('kcc_budget',JSON.stringify(data));
   S.budget=data;
   if(S.page==='budget') rBudget();

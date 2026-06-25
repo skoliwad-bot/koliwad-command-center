@@ -253,9 +253,6 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 .fin-mo{font-size:9px;padding:3px 9px;border:1px solid var(--brd2);background:none;color:var(--mut);cursor:pointer;font-family:inherit;}
 .fin-mo.on{background:var(--surf2);color:var(--grn);border-color:var(--grn);}
 .fin-mo-future{font-size:9px;padding:3px 9px;border:1px solid var(--brd2);background:none;color:var(--mut2);opacity:0.4;font-family:inherit;}
-.fin-grp td{background:var(--surf2);font-weight:700;padding:6px 8px;border-bottom:0.5px solid var(--brd);}
-.fin-grp.fin-over td:first-child{color:var(--red);}
-.fin-sub td{padding:5px 8px;border-bottom:0.5px solid var(--brd);color:var(--txt2);}
 .fin-rev-row{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--brd);flex-wrap:wrap;}
 /* ── BRIEFING ── */
 #brief{display:none;background:#e8e8e8;}
@@ -2297,297 +2294,19 @@ function importTxnFile(file){
 function accountLabel(a){ return {capital_one:'Capital One CC',citi:'Citi Checking',cefcu_savings:'CEFCU Savings',cefcu_heloc:'CEFCU HELOC'}[a]||a; }
 
 // ── MAIN FINANCIALS PAGE RENDER ──────────────────────────────
-function rBudget(){
-  const bud = JSON.parse(localStorage.getItem('kcc_budget')||'null');
-  const store = txnLoad();
-  const txns = store.txns||[];
-  const now = new Date();
-  const curYear = now.getFullYear().toString();
-  const curMoNum = now.getMonth()+1; // 1-12
 
-  // Determine months with data
-  const moWithData=new Set();
-  txns.forEach(t=>{ if(t.date&&t.date.startsWith(curYear)) moWithData.add(parseInt(t.date.slice(5,7))); });
-  if(bud&&bud.monthsClosed) for(let i=1;i<=bud.monthsClosed;i++) moWithData.add(i);
-  const maxMo = Math.max(curMoNum, ...[...moWithData]);
-  const closedMos = bud ? bud.monthsClosed : [...moWithData].filter(m=>m<curMoNum).length;
 
-  // Default selected period
-  if(typeof S._finMo==='undefined') S._finMo = closedMos||curMoNum;
 
-  const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-  // Build period tabs HTML
-  let moTabs='';
-  for(let m=1;m<=12;m++){
-    const hasData = moWithData.has(m)||m<=closedMos;
-    const isCur = m===curMoNum;
-    const cls = !hasData&&!isCur?'fin-mo-future':'fin-mo'+(S._finMo===m?' on':'');
-    moTabs+=`<button class="${cls}" onclick="setFinMo(${m})" ${!hasData&&!isCur?'disabled':''}>
-      ${MON[m-1]}${isCur&&m>closedMos?' MTD':''}
-    </button>`;
-  }
-  moTabs+=`<button class="fin-mo${S._finMo==='ytd'?' on':''}" onclick="setFinMo('ytd')" style="margin-left:8px;">YTD</button>`;
 
-  // Get actuals for selected period
-  const selMo = S._finMo;
-  let selTxns, selLabel;
-  if(selMo==='ytd'){
-    selTxns = txnGetYTD(txns, curYear, closedMos||curMoNum);
-    selLabel = 'YTD '+curYear+' ('+MON[0]+'–'+MON[(closedMos||curMoNum)-1]+')';
-  } else {
-    selTxns = txnGetMonth(txns, curYear, selMo);
-    selLabel = MON[selMo-1]+' '+curYear+(selMo===curMoNum&&selMo>closedMos?' (MTD)':'');
-  }
 
-  const sumByCat = txnSumBySubcat(selTxns);
-  const actInc = selTxns.filter(t=>t.group==='INCOME').reduce((s,t)=>s+t.amount,0);
-  const actExp = Math.abs(selTxns.filter(t=>t.group!=='INCOME').reduce((s,t)=>s+t.amount,0));
-  const actNet = actInc - actExp;
 
-  // Plan for selected period
-  let planInc=0, planExp=0;
-  if(bud){
-    if(selMo==='ytd'){
-      planInc = (bud.ytdIncome||0); planExp = (bud.ytdExpenses||0);
-    } else {
-      // from monthly array if available
-      const mrow = bud.monthly&&bud.monthly[selMo-1];
-      if(mrow){ planInc=mrow.income||0; planExp=mrow.expense||0; }
-      else { planInc=(bud.projIncome||0)/12; planExp=(bud.projExpenses||0)/12; }
-    }
-  }
-  const planNet = planInc - planExp;
 
-  // Uncategorized count
-  const uncatCount = txns.filter(t=>(!t.group||!t.reviewed)&&t.group!=='TRANSFER').length;
 
-  const f$ = n => '$'+Math.round(Math.abs(n)).toLocaleString();
-  const delt = (a,p,invert)=>{const d=a-p;const fav=(invert?d<=0:d>=0);return`<span style="font-size:10px;color:var(${fav?'--grn':'--red'})">${d>=0?'+':''} ${f$(d)}</span>`;};
 
-  // ── CATEGORIES TABLE ─────────────────────────────────────────
-  let catRows='';
-  Object.entries(KCC_CATS).forEach(([grp,subs])=>{
-    if(grp==='TRANSFER') return;
-    const isInc = grp==='INCOME';
-    let gAct=0, gPlan=0;
-    subs.forEach(sub=>{
-      const k=grp+'::'+sub;
-      const act = sumByCat[k]||0;
-      const plan = getPlanVal(bud,grp,sub,selMo,selMo==='ytd',closedMos)/( isInc?1:-1);
-      gAct+=act; gPlan+=plan;
-    });
-    const gOver = isInc?(gAct<gPlan):(Math.abs(gAct)>gPlan);
-    catRows+=`<tr class="fin-grp${gOver?' fin-over':''}">
-      <td>${gOver?'⚠ ':''}<strong>${grp}</strong></td>
-      <td>${f$(gPlan)}</td>
-      <td style="color:var(${isInc?(gAct>=gPlan?'--grn':'--red'):(Math.abs(gAct)<=gPlan?'--grn':'--red')})">${f$(isInc?gAct:Math.abs(gAct))}</td>
-      <td>${isInc?remCell(gAct,gPlan,true):remCell(Math.abs(gAct),gPlan,false)}</td>
-    </tr>`;
-    subs.forEach(sub=>{
-      const k=grp+'::'+sub;
-      const act = sumByCat[k]||0;
-      const plan = getPlanVal(bud,grp,sub,selMo,selMo==='ytd',closedMos)/(isInc?1:-1);
-      const over = isInc?(act<plan):(Math.abs(act)>plan);
-      catRows+=`<tr class="fin-sub">
-        <td style="padding-left:22px">${sub}</td>
-        <td>${f$(plan)}</td>
-        <td style="color:var(${isInc?(act>=plan?'--grn':'--red'):(Math.abs(act)<=plan?'--grn':'--red')})">${f$(isInc?act:Math.abs(act))}</td>
-        <td style="color:var(${over?'--red':'--grn'})">${isInc?remCell(act,plan,true):remCell(Math.abs(act),plan,false)}</td>
-      </tr>`;
-    });
-  });
 
-  // ── TRANSACTION REVIEW ───────────────────────────────────────
-  const uncat = txns.filter(t=>!t.reviewed&&t.group!=='TRANSFER').slice(0,30);
-  const catOpts = Object.entries(KCC_CATS).filter(([g])=>g!=='TRANSFER').flatMap(([g,subs])=>
-    `<optgroup label="${g}">${subs.map(s=>`<option value="${g}::${s}">${s}</option>`).join('')}</optgroup>`
-  ).join('');
 
-  let reviewRows = uncat.length===0
-    ? '<div class="empty">All transactions categorized ✓</div>'
-    : uncat.map(t=>`<div class="fin-rev-row">
-        <div style="display:flex;gap:8px;align-items:center;flex:1;min-width:0">
-          <span style="font-size:10px;color:var(--mut);flex-shrink:0">${t.date}</span>
-          <span style="font-size:10px;color:var(--mut);flex-shrink:0">[${t.account}]</span>
-          <span style="flex:1;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(t.desc)}">${esc(t.desc)}</span>
-          <span style="font-size:12px;font-weight:700;flex-shrink:0;color:${t.amount<0?'var(--red)':'var(--grn)'}">${t.amount>=0?'+':''}${f$(t.amount)}</span>
-        </div>
-        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
-          <select onchange="finCatTxn('${t.id}',this.value)" style="font-size:10px;padding:2px 4px;background:var(--surf);border:1px solid var(--brd2);color:var(--txt)">
-            <option value="">— categorize —</option>${catOpts}
-            <option value="TRANSFER::Internal Transfer">Transfer (skip)</option>
-          </select>
-        </div>
-      </div>`).join('');
 
-  // ── BUILD PAGE ───────────────────────────────────────────────
-  const budgetContent = document.getElementById('budget-content');
-  if(!budgetContent) return;
-
-  const hasTxns = txns.length>0;
-  const srcNote = hasTxns
-    ? `${txns.length} transactions · last import ${store.lastImport||'—'}`
-    : (bud ? `Budget Planner import · ${bud.monthsClosed||0} months closed` : 'No data imported yet');
-
-  const importEl = document.getElementById('budget-last-import');
-  if(importEl) importEl.textContent = srcNote;
-
-  budgetContent.innerHTML = `
-  <!-- PERIOD SELECTOR -->
-  <div style="margin-bottom:14px">
-    <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);margin-bottom:6px">Period</div>
-    <div style="display:flex;gap:4px;flex-wrap:wrap">${moTabs}</div>
-  </div>
-
-  <!-- TABS -->
-  <div class="ftab" style="margin-bottom:14px">
-    <button id="fintb1" onclick="setFinTab('bva')" class="on">Budget vs Actual</button>
-    <button id="fintb2" onclick="setFinTab('cats')">Categories</button>
-    <button id="fintb3" onclick="setFinTab('txns')">Transactions${uncatCount>0?` <span style="background:var(--red);color:#fff;font-size:9px;padding:1px 5px;border-radius:20px">${uncatCount}</span>`:''}</button>
-    <button id="fintb4" onclick="setFinTab('import')">Import ⬆</button>
-  </div>
-
-  <!-- BVA TAB -->
-  <div id="fin-bva">
-    <div class="g4" style="margin-bottom:14px">
-      <div class="sp"><span class="spi">📈</span><div>
-        <span class="spl">${selLabel} — Income</span>
-        <span class="spv ${actInc>0?'g':'r'}">${f$(actInc)}</span>
-        <span class="spl" style="color:var(${actInc>=planInc?'--grn':'--red'})">${actInc>=planInc?'+':'-'}${f$(Math.abs(actInc-planInc))} vs plan ${f$(planInc)}</span>
-      </div></div>
-      <div class="sp"><span class="spi">💸</span><div>
-        <span class="spl">${selLabel} — Expenses</span>
-        <span class="spv r">${f$(actExp)}</span>
-        <span class="spl" style="color:var(${actExp<=planExp?'--grn':'--red'})">${actExp<=planExp?'-':'+'}${f$(Math.abs(actExp-planExp))} vs plan ${f$(planExp)}</span>
-      </div></div>
-      <div class="sp"><span class="spi">⚖</span><div>
-        <span class="spl">${selLabel} — Net</span>
-        <span class="spv ${actNet>=0?'g':'r'}">${actNet>=0?'+':''}${f$(actNet)}</span>
-        <span class="spl" style="color:var(${actNet>=planNet?'--grn':'--red'})">${actNet>=planNet?'+':'-'}${f$(Math.abs(actNet-planNet))} vs plan</span>
-      </div></div>
-      <div class="sp"><span class="spi">📊</span><div>
-        <span class="spl">Savings Rate</span>
-        <span class="spv ${actInc>0&&actNet/actInc>=0?'g':'r'}">${actInc>0?Math.round(actNet/actInc*100):0}%</span>
-        <span class="spl">income kept</span>
-      </div></div>
-    </div>
-    ${(()=>{
-      const mx=Math.max(actInc,actExp,planInc||0,planExp||0,1);
-      const pct=v=>Math.min(90,Math.round(v/mx*90));
-      const bar=(w,col)=>'<div style="height:100%;width:'+w+'%;background:'+col+';position:absolute;left:0;top:0;"></div>';
-      const row=(lbl,w,col,valHtml)=>'<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">'+
-        '<span style="font-size:9px;color:var(--mut);width:90px;flex-shrink:0;text-align:right">'+lbl+'</span>'+
-        '<div style="flex:1;height:13px;background:var(--brd2);position:relative;overflow:hidden;">'+bar(w,col)+'</div>'+
-        '<span style="font-size:11px;font-weight:700;width:90px;flex-shrink:0;">'+valHtml+'</span>'+
-        '</div>';
-      return '<div style="background:var(--surf2);border:1px solid var(--brd2);padding:12px;margin-bottom:12px;">'+
-        '<div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);margin-bottom:10px;">Actual vs Plan — '+selLabel+'</div>'+
-        row('Income actual',pct(actInc),'var(--grn)','<span style="color:var(--grn)">'+f$(actInc)+'</span>')+
-        row('Income plan',pct(planInc||0),'#2a4a2a','<span style="color:var(--mut)">'+f$(planInc||0)+'</span>')+
-        '<div style="height:6px"></div>'+
-        row('Expense actual',pct(actExp),'var(--red)','<span style="color:var(--red)">'+f$(actExp)+'</span>')+
-        row('Expense plan',pct(planExp||0),'#4a2a2a','<span style="color:var(--mut)">'+f$(planExp||0)+'</span>')+
-        '<div style="height:1px;background:var(--brd2);margin:8px 0;"></div>'+
-        '<div style="text-align:right;font-size:12px;">Net this period: <strong style="color:var('+( actNet>=0?'--grn':'--red')+')">'+( actNet>=0?'+':'')+f$(actNet)+'</strong></div>'+
-        '</div>';
-    })()}
-  </div>
-
-  <!-- CATEGORIES TAB -->
-  <div id="fin-cats" style="display:none">
-    <table style="width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;">
-      <colgroup><col style="width:auto"><col style="width:110px"><col style="width:110px"><col style="width:110px"></colgroup>
-      <thead><tr>
-        <th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--brd);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut)">Category</th>
-        <th style="text-align:right;padding:5px 8px;border-bottom:1px solid var(--brd);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut)">Plan</th>
-        <th style="text-align:right;padding:5px 8px;border-bottom:1px solid var(--brd);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut)">Actual</th>
-        <th style="text-align:right;padding:5px 8px;border-bottom:1px solid var(--brd);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut)">Remaining</th>
-      </tr></thead>
-      <tbody>${catRows}</tbody>
-    </table>
-  </div>
-
-  <!-- TRANSACTIONS TAB -->
-  <div id="fin-txns" style="display:none">
-    ${uncatCount>0?`<div style="padding:8px 12px;border:1px solid var(--amb);background:rgba(212,160,48,0.08);margin-bottom:12px;font-size:11px;color:var(--amb)">
-      ⚠ ${uncatCount} transactions need categorization — select a category to auto-apply rule for future imports
-    </div>`:''}
-    <div style="font-size:9px;color:var(--mut);margin-bottom:8px">Showing uncategorized · categorize once → saves as rule</div>
-    ${reviewRows}
-  </div>
-
-  <!-- IMPORT TAB -->
-  <div id="fin-import" style="display:none">
-    <div style="border:1.5px dashed var(--brd2);padding:24px;text-align:center;margin-bottom:16px">
-      <div style="font-size:28px;margin-bottom:8px">⬆</div>
-      <div style="font-size:13px;font-weight:700;margin-bottom:6px">Import transactions</div>
-      <div style="font-size:11px;color:var(--mut);margin-bottom:14px">Capital One CSV · Citi CSV · CEFCU Savings CSV · CEFCU HELOC CSV</div>
-      <label style="cursor:pointer;padding:8px 20px;border:1px solid var(--grn);color:var(--grn);font-size:11px;font-weight:700;letter-spacing:1px">
-        Choose file<input type="file" accept=".csv" multiple onchange="[...this.files].forEach(f=>importTxnFile(f))" style="display:none">
-      </label>
-      <button onclick="loadMonarchHistory()" style="margin-top:10px;padding:8px 20px;border:1px solid var(--blu);color:var(--blu);background:none;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;font-family:inherit;display:block;width:100%;">&#x2193; Load Monarch History (Jan 2025 – Jun 2026)</button>
-    </div>
-    <div style="border:1px solid var(--brd);padding:12px 16px;margin-bottom:10px">
-      <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Accounts</div>
-      ${['Capital One CC','Citi Checking','CEFCU Savings','CEFCU HELOC'].map(a=>{
-        const cnt=txns.filter(t=>t.account===a).length;
-        const last=txns.filter(t=>t.account===a)[0]?.date||'—';
-        return`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--brd);font-size:11px">
-          <span>${a}</span><span style="color:var(--mut)">${cnt} txns · latest ${last}</span>
-        </div>`;
-      }).join('')}
-    </div>
-  </div>
-  `;
-
-  // Restore active tab
-  setFinTab(S._finTab||'bva', true);
-}
-
-function setFinMo(mo){
-  S._finMo=mo;
-  document.querySelectorAll('.fin-mo,.fin-mo-future').forEach(b=>b.classList.remove('on'));
-  event.target.classList.add('on');
-  rBudget();
-}
-
-function setFinTab(id, silent){
-  S._finTab=id;
-  ['bva','cats','txns','import'].forEach((t,i)=>{
-    const el=document.getElementById('fin-'+t);
-    const btn=document.getElementById('fintb'+(i+1));
-    if(el) el.style.display=t===id?'':'none';
-    if(btn) btn.classList.toggle('on',t===id);
-  });
-}
-
-function finCatTxn(id, val){
-  if(!val) return;
-  const [group,sub]=val.split('::');
-  txnSetCat(id,group,sub);
-  // Save as rule based on description
-  const store=txnLoad();
-  const t=store.txns.find(x=>x.id===id);
-  if(t){
-    const pat=escapeRegex((t.desc||'').split(' ').slice(0,3).join(' ').trim());
-    if(pat) txnSaveRule(pat,group,sub);
-  }
-  rBudget();
-}
-
-function escapeRegex(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
-
-function remCell(actual,plan,isIncome){const rem=isIncome?(actual-plan):(plan-actual);const f$=n=>'$'+Math.round(Math.abs(n)).toLocaleString();if(rem>0)return '<td style="text-align:right;color:var(--grn)">+'+f$(rem)+'</td>';if(rem<0)return '<td style="text-align:right;color:var(--red)">-'+f$(Math.abs(rem))+'</td>';return '<td style="text-align:right;color:var(--mut)">$0</td>';}
-function getPlanVal(bud,grp,sub,selMo,isYtd,closedMos){if(!bud)return 0;const vals=bud.catPlans&&bud.catPlans[grp+'::'+sub];if(!vals)return 0;const N=v=>(typeof v==='number'&&isFinite(v))?v:0;if(isYtd)return vals.slice(0,closedMos||6).reduce((s,v)=>s+N(v),0);return N(vals[(selMo||1)-1]);}
-
-function remCell(actual, plan, isIncome){
-  const rem = isIncome ? (actual - plan) : (plan - actual);
-  const f$=n=>'$'+Math.round(Math.abs(n)).toLocaleString();
-  if(rem>0) return '<td style="text-align:right;color:var(--grn)">+'+f$(rem)+'</td>';
-  if(rem<0) return '<td style="text-align:right;color:var(--red)">-'+f$(Math.abs(rem))+'</td>';
-  return '<td style="text-align:right;color:var(--mut)">$0</td>';
-}
 function getPlanVal(bud, grp, sub, selMo, isYtd, closedMos){
   if(!bud) return 0;
   const vals = bud.catPlans && bud.catPlans[grp+'::'+sub];
@@ -2809,6 +2528,283 @@ function loadMonarchHistory(){
   txnSave(store);
   alert('Loaded '+added+' Monarch historical records (Jan 2025 – Jun 2026).\nCategory-level actuals from your Monarch account — pre-categorized and ready.');
   if(S.page==='budget') rBudget();
+}
+
+
+// ── FINANCIALS RENDER ──────────────────────────────────────────
+function rBudget(){
+  const bc = document.getElementById('budget-content');
+  if(!bc) return;
+  const bud = JSON.parse(localStorage.getItem('kcc_budget')||'null');
+  const store = txnLoad();
+  const txns = store.txns||[];
+  const now = new Date();
+  const yr = now.getFullYear().toString();
+  const curMo = now.getMonth()+1;
+  const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const closedMos = bud ? (bud.monthsClosed||0) : 0;
+  const f$ = n => '$'+Math.round(Math.abs(n||0)).toLocaleString();
+  const col = n => n>=0?'var(--grn)':'var(--red)';
+  const sgn = n => n>0?'+':n<0?'-':'';
+
+  // default period
+  if(typeof S._finMo==='undefined') S._finMo = closedMos||curMo;
+  const selMo = S._finMo;
+  const isYtd = selMo==='ytd';
+  const moNum = isYtd ? null : parseInt(selMo);
+  const selLabel = isYtd ? 'YTD '+yr+' (Jan\u2013'+MON[(closedMos||curMo)-1]+')' : MON[moNum-1]+' '+yr+(moNum===curMo&&moNum>closedMos?' (MTD)':'');
+
+  // period buttons
+  let moBtns = '';
+  for(let m=1;m<=12;m++){
+    const isClosed = m<=closedMos;
+    const isCur = m===curMo;
+    const hasData = isClosed||isCur;
+    const label = MON[m-1]+(isCur&&!isClosed?' MTD':'');
+    if(hasData){
+      moBtns += '<button class="fin-mo'+(selMo===m?' on':'')+'" onclick="setFinMo('+m+')">'+label+'</button>';
+    } else {
+      moBtns += '<button class="fin-mo-future" disabled>'+label+'</button>';
+    }
+  }
+  moBtns += '<button class="fin-mo'+(isYtd?' on':'')+'" onclick="setFinMo(\'ytd\')" style="margin-left:8px">YTD</button>';
+
+  // actuals from transactions
+  const selTxns = isYtd ? txnGetYTD(txns,yr,closedMos||curMo) : txnGetMonth(txns,yr,moNum);
+  const sumCat = txnSumBySubcat(selTxns);
+  const actInc = selTxns.filter(t=>t.group==='INCOME').reduce((s,t)=>s+t.amount,0);
+  const actExp = Math.abs(selTxns.filter(t=>t.group!=='INCOME'&&t.group!=='TRANSFER').reduce((s,t)=>s+t.amount,0));
+  const actNet = actInc-actExp;
+
+  // plan values
+  let planInc=0, planExp=0;
+  if(bud){
+    if(isYtd){ planInc=bud.ytdIncome||0; planExp=bud.ytdExpenses||0; }
+    else {
+      const mrow = bud.monthly&&bud.monthly[moNum-1];
+      if(mrow){ planInc=mrow.income||0; planExp=mrow.expense||0; }
+      else if(bud.projIncome){ planInc=bud.projIncome/12; planExp=bud.projExpenses/12; }
+    }
+  }
+  const planNet = planInc-planExp;
+  const uncatCount = txns.filter(t=>!t.reviewed&&t.group!=='TRANSFER').length;
+
+  // ── KPI CARDS ──
+  const cards =
+    '<div class="g4" style="margin-bottom:14px">'+
+      kpiCard('📈', selLabel+' \u2014 Income', f$(actInc), 'g',
+        planInc ? (sgn(actInc-planInc)+f$(actInc-planInc)+' vs plan '+f$(planInc)) : '', actInc>=planInc?'g':'r')+
+      kpiCard('💸', selLabel+' \u2014 Expenses', f$(actExp), 'r',
+        planExp ? (sgn(actExp-planExp)+f$(actExp-planExp)+' vs plan '+f$(planExp)) : '', actExp<=planExp?'g':'r')+
+      kpiCard('\u2696', selLabel+' \u2014 Net', (actNet>=0?'+':'')+f$(actNet), actNet>=0?'g':'r',
+        planNet ? (sgn(actNet-planNet)+f$(actNet-planNet)+' vs plan') : '', actNet>=planNet?'g':'r')+
+      kpiCard('📊', 'Savings Rate', (actInc>0?Math.round(actNet/actInc*100):0)+'%', actInc>0&&actNet/actInc>=0?'g':'r', 'income kept', '')+
+    '</div>';
+
+  // ── BVA BARS ──
+  const mx = Math.max(actInc, actExp, planInc||1, planExp||1, 1);
+  const pct = v => Math.min(90, Math.round(Math.abs(v)/mx*90));
+
+  const bvaBar = function(label, value, pctW, bgColor, valueColor, deltaStr) {
+    return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">'+
+      '<span style="font-size:10px;color:var(--mut);width:100px;text-align:right;flex-shrink:0">'+label+'</span>'+
+      '<div style="flex:1;height:12px;background:var(--brd2);border-radius:2px;overflow:hidden;">'+
+        '<div style="height:100%;width:'+pctW+'%;background:'+bgColor+';border-radius:2px;"></div>'+
+      '</div>'+
+      '<span style="font-size:11px;font-weight:700;color:'+valueColor+';width:110px;flex-shrink:0">'+
+        value+(deltaStr?'<span style="font-size:9px;margin-left:4px;opacity:.8"> '+deltaStr+'</span>':'')+
+      '</span>'+
+    '</div>';
+  };
+
+  const bvaBars = planInc || planExp ? (
+    '<div style="background:var(--surf2);border:1px solid var(--brd2);padding:12px 14px;margin-bottom:12px;">'+
+    '<div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);margin-bottom:10px;">Cash flow \u2014 '+selLabel+'</div>'+
+    bvaBar('Income', f$(actInc), pct(actInc), 'var(--grn)', 'var(--grn)',
+      planInc ? (sgn(actInc-planInc)+f$(actInc-planInc)) : '') +
+    bvaBar('Income plan', f$(planInc), pct(planInc), '#2a4a2a', 'var(--mut)', '') +
+    '<div style="height:6px"></div>'+
+    bvaBar('Expenses', f$(actExp), pct(actExp), 'var(--red)', 'var(--red)',
+      planExp ? (sgn(actExp-planExp)+f$(actExp-planExp)) : '') +
+    bvaBar('Expense plan', f$(planExp), pct(planExp), '#4a2a2a', 'var(--mut)', '') +
+    '<div style="height:1px;background:var(--brd2);margin:8px 0"></div>'+
+    '<div style="text-align:right;font-size:12px;">Net: <strong style="color:'+col(actNet)+'">'+(actNet>=0?'+':'')+f$(actNet)+'</strong>'+
+      (planNet?'<span style="font-size:10px;color:var(--mut)"> vs plan '+(actNet>=planNet?'+':'')+f$(actNet-planNet)+'</span>':'')+
+    '</div>'+
+    '</div>'
+  ) : '<div style="padding:20px;text-align:center;color:var(--mut);font-size:11px;">Import Budget Planner to see plan vs actual comparison</div>';
+
+  // ── CATEGORIES TABLE (CSS Grid, no table element) ──
+  const COL_W = '100px';
+  const gridHeader =
+    '<div style="display:grid;grid-template-columns:1fr '+COL_W+' '+COL_W+' '+COL_W+';gap:0;border-bottom:1px solid var(--brd);padding:5px 8px;background:var(--surf);">'+
+      '<span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut)">Category</span>'+
+      '<span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);text-align:right">Plan</span>'+
+      '<span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);text-align:right">Actual</span>'+
+      '<span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);text-align:right">Remaining</span>'+
+    '</div>';
+
+  let catRows = '';
+  Object.entries(KCC_CATS).forEach(function(entry){
+    const grp = entry[0], subs = entry[1];
+    if(grp==='TRANSFER') return;
+    const isInc = grp==='INCOME';
+    let gPlan=0, gAct=0;
+    subs.forEach(function(sub){
+      const k=grp+'::'+sub;
+      const act=sumCat[k]||0;
+      const plan=getPlanVal(bud,grp,sub,moNum,isYtd,closedMos);
+      gPlan+=plan; gAct+=isInc?act:Math.abs(act);
+    });
+    const gRem = isInc?(gAct-gPlan):(gPlan-gAct);
+    const gOver = gRem<0;
+    catRows +=
+      '<div style="display:grid;grid-template-columns:1fr '+COL_W+' '+COL_W+' '+COL_W+';gap:0;padding:6px 8px;background:var(--surf2);border-bottom:0.5px solid var(--brd);font-weight:700;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'block\':\'none\'">'+
+        '<span style="color:'+(gOver?'var(--red)':'var(--txt)')+'">'+(gOver?'\u26a0 ':'')+grp+'</span>'+
+        '<span style="text-align:right;color:var(--txt2)">'+f$(gPlan)+'</span>'+
+        '<span style="text-align:right;color:'+(isInc?'var(--grn)':'var(--txt)')+'">'+f$(gAct)+'</span>'+
+        '<span style="text-align:right;color:'+(gRem>=0?'var(--grn)':'var(--red)')+'">'+(gRem>=0?'+':'-')+f$(Math.abs(gRem))+'</span>'+
+      '</div>'+
+      '<div>'; // subcats container (shown by default)
+    subs.forEach(function(sub){
+      const k=grp+'::'+sub;
+      const actRaw=sumCat[k]||0;
+      const act=isInc?actRaw:Math.abs(actRaw);
+      const plan=getPlanVal(bud,grp,sub,moNum,isYtd,closedMos);
+      const rem=isInc?(act-plan):(plan-act);
+      catRows +=
+        '<div style="display:grid;grid-template-columns:1fr '+COL_W+' '+COL_W+' '+COL_W+';gap:0;padding:5px 8px 5px 20px;border-bottom:0.5px solid var(--brd);">'+
+          '<span style="color:var(--txt2)">'+sub+'</span>'+
+          '<span style="text-align:right;color:var(--mut)">'+f$(plan)+'</span>'+
+          '<span style="text-align:right;color:'+(act>0?'var(--txt2)':'var(--mut)')+'">'+f$(act)+'</span>'+
+          '<span style="text-align:right;color:'+(rem>=0?'var(--grn)':'var(--red)')+'">'+(rem>=0?'+':'-')+f$(Math.abs(rem))+'</span>'+
+        '</div>';
+    });
+    catRows += '</div>';
+  });
+
+  // ── TRANSACTION REVIEW ──
+  const uncat = txns.filter(t=>!t.reviewed&&t.group!=='TRANSFER').slice(0,30);
+  const catOpts = Object.entries(KCC_CATS).filter(function(e){return e[0]!=='TRANSFER';}).map(function(e){
+    return '<optgroup label="'+e[0]+'">'+e[1].map(function(s){return '<option value="'+e[0]+'::'+s+'">'+s+'</option>';}).join('')+'</optgroup>';
+  }).join('');
+  const reviewRows = uncat.length===0
+    ? '<div class="empty" style="padding:20px;text-align:center">All transactions categorized \u2713</div>'
+    : uncat.map(function(t){
+        return '<div class="fin-rev-row">'+
+          '<span style="font-size:10px;color:var(--mut);flex-shrink:0">'+t.date+'</span>'+
+          '<span style="font-size:9px;color:var(--mut);flex-shrink:0">['+t.account+']</span>'+
+          '<span style="flex:1;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t.desc)+'</span>'+
+          '<span style="font-size:12px;font-weight:700;flex-shrink:0;color:'+(t.amount<0?'var(--red)':'var(--grn)')+'">'+(t.amount>=0?'+':'')+f$(t.amount)+'</span>'+
+          '<select onchange="finCatTxn(\''+t.id+'\',this.value)" style="font-size:10px;padding:2px;background:var(--surf);border:1px solid var(--brd2);color:var(--txt)">'+
+            '<option value="">\u2014 categorize \u2014</option>'+catOpts+
+            '<option value="TRANSFER::Internal Transfer">Transfer (skip)</option>'+
+          '</select>'+
+        '</div>';
+      }).join('');
+
+  // ── IMPORT TAB ──
+  const importAccounts = ['Capital One CC','Citi Checking','CEFCU Savings','CEFCU HELOC'].map(function(a){
+    const cnt=txns.filter(function(t){return t.account===a;}).length;
+    const last=txns.filter(function(t){return t.account===a;})[0];
+    return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--brd);font-size:11px;">'+
+      '<span>'+a+'</span><span style="color:var(--mut)">'+cnt+' txns'+( last?' \u00b7 latest '+last.date:'')+'</span></div>';
+  }).join('');
+
+  // ── ASSEMBLE ──
+  const srcNote = txns.length>0
+    ? txns.length+' transactions \u00b7 last import '+(store.lastImport||'\u2014')
+    : (bud?'Budget Planner \u00b7 '+closedMos+' months closed':'No data \u2014 use Import tab');
+  const importEl = document.getElementById('budget-last-import');
+  if(importEl) importEl.textContent = srcNote;
+
+  bc.innerHTML =
+    '<div style="margin-bottom:12px">'+
+      '<div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);margin-bottom:6px">Period</div>'+
+      '<div style="display:flex;gap:4px;flex-wrap:wrap">'+moBtns+'</div>'+
+    '</div>'+
+    '<div class="ftab" style="margin-bottom:12px">'+
+      '<button id="fintb1" onclick="setFinTab(\'bva\')" class="on">Budget vs Actual</button>'+
+      '<button id="fintb2" onclick="setFinTab(\'cats\')">Categories</button>'+
+      '<button id="fintb3" onclick="setFinTab(\'txns\')">Transactions'+(uncatCount>0?' <span style="background:var(--red);color:#fff;font-size:9px;padding:1px 5px;border-radius:20px">'+uncatCount+'</span>':'')+' </button>'+
+      '<button id="fintb4" onclick="setFinTab(\'import\')">Import \u2b06</button>'+
+    '</div>'+
+    '<div id="fin-bva">'+cards+bvaBars+'</div>'+
+    '<div id="fin-cats" style="display:none">'+gridHeader+catRows+'</div>'+
+    '<div id="fin-txns" style="display:none">'+
+      (uncatCount>0?'<div style="padding:8px 12px;border:1px solid var(--amb);background:rgba(212,160,48,.08);margin-bottom:10px;font-size:11px;color:var(--amb)">\u26a0 '+uncatCount+' transactions need categorization</div>':'')+
+      reviewRows+
+    '</div>'+
+    '<div id="fin-import" style="display:none">'+
+      '<div style="border:1.5px dashed var(--brd2);padding:24px;text-align:center;margin-bottom:14px;">'+
+        '<div style="font-size:24px;margin-bottom:8px">\u2b06</div>'+
+        '<div style="font-size:13px;font-weight:700;margin-bottom:6px">Import transactions</div>'+
+        '<div style="font-size:11px;color:var(--mut);margin-bottom:14px">Capital One CSV \u00b7 Citi CSV \u00b7 CEFCU Savings CSV \u00b7 CEFCU HELOC CSV</div>'+
+        '<label style="cursor:pointer;padding:8px 20px;border:1px solid var(--grn);color:var(--grn);font-size:11px;font-weight:700;letter-spacing:1px">'+
+          'Choose file<input type="file" accept=".csv" multiple onchange="[...this.files].forEach(f=>importTxnFile(f))" style="display:none">'+
+        '</label>'+
+        '<button onclick="loadMonarchHistory()" style="margin-top:10px;padding:8px 20px;border:1px solid var(--blu);color:var(--blu);background:none;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;font-family:inherit;display:block;width:100%;">\u2193 Load Monarch History (Jan 2025 \u2013 Jun 2026)</button>'+
+      '</div>'+
+      '<div style="border:1px solid var(--brd);padding:12px 14px;">'+
+        '<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Accounts</div>'+
+        importAccounts+
+      '</div>'+
+    '</div>';
+
+  setFinTab(S._finTab||'bva', true);
+}
+
+function kpiCard(icon, label, val, valCls, sub, subCls){
+  return '<div class="sp"><span class="spi">'+icon+'</span><div>'+
+    '<span class="spl">'+label+'</span>'+
+    '<span class="spv '+valCls+'">'+val+'</span>'+
+    (sub?'<span class="spl" style="color:var(--'+(subCls||'mut')+')">'+sub+'</span>':'')+
+  '</div></div>';
+}
+
+function setFinMo(mo){
+  S._finMo = (mo==='ytd') ? 'ytd' : parseInt(mo);
+  rBudget();
+}
+
+function setFinTab(id, silent){
+  S._finTab=id;
+  ['bva','cats','txns','import'].forEach(function(t,i){
+    const el=document.getElementById('fin-'+t);
+    const btn=document.getElementById('fintb'+(i+1));
+    if(el) el.style.display=t===id?'':'none';
+    if(btn) btn.classList.toggle('on',t===id);
+  });
+}
+
+function finCatTxn(id, val){
+  if(!val) return;
+  const parts=val.split('::'); const group=parts[0], sub=parts[1];
+  txnSetCat(id,group,sub);
+  const store=txnLoad();
+  const t=store.txns.find(function(x){return x.id===id;});
+  if(t){
+    const pat=escapeRegex((t.desc||'').split(' ').slice(0,3).join(' ').trim());
+    if(pat) txnSaveRule(pat,group,sub);
+  }
+  rBudget();
+}
+
+function remCell(actual,plan,isIncome){
+  const rem=isIncome?(actual-plan):(plan-actual);
+  const f$=function(n){return '$'+Math.round(Math.abs(n)).toLocaleString();};
+  if(rem>0) return '<td style="text-align:right;color:var(--grn)">+'+f$(rem)+'</td>';
+  if(rem<0) return '<td style="text-align:right;color:var(--red)">-'+f$(Math.abs(rem))+'</td>';
+  return '<td style="text-align:right;color:var(--mut)">$0</td>';
+}
+
+function getPlanVal(bud,grp,sub,selMo,isYtd,closedMos){
+  if(!bud) return 0;
+  const vals=bud.catPlans&&bud.catPlans[grp+'::'+sub];
+  if(!vals) return 0;
+  function N(v){return (typeof v==='number'&&isFinite(v))?v:0;}
+  if(isYtd) return vals.slice(0,closedMos||6).reduce(function(s,v){return s+N(v);},0);
+  return N(vals[(selMo||1)-1]);
 }
 
 
@@ -3537,11 +3533,11 @@ function parseBudgetPlanner(wb){
   const sum=arr=>arr.reduce((s,v)=>{const n=N(v);return n!=null?s+n:s;},0);
   const planRows=J('Plan');
   let incomeRows=[],expRows=[],currentGroup='',inIncome=false,inExp=false;
-  planRows.forEach(r=>{const lbl=(r[0]||'').trim();if(!lbl)return;if(lbl==='INCOME'){inIncome=true;return;}if(/^[A-Z][A-Z &]+$/.test(lbl)&&lbl!=='INCOME'&&!lbl.startsWith('Total')&&!lbl.startsWith('NET')){inIncome=false;inExp=true;currentGroup=lbl;return;}if(lbl.startsWith('Total ')||lbl.startsWith('TOTAL ')||lbl.includes('Income \u2212 Expenses')||lbl.includes('Income - Expenses'))return;const vals=r.slice(1,13).map(N);if(inIncome&&vals.some(v=>v!=null))incomeRows.push({name:lbl,vals});else if(inExp&&vals.some(v=>v!=null))expRows.push({name:lbl,group:currentGroup,vals});});
+  planRows.forEach(r=>{const lbl=(r[0]||'').trim();if(!lbl)return;if(lbl==='INCOME'){inIncome=true;return;}if(/^[A-Z][A-Z &]+$/.test(lbl)&&lbl!=='INCOME'&&!lbl.startsWith('Total')&&!lbl.startsWith('NET')){inIncome=false;inExp=true;currentGroup=lbl;return;}if(lbl.startsWith('Total ')||lbl.startsWith('TOTAL ')||lbl.includes('Income − Expenses')||lbl.includes('Income - Expenses'))return;const vals=r.slice(1,13).map(N);if(inIncome&&vals.some(v=>v!=null))incomeRows.push({name:lbl,vals});else if(inExp&&vals.some(v=>v!=null))expRows.push({name:lbl,group:currentGroup,vals});});
   const catPlans={};incomeRows.forEach(r=>{catPlans['INCOME::'+r.name]=r.vals;});expRows.forEach(r=>{catPlans[r.group+'::'+r.name]=r.vals;});
   const actRows=J('Actuals');
   let actIncRows=[],actExpRows=[],actGroup='',actInInc=false,actInExp=false;
-  actRows.forEach((r,i)=>{if(i<2)return;const lbl=(r[0]||'').trim();if(!lbl)return;if(lbl==='INCOME'){actInInc=true;return;}if(/^[A-Z][A-Z &]+$/.test(lbl)&&lbl!=='INCOME'&&!lbl.startsWith('Total')&&!lbl.startsWith('NET')){actInInc=false;actInExp=true;actGroup=lbl;return;}if(lbl.startsWith('Total ')||lbl.startsWith('TOTAL ')||lbl.includes('Income \u2212 Expenses')||lbl.includes('Income - Expenses'))return;const vals=r.slice(1,13).map(N);if(actInInc&&vals.some(v=>v!=null))actIncRows.push({name:lbl,vals});else if(actInExp&&vals.some(v=>v!=null))actExpRows.push({name:lbl,group:actGroup,vals});});
+  actRows.forEach((r,i)=>{if(i<2)return;const lbl=(r[0]||'').trim();if(!lbl)return;if(lbl==='INCOME'){actInInc=true;return;}if(/^[A-Z][A-Z &]+$/.test(lbl)&&lbl!=='INCOME'&&!lbl.startsWith('Total')&&!lbl.startsWith('NET')){actInInc=false;actInExp=true;actGroup=lbl;return;}if(lbl.startsWith('Total ')||lbl.startsWith('TOTAL ')||lbl.includes('Income − Expenses')||lbl.includes('Income - Expenses'))return;const vals=r.slice(1,13).map(N);if(actInInc&&vals.some(v=>v!=null))actIncRows.push({name:lbl,vals});else if(actInExp&&vals.some(v=>v!=null))actExpRows.push({name:lbl,group:actGroup,vals});});
   let monthsClosed=0;if(actIncRows.length){const first=actIncRows.find(r=>r.vals.some(v=>v!=null));if(first)monthsClosed=first.vals.filter(v=>v!=null).length;}
   const ytdIncome=sum(actIncRows.flatMap(r=>r.vals.slice(0,monthsClosed)));const ytdExpenses=sum(actExpRows.flatMap(r=>r.vals.slice(0,monthsClosed)));
   const catActuals={};actIncRows.forEach(r=>{catActuals['INCOME::'+r.name]=r.vals;});actExpRows.forEach(r=>{catActuals[r.group+'::'+r.name]=r.vals;});

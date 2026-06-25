@@ -257,9 +257,6 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 .fin-grp.fin-over td:first-child{color:var(--red);}
 .fin-sub td{padding:5px 8px;border-bottom:0.5px solid var(--brd);color:var(--txt2);}
 .fin-rev-row{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--brd);flex-wrap:wrap;}
-.fin-tbl{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;}
-.fin-tbl colgroup col.fin-col-cat{width:auto;}
-.fin-tbl colgroup col.fin-col-num{width:110px;}
 /* ── BRIEFING ── */
 #brief{display:none;background:#e8e8e8;}
 #brief.on{display:block;padding:20px;min-height:100vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
@@ -2475,12 +2472,50 @@ function rBudget(){
         <span class="spl">income kept</span>
       </div></div>
     </div>
-    ${!hasTxns?`<div class="empty">Import transactions to see actuals · or use budget plan data</div>`:''}
+
+    <!-- ACTUAL CASH FLOW BARS -->
+    <div style="background:var(--surf);border:1px solid var(--brd2);padding:12px;margin-bottom:12px;">
+      <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);margin-bottom:10px;">Actual cash flow — ${selLabel}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+        <span style="font-size:9px;color:var(--mut);width:90px;flex-shrink:0;text-align:right">Income</span>
+        <div style="flex:1;height:13px;background:var(--brd2);position:relative;overflow:hidden;"><div style="height:100%;width:${Math.round(actInc/Math.max(actInc,actExp,planInc,planExp)*90)}%;background:var(--grn);opacity:.8;position:absolute;left:0;top:0;"></div></div>
+        <span style="font-size:11px;font-weight:700;width:80px;flex-shrink:0;color:var(--grn);">${f$(actInc)}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-size:9px;color:var(--mut);width:90px;flex-shrink:0;text-align:right">Expenses</span>
+        <div style="flex:1;height:13px;background:var(--brd2);position:relative;overflow:hidden;"><div style="height:100%;width:${Math.round(actExp/Math.max(actInc,actExp,planInc,planExp)*90)}%;background:var(--red);opacity:.7;position:absolute;left:0;top:0;"></div></div>
+        <span style="font-size:11px;font-weight:700;width:80px;flex-shrink:0;color:var(--red);">${f$(actExp)}</span>
+      </div>
+      <div style="text-align:right;padding:4px 0 0 98px;font-size:12px;">Net: <span style="font-weight:700;color:var(${actNet>=0?'--grn':'--red'})">${actNet>=0?'+':''}${f$(actNet)}</span></div>
+      <div style="height:1px;background:var(--brd2);margin:10px 0;"></div>
+      <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);margin-bottom:8px;">vs Plan</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-size:9px;color:var(--mut);width:90px;flex-shrink:0;text-align:right">Income plan</span>
+        <div style="flex:1;height:13px;background:var(--brd2);position:relative;overflow:hidden;"><div style="height:100%;width:${planInc?Math.round(planInc/Math.max(actInc,actExp,planInc,planExp)*90):0}%;background:#2a4a2a;position:absolute;left:0;top:0;"></div></div>
+        <span style="font-size:10px;width:80px;flex-shrink:0;color:var(--mut);">${f$(planInc)}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-size:9px;color:var(--mut);width:90px;flex-shrink:0;text-align:right">Income actual</span>
+        <div style="flex:1;height:13px;background:var(--brd2);position:relative;overflow:hidden;"><div style="height:100%;width:${Math.round(actInc/Math.max(actInc,actExp,planInc,planExp)*90)}%;background:var(--grn);opacity:.8;position:absolute;left:0;top:0;"></div></div>
+        <span style="font-size:11px;font-weight:700;width:80px;flex-shrink:0;color:var(${actInc>=planInc?'--grn':'--red'})">${f$(actInc)} <span style="font-size:9px;">${actInc>=planInc?'+':''}\${f$(actInc-planInc)}</span></span>
+      </div>
+      <div style="height:5px;"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-size:9px;color:var(--mut);width:90px;flex-shrink:0;text-align:right">Expense plan</span>
+        <div style="flex:1;height:13px;background:var(--brd2);position:relative;overflow:hidden;"><div style="height:100%;width:${planExp?Math.round(planExp/Math.max(actInc,actExp,planInc,planExp)*90):0}%;background:#4a2a2a;position:absolute;left:0;top:0;"></div></div>
+        <span style="font-size:10px;width:80px;flex-shrink:0;color:var(--mut);">${f$(planExp)}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:9px;color:var(--mut);width:90px;flex-shrink:0;text-align:right">Expense actual</span>
+        <div style="flex:1;height:13px;background:var(--brd2);position:relative;overflow:hidden;"><div style="height:100%;width:${Math.round(actExp/Math.max(actInc,actExp,planInc,planExp)*90)}%;background:var(--red);opacity:.7;position:absolute;left:0;top:0;"></div></div>
+        <span style="font-size:11px;font-weight:700;width:80px;flex-shrink:0;color:var(${actExp<=planExp?'--grn':'--red'})">${f$(actExp)} <span style="font-size:9px;">${actExp<=planExp?'-':'+'}${f$(Math.abs(actExp-planExp))}</span></span>
+      </div>
+    </div>
   </div>
 
   <!-- CATEGORIES TAB -->
   <div id="fin-cats" style="display:none">
-    <table class="fin-tbl">
+    <table style="width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;">
       <colgroup><col style="width:auto"><col style="width:110px"><col style="width:110px"><col style="width:110px"></colgroup>
       <thead><tr>
         <th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--brd);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut)">Category</th>
@@ -2561,6 +2596,9 @@ function finCatTxn(id, val){
 }
 
 function escapeRegex(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+
+function remCell(actual,plan,isIncome){const rem=isIncome?(actual-plan):(plan-actual);const f$=n=>'$'+Math.round(Math.abs(n)).toLocaleString();if(rem>0)return '<td style="text-align:right;color:var(--grn)">+'+f$(rem)+'</td>';if(rem<0)return '<td style="text-align:right;color:var(--red)">-'+f$(Math.abs(rem))+'</td>';return '<td style="text-align:right;color:var(--mut)">$0</td>';}
+function getPlanVal(bud,grp,sub,selMo,isYtd,closedMos){if(!bud)return 0;const vals=bud.catPlans&&bud.catPlans[grp+'::'+sub];if(!vals)return 0;const N=v=>(typeof v==='number'&&isFinite(v))?v:0;if(isYtd)return vals.slice(0,closedMos||6).reduce((s,v)=>s+N(v),0);return N(vals[(selMo||1)-1]);}
 
 function remCell(actual, plan, isIncome){
   const rem = isIncome ? (actual - plan) : (plan - actual);
@@ -3518,53 +3556,21 @@ function parseBudgetPlanner(wb){
   const sum=arr=>arr.reduce((s,v)=>{const n=N(v);return n!=null?s+n:s;},0);
   const planRows=J('Plan');
   let incomeRows=[],expRows=[],currentGroup='',inIncome=false,inExp=false;
-  planRows.forEach(r=>{
-    const lbl=(r[0]||'').trim();
-    if(!lbl) return;
-    if(lbl==='INCOME'){inIncome=true;return;}
-    if(/^[A-Z][A-Z &]+$/.test(lbl)&&lbl!=='INCOME'&&!lbl.startsWith('Total')&&!lbl.startsWith('NET')){inIncome=false;inExp=true;currentGroup=lbl;return;}
-    if(lbl.startsWith('Total ')||lbl.startsWith('TOTAL ')||lbl.includes('Income − Expenses')||lbl.includes('Income - Expenses')) return;
-    const vals=r.slice(1,13).map(N);
-    if(inIncome&&vals.some(v=>v!=null)) incomeRows.push({name:lbl,vals});
-    else if(inExp&&vals.some(v=>v!=null)) expRows.push({name:lbl,group:currentGroup,vals});
-  });
-  const catPlans={};
-  incomeRows.forEach(r=>{catPlans['INCOME::'+r.name]=r.vals;});
-  expRows.forEach(r=>{catPlans[r.group+'::'+r.name]=r.vals;});
+  planRows.forEach(r=>{const lbl=(r[0]||'').trim();if(!lbl)return;if(lbl==='INCOME'){inIncome=true;return;}if(/^[A-Z][A-Z &]+$/.test(lbl)&&lbl!=='INCOME'&&!lbl.startsWith('Total')&&!lbl.startsWith('NET')){inIncome=false;inExp=true;currentGroup=lbl;return;}if(lbl.startsWith('Total ')||lbl.startsWith('TOTAL ')||lbl.includes('Income − Expenses')||lbl.includes('Income - Expenses'))return;const vals=r.slice(1,13).map(N);if(inIncome&&vals.some(v=>v!=null))incomeRows.push({name:lbl,vals});else if(inExp&&vals.some(v=>v!=null))expRows.push({name:lbl,group:currentGroup,vals});});
+  const catPlans={};incomeRows.forEach(r=>{catPlans['INCOME::'+r.name]=r.vals;});expRows.forEach(r=>{catPlans[r.group+'::'+r.name]=r.vals;});
   const actRows=J('Actuals');
   let actIncRows=[],actExpRows=[],actGroup='',actInInc=false,actInExp=false;
-  actRows.forEach((r,i)=>{
-    if(i<2) return;
-    const lbl=(r[0]||'').trim();
-    if(!lbl) return;
-    if(lbl==='INCOME'){actInInc=true;return;}
-    if(/^[A-Z][A-Z &]+$/.test(lbl)&&lbl!=='INCOME'&&!lbl.startsWith('Total')&&!lbl.startsWith('NET')){actInInc=false;actInExp=true;actGroup=lbl;return;}
-    if(lbl.startsWith('Total ')||lbl.startsWith('TOTAL ')||lbl.includes('Income − Expenses')||lbl.includes('Income - Expenses')) return;
-    const vals=r.slice(1,13).map(N);
-    if(actInInc&&vals.some(v=>v!=null)) actIncRows.push({name:lbl,vals});
-    else if(actInExp&&vals.some(v=>v!=null)) actExpRows.push({name:lbl,group:actGroup,vals});
-  });
-  let monthsClosed=0;
-  if(actIncRows.length){const first=actIncRows.find(r=>r.vals.some(v=>v!=null));if(first) monthsClosed=first.vals.filter(v=>v!=null).length;}
-  const ytdIncome=sum(actIncRows.flatMap(r=>r.vals.slice(0,monthsClosed)));
-  const ytdExpenses=sum(actExpRows.flatMap(r=>r.vals.slice(0,monthsClosed)));
-  const catActuals={};
-  actIncRows.forEach(r=>{catActuals['INCOME::'+r.name]=r.vals;});
-  actExpRows.forEach(r=>{catActuals[r.group+'::'+r.name]=r.vals;});
-  const fcstIncome=ytdIncome+sum(incomeRows.flatMap(r=>r.vals.slice(monthsClosed)));
-  const fcstExpenses=ytdExpenses+sum(expRows.flatMap(r=>r.vals.slice(monthsClosed)));
+  actRows.forEach((r,i)=>{if(i<2)return;const lbl=(r[0]||'').trim();if(!lbl)return;if(lbl==='INCOME'){actInInc=true;return;}if(/^[A-Z][A-Z &]+$/.test(lbl)&&lbl!=='INCOME'&&!lbl.startsWith('Total')&&!lbl.startsWith('NET')){actInInc=false;actInExp=true;actGroup=lbl;return;}if(lbl.startsWith('Total ')||lbl.startsWith('TOTAL ')||lbl.includes('Income − Expenses')||lbl.includes('Income - Expenses'))return;const vals=r.slice(1,13).map(N);if(actInInc&&vals.some(v=>v!=null))actIncRows.push({name:lbl,vals});else if(actInExp&&vals.some(v=>v!=null))actExpRows.push({name:lbl,group:actGroup,vals});});
+  let monthsClosed=0;if(actIncRows.length){const first=actIncRows.find(r=>r.vals.some(v=>v!=null));if(first)monthsClosed=first.vals.filter(v=>v!=null).length;}
+  const ytdIncome=sum(actIncRows.flatMap(r=>r.vals.slice(0,monthsClosed)));const ytdExpenses=sum(actExpRows.flatMap(r=>r.vals.slice(0,monthsClosed)));
+  const catActuals={};actIncRows.forEach(r=>{catActuals['INCOME::'+r.name]=r.vals;});actExpRows.forEach(r=>{catActuals[r.group+'::'+r.name]=r.vals;});
+  const fcstIncome=ytdIncome+sum(incomeRows.flatMap(r=>r.vals.slice(monthsClosed)));const fcstExpenses=ytdExpenses+sum(expRows.flatMap(r=>r.vals.slice(monthsClosed)));
   const monthly=MON.map((mo,mi)=>{const inc=sum(incomeRows.map(r=>N(r.vals[mi])||0));const exp=sum(expRows.map(r=>N(r.vals[mi])||0));return{mo,income:inc,expense:exp,net:inc-exp};});
-  const swings=[];
-  actExpRows.forEach(r=>{const planRow=expRows.find(p=>p.name===r.name&&p.group===r.group);if(!planRow) return;const act=sum(r.vals.slice(0,monthsClosed));const plan=sum(planRow.vals.slice(0,monthsClosed));const varD=act-plan;if(Math.abs(varD)<1) return;swings.push({cat:r.name,group:r.group,plan,fcst:act,varD,impact:varD<0?Math.abs(varD):-Math.abs(varD),varP:plan?varD/plan:0});});
-  swings.sort((a,b)=>Math.abs(b.varD)-Math.abs(a.varD));
-  const groupMap={};expRows.forEach(r=>{if(!groupMap[r.group]) groupMap[r.group]={name:r.group,plan:0,proj:0};groupMap[r.group].plan+=sum(r.vals);});
-  let prevMonth=null;
-  if(monthsClosed>=1){const mo=monthsClosed-1;const actInc=sum(actIncRows.map(r=>N(r.vals[mo])||0));const actExp=sum(actExpRows.map(r=>N(r.vals[mo])||0));const planInc=sum(incomeRows.map(r=>N(r.vals[mo])||0));const planExp=sum(expRows.map(r=>N(r.vals[mo])||0));const cats=[];actExpRows.forEach(r=>{const planRow=expRows.find(p=>p.name===r.name&&p.group===r.group);if(!planRow) return;const act=N(r.vals[mo])||0,plan=N(planRow.vals[mo])||0;cats.push({cat:r.name,group:r.group,plan,actual:act,varD:act-plan,fav:act<=plan});});cats.sort((a,b)=>Math.abs(b.varD)-Math.abs(a.varD));prevMonth={idx:monthsClosed,name:MON[mo],income:{plan:planInc,actual:actInc,varD:actInc-planInc},expenses:{plan:planExp,actual:actExp,varD:actExp-planExp},net:{plan:planInc-planExp,actual:actInc-actExp,varD:(actInc-actExp)-(planInc-planExp)},swings:cats.slice(0,10)};}
+  const swings=[];actExpRows.forEach(r=>{const planRow=expRows.find(p=>p.name===r.name&&p.group===r.group);if(!planRow)return;const act=sum(r.vals.slice(0,monthsClosed));const plan=sum(planRow.vals.slice(0,monthsClosed));const varD=act-plan;if(Math.abs(varD)<1)return;swings.push({cat:r.name,group:r.group,plan,fcst:act,varD,impact:varD<0?Math.abs(varD):-Math.abs(varD),varP:plan?varD/plan:0});});swings.sort((a,b)=>Math.abs(b.varD)-Math.abs(a.varD));
+  const groupMap={};expRows.forEach(r=>{if(!groupMap[r.group])groupMap[r.group]={name:r.group,plan:0,proj:0};groupMap[r.group].plan+=sum(r.vals);});
+  let prevMonth=null;if(monthsClosed>=1){const mo=monthsClosed-1;const actInc=sum(actIncRows.map(r=>N(r.vals[mo])||0));const actExp=sum(actExpRows.map(r=>N(r.vals[mo])||0));const planInc=sum(incomeRows.map(r=>N(r.vals[mo])||0));const planExp=sum(expRows.map(r=>N(r.vals[mo])||0));const cats=[];actExpRows.forEach(r=>{const planRow=expRows.find(p=>p.name===r.name&&p.group===r.group);if(!planRow)return;const act=N(r.vals[mo])||0,plan=N(planRow.vals[mo])||0;cats.push({cat:r.name,group:r.group,plan,actual:act,varD:act-plan,fav:act<=plan});});cats.sort((a,b)=>Math.abs(b.varD)-Math.abs(a.varD));prevMonth={idx:monthsClosed,name:MON[mo],income:{plan:planInc,actual:actInc,varD:actInc-planInc},expenses:{plan:planExp,actual:actExp,varD:actExp-planExp},net:{plan:planInc-planExp,actual:actInc-actExp,varD:(actInc-actExp)-(planInc-planExp)},swings:cats.slice(0,10)};}
   const data={importTime:new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),projIncome:fcstIncome,projExpenses:fcstExpenses,projNet:fcstIncome-fcstExpenses,netVsPlan:fcstIncome-fcstExpenses-(sum(incomeRows.flatMap(r=>r.vals))-sum(expRows.flatMap(r=>r.vals))),ytdIncome,ytdExpenses,ytdNet:ytdIncome-ytdExpenses,monthsClosed,catPlans,catActuals,groups:Object.values(groupMap),monthly,swings:swings.slice(0,12),prevMonth,favorable:0,unfavorable:0,netVar:0};
-  localStorage.setItem('kcc_budget',JSON.stringify(data));
-  S.budget=data;
-  if(S.page==='budget') rBudget();
-  return data;
+  localStorage.setItem('kcc_budget',JSON.stringify(data));S.budget=data;if(S.page==='budget')rBudget();return data;
 }
 
 

@@ -2508,6 +2508,7 @@ function rBudget(){
       <label style="cursor:pointer;padding:8px 20px;border:1px solid var(--grn);color:var(--grn);font-size:11px;font-weight:700;letter-spacing:1px">
         Choose file<input type="file" accept=".csv" multiple onchange="[...this.files].forEach(f=>importTxnFile(f))" style="display:none">
       </label>
+      <button onclick="loadMonarchHistory()" style="margin-top:10px;padding:8px 20px;border:1px solid var(--blu);color:var(--blu);background:none;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;font-family:inherit;display:block;width:100%;">↓ Load Monarch History (Jan 2025 – Jun 2026) — one time</button>
     </div>
     <div style="border:1px solid var(--brd);padding:12px 16px;margin-bottom:10px">
       <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Accounts</div>

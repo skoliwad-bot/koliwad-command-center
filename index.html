@@ -2453,18 +2453,18 @@ function rBudget(){
     <div class="g4" style="margin-bottom:14px">
       <div class="sp"><span class="spi">📈</span><div>
         <span class="spl">${selLabel} — Income</span>
-        <span class="spv ${actInc>0?'g':''}">${f$(actInc)}</span>
-        ${planInc?`<span class="spl">${delt(actInc,planInc,false)} vs plan ${f$(planInc)}</span>`:''}
+        <span class="spv ${actInc>0?'g':'r'}">${f$(actInc)}</span>
+        <span class="spl" style="color:var(${actInc>=planInc?'--grn':'--red'})">${actInc>=planInc?'+':'-'}${f$(Math.abs(actInc-planInc))} vs plan ${f$(planInc)}</span>
       </div></div>
       <div class="sp"><span class="spi">💸</span><div>
         <span class="spl">${selLabel} — Expenses</span>
         <span class="spv r">${f$(actExp)}</span>
-        ${planExp?`<span class="spl">${delt(-actExp,-planExp,true)} vs plan ${f$(planExp)}</span>`:''}
+        <span class="spl" style="color:var(${actExp<=planExp?'--grn':'--red'})">${actExp<=planExp?'-':'+'}${f$(Math.abs(actExp-planExp))} vs plan ${f$(planExp)}</span>
       </div></div>
       <div class="sp"><span class="spi">⚖</span><div>
         <span class="spl">${selLabel} — Net</span>
         <span class="spv ${actNet>=0?'g':'r'}">${actNet>=0?'+':''}${f$(actNet)}</span>
-        ${planNet?`<span class="spl">${delt(actNet,planNet,false)} vs plan</span>`:''}
+        <span class="spl" style="color:var(${actNet>=planNet?'--grn':'--red'})">${actNet>=planNet?'+':'-'}${f$(Math.abs(actNet-planNet))} vs plan</span>
       </div></div>
       <div class="sp"><span class="spi">📊</span><div>
         <span class="spl">Savings Rate</span>
@@ -2472,45 +2472,26 @@ function rBudget(){
         <span class="spl">income kept</span>
       </div></div>
     </div>
-
-    <!-- ACTUAL CASH FLOW BARS -->
-    <div style="background:var(--surf);border:1px solid var(--brd2);padding:12px;margin-bottom:12px;">
-      <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);margin-bottom:10px;">Actual cash flow — ${selLabel}</div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
-        <span style="font-size:9px;color:var(--mut);width:90px;flex-shrink:0;text-align:right">Income</span>
-        <div style="flex:1;height:13px;background:var(--brd2);position:relative;overflow:hidden;"><div style="height:100%;width:${Math.round(actInc/Math.max(actInc,actExp,planInc,planExp)*90)}%;background:var(--grn);opacity:.8;position:absolute;left:0;top:0;"></div></div>
-        <span style="font-size:11px;font-weight:700;width:80px;flex-shrink:0;color:var(--grn);">${f$(actInc)}</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-        <span style="font-size:9px;color:var(--mut);width:90px;flex-shrink:0;text-align:right">Expenses</span>
-        <div style="flex:1;height:13px;background:var(--brd2);position:relative;overflow:hidden;"><div style="height:100%;width:${Math.round(actExp/Math.max(actInc,actExp,planInc,planExp)*90)}%;background:var(--red);opacity:.7;position:absolute;left:0;top:0;"></div></div>
-        <span style="font-size:11px;font-weight:700;width:80px;flex-shrink:0;color:var(--red);">${f$(actExp)}</span>
-      </div>
-      <div style="text-align:right;padding:4px 0 0 98px;font-size:12px;">Net: <span style="font-weight:700;color:var(${actNet>=0?'--grn':'--red'})">${actNet>=0?'+':''}${f$(actNet)}</span></div>
-      <div style="height:1px;background:var(--brd2);margin:10px 0;"></div>
-      <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);margin-bottom:8px;">vs Plan</div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-        <span style="font-size:9px;color:var(--mut);width:90px;flex-shrink:0;text-align:right">Income plan</span>
-        <div style="flex:1;height:13px;background:var(--brd2);position:relative;overflow:hidden;"><div style="height:100%;width:${planInc?Math.round(planInc/Math.max(actInc,actExp,planInc,planExp)*90):0}%;background:#2a4a2a;position:absolute;left:0;top:0;"></div></div>
-        <span style="font-size:10px;width:80px;flex-shrink:0;color:var(--mut);">${f$(planInc)}</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-        <span style="font-size:9px;color:var(--mut);width:90px;flex-shrink:0;text-align:right">Income actual</span>
-        <div style="flex:1;height:13px;background:var(--brd2);position:relative;overflow:hidden;"><div style="height:100%;width:${Math.round(actInc/Math.max(actInc,actExp,planInc,planExp)*90)}%;background:var(--grn);opacity:.8;position:absolute;left:0;top:0;"></div></div>
-        <span style="font-size:11px;font-weight:700;width:80px;flex-shrink:0;color:var(${actInc>=planInc?'--grn':'--red'})">${f$(actInc)} <span style="font-size:9px;">${actInc>=planInc?'+':''}\${f$(actInc-planInc)}</span></span>
-      </div>
-      <div style="height:5px;"></div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-        <span style="font-size:9px;color:var(--mut);width:90px;flex-shrink:0;text-align:right">Expense plan</span>
-        <div style="flex:1;height:13px;background:var(--brd2);position:relative;overflow:hidden;"><div style="height:100%;width:${planExp?Math.round(planExp/Math.max(actInc,actExp,planInc,planExp)*90):0}%;background:#4a2a2a;position:absolute;left:0;top:0;"></div></div>
-        <span style="font-size:10px;width:80px;flex-shrink:0;color:var(--mut);">${f$(planExp)}</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span style="font-size:9px;color:var(--mut);width:90px;flex-shrink:0;text-align:right">Expense actual</span>
-        <div style="flex:1;height:13px;background:var(--brd2);position:relative;overflow:hidden;"><div style="height:100%;width:${Math.round(actExp/Math.max(actInc,actExp,planInc,planExp)*90)}%;background:var(--red);opacity:.7;position:absolute;left:0;top:0;"></div></div>
-        <span style="font-size:11px;font-weight:700;width:80px;flex-shrink:0;color:var(${actExp<=planExp?'--grn':'--red'})">${f$(actExp)} <span style="font-size:9px;">${actExp<=planExp?'-':'+'}${f$(Math.abs(actExp-planExp))}</span></span>
-      </div>
-    </div>
+    ${(()=>{
+      const mx=Math.max(actInc,actExp,planInc||0,planExp||0,1);
+      const pct=v=>Math.min(90,Math.round(v/mx*90));
+      const bar=(w,col)=>'<div style="height:100%;width:'+w+'%;background:'+col+';position:absolute;left:0;top:0;"></div>';
+      const row=(lbl,w,col,valHtml)=>'<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">'+
+        '<span style="font-size:9px;color:var(--mut);width:90px;flex-shrink:0;text-align:right">'+lbl+'</span>'+
+        '<div style="flex:1;height:13px;background:var(--brd2);position:relative;overflow:hidden;">'+bar(w,col)+'</div>'+
+        '<span style="font-size:11px;font-weight:700;width:90px;flex-shrink:0;">'+valHtml+'</span>'+
+        '</div>';
+      return '<div style="background:var(--surf2);border:1px solid var(--brd2);padding:12px;margin-bottom:12px;">'+
+        '<div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);margin-bottom:10px;">Actual vs Plan — '+selLabel+'</div>'+
+        row('Income actual',pct(actInc),'var(--grn)','<span style="color:var(--grn)">'+f$(actInc)+'</span>')+
+        row('Income plan',pct(planInc||0),'#2a4a2a','<span style="color:var(--mut)">'+f$(planInc||0)+'</span>')+
+        '<div style="height:6px"></div>'+
+        row('Expense actual',pct(actExp),'var(--red)','<span style="color:var(--red)">'+f$(actExp)+'</span>')+
+        row('Expense plan',pct(planExp||0),'#4a2a2a','<span style="color:var(--mut)">'+f$(planExp||0)+'</span>')+
+        '<div style="height:1px;background:var(--brd2);margin:8px 0;"></div>'+
+        '<div style="text-align:right;font-size:12px;">Net this period: <strong style="color:var('+( actNet>=0?'--grn':'--red')+')">'+( actNet>=0?'+':'')+f$(actNet)+'</strong></div>'+
+        '</div>';
+    })()}
   </div>
 
   <!-- CATEGORIES TAB -->
@@ -2545,7 +2526,7 @@ function rBudget(){
       <label style="cursor:pointer;padding:8px 20px;border:1px solid var(--grn);color:var(--grn);font-size:11px;font-weight:700;letter-spacing:1px">
         Choose file<input type="file" accept=".csv" multiple onchange="[...this.files].forEach(f=>importTxnFile(f))" style="display:none">
       </label>
-      <button onclick="loadMonarchHistory()" style="margin-top:10px;padding:8px 20px;border:1px solid var(--blu);color:var(--blu);background:none;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;font-family:inherit;display:block;width:100%;">↓ Load Monarch History (Jan 2025 – Jun 2026)</button>
+      <button onclick="loadMonarchHistory()" style="margin-top:10px;padding:8px 20px;border:1px solid var(--blu);color:var(--blu);background:none;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;font-family:inherit;display:block;width:100%;">&#x2193; Load Monarch History (Jan 2025 – Jun 2026)</button>
     </div>
     <div style="border:1px solid var(--brd);padding:12px 16px;margin-bottom:10px">
       <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Accounts</div>
@@ -3556,11 +3537,11 @@ function parseBudgetPlanner(wb){
   const sum=arr=>arr.reduce((s,v)=>{const n=N(v);return n!=null?s+n:s;},0);
   const planRows=J('Plan');
   let incomeRows=[],expRows=[],currentGroup='',inIncome=false,inExp=false;
-  planRows.forEach(r=>{const lbl=(r[0]||'').trim();if(!lbl)return;if(lbl==='INCOME'){inIncome=true;return;}if(/^[A-Z][A-Z &]+$/.test(lbl)&&lbl!=='INCOME'&&!lbl.startsWith('Total')&&!lbl.startsWith('NET')){inIncome=false;inExp=true;currentGroup=lbl;return;}if(lbl.startsWith('Total ')||lbl.startsWith('TOTAL ')||lbl.includes('Income − Expenses')||lbl.includes('Income - Expenses'))return;const vals=r.slice(1,13).map(N);if(inIncome&&vals.some(v=>v!=null))incomeRows.push({name:lbl,vals});else if(inExp&&vals.some(v=>v!=null))expRows.push({name:lbl,group:currentGroup,vals});});
+  planRows.forEach(r=>{const lbl=(r[0]||'').trim();if(!lbl)return;if(lbl==='INCOME'){inIncome=true;return;}if(/^[A-Z][A-Z &]+$/.test(lbl)&&lbl!=='INCOME'&&!lbl.startsWith('Total')&&!lbl.startsWith('NET')){inIncome=false;inExp=true;currentGroup=lbl;return;}if(lbl.startsWith('Total ')||lbl.startsWith('TOTAL ')||lbl.includes('Income \u2212 Expenses')||lbl.includes('Income - Expenses'))return;const vals=r.slice(1,13).map(N);if(inIncome&&vals.some(v=>v!=null))incomeRows.push({name:lbl,vals});else if(inExp&&vals.some(v=>v!=null))expRows.push({name:lbl,group:currentGroup,vals});});
   const catPlans={};incomeRows.forEach(r=>{catPlans['INCOME::'+r.name]=r.vals;});expRows.forEach(r=>{catPlans[r.group+'::'+r.name]=r.vals;});
   const actRows=J('Actuals');
   let actIncRows=[],actExpRows=[],actGroup='',actInInc=false,actInExp=false;
-  actRows.forEach((r,i)=>{if(i<2)return;const lbl=(r[0]||'').trim();if(!lbl)return;if(lbl==='INCOME'){actInInc=true;return;}if(/^[A-Z][A-Z &]+$/.test(lbl)&&lbl!=='INCOME'&&!lbl.startsWith('Total')&&!lbl.startsWith('NET')){actInInc=false;actInExp=true;actGroup=lbl;return;}if(lbl.startsWith('Total ')||lbl.startsWith('TOTAL ')||lbl.includes('Income − Expenses')||lbl.includes('Income - Expenses'))return;const vals=r.slice(1,13).map(N);if(actInInc&&vals.some(v=>v!=null))actIncRows.push({name:lbl,vals});else if(actInExp&&vals.some(v=>v!=null))actExpRows.push({name:lbl,group:actGroup,vals});});
+  actRows.forEach((r,i)=>{if(i<2)return;const lbl=(r[0]||'').trim();if(!lbl)return;if(lbl==='INCOME'){actInInc=true;return;}if(/^[A-Z][A-Z &]+$/.test(lbl)&&lbl!=='INCOME'&&!lbl.startsWith('Total')&&!lbl.startsWith('NET')){actInInc=false;actInExp=true;actGroup=lbl;return;}if(lbl.startsWith('Total ')||lbl.startsWith('TOTAL ')||lbl.includes('Income \u2212 Expenses')||lbl.includes('Income - Expenses'))return;const vals=r.slice(1,13).map(N);if(actInInc&&vals.some(v=>v!=null))actIncRows.push({name:lbl,vals});else if(actInExp&&vals.some(v=>v!=null))actExpRows.push({name:lbl,group:actGroup,vals});});
   let monthsClosed=0;if(actIncRows.length){const first=actIncRows.find(r=>r.vals.some(v=>v!=null));if(first)monthsClosed=first.vals.filter(v=>v!=null).length;}
   const ytdIncome=sum(actIncRows.flatMap(r=>r.vals.slice(0,monthsClosed)));const ytdExpenses=sum(actExpRows.flatMap(r=>r.vals.slice(0,monthsClosed)));
   const catActuals={};actIncRows.forEach(r=>{catActuals['INCOME::'+r.name]=r.vals;});actExpRows.forEach(r=>{catActuals[r.group+'::'+r.name]=r.vals;});
@@ -3572,6 +3553,7 @@ function parseBudgetPlanner(wb){
   const data={importTime:new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),projIncome:fcstIncome,projExpenses:fcstExpenses,projNet:fcstIncome-fcstExpenses,netVsPlan:fcstIncome-fcstExpenses-(sum(incomeRows.flatMap(r=>r.vals))-sum(expRows.flatMap(r=>r.vals))),ytdIncome,ytdExpenses,ytdNet:ytdIncome-ytdExpenses,monthsClosed,catPlans,catActuals,groups:Object.values(groupMap),monthly,swings:swings.slice(0,12),prevMonth,favorable:0,unfavorable:0,netVar:0};
   localStorage.setItem('kcc_budget',JSON.stringify(data));S.budget=data;if(S.page==='budget')rBudget();return data;
 }
+
 
 
 function rFire(){

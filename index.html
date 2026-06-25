@@ -422,7 +422,7 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
   .br-box{padding:5px 8px;border-width:1.5px;}
   .br-box-hdr{font-size:6px;margin-bottom:4px;}
 
-  .br-foot{display:none!important;}
+  .br-foot{padding:4px 14px;margin-top:6px;}
   .br-foot span{font-size:6px;}
 
   .br-2col,.br-fire,.br-stats{break-inside:avoid;}
@@ -1751,18 +1751,17 @@ localStorage.setItem = function(key, value) {
       <div class="br-sec" style="break-after:avoid"><span class="br-sec-dot" style="background:#999"></span><span class="br-sec-label">Notes</span><span class="br-sec-line"></span></div>
       <div style="break-inside:avoid">
         <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
-        <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
         <div class="br-line"></div>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px;break-inside:avoid;">
         <div class="br-box">
           <div class="br-box-hdr">⏳ Waiting On</div>
-          <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
+          <div class="br-line"></div><div class="br-line"></div>
         </div>
         <div class="br-box">
           <div class="br-box-hdr">🌅 Tomorrow</div>
-          <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
+          <div class="br-line"></div><div class="br-line"></div>
         </div>
       </div>
 
@@ -2018,6 +2017,220 @@ function setM(m){
   document.body.style.overflow = isC ? '' : 'auto';
   if(!isC){ renderBrief(); window.scrollTo(0,0); }
 }
+
+// Pre-populate kcc_txns from Monarch historical data (Jan 2025 – Jun 2026)
+// Called once from the Import tab "Load Monarch History" button
+function loadMonarchHistory(){
+  const CAT_MAP = {
+    'Auto Payment':'AUTO & TRANSPORT::Auto Payment','Gas & Charge':'AUTO & TRANSPORT::Gas & Charge',
+    'Auto Maintenance':'AUTO & TRANSPORT::Auto Maintenance','Parking & Tolls':'AUTO & TRANSPORT::Parking & Tolls',
+    'Auto Inurance':'AUTO & TRANSPORT::Auto Insurance','AAA':'AUTO & TRANSPORT::Auto Registration',
+    'Auto Registration':'AUTO & TRANSPORT::Auto Registration','Mortgage':'HOUSING::Mortgage',
+    'Property Tax':'HOUSING::Property Tax','Home Improvement':'HOUSING::Home Improvement',
+    'Gardener':'HOUSING::Gardener','Home Insurance':'HOUSING::Home Insurance',
+    'Pool Maintenance':'HOUSING::Pool Maintenance','Pest Control':'HOUSING::Pest Control',
+    'Home Security':'HOUSING::Home Improvement','Trash':'BILLS & UTILITIES::Trash',
+    'Water':'BILLS & UTILITIES::Water','Gas & Electric':'BILLS & UTILITIES::Gas & Electric',
+    'Internet':'BILLS & UTILITIES::Internet','Phone':'BILLS & UTILITIES::Phone',
+    'Groceries':'FOOD & DINING::Groceries','Eating Out':'FOOD & DINING::Eating Out',
+    'Coffee Shops':'FOOD & DINING::Eating Out','Travel & Vacation':'ENTERTAINMENT::Travel & Vacation',
+    'Subscriptions':'ENTERTAINMENT::Subscriptions','Financial Tools':'ENTERTAINMENT::Subscriptions',
+    'Other':'ENTERTAINMENT::Other','Misc Shopping':'SHOPPING::Misc Shopping',
+    'Clothing':'SHOPPING::Clothing','Make Up':'SHOPPING::Make Up','Amazon':'SHOPPING::Amazon',
+    'Nanny':'FAMILY::Nanny','Kids Activities':'FAMILY::Kids Activities','School':'FAMILY::School',
+    'Baseball':'FAMILY::Baseball','Dance':'FAMILY::Dance','Tennis':'FAMILY::Tennis',
+    'Kids Cash':'FAMILY::Kids Cash','Loans':'FINANCIAL::Loans','Life Insurance':'FINANCIAL::Life Insurance',
+    'Misc Financial':'FINANCIAL::Other / Uncategorized','Taxes':'FINANCIAL::Other / Uncategorized',
+    'Pharmacy':'HEALTH & WELLNESS::Pharmacy','Dentist':'HEALTH & WELLNESS::Dentist',
+    'Fitness':'HEALTH & WELLNESS::Fitness','Healthcare':'HEALTH & WELLNESS::Healthcare',
+    'Paulette Mortgage':'RENTAL PROPERTY::Paulette Mortgage','Paulette Insurance':'RENTAL PROPERTY::Paulette Insurance',
+    'Paulette Property Tax':'RENTAL PROPERTY::Paulette Property Tax','HELOC':'RENTAL PROPERTY::Paulette Mortgage',
+    'Paychecks':'INCOME::Paychecks','Rental Income':'INCOME::Rental Income',
+    'Parents Gift':'INCOME::Parents Gift','Tax Refund':'INCOME::Tax Refund',
+    'Other Income':'INCOME::Other / Uncategorized',
+  };
+  const SKIP = new Set(['Transfer','Credit Card Payment','Gifts','Postage & Shipping']);
+
+  const RAW = [
+    // ── JAN-JUN 2025 ──
+    {c:'Auto Payment',t:'expense',m:'2025-01',a:1709.1},{c:'Auto Payment',t:'expense',m:'2025-02',a:1298.02},{c:'Auto Payment',t:'expense',m:'2025-03',a:1709.1},{c:'Auto Payment',t:'expense',m:'2025-04',a:1710.96},{c:'Auto Payment',t:'expense',m:'2025-05',a:3712.66},{c:'Auto Payment',t:'expense',m:'2025-06',a:1712.98},
+    {c:'Groceries',t:'expense',m:'2025-01',a:687.98},{c:'Groceries',t:'expense',m:'2025-02',a:680.02},{c:'Groceries',t:'expense',m:'2025-03',a:1043.61},{c:'Groceries',t:'expense',m:'2025-04',a:1263.14},{c:'Groceries',t:'expense',m:'2025-05',a:1206.88},{c:'Groceries',t:'expense',m:'2025-06',a:1300.42},
+    {c:'Misc Shopping',t:'expense',m:'2025-01',a:77.53},{c:'Misc Shopping',t:'expense',m:'2025-02',a:219.26},{c:'Misc Shopping',t:'expense',m:'2025-03',a:197.85},{c:'Misc Shopping',t:'expense',m:'2025-04',a:502.63},{c:'Misc Shopping',t:'expense',m:'2025-05',a:269.37},{c:'Misc Shopping',t:'expense',m:'2025-06',a:198.65},
+    {c:'Mortgage',t:'expense',m:'2025-01',a:10712.62},{c:'Mortgage',t:'expense',m:'2025-02',a:10712.62},{c:'Mortgage',t:'expense',m:'2025-03',a:10712.62},{c:'Mortgage',t:'expense',m:'2025-04',a:10712.62},{c:'Mortgage',t:'expense',m:'2025-05',a:10712.62},{c:'Mortgage',t:'expense',m:'2025-06',a:10712.62},
+    {c:'Nanny',t:'expense',m:'2025-01',a:4327.5},{c:'Nanny',t:'expense',m:'2025-02',a:4075},{c:'Nanny',t:'expense',m:'2025-03',a:4362.5},{c:'Nanny',t:'expense',m:'2025-04',a:3775},{c:'Nanny',t:'expense',m:'2025-05',a:4387.5},{c:'Nanny',t:'expense',m:'2025-06',a:4187},
+    {c:'Paulette Mortgage',t:'expense',m:'2025-01',a:6649.42},{c:'Paulette Mortgage',t:'expense',m:'2025-02',a:3324.71},{c:'Paulette Mortgage',t:'expense',m:'2025-03',a:6649.42},{c:'Paulette Mortgage',t:'expense',m:'2025-04',a:6649.42},{c:'Paulette Mortgage',t:'expense',m:'2025-05',a:6649.42},{c:'Paulette Mortgage',t:'expense',m:'2025-06',a:6649.42},
+    {c:'Paychecks',t:'income',m:'2025-01',a:22925.19},{c:'Paychecks',t:'income',m:'2025-02',a:16477.92},{c:'Paychecks',t:'income',m:'2025-03',a:14316.32},{c:'Paychecks',t:'income',m:'2025-04',a:14672.5},{c:'Paychecks',t:'income',m:'2025-05',a:14653.99},{c:'Paychecks',t:'income',m:'2025-06',a:14672.5},
+    {c:'Rental Income',t:'income',m:'2025-01',a:12000},{c:'Rental Income',t:'income',m:'2025-02',a:6000},{c:'Rental Income',t:'income',m:'2025-03',a:12000},{c:'Rental Income',t:'income',m:'2025-04',a:12000},{c:'Rental Income',t:'income',m:'2025-05',a:12000},{c:'Rental Income',t:'income',m:'2025-06',a:12000},
+    {c:'Other Income',t:'income',m:'2025-01',a:271.53},{c:'Other Income',t:'income',m:'2025-02',a:263.5},{c:'Other Income',t:'income',m:'2025-03',a:467.78},{c:'Other Income',t:'income',m:'2025-04',a:19.8},{c:'Other Income',t:'income',m:'2025-05',a:525.74},{c:'Other Income',t:'income',m:'2025-06',a:37.88},
+    {c:'Tax Refund',t:'income',m:'2025-03',a:15003},
+    {c:'Pharmacy',t:'expense',m:'2025-01',a:34.36},{c:'Pharmacy',t:'expense',m:'2025-02',a:142.95},{c:'Pharmacy',t:'expense',m:'2025-03',a:59.28},{c:'Pharmacy',t:'expense',m:'2025-04',a:34.62},{c:'Pharmacy',t:'expense',m:'2025-05',a:42.55},{c:'Pharmacy',t:'expense',m:'2025-06',a:9.49},
+    {c:'Trash',t:'expense',m:'2025-02',a:141.6},{c:'Trash',t:'expense',m:'2025-05',a:141.6},{c:'Trash',t:'expense',m:'2025-06',a:4.83},
+    {c:'Travel & Vacation',t:'expense',m:'2025-02',a:83.25},{c:'Travel & Vacation',t:'expense',m:'2025-03',a:633.63},
+    {c:'Clothing',t:'expense',m:'2025-01',a:188},{c:'Clothing',t:'expense',m:'2025-03',a:48.49},{c:'Clothing',t:'expense',m:'2025-04',a:171.76},{c:'Clothing',t:'expense',m:'2025-05',a:88.4},{c:'Clothing',t:'expense',m:'2025-06',a:1040.73},
+    {c:'Eating Out',t:'expense',m:'2025-01',a:472.13},{c:'Eating Out',t:'expense',m:'2025-02',a:497.45},{c:'Eating Out',t:'expense',m:'2025-03',a:1036.41},{c:'Eating Out',t:'expense',m:'2025-04',a:910.54},{c:'Eating Out',t:'expense',m:'2025-05',a:580.97},{c:'Eating Out',t:'expense',m:'2025-06',a:1590.04},
+    {c:'Gas & Charge',t:'expense',m:'2025-05',a:250},{c:'Gas & Charge',t:'expense',m:'2025-06',a:39.92},
+    {c:'Kids Activities',t:'expense',m:'2025-06',a:337.63},
+    {c:'Loans',t:'expense',m:'2025-01',a:4236.2},{c:'Loans',t:'expense',m:'2025-02',a:1053.25},{c:'Loans',t:'expense',m:'2025-03',a:2106.5},{c:'Loans',t:'expense',m:'2025-04',a:2106.5},{c:'Loans',t:'expense',m:'2025-05',a:2106.5},{c:'Loans',t:'expense',m:'2025-06',a:2106.5},
+    {c:'Paulette Insurance',t:'expense',m:'2025-01',a:2330.8},{c:'Paulette Insurance',t:'expense',m:'2025-03',a:1165.4},
+    {c:'Property Tax',t:'expense',m:'2025-04',a:11133},
+    {c:'Subscriptions',t:'expense',m:'2025-01',a:166.92},{c:'Subscriptions',t:'expense',m:'2025-02',a:169.29},{c:'Subscriptions',t:'expense',m:'2025-03',a:214.03},{c:'Subscriptions',t:'expense',m:'2025-04',a:176.25},{c:'Subscriptions',t:'expense',m:'2025-05',a:206.32},{c:'Subscriptions',t:'expense',m:'2025-06',a:237.25},
+    {c:'Water',t:'expense',m:'2025-01',a:492.4},{c:'Water',t:'expense',m:'2025-03',a:405.76},{c:'Water',t:'expense',m:'2025-04',a:443.24},{c:'Water',t:'expense',m:'2025-06',a:51.72},
+    {c:'Auto Maintenance',t:'expense',m:'2025-01',a:18},{c:'Auto Maintenance',t:'expense',m:'2025-03',a:10},{c:'Auto Maintenance',t:'expense',m:'2025-04',a:10},{c:'Auto Maintenance',t:'expense',m:'2025-05',a:10},{c:'Auto Maintenance',t:'expense',m:'2025-06',a:10},
+    {c:'Fitness',t:'expense',m:'2025-01',a:357},{c:'Fitness',t:'expense',m:'2025-02',a:238},{c:'Fitness',t:'expense',m:'2025-04',a:22},{c:'Fitness',t:'expense',m:'2025-05',a:22},{c:'Fitness',t:'expense',m:'2025-06',a:399},
+    {c:'Gas & Electric',t:'expense',m:'2025-01',a:1497.49},{c:'Gas & Electric',t:'expense',m:'2025-02',a:381.74},{c:'Gas & Electric',t:'expense',m:'2025-03',a:1792.84},{c:'Gas & Electric',t:'expense',m:'2025-04',a:820.55},{c:'Gas & Electric',t:'expense',m:'2025-05',a:838.94},{c:'Gas & Electric',t:'expense',m:'2025-06',a:1045.78},
+    {c:'Home Improvement',t:'expense',m:'2025-03',a:2800},
+    {c:'Make Up',t:'expense',m:'2025-02',a:43},{c:'Make Up',t:'expense',m:'2025-03',a:48.79},{c:'Make Up',t:'expense',m:'2025-04',a:30.06},{c:'Make Up',t:'expense',m:'2025-05',a:91.5},{c:'Make Up',t:'expense',m:'2025-06',a:216.83},
+    {c:'Paulette Property Tax',t:'expense',m:'2025-04',a:1755.16},
+    {c:'School',t:'expense',m:'2025-02',a:37.85},{c:'School',t:'expense',m:'2025-03',a:74.95},{c:'School',t:'expense',m:'2025-04',a:159.12},
+    {c:'Amazon',t:'expense',m:'2025-01',a:806.2},{c:'Amazon',t:'expense',m:'2025-02',a:736.32},{c:'Amazon',t:'expense',m:'2025-03',a:874.48},{c:'Amazon',t:'expense',m:'2025-04',a:2027.65},{c:'Amazon',t:'expense',m:'2025-05',a:1673.68},{c:'Amazon',t:'expense',m:'2025-06',a:912.37},
+    {c:'Baseball',t:'expense',m:'2025-01',a:45.22},{c:'Baseball',t:'expense',m:'2025-03',a:110.24},{c:'Baseball',t:'expense',m:'2025-04',a:177.57},{c:'Baseball',t:'expense',m:'2025-05',a:770},{c:'Baseball',t:'expense',m:'2025-06',a:893.74},
+    {c:'Gardener',t:'expense',m:'2025-01',a:185},{c:'Gardener',t:'expense',m:'2025-02',a:185},{c:'Gardener',t:'expense',m:'2025-03',a:185},{c:'Gardener',t:'expense',m:'2025-04',a:185},{c:'Gardener',t:'expense',m:'2025-05',a:485},{c:'Gardener',t:'expense',m:'2025-06',a:185},
+    {c:'Healthcare',t:'expense',m:'2025-01',a:-14},{c:'Healthcare',t:'expense',m:'2025-02',a:180.96},{c:'Healthcare',t:'expense',m:'2025-03',a:205},{c:'Healthcare',t:'expense',m:'2025-04',a:150.51},{c:'Healthcare',t:'expense',m:'2025-05',a:570.17},
+    {c:'Internet',t:'expense',m:'2025-01',a:61.24},{c:'Internet',t:'expense',m:'2025-02',a:38.62},{c:'Internet',t:'expense',m:'2025-03',a:64.25},{c:'Internet',t:'expense',m:'2025-04',a:64.25},{c:'Internet',t:'expense',m:'2025-05',a:64.25},{c:'Internet',t:'expense',m:'2025-06',a:64.24},
+    {c:'Parking & Tolls',t:'expense',m:'2025-01',a:45},{c:'Parking & Tolls',t:'expense',m:'2025-02',a:4.5},{c:'Parking & Tolls',t:'expense',m:'2025-04',a:102.64},{c:'Parking & Tolls',t:'expense',m:'2025-05',a:6},{c:'Parking & Tolls',t:'expense',m:'2025-06',a:13},
+    {c:'Taxes',t:'expense',m:'2025-01',a:3109.36},{c:'Taxes',t:'expense',m:'2025-04',a:950},
+    {c:'Home Insurance',t:'expense',m:'2025-01',a:-2188.78},{c:'Home Insurance',t:'expense',m:'2025-03',a:1321.34},{c:'Home Insurance',t:'expense',m:'2025-04',a:1321.34},{c:'Home Insurance',t:'expense',m:'2025-05',a:1321.34},{c:'Home Insurance',t:'expense',m:'2025-06',a:1321.34},
+    {c:'Misc Financial',t:'expense',m:'2025-01',a:75},{c:'Misc Financial',t:'expense',m:'2025-02',a:25},{c:'Misc Financial',t:'expense',m:'2025-03',a:50},{c:'Misc Financial',t:'expense',m:'2025-04',a:25},{c:'Misc Financial',t:'expense',m:'2025-05',a:25},
+    {c:'Phone',t:'expense',m:'2025-01',a:356.34},{c:'Phone',t:'expense',m:'2025-02',a:356.99},{c:'Phone',t:'expense',m:'2025-03',a:357.04},{c:'Phone',t:'expense',m:'2025-04',a:357.04},{c:'Phone',t:'expense',m:'2025-05',a:574.93},{c:'Phone',t:'expense',m:'2025-06',a:470.85},
+    {c:'Auto Inurance',t:'expense',m:'2025-01',a:265.1},{c:'Auto Inurance',t:'expense',m:'2025-02',a:265.1},{c:'Auto Inurance',t:'expense',m:'2025-03',a:265.1},{c:'Auto Inurance',t:'expense',m:'2025-04',a:570.01},{c:'Auto Inurance',t:'expense',m:'2025-06',a:423.05},
+    {c:'Pool Maintenance',t:'expense',m:'2025-01',a:775},{c:'Pool Maintenance',t:'expense',m:'2025-02',a:375},{c:'Pool Maintenance',t:'expense',m:'2025-03',a:525},{c:'Pool Maintenance',t:'expense',m:'2025-04',a:550},{c:'Pool Maintenance',t:'expense',m:'2025-05',a:625},{c:'Pool Maintenance',t:'expense',m:'2025-06',a:250},
+    {c:'AAA',t:'expense',m:'2025-01',a:92},
+    {c:'Kids Cash',t:'expense',m:'2025-05',a:126},{c:'Kids Cash',t:'expense',m:'2025-06',a:60},
+    {c:'Pest Control',t:'expense',m:'2025-01',a:55},{c:'Pest Control',t:'expense',m:'2025-02',a:55},{c:'Pest Control',t:'expense',m:'2025-03',a:55},{c:'Pest Control',t:'expense',m:'2025-04',a:330},{c:'Pest Control',t:'expense',m:'2025-05',a:55},{c:'Pest Control',t:'expense',m:'2025-06',a:55},
+    {c:'Dance',t:'expense',m:'2025-01',a:1378.59},{c:'Dance',t:'expense',m:'2025-02',a:1640.17},{c:'Dance',t:'expense',m:'2025-03',a:1769.68},{c:'Dance',t:'expense',m:'2025-04',a:2372.25},{c:'Dance',t:'expense',m:'2025-05',a:756},{c:'Dance',t:'expense',m:'2025-06',a:1689.38},
+    {c:'Home Security',t:'expense',m:'2025-01',a:67.77},{c:'Home Security',t:'expense',m:'2025-02',a:67.77},{c:'Home Security',t:'expense',m:'2025-03',a:167.76},{c:'Home Security',t:'expense',m:'2025-04',a:67.77},{c:'Home Security',t:'expense',m:'2025-05',a:67.77},{c:'Home Security',t:'expense',m:'2025-06',a:67.77},
+    {c:'Tennis',t:'expense',m:'2025-01',a:350},{c:'Tennis',t:'expense',m:'2025-02',a:1018.11},{c:'Tennis',t:'expense',m:'2025-03',a:918.95},{c:'Tennis',t:'expense',m:'2025-04',a:420},{c:'Tennis',t:'expense',m:'2025-05',a:798.53},{c:'Tennis',t:'expense',m:'2025-06',a:385},
+    // ── JUL-DEC 2025 ──
+    {c:'Auto Payment',t:'expense',m:'2025-07',a:2113.5},{c:'Auto Payment',t:'expense',m:'2025-08',a:3761.54},{c:'Auto Payment',t:'expense',m:'2025-09',a:2937.52},{c:'Auto Payment',t:'expense',m:'2025-10',a:2937.52},{c:'Auto Payment',t:'expense',m:'2025-11',a:2937.52},{c:'Auto Payment',t:'expense',m:'2025-12',a:2113.5},
+    {c:'Groceries',t:'expense',m:'2025-07',a:1226.67},{c:'Groceries',t:'expense',m:'2025-08',a:1221.12},{c:'Groceries',t:'expense',m:'2025-09',a:748.53},{c:'Groceries',t:'expense',m:'2025-10',a:1026.15},{c:'Groceries',t:'expense',m:'2025-11',a:718.05},{c:'Groceries',t:'expense',m:'2025-12',a:944.53},
+    {c:'Misc Shopping',t:'expense',m:'2025-07',a:65.42},{c:'Misc Shopping',t:'expense',m:'2025-08',a:316.19},{c:'Misc Shopping',t:'expense',m:'2025-09',a:401.65},{c:'Misc Shopping',t:'expense',m:'2025-10',a:1379.31},{c:'Misc Shopping',t:'expense',m:'2025-11',a:495.65},{c:'Misc Shopping',t:'expense',m:'2025-12',a:333.4},
+    {c:'Mortgage',t:'expense',m:'2025-07',a:10712.62},{c:'Mortgage',t:'expense',m:'2025-08',a:10712.62},{c:'Mortgage',t:'expense',m:'2025-09',a:10712.62},{c:'Mortgage',t:'expense',m:'2025-10',a:10712.62},{c:'Mortgage',t:'expense',m:'2025-11',a:10712.62},{c:'Mortgage',t:'expense',m:'2025-12',a:10712.62},
+    {c:'Nanny',t:'expense',m:'2025-07',a:2775},{c:'Nanny',t:'expense',m:'2025-08',a:3337.5},{c:'Nanny',t:'expense',m:'2025-09',a:4010},{c:'Nanny',t:'expense',m:'2025-10',a:5037.5},{c:'Nanny',t:'expense',m:'2025-11',a:5060},{c:'Nanny',t:'expense',m:'2025-12',a:3625},
+    {c:'Paulette Mortgage',t:'expense',m:'2025-07',a:6649.42},{c:'Paulette Mortgage',t:'expense',m:'2025-08',a:6649.42},{c:'Paulette Mortgage',t:'expense',m:'2025-09',a:6649.42},{c:'Paulette Mortgage',t:'expense',m:'2025-10',a:6649.42},{c:'Paulette Mortgage',t:'expense',m:'2025-11',a:6649.42},{c:'Paulette Mortgage',t:'expense',m:'2025-12',a:6649.42},
+    {c:'Paychecks',t:'income',m:'2025-07',a:14672.49},{c:'Paychecks',t:'income',m:'2025-08',a:23999.65},{c:'Paychecks',t:'income',m:'2025-09',a:15899.33},{c:'Paychecks',t:'income',m:'2025-10',a:15899.34},{c:'Paychecks',t:'income',m:'2025-11',a:15899.32},{c:'Paychecks',t:'income',m:'2025-12',a:15899.33},
+    {c:'Rental Income',t:'income',m:'2025-07',a:12000},{c:'Rental Income',t:'income',m:'2025-08',a:12000},{c:'Rental Income',t:'income',m:'2025-09',a:12000},{c:'Rental Income',t:'income',m:'2025-10',a:12000},{c:'Rental Income',t:'income',m:'2025-11',a:16000},{c:'Rental Income',t:'income',m:'2025-12',a:16000},
+    {c:'Other Income',t:'income',m:'2025-07',a:1048.74},{c:'Other Income',t:'income',m:'2025-08',a:680.45},{c:'Other Income',t:'income',m:'2025-09',a:255.34},{c:'Other Income',t:'income',m:'2025-10',a:-9786.24},{c:'Other Income',t:'income',m:'2025-11',a:805.31},{c:'Other Income',t:'income',m:'2025-12',a:335.68},
+    {c:'Pharmacy',t:'expense',m:'2025-07',a:32.87},{c:'Pharmacy',t:'expense',m:'2025-08',a:10.98},{c:'Pharmacy',t:'expense',m:'2025-09',a:41.04},{c:'Pharmacy',t:'expense',m:'2025-10',a:64.48},{c:'Pharmacy',t:'expense',m:'2025-11',a:-30.57},{c:'Pharmacy',t:'expense',m:'2025-12',a:64.47},
+    {c:'Trash',t:'expense',m:'2025-08',a:146.43},{c:'Trash',t:'expense',m:'2025-11',a:146.43},
+    {c:'Travel & Vacation',t:'expense',m:'2025-08',a:2690.24},{c:'Travel & Vacation',t:'expense',m:'2025-09',a:171.57},{c:'Travel & Vacation',t:'expense',m:'2025-12',a:466.58},
+    {c:'Clothing',t:'expense',m:'2025-07',a:464.27},{c:'Clothing',t:'expense',m:'2025-08',a:256.11},{c:'Clothing',t:'expense',m:'2025-09',a:1585.21},{c:'Clothing',t:'expense',m:'2025-11',a:235.59},{c:'Clothing',t:'expense',m:'2025-12',a:1240.77},
+    {c:'Dentist',t:'expense',m:'2025-12',a:95.2},
+    {c:'Eating Out',t:'expense',m:'2025-07',a:606.15},{c:'Eating Out',t:'expense',m:'2025-08',a:679.94},{c:'Eating Out',t:'expense',m:'2025-09',a:200.42},{c:'Eating Out',t:'expense',m:'2025-10',a:876.95},{c:'Eating Out',t:'expense',m:'2025-11',a:1069.22},{c:'Eating Out',t:'expense',m:'2025-12',a:1261.69},
+    {c:'Gas & Charge',t:'expense',m:'2025-10',a:17.26},{c:'Gas & Charge',t:'expense',m:'2025-12',a:159.99},
+    {c:'Kids Activities',t:'expense',m:'2025-12',a:74.64},
+    {c:'Loans',t:'expense',m:'2025-07',a:2106.5},{c:'Loans',t:'expense',m:'2025-08',a:2106.5},{c:'Loans',t:'expense',m:'2025-09',a:4773.16},{c:'Loans',t:'expense',m:'2025-10',a:4763.16},{c:'Loans',t:'expense',m:'2025-11',a:6484.88},{c:'Loans',t:'expense',m:'2025-12',a:3061.44},
+    {c:'Paulette Insurance',t:'expense',m:'2025-09',a:1098.4},
+    {c:'Property Tax',t:'expense',m:'2025-12',a:11144.22},
+    {c:'Subscriptions',t:'expense',m:'2025-07',a:284.22},{c:'Subscriptions',t:'expense',m:'2025-08',a:359.22},{c:'Subscriptions',t:'expense',m:'2025-09',a:301.2},{c:'Subscriptions',t:'expense',m:'2025-10',a:355.18},{c:'Subscriptions',t:'expense',m:'2025-11',a:467.29},{c:'Subscriptions',t:'expense',m:'2025-12',a:285.8},
+    {c:'Water',t:'expense',m:'2025-07',a:557.32},{c:'Water',t:'expense',m:'2025-09',a:557.32},{c:'Water',t:'expense',m:'2025-12',a:483.48},
+    {c:'Auto Maintenance',t:'expense',m:'2025-07',a:10},{c:'Auto Maintenance',t:'expense',m:'2025-08',a:20},{c:'Auto Maintenance',t:'expense',m:'2025-09',a:20},{c:'Auto Maintenance',t:'expense',m:'2025-10',a:60},{c:'Auto Maintenance',t:'expense',m:'2025-11',a:20},{c:'Auto Maintenance',t:'expense',m:'2025-12',a:194.07},
+    {c:'Coffee Shops',t:'expense',m:'2025-12',a:22.1},
+    {c:'Fitness',t:'expense',m:'2025-07',a:119},{c:'Fitness',t:'expense',m:'2025-09',a:198},{c:'Fitness',t:'expense',m:'2025-10',a:342.3},{c:'Fitness',t:'expense',m:'2025-11',a:338.3},{c:'Fitness',t:'expense',m:'2025-12',a:338.3},
+    {c:'Gas & Electric',t:'expense',m:'2025-07',a:921.53},{c:'Gas & Electric',t:'expense',m:'2025-08',a:953.46},{c:'Gas & Electric',t:'expense',m:'2025-09',a:1173.49},{c:'Gas & Electric',t:'expense',m:'2025-10',a:1170.18},{c:'Gas & Electric',t:'expense',m:'2025-11',a:739.89},{c:'Gas & Electric',t:'expense',m:'2025-12',a:940.65},
+    {c:'Home Improvement',t:'expense',m:'2025-08',a:219.95},{c:'Home Improvement',t:'expense',m:'2025-09',a:1039},{c:'Home Improvement',t:'expense',m:'2025-11',a:2239},{c:'Home Improvement',t:'expense',m:'2025-12',a:850},
+    {c:'Life Insurance',t:'expense',m:'2025-11',a:2470},
+    {c:'Make Up',t:'expense',m:'2025-07',a:32.07},{c:'Make Up',t:'expense',m:'2025-08',a:50.84},{c:'Make Up',t:'expense',m:'2025-09',a:88.31},{c:'Make Up',t:'expense',m:'2025-12',a:47.29},
+    {c:'Paulette Property Tax',t:'expense',m:'2025-12',a:2113.5},
+    {c:'School',t:'expense',m:'2025-08',a:241.3},{c:'School',t:'expense',m:'2025-09',a:118},{c:'School',t:'expense',m:'2025-10',a:3455},{c:'School',t:'expense',m:'2025-11',a:35},{c:'School',t:'expense',m:'2025-12',a:1444},
+    {c:'Amazon',t:'expense',m:'2025-07',a:1503.36},{c:'Amazon',t:'expense',m:'2025-08',a:1424.75},{c:'Amazon',t:'expense',m:'2025-09',a:1784.41},{c:'Amazon',t:'expense',m:'2025-10',a:1786.14},{c:'Amazon',t:'expense',m:'2025-11',a:1310},{c:'Amazon',t:'expense',m:'2025-12',a:2671.51},
+    {c:'Baseball',t:'expense',m:'2025-07',a:109.95},{c:'Baseball',t:'expense',m:'2025-09',a:437.94},{c:'Baseball',t:'expense',m:'2025-10',a:359.46},{c:'Baseball',t:'expense',m:'2025-11',a:260.46},{c:'Baseball',t:'expense',m:'2025-12',a:260.46},
+    {c:'Gardener',t:'expense',m:'2025-07',a:185},{c:'Gardener',t:'expense',m:'2025-08',a:185},{c:'Gardener',t:'expense',m:'2025-10',a:185},{c:'Gardener',t:'expense',m:'2025-12',a:185},
+    {c:'Healthcare',t:'expense',m:'2025-07',a:5},{c:'Healthcare',t:'expense',m:'2025-08',a:76.46},{c:'Healthcare',t:'expense',m:'2025-09',a:770.74},{c:'Healthcare',t:'expense',m:'2025-10',a:238.67},{c:'Healthcare',t:'expense',m:'2025-11',a:140.9},{c:'Healthcare',t:'expense',m:'2025-12',a:455.56},
+    {c:'Internet',t:'expense',m:'2025-07',a:64.25},{c:'Internet',t:'expense',m:'2025-08',a:131.25},{c:'Internet',t:'expense',m:'2025-09',a:76.25},{c:'Internet',t:'expense',m:'2025-10',a:76.25},{c:'Internet',t:'expense',m:'2025-11',a:76.25},{c:'Internet',t:'expense',m:'2025-12',a:76.25},
+    {c:'Parking & Tolls',t:'expense',m:'2025-08',a:42.7},{c:'Parking & Tolls',t:'expense',m:'2025-09',a:17.05},{c:'Parking & Tolls',t:'expense',m:'2025-10',a:13.4},{c:'Parking & Tolls',t:'expense',m:'2025-11',a:29},{c:'Parking & Tolls',t:'expense',m:'2025-12',a:99},
+    {c:'Home Insurance',t:'expense',m:'2025-07',a:1321.34},{c:'Home Insurance',t:'expense',m:'2025-08',a:1321.34},{c:'Home Insurance',t:'expense',m:'2025-09',a:1321.34},{c:'Home Insurance',t:'expense',m:'2025-10',a:1321.34},{c:'Home Insurance',t:'expense',m:'2025-11',a:1321.34},{c:'Home Insurance',t:'expense',m:'2025-12',a:1321.34},
+    {c:'Misc Financial',t:'expense',m:'2025-07',a:25},{c:'Misc Financial',t:'expense',m:'2025-09',a:50},{c:'Misc Financial',t:'expense',m:'2025-10',a:32},{c:'Misc Financial',t:'expense',m:'2025-11',a:474},
+    {c:'Phone',t:'expense',m:'2025-07',a:389.81},{c:'Phone',t:'expense',m:'2025-08',a:402.65},{c:'Phone',t:'expense',m:'2025-09',a:402.65},{c:'Phone',t:'expense',m:'2025-10',a:402.65},{c:'Phone',t:'expense',m:'2025-11',a:404.89},{c:'Phone',t:'expense',m:'2025-12',a:404.89},
+    {c:'Auto Inurance',t:'expense',m:'2025-07',a:533.16},{c:'Auto Inurance',t:'expense',m:'2025-08',a:533.16},{c:'Auto Inurance',t:'expense',m:'2025-09',a:533.16},{c:'Auto Inurance',t:'expense',m:'2025-10',a:1166.64},{c:'Auto Inurance',t:'expense',m:'2025-12',a:630.87},
+    {c:'Financial Tools',t:'expense',m:'2025-07',a:14.99},{c:'Financial Tools',t:'expense',m:'2025-09',a:5},{c:'Financial Tools',t:'expense',m:'2025-10',a:5},{c:'Financial Tools',t:'expense',m:'2025-11',a:5},{c:'Financial Tools',t:'expense',m:'2025-12',a:5},
+    {c:'Pool Maintenance',t:'expense',m:'2025-12',a:0},
+    {c:'Kids Cash',t:'expense',m:'2025-07',a:140},{c:'Kids Cash',t:'expense',m:'2025-10',a:50},{c:'Kids Cash',t:'expense',m:'2025-11',a:20},{c:'Kids Cash',t:'expense',m:'2025-12',a:40},
+    {c:'Pest Control',t:'expense',m:'2025-07',a:55},{c:'Pest Control',t:'expense',m:'2025-08',a:55},{c:'Pest Control',t:'expense',m:'2025-10',a:110},{c:'Pest Control',t:'expense',m:'2025-11',a:55},{c:'Pest Control',t:'expense',m:'2025-12',a:55},
+    {c:'Auto Registration',t:'expense',m:'2025-09',a:619.86},{c:'Auto Registration',t:'expense',m:'2025-11',a:46.9},
+    {c:'Dance',t:'expense',m:'2025-08',a:236.86},{c:'Dance',t:'expense',m:'2025-09',a:1048.86},{c:'Dance',t:'expense',m:'2025-10',a:2794.14},{c:'Dance',t:'expense',m:'2025-11',a:1082.99},{c:'Dance',t:'expense',m:'2025-12',a:2137.55},
+    {c:'Home Security',t:'expense',m:'2025-07',a:67.77},{c:'Home Security',t:'expense',m:'2025-08',a:67.77},{c:'Home Security',t:'expense',m:'2025-09',a:67.77},{c:'Home Security',t:'expense',m:'2025-10',a:67.77},{c:'Home Security',t:'expense',m:'2025-11',a:67.77},{c:'Home Security',t:'expense',m:'2025-12',a:3.33},
+    {c:'Tennis',t:'expense',m:'2025-07',a:770},{c:'Tennis',t:'expense',m:'2025-08',a:455},{c:'Tennis',t:'expense',m:'2025-09',a:490},{c:'Tennis',t:'expense',m:'2025-10',a:140},
+    // ── JAN-JUN 2026 ──
+    {c:'Auto Payment',t:'expense',m:'2026-01',a:2113.5},{c:'Auto Payment',t:'expense',m:'2026-02',a:2937.52},{c:'Auto Payment',t:'expense',m:'2026-03',a:3794.01},{c:'Auto Payment',t:'expense',m:'2026-04',a:4044.01},{c:'Auto Payment',t:'expense',m:'2026-05',a:824.02},{c:'Auto Payment',t:'expense',m:'2026-06',a:0},
+    {c:'Groceries',t:'expense',m:'2026-01',a:720.95},{c:'Groceries',t:'expense',m:'2026-02',a:695.82},{c:'Groceries',t:'expense',m:'2026-03',a:548.54},{c:'Groceries',t:'expense',m:'2026-04',a:778.38},{c:'Groceries',t:'expense',m:'2026-05',a:564.8},{c:'Groceries',t:'expense',m:'2026-06',a:500.37},
+    {c:'Misc Shopping',t:'expense',m:'2026-01',a:176.41},{c:'Misc Shopping',t:'expense',m:'2026-02',a:358.86},{c:'Misc Shopping',t:'expense',m:'2026-03',a:2298.37},{c:'Misc Shopping',t:'expense',m:'2026-04',a:1334.6},{c:'Misc Shopping',t:'expense',m:'2026-05',a:119.64},{c:'Misc Shopping',t:'expense',m:'2026-06',a:1733.07},
+    {c:'Mortgage',t:'expense',m:'2026-01',a:10712.62},{c:'Mortgage',t:'expense',m:'2026-02',a:10712.62},{c:'Mortgage',t:'expense',m:'2026-03',a:0},{c:'Mortgage',t:'expense',m:'2026-04',a:-2164.86},{c:'Mortgage',t:'expense',m:'2026-05',a:23517.99},{c:'Mortgage',t:'expense',m:'2026-06',a:15678.66},
+    {c:'Nanny',t:'expense',m:'2026-01',a:3150},{c:'Nanny',t:'expense',m:'2026-02',a:5140},{c:'Nanny',t:'expense',m:'2026-03',a:3565},{c:'Nanny',t:'expense',m:'2026-04',a:2477.5},{c:'Nanny',t:'expense',m:'2026-05',a:2888},{c:'Nanny',t:'expense',m:'2026-06',a:3925},
+    {c:'Paulette Mortgage',t:'expense',m:'2026-01',a:6649.42},{c:'Paulette Mortgage',t:'expense',m:'2026-02',a:6649.42},{c:'Paulette Mortgage',t:'expense',m:'2026-03',a:9974.13},{c:'Paulette Mortgage',t:'expense',m:'2026-04',a:9974.13},{c:'Paulette Mortgage',t:'expense',m:'2026-05',a:9974.13},{c:'Paulette Mortgage',t:'expense',m:'2026-06',a:6649.42},
+    {c:'Paychecks',t:'income',m:'2026-01',a:22294.59},{c:'Paychecks',t:'income',m:'2026-02',a:14737.14},{c:'Paychecks',t:'income',m:'2026-03',a:14737.12},{c:'Paychecks',t:'income',m:'2026-04',a:14737.14},{c:'Paychecks',t:'income',m:'2026-05',a:14737.14},{c:'Paychecks',t:'income',m:'2026-06',a:14737.15},
+    {c:'Rental Income',t:'income',m:'2026-01',a:16000},{c:'Rental Income',t:'income',m:'2026-02',a:16000},{c:'Rental Income',t:'income',m:'2026-03',a:24480},{c:'Rental Income',t:'income',m:'2026-04',a:24480},{c:'Rental Income',t:'income',m:'2026-05',a:24480},{c:'Rental Income',t:'income',m:'2026-06',a:16320},
+    {c:'Other Income',t:'income',m:'2026-02',a:47.67},{c:'Other Income',t:'income',m:'2026-03',a:60},{c:'Other Income',t:'income',m:'2026-04',a:32.1},{c:'Other Income',t:'income',m:'2026-05',a:18.2},
+    {c:'Pharmacy',t:'expense',m:'2026-01',a:86.88},{c:'Pharmacy',t:'expense',m:'2026-02',a:15},{c:'Pharmacy',t:'expense',m:'2026-03',a:196.77},{c:'Pharmacy',t:'expense',m:'2026-04',a:67.96},{c:'Pharmacy',t:'expense',m:'2026-05',a:139.24},{c:'Pharmacy',t:'expense',m:'2026-06',a:77.63},
+    {c:'Trash',t:'expense',m:'2026-02',a:146.43},
+    {c:'Travel & Vacation',t:'expense',m:'2026-01',a:306.84},{c:'Travel & Vacation',t:'expense',m:'2026-02',a:567.4},{c:'Travel & Vacation',t:'expense',m:'2026-03',a:531.55},{c:'Travel & Vacation',t:'expense',m:'2026-04',a:6287.38},
+    {c:'Clothing',t:'expense',m:'2026-01',a:348.28},{c:'Clothing',t:'expense',m:'2026-02',a:-19.06},{c:'Clothing',t:'expense',m:'2026-03',a:1040.16},{c:'Clothing',t:'expense',m:'2026-04',a:9},{c:'Clothing',t:'expense',m:'2026-05',a:1004.7},{c:'Clothing',t:'expense',m:'2026-06',a:725.39},
+    {c:'Eating Out',t:'expense',m:'2026-01',a:1353.92},{c:'Eating Out',t:'expense',m:'2026-02',a:1173.64},{c:'Eating Out',t:'expense',m:'2026-03',a:1772.2},{c:'Eating Out',t:'expense',m:'2026-04',a:1830.33},{c:'Eating Out',t:'expense',m:'2026-05',a:1541.08},{c:'Eating Out',t:'expense',m:'2026-06',a:1965.3},
+    {c:'Gas & Charge',t:'expense',m:'2026-01',a:302.78},{c:'Gas & Charge',t:'expense',m:'2026-02',a:65.48},{c:'Gas & Charge',t:'expense',m:'2026-03',a:239.87},
+    {c:'Loans',t:'expense',m:'2026-01',a:394.78},{c:'Loans',t:'expense',m:'2026-02',a:394.78},{c:'Loans',t:'expense',m:'2026-03',a:3159.75},{c:'Loans',t:'expense',m:'2026-04',a:3159.75},{c:'Loans',t:'expense',m:'2026-05',a:2303.89},{c:'Loans',t:'expense',m:'2026-06',a:2106.5},
+    {c:'Paulette Insurance',t:'expense',m:'2026-01',a:828.8},{c:'Paulette Insurance',t:'expense',m:'2026-03',a:828.8},
+    {c:'Subscriptions',t:'expense',m:'2026-01',a:351.57},{c:'Subscriptions',t:'expense',m:'2026-02',a:593.26},{c:'Subscriptions',t:'expense',m:'2026-03',a:513.12},{c:'Subscriptions',t:'expense',m:'2026-04',a:708.76},{c:'Subscriptions',t:'expense',m:'2026-05',a:344.8},{c:'Subscriptions',t:'expense',m:'2026-06',a:385.29},
+    {c:'Water',t:'expense',m:'2026-01',a:412.97},{c:'Water',t:'expense',m:'2026-03',a:399.67},{c:'Water',t:'expense',m:'2026-05',a:646.73},
+    {c:'Auto Maintenance',t:'expense',m:'2026-01',a:256.25},{c:'Auto Maintenance',t:'expense',m:'2026-02',a:250},{c:'Auto Maintenance',t:'expense',m:'2026-03',a:130},{c:'Auto Maintenance',t:'expense',m:'2026-04',a:10},{c:'Auto Maintenance',t:'expense',m:'2026-05',a:129.39},{c:'Auto Maintenance',t:'expense',m:'2026-06',a:238.79},
+    {c:'Coffee Shops',t:'expense',m:'2026-03',a:16.62},
+    {c:'Fitness',t:'expense',m:'2026-01',a:457.3},{c:'Fitness',t:'expense',m:'2026-02',a:338.3},{c:'Fitness',t:'expense',m:'2026-03',a:338.3},{c:'Fitness',t:'expense',m:'2026-04',a:455.15},{c:'Fitness',t:'expense',m:'2026-05',a:338.3},
+    {c:'Gas & Electric',t:'expense',m:'2026-01',a:1038.26},{c:'Gas & Electric',t:'expense',m:'2026-02',a:1015.79},{c:'Gas & Electric',t:'expense',m:'2026-03',a:1414.86},{c:'Gas & Electric',t:'expense',m:'2026-04',a:734.44},{c:'Gas & Electric',t:'expense',m:'2026-05',a:1166.32},{c:'Gas & Electric',t:'expense',m:'2026-06',a:816.79},
+    {c:'Home Improvement',t:'expense',m:'2026-04',a:4801.42},{c:'Home Improvement',t:'expense',m:'2026-06',a:384.2},
+    {c:'Make Up',t:'expense',m:'2026-05',a:123.32},
+    {c:'Other',t:'expense',m:'2026-01',a:135},{c:'Other',t:'expense',m:'2026-03',a:75},{c:'Other',t:'expense',m:'2026-06',a:66},
+    {c:'Paulette Property Tax',t:'expense',m:'2026-05',a:2334.9},
+    {c:'School',t:'expense',m:'2026-01',a:946},{c:'School',t:'expense',m:'2026-03',a:128.15},{c:'School',t:'expense',m:'2026-04',a:126.85},{c:'School',t:'expense',m:'2026-05',a:130.36},{c:'School',t:'expense',m:'2026-06',a:10050.08},
+    {c:'Amazon',t:'expense',m:'2026-01',a:1500.77},{c:'Amazon',t:'expense',m:'2026-02',a:2547.13},{c:'Amazon',t:'expense',m:'2026-03',a:2368.09},{c:'Amazon',t:'expense',m:'2026-04',a:3635.49},{c:'Amazon',t:'expense',m:'2026-05',a:2860.58},{c:'Amazon',t:'expense',m:'2026-06',a:2027.03},
+    {c:'Baseball',t:'expense',m:'2026-01',a:338.5},{c:'Baseball',t:'expense',m:'2026-02',a:712.49},{c:'Baseball',t:'expense',m:'2026-03',a:489.33},{c:'Baseball',t:'expense',m:'2026-04',a:312.49},{c:'Baseball',t:'expense',m:'2026-05',a:694.69},{c:'Baseball',t:'expense',m:'2026-06',a:1180},
+    {c:'Gardener',t:'expense',m:'2026-01',a:185},{c:'Gardener',t:'expense',m:'2026-02',a:185},{c:'Gardener',t:'expense',m:'2026-03',a:185},{c:'Gardener',t:'expense',m:'2026-04',a:185},{c:'Gardener',t:'expense',m:'2026-06',a:250},
+    {c:'Healthcare',t:'expense',m:'2026-01',a:333.68},{c:'Healthcare',t:'expense',m:'2026-02',a:941.22},{c:'Healthcare',t:'expense',m:'2026-03',a:633.46},{c:'Healthcare',t:'expense',m:'2026-04',a:685.4},{c:'Healthcare',t:'expense',m:'2026-05',a:804.03},{c:'Healthcare',t:'expense',m:'2026-06',a:212.63},
+    {c:'Internet',t:'expense',m:'2026-01',a:76.25},{c:'Internet',t:'expense',m:'2026-02',a:81.25},{c:'Internet',t:'expense',m:'2026-03',a:126.46},{c:'Internet',t:'expense',m:'2026-04',a:61.25},{c:'Internet',t:'expense',m:'2026-05',a:162.28},
+    {c:'Parents Gift',t:'income',m:'2026-05',a:0},
+    {c:'Parking & Tolls',t:'expense',m:'2026-02',a:16},{c:'Parking & Tolls',t:'expense',m:'2026-03',a:10},{c:'Parking & Tolls',t:'expense',m:'2026-05',a:23},{c:'Parking & Tolls',t:'expense',m:'2026-06',a:6},
+    {c:'Home Insurance',t:'expense',m:'2026-02',a:1499.66},{c:'Home Insurance',t:'expense',m:'2026-03',a:2249.46},{c:'Home Insurance',t:'expense',m:'2026-04',a:2249.46},{c:'Home Insurance',t:'expense',m:'2026-05',a:1499.64},{c:'Home Insurance',t:'expense',m:'2026-06',a:1499.64},
+    {c:'Misc Financial',t:'expense',m:'2026-03',a:100},{c:'Misc Financial',t:'expense',m:'2026-04',a:27.5},
+    {c:'Phone',t:'expense',m:'2026-01',a:442.41},{c:'Phone',t:'expense',m:'2026-02',a:452.23},{c:'Phone',t:'expense',m:'2026-03',a:406.91},{c:'Phone',t:'expense',m:'2026-04',a:2547.72},{c:'Phone',t:'expense',m:'2026-05',a:-877.71},{c:'Phone',t:'expense',m:'2026-06',a:509.2},
+    {c:'Auto Inurance',t:'expense',m:'2026-01',a:630.87},{c:'Auto Inurance',t:'expense',m:'2026-02',a:630.87},{c:'Auto Inurance',t:'expense',m:'2026-03',a:630.87},{c:'Auto Inurance',t:'expense',m:'2026-04',a:1261.02},{c:'Auto Inurance',t:'expense',m:'2026-05',a:-128.33},{c:'Auto Inurance',t:'expense',m:'2026-06',a:651.23},
+    {c:'Pool Maintenance',t:'expense',m:'2026-01',a:1166.51},{c:'Pool Maintenance',t:'expense',m:'2026-02',a:240},{c:'Pool Maintenance',t:'expense',m:'2026-04',a:599.09},{c:'Pool Maintenance',t:'expense',m:'2026-05',a:240},
+    {c:'AAA',t:'expense',m:'2026-01',a:92},
+    {c:'Kids Cash',t:'expense',m:'2026-01',a:80},{c:'Kids Cash',t:'expense',m:'2026-02',a:40},{c:'Kids Cash',t:'expense',m:'2026-03',a:155},{c:'Kids Cash',t:'expense',m:'2026-04',a:20},{c:'Kids Cash',t:'expense',m:'2026-05',a:74.97},{c:'Kids Cash',t:'expense',m:'2026-06',a:339.97},
+    {c:'Pest Control',t:'expense',m:'2026-01',a:55},{c:'Pest Control',t:'expense',m:'2026-02',a:65},{c:'Pest Control',t:'expense',m:'2026-03',a:65},{c:'Pest Control',t:'expense',m:'2026-04',a:65},{c:'Pest Control',t:'expense',m:'2026-05',a:65},
+    {c:'Dance',t:'expense',m:'2026-01',a:1920.11},{c:'Dance',t:'expense',m:'2026-02',a:1224.49},{c:'Dance',t:'expense',m:'2026-03',a:3348.99},{c:'Dance',t:'expense',m:'2026-04',a:1116.49},{c:'Dance',t:'expense',m:'2026-05',a:825.01},{c:'Dance',t:'expense',m:'2026-06',a:2113.29},
+    {c:'Tennis',t:'expense',m:'2026-02',a:350},
+    {c:'Dentist',t:'expense',m:'2026-01',a:0},
+    {c:'Kids Activities',t:'expense',m:'2026-06',a:165.99},
+    {c:'Gifts',t:'expense',m:'2026-03',a:26.24},{c:'Gifts',t:'expense',m:'2026-04',a:12},
+    {c:'HELOC',t:'expense',m:'2026-06',a:0},
+  ];
+
+  const txns = [];
+  for(const row of RAW){
+    if(SKIP.has(row.c)) continue;
+    const mapped = CAT_MAP[row.c];
+    if(!mapped) continue;
+    const amt = parseFloat(row.a);
+    if(amt === 0) continue;
+    const [group,sub] = mapped.split('::');
+    const isInc = row.t === 'income';
+    const amount = isInc ? Math.abs(amt) : -Math.abs(amt);
+    const date = row.m+'-15';
+    const id = 'monarch-'+row.m+'-'+row.c.replace(/[\s&\/]/g,'').slice(0,12).toLowerCase();
+    txns.push({id,date,account:'Monarch (historical)',desc:row.c,memo:'Monarch import',amount,group,sub,reviewed:true,source:'monarch'});
+  }
+
+  // Merge into store
+  const store = txnLoad();
+  const existing = new Set(store.txns.map(t=>t.id));
+  let added=0;
+  for(const t of txns){
+    if(!existing.has(t.id)){store.txns.push(t);added++;}
+  }
+  store.txns.sort((a,b)=>b.date.localeCompare(a.date));
+  store.lastImport='Monarch 2025–2026 ('+added+' records)';
+  txnSave(store);
+  alert('Loaded '+added+' Monarch historical records (Jan 2025 – Jun 2026).\nCategory-level actuals from your Monarch account — pre-categorized and ready.');
+  if(S.page==='budget') rBudget();
+}
+
 
 // ── NAV ──────────────────────────────────────────────────────
 function nav(pg){
@@ -2739,163 +2952,102 @@ function rFin(){
 // ══ 2026 BUDGET PLANNER → FINANCIALS PAGE ════════════════════
 function parseBudgetPlanner(wb){
   const J = sn => wb.Sheets[sn] ? XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1}) : [];
-  const N = v => (typeof v==='number' && isFinite(v)) ? v : (typeof v==='string' && v.trim()!=='' && !isNaN(+v) ? +v : null);
+  const N = v => (typeof v==='number' && isFinite(v)) ? v
+               : (typeof v==='string' && v.trim()!=='' && !isNaN(+v) ? +v : null);
   const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const sum = arr => arr.reduce((s,v)=>{const n=N(v);return n!=null?s+n:s;},0);
-  const isTotal = s => /^total\b/i.test((s||'').trim());
-  const isSection = s => /^[A-Z &]+$/.test((s||'').trim()) && (s||'').trim().length>2;
+  const find = (rows,test) => rows.findIndex(test);
 
-  // ── READ PLAN SHEET directly (Dashboard formulas are uncached) ──
-  const planRows = J('Plan');
-  // row 2 = header with month names; find monthsClosed from Actuals
-  let incomeRows=[], expRows=[], groups=[], currentGroup='';
-  let inIncome=false, inExp=false;
-  planRows.forEach(r=>{
-    const lbl=(r[0]||'').trim();
-    if(!lbl) return;
-    if(lbl==='INCOME'||lbl==='TOTAL INCOME'&&!inExp) { inIncome=true; return; }
-    if(isSection(lbl) && lbl!=='INCOME'){ inIncome=false; inExp=true; currentGroup=lbl; return; }
-    if(lbl.startsWith('Total ')||lbl.startsWith('TOTAL ')) return;
-    if(lbl==='NET (Income − Expenses)'||lbl==='NET (Income - Expenses)') return;
-    const vals=r.slice(1,13).map(N);
-    if(inIncome && vals.some(v=>v!=null)) incomeRows.push({name:lbl,vals});
-    else if(inExp && vals.some(v=>v!=null)) expRows.push({name:lbl,group:currentGroup,vals});
-  });
-  const projIncome = sum(incomeRows.flatMap(r=>r.vals));
-  const projExpenses = sum(expRows.flatMap(r=>r.vals));
-  const projNet = projIncome - projExpenses;
+  const dash = J('Dashboard');
 
-  // Plan annual totals by category group
-  const groupMap={};
-  expRows.forEach(r=>{
-    if(!groupMap[r.group]) groupMap[r.group]={name:r.group,plan:0,proj:0};
-    groupMap[r.group].plan += sum(r.vals);
-  });
+  // Full-year blended top line: header row then values row
+  let projIncome=null, projExpenses=null, projNet=null, netVsPlan=null;
+  const hdr = find(dash, r => String(r&&r[0]||'').toUpperCase().includes('PROJECTED INCOME'));
+  if(hdr>=0 && dash[hdr+1]){ const v=dash[hdr+1]; projIncome=N(v[0]); projExpenses=N(v[2]); projNet=N(v[4]); netVsPlan=N(v[6]); }
 
-  // ── READ ACTUALS SHEET ──
-  const actRows = J('Actuals');
-  let actIncomeRows=[], actExpRows=[], actGroup='', actInIncome=false, actInExp=false;
-  let monthsClosed=0;
-  actRows.forEach((r,i)=>{
-    const lbl=(r[0]||'').trim();
-    if(i===0||i===1) return; // header rows
-    if(lbl==='INCOME'||lbl==='TOTAL INCOME'&&!actInExp){ actInIncome=true; return; }
-    if(isSection(lbl)&&lbl!=='INCOME'){ actInIncome=false; actInExp=true; actGroup=lbl; return; }
-    if(lbl.startsWith('Total ')||lbl.startsWith('TOTAL ')||lbl==='NET (Income − Expenses)'||lbl==='NET (Income - Expenses)') return;
-    const vals=r.slice(1,13).map(N);
-    if(actInIncome&&vals.some(v=>v!=null)) actIncomeRows.push({name:lbl,vals});
-    else if(actInExp&&vals.some(v=>v!=null)) actExpRows.push({name:lbl,group:actGroup,vals});
-    // count months from header row 2 that says "Actual"
-  });
-  // Detect closed months: look for "Actual" markers in Actuals row 2
-  if(actRows[2]) actRows[2].slice(1,13).forEach((c,i)=>{ if(typeof c==='string'&&/actual/i.test(c)) monthsClosed=i+1; else if(N(actRows[2][i+1])!=null) monthsClosed=Math.max(monthsClosed,0); });
-  // Fallback: count non-null income columns
-  if(!monthsClosed && actIncomeRows.length){
-    const first=actIncomeRows.find(r=>r.vals.some(v=>v!=null));
-    if(first) monthsClosed=first.vals.filter(v=>v!=null).length;
+  // YTD actuals (closed months)
+  const ytdVal = pfx => { const i=find(dash, r=>String(r&&r[0]||'').toLowerCase().startsWith(pfx)); if(i<0) return null; const r=dash[i]; for(let c=r.length-1;c>=1;c--){ const n=N(r[c]); if(n!==null) return n; } return null; };
+  const ytdIncome    = ytdVal('income (ytd');
+  const ytdExpenses  = ytdVal('expenses (ytd');
+  const ytdNet       = ytdVal('net (ytd');
+  const monthsClosed = ytdVal('months marked');
+
+  // Expense groups + monthly Income/Expense/Net (right-side cols of same table)
+  const groups=[], monthly=[];
+  const gHdr = find(dash, r => String(r&&r[0]||'').toUpperCase()==='EXPENSE GROUP');
+  if(gHdr>=0){
+    for(let i=gHdr+1;i<dash.length;i++){
+      const r=dash[i]; if(!r) continue;
+      const name=r[0];
+      if(typeof name==='string' && name.trim() && N(r[1])!==null && !name.toUpperCase().startsWith('TOTAL')){
+        groups.push({name, plan:N(r[1]), proj:N(r[2]), varD:N(r[3]), varP:N(r[4])});
+      }
+      const mo=r[7];
+      if(typeof mo==='string' && MON.includes(mo)) monthly.push({mo, income:N(r[8])||0, expense:N(r[9])||0, net:N(r[10])||0});
+    }
   }
 
-  const ytdIncome = sum(actIncomeRows.flatMap(r=>r.vals.slice(0,monthsClosed)));
-  const ytdExpenses = sum(actExpRows.flatMap(r=>r.vals.slice(0,monthsClosed)));
-  const ytdNet = ytdIncome - ytdExpenses;
+  // Plan vs Forecast annual lines
+  const pvfRows = J('Plan vs Forecast');
+  const pvfLine = label => { const i=find(pvfRows, r=>String(r&&r[0]||'').trim().toLowerCase()===label && N(r[1])!==null && N(r[2])!==null); if(i<0) return null; const r=pvfRows[i]; return {plan:N(r[1]), fcst:N(r[2]), varD:N(r[3]), varP:N(r[4])}; };
+  const pvf = { income:pvfLine('income'), expenses:pvfLine('expenses'), net:pvfLine('net') };
 
-  // Plan totals for closed months (for variance)
-  const planIncomeYTD = sum(incomeRows.flatMap(r=>r.vals.slice(0,monthsClosed)));
-  const planExpYTD = sum(expRows.flatMap(r=>r.vals.slice(0,monthsClosed)));
+  // Monthly Plan vs Forecast (fcst = actual for closed months)
+  const monthlyPVF=[];
+  const mHdr = find(pvfRows, r=>String(r&&r[0]||'').trim()==='Month');
+  if(mHdr>=0){ for(let i=mHdr+1;i<pvfRows.length;i++){ const r=pvfRows[i]; if(!r||!MON.includes(String(r[0]||'').trim())) break;
+    monthlyPVF.push({mo:String(r[0]).trim(), planInc:N(r[1]), fcstInc:N(r[2]), planExp:N(r[3]), fcstExp:N(r[4]), planNet:N(r[5]), fcstNet:N(r[6])}); } }
 
-  // Actuals group totals
-  const actGroupMap={};
-  actExpRows.forEach(r=>{
-    if(!actGroupMap[r.group]) actGroupMap[r.group]={proj:0};
-    actGroupMap[r.group].proj += sum(r.vals.slice(0,monthsClosed));
-  });
-
-  // ── PLAN vs FORECAST (annual) — compute from Plan + Actuals ──
-  // Forecast = actuals (closed months) + plan (remaining months)
-  const fcstIncome = ytdIncome + sum(incomeRows.flatMap(r=>r.vals.slice(monthsClosed)));
-  const fcstExpenses = ytdExpenses + sum(expRows.flatMap(r=>r.vals.slice(monthsClosed)));
-  const fcstNet = fcstIncome - fcstExpenses;
-  const planIncomeAnn = sum(incomeRows.flatMap(r=>r.vals));
-  const planExpAnn = sum(expRows.flatMap(r=>r.vals));
-  const planNetAnn = planIncomeAnn - planExpAnn;
-  const pvf={
-    income:{plan:planIncomeAnn,fcst:fcstIncome,varD:fcstIncome-planIncomeAnn,varP:planIncomeAnn?( fcstIncome-planIncomeAnn)/planIncomeAnn:0},
-    expenses:{plan:planExpAnn,fcst:fcstExpenses,varD:fcstExpenses-planExpAnn,varP:planExpAnn?(fcstExpenses-planExpAnn)/planExpAnn:0},
-    net:{plan:planNetAnn,fcst:fcstNet,varD:fcstNet-planNetAnn,varP:planNetAnn?(fcstNet-planNetAnn)/planNetAnn:0}
-  };
-
-  // ── GROUPS (expense plan vs forecast) ──
-  const groups2=Object.keys(groupMap).map(g=>{
-    const plan=groupMap[g].plan;
-    const actG=actGroupMap[g]||{proj:0};
-    const remaining=sum(expRows.filter(r=>r.group===g).flatMap(r=>r.vals.slice(monthsClosed)));
-    const proj=actG.proj+remaining;
-    return {name:g,plan,proj,varD:proj-plan,varP:plan?(proj-plan)/plan:0};
-  });
-
-  // ── MONTHLY net ──
-  const monthly=MON.map((mo,mi)=>{
-    const inc=sum(incomeRows.map(r=>N(r.vals[mi])||0));
-    const exp=sum(expRows.map(r=>N(r.vals[mi])||0));
-    return {mo,income:inc,expense:exp,net:inc-exp};
-  });
-
-  // ── VARIANCE / SWINGS ──
-  const favorable=Math.max(0,ytdIncome-planIncomeYTD)+Math.max(0,planExpYTD-ytdExpenses);
-  const unfavorable=Math.min(0,ytdIncome-planIncomeYTD)+Math.min(0,planExpYTD-ytdExpenses);
-  const netVar=favorable+unfavorable;
-
-  // Category-level swings (YTD actuals vs plan)
-  const swings=[];
-  actExpRows.forEach(r=>{
-    const planRow=expRows.find(p=>p.name===r.name&&p.group===r.group);
-    if(!planRow) return;
-    const act=sum(r.vals.slice(0,monthsClosed));
-    const plan=sum(planRow.vals.slice(0,monthsClosed));
-    const varD=act-plan;
-    if(Math.abs(varD)<1) return;
-    const impact=varD<0?Math.abs(varD):-Math.abs(varD); // negative variance on expense = favorable
-    swings.push({cat:r.name,group:r.group,plan,fcst:act,varD,impact,varP:plan?varD/plan:0});
-  });
-  swings.sort((a,b)=>Math.abs(b.varD)-Math.abs(a.varD));
-
-  // ── PREV MONTH actuals ──
+  // Latest closed month — per-category actual vs plan (from Plan + Actuals sheets)
+  const catMap = rows => { const out=[]; let section='';
+    for(const r of rows){ const name=r&&r[0];
+      if(typeof name!=='string' || !name.trim()) continue;
+      const hasNum = r.slice(1,13).some(x=>N(x)!==null);
+      if(!hasNum){ const t=name.trim(); if(t.toUpperCase()===t && !t.toUpperCase().startsWith('TOTAL') && t.toUpperCase()!=='CATEGORY') section=t; continue; }
+      const up=name.trim().toUpperCase(); if(up.startsWith('TOTAL')||up.startsWith('NET ')||up.startsWith('NET(')||up==='CATEGORY') continue;
+      out.push({name:name.trim(), group:section, vals:r.slice(1,13).map(N)}); }
+    return out; };
   let prevMonth=null;
-  if(monthsClosed>=1){
-    const mo=monthsClosed-1;
-    const actInc=sum(actIncomeRows.map(r=>N(r.vals[mo])||0));
-    const actExp=sum(actExpRows.map(r=>N(r.vals[mo])||0));
-    const planInc=sum(incomeRows.map(r=>N(r.vals[mo])||0));
-    const planExp=sum(expRows.map(r=>N(r.vals[mo])||0));
+  const mc = monthsClosed;
+  if(mc && mc>=1 && mc<=12){
+    const pMap=catMap(J('Plan')), aMap=catMap(J('Actuals'));
+    const aByName={}; aMap.forEach(x=>{ aByName[x.name]=x; });
     const cats=[];
-    actExpRows.forEach(r=>{
-      const planRow=expRows.find(p=>p.name===r.name&&p.group===r.group);
-      if(!planRow) return;
-      const act=N(r.vals[mo])||0, plan=N(planRow.vals[mo])||0;
-      const varD=act-plan;
-      cats.push({cat:r.name,group:r.group,plan,actual:act,varD,fav:varD<=0});
-    });
-    cats.sort((a,b)=>Math.abs(b.varD)-Math.abs(a.varD));
-    prevMonth={idx:monthsClosed,name:MON[mo],
-      income:{plan:planInc,actual:actInc,varD:actInc-planInc},
-      expenses:{plan:planExp,actual:actExp,varD:actExp-planExp},
-      net:{plan:planInc-planExp,actual:actInc-actExp,varD:(actInc-actExp)-(planInc-planExp)},
-      swings:cats.slice(0,10)};
+    pMap.forEach(p=>{ const a=aByName[p.name]; if(!a) return;
+      const plan=p.vals[mc-1], actual=a.vals[mc-1];
+      if(plan==null && actual==null) return;
+      const isInc = (p.group||'').toUpperCase()==='INCOME';
+      const varD=(actual||0)-(plan||0);
+      cats.push({cat:p.name, group:p.group, isInc, plan:plan||0, actual:actual||0, varD, fav: isInc ? varD>=0 : varD<=0}); });
+    const pm = monthlyPVF[mc-1]||{};
+    prevMonth = {
+      idx:mc, name:MON[mc-1],
+      income:  {plan:pm.planInc, actual:pm.fcstInc, varD:(pm.fcstInc||0)-(pm.planInc||0)},
+      expenses:{plan:pm.planExp, actual:pm.fcstExp, varD:(pm.fcstExp||0)-(pm.planExp||0)},
+      net:     {plan:pm.planNet, actual:pm.fcstNet, varD:(pm.fcstNet||0)-(pm.planNet||0)},
+      swings: cats.sort((x,y)=>Math.abs(y.varD)-Math.abs(x.varD)).slice(0,10)
+    };
   }
 
-  const data={
+  // Variance Analysis: favorable / unfavorable totals + largest swings
+  const varRows = J('Variance Analysis');
+  let favorable=null, unfavorable=null, netVar=null;
+  const fHdr = find(varRows, r=>String(r&&r[0]||'').trim().toUpperCase().startsWith('FAVORABLE'));
+  if(fHdr>=0 && varRows[fHdr+1]){ const v=varRows[fHdr+1]; favorable=N(v[0]); unfavorable=N(v[2]); netVar=N(v[4]); }
+  const swings=[];
+  const sHdr = find(varRows, r=>String(r&&r[0]||'').toLowerCase()==='rank');
+  if(sHdr>=0){ for(let i=sHdr+1;i<varRows.length;i++){ const r=varRows[i]; if(!r||N(r[0])===null) break; swings.push({rank:N(r[0]), cat:r[1], group:r[2], plan:N(r[3]), fcst:N(r[4]), varD:N(r[5]), impact:N(r[6]), varP:N(r[7])}); } }
+
+  const data = {
     importTime:new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
-    projIncome:fcstIncome, projExpenses:fcstExpenses, projNet:fcstNet, netVsPlan:fcstNet-planNetAnn,
+    projIncome, projExpenses, projNet, netVsPlan,
     ytdIncome, ytdExpenses, ytdNet, monthsClosed,
-    pvf, groups:groups2, monthly, monthlyPVF:[], prevMonth,
-    favorable, unfavorable:Math.abs(unfavorable), netVar, swings:swings.slice(0,12)
+    pvf, groups, monthly, monthlyPVF, prevMonth, favorable, unfavorable, netVar, swings:swings.slice(0,12)
   };
   localStorage.setItem('kcc_budget', JSON.stringify(data));
-  S.budget=data;
+  S.budget = data;
   if(S.page==='budget') rBudget();
   return data;
 }
-
 
 function rBudget(){
   const root = document.getElementById('budget-content');
@@ -3632,7 +3784,29 @@ function hDietCard(H){
     +[1,2,3,4,5,6,7,8,9,10].map(n=>'<span onclick="hSetEnergy('+n+')" data-n="'+n+'" style="cursor:pointer;font-size:13px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:3px;border:1px solid var(--brd2);background:transparent;color:var(--mut2)">'+n+'</span>').join('')
     +'</div></div>'
     // ── SECTION 3: JOURNAL ──
-    +'<div style="padding:10px 0;border-bottom:2px solid var(--brd)">'    +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:7px">Daily Journal <span style="color:var(--mut2);font-weight:400;letter-spacing:0;text-transform:none">— all optional</span></div>'    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px">'    +'<div><div class="hfl">Breakfast</div><input id="h-f-bfast" type="text" style="width:100%;box-sizing:border-box"></div>'    +'<div><div class="hfl">Lunch</div><input id="h-f-lunch" type="text" style="width:100%;box-sizing:border-box"></div>'    +'<div><div class="hfl">Dinner</div><input id="h-f-dinner" type="text" style="width:100%;box-sizing:border-box"></div>'    +'</div>'    +'<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:6px">'    +'<div><div class="hfl">Water oz</div><input id="h-f-water" type="number" step="1" style="width:100%;box-sizing:border-box"></div>'    +'<div><div class="hfl">Diet Coke</div><input id="h-f-cokes" type="number" step="1" style="width:100%;box-sizing:border-box"></div>'    +'<div><div class="hfl">Energy Drk</div><input id="h-f-edrinks" type="number" step="1" style="width:100%;box-sizing:border-box"></div>'    +'<div><div class="hfl">Sleep /100</div><input id="h-f-sleep" type="number" min="1" max="100" step="1" placeholder="Watch" style="width:100%;box-sizing:border-box"></div>'    +'<div><div class="hfl">BM</div><select id="h-f-bowel" style="width:100%;box-sizing:border-box"><option value="">—</option><option>Good</option><option>OK</option><option>Bad</option></select></div>'    +'<div><div class="hfl">Exercise</div><input id="h-f-exercise" type="text" style="width:100%;box-sizing:border-box"></div>'    +'</div>'    +'<div id="h-notes-wrap" style="display:none;margin-bottom:6px"><textarea id="h-diet-note" placeholder="Free-form notes..." style="width:100%;min-height:60px;resize:vertical;box-sizing:border-box;font-size:12px;line-height:1.6;padding:8px;border:1px solid var(--brd2);background:var(--bg);color:var(--txt);font-family:\'JetBrains Mono\',monospace;border-radius:3px;outline:none"></textarea></div>'    +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'    +'<button class="btn" onclick="hSaveDietLog()">Save entry</button>'    +'<button class="btn" onclick="hFormatDietAI()" style="font-size:9px">✦ AI Format</button>'    +'<button class="btn" onclick="hToggleNotes()" id="h-notes-btn" style="font-size:9px">+ Notes</button>'    +'<span id="h-diet-status" style="font-size:9px;color:var(--mut)"></span>'    +'</div></div>'
+    +'<div style="padding:14px 0;border-bottom:2px solid var(--brd)">'
+    +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Daily Journal <span style="color:var(--mut2);font-weight:400;letter-spacing:0;text-transform:none">— all optional</span></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:9px">'
+    +'<div><div class="hfl">Breakfast</div><input id="h-f-bfast" type="text" style="width:100%;box-sizing:border-box"></div>'
+    +'<div><div class="hfl">Lunch</div><input id="h-f-lunch" type="text" style="width:100%;box-sizing:border-box"></div>'
+    +'<div><div class="hfl">Dinner</div><input id="h-f-dinner" type="text" style="width:100%;box-sizing:border-box"></div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:9px">'
+    +'<div><div class="hfl">Water (oz)</div><input id="h-f-water" type="number" step="1" style="width:100%;box-sizing:border-box"></div>'
+    +'<div><div class="hfl">Diet Cokes</div><input id="h-f-cokes" type="number" step="1" style="width:100%;box-sizing:border-box"></div>'
+    +'<div><div class="hfl">Energy Drinks</div><input id="h-f-edrinks" type="number" step="1" style="width:100%;box-sizing:border-box"></div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:9px">'
+    +'<div><div class="hfl">Bowel Movement</div><select id="h-f-bowel" style="width:100%;box-sizing:border-box"><option value="">—</option><option>Good</option><option>OK</option><option>Bad</option></select></div>'
+    +'<div><div class="hfl">Sleep score (1–100)</div><input id="h-f-sleep" type="number" min="1" max="100" step="1" placeholder="Apple Watch" style="width:100%;box-sizing:border-box"></div>'
+    +'<div><div class="hfl">Exercise</div><input id="h-f-exercise" type="text" style="width:100%;box-sizing:border-box"></div>'
+    +'</div>'
+    +'<textarea id="h-diet-note" placeholder="Free-form notes — how you felt, GLP-1 side effects, wins, struggles..." style="width:100%;min-height:80px;resize:vertical;box-sizing:border-box;font-size:12px;line-height:1.6;padding:10px;border:1px solid var(--brd2);background:var(--bg);color:var(--txt);font-family:\'JetBrains Mono\',monospace;border-radius:3px;outline:none"></textarea>'
+    +'<div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">'
+    +'<button class="btn" onclick="hSaveDietLog()">Save entry</button>'
+    +'<button class="btn" onclick="hFormatDietAI()" style="font-size:9px">✦ AI Format</button>'
+    +'<span id="h-diet-status" style="font-size:9px;color:var(--mut)"></span>'
+    +'</div></div>'
     // ── SECTION 4: AI FORMATTED / ANALYSIS ──
     +'<div id="h-diet-fmt" style="display:none;padding:14px 0;border-bottom:2px solid var(--brd)">'
     +'<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:6px">AI Summary</div>'
@@ -3698,9 +3872,6 @@ function hDietHydrate(d){
   const rxItems=[...(H.meds||[]).filter(r=>r.name),...(H.supps||[]).filter(r=>r.name)];
   // textarea
   const ta=el('h-diet-note'); if(ta) ta.value=log?log.raw||'':'';
-  // show notes section if this entry has free-form text
-  const nw=el('h-notes-wrap'), nb=el('h-notes-btn');
-  if(nw&&nb){ const hasRaw=log&&log.raw&&log.raw.trim(); nw.style.display=hasRaw?'':'none'; nb.textContent=hasRaw?'− Notes':'+ Notes'; }
   // structured fields
   const f=(log&&log.f)||{};
   const setV=(id,v)=>{ const e=el(id); if(e) e.value=(v==null?'':v); };
@@ -3774,14 +3945,6 @@ function hFieldsLine(f){
   if(f.sleep!=null && f.sleep!=='') p.push('😴 '+f.sleep+(typeof f.sleep==='number'?'/100':''));
   if(f.exercise) p.push('🏃 '+f.exercise);
   return p.length?'<div style="font-size:10px;color:var(--txt2);line-height:1.6;margin-bottom:4px">'+p.map(esc).join(' · ')+'</div>':'';
-}
-function hToggleNotes(){
-  const w=el('h-notes-wrap'), btn=el('h-notes-btn');
-  if(!w) return;
-  const show=w.style.display==='none';
-  w.style.display=show?'':'none';
-  if(btn) btn.textContent=show?'− Notes':'+ Notes';
-  if(show && el('h-diet-note')) el('h-diet-note').focus();
 }
 function hSaveDietLog(){
   const d=el('h-diet-d').value||hToday();
@@ -3999,7 +4162,6 @@ function hBPCard(H){
     +'<input id="h-bp-s" type="number" placeholder="SYS" style="width:80px">'
     +'<input id="h-bp-di" type="number" placeholder="DIA" style="width:80px">'
     +'<input id="h-bp-p" type="number" placeholder="pulse" style="width:80px">'
-    +'<select id="h-bp-tod" style="width:70px"><option value="">—</option><option value="AM">AM</option><option value="PM">PM</option></select>'
     +'<button class="btn" onclick="hAddBP()">+ Log</button></div>'
     +hBPLog(bp)
     +'<div style="font-size:8px;color:var(--mut2);margin-top:10px;font-style:italic">AHA categories. Not a diagnosis — discuss with your doctor.</div>'
@@ -4012,7 +4174,7 @@ function hBPLog(bp){
     const cat=hBPcat(x.sys,x.dia);
     return '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:5px 0;border-bottom:1px solid var(--brd2)">'
       +'<span style="color:var(--mut)">'+x.d+'</span>'
-      +'<span style="display:flex;align-items:center;gap:10px"><span style="font-family:\'JetBrains Mono\',monospace;color:var(--txt2)">'+x.sys+'/'+x.dia+(x.pulse?' <span style="color:var(--mut)">♥'+x.pulse+'</span>':'')+(x.tod?' <span style="color:var(--mut2);font-size:9px">'+x.tod+'</span>':'')+'</span>'
+      +'<span style="display:flex;align-items:center;gap:10px"><span style="font-family:\'JetBrains Mono\',monospace;color:var(--txt2)">'+x.sys+'/'+x.dia+(x.pulse?' <span style="color:var(--mut)">♥'+x.pulse+'</span>':'')+'</span>'
       +'<span style="font-size:8px;font-weight:700;color:'+cat.c+';min-width:54px;text-align:right">'+cat.l+'</span>'
       +'<span onclick="hDelBP('+(bp.length-1-i)+')" style="color:var(--mut2);cursor:pointer">×</span></span></div>';
   }).join('')+'</div>';
@@ -4050,7 +4212,7 @@ function hEditRxForm(key,i){ const H=hGet(); const isMed=(key==='meds'); const c
   const rec={name:name.trim(),dose:dose.trim(),sched:sched.trim(),purpose:purpose.trim()}; if(isMed) rec.by=by.trim();
   if(i!=null) H[key][i]=rec; else H[key].push(rec); hSave(); rHealth(); }
 function hDelRx(key,i){ const H=hGet(); if(confirm('Remove this entry?')){ H[key].splice(i,1); hSave(); rHealth(); } }
-function hAddBP(){ const d=el('h-bp-d').value, sys=hNum(el('h-bp-s').value), dia=hNum(el('h-bp-di').value), pulse=hNum(el('h-bp-p').value), tod=(el('h-bp-tod')&&el('h-bp-tod').value)||''; if(!d||sys==null||dia==null){alert('Enter date, systolic and diastolic');return;} const H=hGet(); H.bp=H.bp||[]; H.bp.push({d,sys,dia,pulse:pulse||null,tod:tod||null}); hSave(); rHealth(); }
+function hAddBP(){ const d=el('h-bp-d').value, sys=hNum(el('h-bp-s').value), dia=hNum(el('h-bp-di').value), pulse=hNum(el('h-bp-p').value); if(!d||sys==null||dia==null){alert('Enter date, systolic and diastolic');return;} const H=hGet(); H.bp=H.bp||[]; H.bp.push({d,sys,dia,pulse:pulse||null}); hSave(); rHealth(); }
 function hDelBP(i){ const H=hGet(); H.bp.splice(i,1); hSave(); rHealth(); }
 function fpAddTask(pid){ fpOpenTaskForm(pid,null); }
 function fpOpenTaskForm(pid,tid){
@@ -7777,10 +7939,9 @@ window.kccClear=function(){
 function kccCtx(){
   const now=new Date();
   const ds=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-  const p=['You are Kiko, the personal AI assistant inside Sonny Koliwad\'s Koliwad Command Center (KCC). Answer based on ALL the live data below. Be concise and direct. Use exact numbers from the data. Never say you can\'t see something if it appears below.'];
+  const p=['You are the personal AI assistant inside Sonny Koliwad\'s Koliwad Command Center (KCC). Answer based on the live data below. Be concise and direct. Use exact numbers from the data.'];
   p.push('TODAY: '+ds+' · Current page: '+(S&&S.page||'unknown'));
-
-  // ── TASKS ──
+  // Tasks
   const tasks=(S&&S.tasks)||[];
   if(tasks.length){
     const t0=new Date();t0.setHours(0,0,0,0);
@@ -7790,117 +7951,45 @@ function kccCtx(){
     const td=open.filter(t=>{const d=pDD(t.dd);return d&&d.getTime()===t0.getTime();});
     const nd=open.filter(t=>!pDD(t.dd));
     p.push('TASKS: '+ov.length+' overdue | '+td.length+' due today | '+nd.length+' undated backlog');
-    if(ov.length) p.push('  Overdue: '+ov.slice(0,8).map(t=>t.title+(t.m==='Must'?' [Must]':'')+( t.dd?' ('+t.dd+')':'')).join('; '));
-    if(td.length) p.push('  Due today: '+td.slice(0,6).map(t=>t.title+(t.m==='Must'?' [Must]':'')).join('; '));
-    if(nd.length) p.push('  Undated backlog: '+nd.slice(0,6).map(t=>t.title).join('; '));
+    if(ov.length) p.push('  Overdue: '+ov.slice(0,6).map(t=>t.title+(t.m==='Must'?' [Must]':'')).join('; '));
+    if(td.length) p.push('  Today: '+td.slice(0,4).map(t=>t.title).join('; '));
+    if(nd.length) p.push('  Backlog sample: '+nd.slice(0,4).map(t=>t.title).join('; '));
   }
-
-  // ── FIRE PLAN ──
+  // FIRE
   if(typeof FL_D!=='undefined'&&FL_D&&FL_D.fireDate){
     const tr=FL_D.todayRow||{};
-    const al=FL_D.actLatest||{};
-    p.push('FIRE PLAN: Date '+FL_D.fireDate+' | Scenario: '+(FL_D.scenario||'—')+' | Coverage '+Math.round((tr.firePct||0)*100)+'%');
-    p.push('  Projected/mo: Income $'+Math.round(tr.totalIn||0)+' | Expenses $'+Math.round(tr.totalOut||0)+' | Gap $'+Math.round((tr.totalIn||0)-(tr.totalOut||0)));
-    p.push('  Assets: HF $'+Math.round(tr.hf||0)+' | TIAA $'+Math.round(tr.tiaa||0)+' | HELOC drawn $'+Math.round(tr.heloc||0)+' | Available $$ $'+Math.round(tr.avail||0));
-    if(al.income&&al.income.actual!=null) p.push('  Actuals (Mo '+al.income.mo+'): Income $'+Math.round(al.income.actual)+' (proj $'+Math.round(al.income.proj||0)+') | Expenses $'+(al.expenses&&al.expenses.actual!=null?Math.round(al.expenses.actual)+' (proj $'+Math.round(al.expenses.proj||0)+')':'—'));
-    if(al.available&&al.available.actual!=null) p.push('  Available $$ actual: $'+Math.round(al.available.actual)+' vs proj $'+Math.round(al.available.proj||0)+' ('+(al.available.actual>=(al.available.proj||0)?'+':'')+Math.round(al.available.actual-(al.available.proj||0))+')');
+    p.push('FIRE PLAN: Date '+FL_D.fireDate+' | Income $'+Math.round(tr.totalIn||0)+'/mo | Expenses $'+Math.round(tr.totalOut||0)+'/mo | Gap $'+Math.round((tr.totalIn||0)-(tr.totalOut||0))+'/mo | HF $'+Math.round(tr.hf||0)+' | TIAA $'+Math.round(tr.tiaa||0)+' | HELOC drawn $'+Math.round(tr.heloc||0)+' | Available $$ $'+Math.round(tr.avail||0)+' | FIRE coverage '+Math.round((tr.firePct||0)*100)+'%');
+    const aAct=FL_D.actLatest&&FL_D.actLatest.available;
+    if(aAct&&aAct.actual!=null) p.push('  Available $$ actual ('+aAct.mo+'): $'+Math.round(aAct.actual)+' vs proj $'+Math.round(aAct.proj||0)+' | var '+(aAct.actual-(aAct.proj||0)>=0?'+':'')+Math.round(aAct.actual-(aAct.proj||0)));
   }
-
-  // ── FIRE PATH (Kanban phases) ──
-  if(typeof FP!=='undefined'&&FP&&FP.length){
-    const fpOpen=[];
-    FP.forEach(ph=>{ph.tasks&&ph.tasks.forEach(t=>{if(!S.fchk||!S.fchk[t.id]) fpOpen.push({title:t.t,phase:ph.t,tag:t.tag||'',dd:t.dd||''});});});
-    if(fpOpen.length) p.push('FIRE PATH open tasks ('+fpOpen.length+'): '+fpOpen.slice(0,8).map(t=>t.title+(t.tag==='critical'?'[critical]':t.tag==='asap'?'[asap]':'')+(t.dd?' due '+t.dd:'')+' ('+t.phase+')').join('; '));
-  }
-
-  // ── VELOCITY BANKING ──
+  // Velocity Banking
   const cI=JSON.parse(localStorage.getItem('kcc_cc_import')||'null');
   if(cI){
     const cards=(cI.cards||[]);
     const totalCC=cards.reduce((s,c)=>s+(c.bal||0),0);
-    const totalMin=cards.reduce((s,c)=>s+(c.minDue||0),0);
-    p.push('VELOCITY BANKING: WF Checking $'+Math.round(cI.wfChecking||0)+' | HELOC balance $'+Math.round(cI.heloc||0)+' | HELOC avail $'+Math.round(cI.available||0));
-    p.push('  CC total $'+Math.round(totalCC)+' (min due $'+Math.round(totalMin)+') | Randy Dang owed BY SONNY $'+Math.round(Math.abs(cI.dangOwed||0))+' [Priority #1 DEBT to pay]');
-    if(cards.length) p.push('  Cards: '+cards.map(c=>c.name+' $'+Math.round(c.bal)+(c.minDue?' min $'+Math.round(c.minDue):'')).join(' | '));
-  }
-  // Citi pending / HELOC checks
-  const ccImpFull=JSON.parse(localStorage.getItem('kcc_cc_import')||'null');
-  if(ccImpFull){
-    if(ccImpFull.citiPending&&ccImpFull.citiPending.length) p.push('  Citi pending ('+ccImpFull.citiPending.length+'): '+ccImpFull.citiPending.slice(0,5).map(x=>(x.payee||x.desc||'?')+' $'+x.amount).join(' | '));
-    if(ccImpFull.helocChecks&&ccImpFull.helocChecks.length) p.push('  HELOC checks outstanding: '+ccImpFull.helocChecks.filter(x=>x.cleared!=='Y').map(x=>(x.payee||'?')+' $'+x.amount).join(' | '));
+    p.push('VELOCITY BANKING: WF Checking $'+Math.round(cI.wfChecking||0)+' | Randy Dang owed (by Sonny) $'+Math.round(Math.abs(cI.dangOwed||0))+' [Priority #1 debt to pay] | CC debt total $'+Math.round(totalCC));
+    if(cards.length) p.push('  Cards: '+cards.map(c=>c.name+' $'+Math.round(c.bal)).join(' | '));
   }
   const fins=S&&S.fins;
   if(fins) p.push('MONTHLY BUDGET: Income $'+Math.round(fins.income||0)+'/mo | Spend $'+Math.round(fins.spend||0)+' | Cash flow $'+Math.round(fins.cf||0));
-
-  // ── FINANCIALS (Budget Planner) ──
-  const bud=JSON.parse(localStorage.getItem('kcc_budget')||'null');
-  if(bud){
-    p.push('2026 BUDGET ('+( bud.monthsClosed||0)+' months closed): Projected income $'+Math.round(bud.projIncome||0)+' | Expenses $'+Math.round(bud.projExpenses||0)+' | Net $'+Math.round(bud.projNet||0)+' | vs plan $'+Math.round(bud.netVsPlan||0));
-    if(bud.ytdIncome) p.push('  YTD actual: Income $'+Math.round(bud.ytdIncome)+' | Expenses $'+Math.round(bud.ytdExpenses||0)+' | Net $'+Math.round(bud.ytdNet||0));
-    if(bud.swings&&bud.swings.length) p.push('  Top variances: '+bud.swings.slice(0,4).map(s=>s.cat+' '+(s.impact>=0?'favorable':'unfavorable')+' $'+Math.round(Math.abs(s.impact||0))).join(' | '));
-  }
-
-  // ── TICKETS ──
-  if(cI&&cI.mtdProfit!=null){
-    p.push('TICKET BUSINESS: MTD profit $'+Math.round(cI.mtdProfit||0)+' | YTD $'+Math.round(cI.ytdProfit||0)+' | Open listings '+(cI.openListings||0)+' | WF Checking $'+Math.round(cI.wfChecking||0));
-    if(cI.pendingPayments) p.push('  Pending payments in: $'+Math.round(cI.pendingPayments||0));
-  }
-  // Recurring bills
-  const bills=JSON.parse(localStorage.getItem('kcc_recbills')||'[]');
-  if(bills.length) p.push('RECURRING BILLS: '+bills.map(b=>b.name+' $'+b.amount+' due '+b.day+'th').join(' | '));
-  // Payment plans
-  const payplans=JSON.parse(localStorage.getItem('kcc_payplans')||'[]');
-  if(payplans.length) p.push('PAYMENT PLANS: '+payplans.map(pp=>pp.name+' $'+Math.round(pp.remaining||0)+' remaining').join(' | '));
-
-  // ── PORTFOLIO ──
-  const pf=S&&S.portfolio;
-  if(pf&&pf.value) p.push('PORTFOLIO: Value $'+Math.round(pf.value||0)+(pf.dd?' | DD '+pf.dd:'')+(pf.hwm?' | HWM $'+Math.round(pf.hwm):'')+(pf.actions&&pf.actions.length?' | Next action: '+pf.actions[0].action:''));
-
-  // ── HEALTH (full) ──
-  const H=S&&S.health || JSON.parse(localStorage.getItem('kcc_health')||'null');
+  // Health
+  const H=S&&S.health;
   if(H){
-    const _w=H.weight||{},_g=H.glp1||{},_t=H.targets||{};
+    const _w=H.weight||{},_g=H.glp1||{};
     const lw=(_w.log||[]).slice(-1)[0];
-    const wRecent=(_w.log||[]).slice(-5).map(x=>x.d+': '+x.w+'lbs').join(', ');
-    p.push('HEALTH — GLP-1: '+(_g.med||'none')+(_g.dose?' '+_g.dose:'')+(_g.lastDose?' last dose '+_g.lastDose:'')+(_g.day!=null?' scheduled '+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][_g.day]:''));
-    p.push('  Weight: Current '+(lw?lw.w+' lbs ('+lw.d+')':(_w.start||'?')+' lbs start')+'  Goal '+(_w.goal||'?')+' lbs  Recent trend: '+wRecent);
-    if(_t.cal||_t.protein) p.push('  Targets: '+(_t.cal||2000)+' cal / '+(_t.protein||170)+'g protein daily');
-    const energy=(H.energy||[]).slice(-7);
-    if(energy.length) p.push('  Energy scores (last '+energy.length+'d): '+energy.map(e=>e.d+': '+e.rating+'/10').join(', '));
-    const dietLogs=(H.dietLog||[]).slice().sort((a,b)=>a.d<b.d?-1:1).slice(-5);
-    if(dietLogs.length){
-      p.push('  Recent logs:');
-      dietLogs.forEach(e=>{
-        const f=e.f||{},parts=[];
-        if(f.bfast) parts.push('B:'+f.bfast);
-        if(f.lunch) parts.push('L:'+f.lunch);
-        if(f.dinner) parts.push('D:'+f.dinner);
-        if(f.water!=null) parts.push('H2O:'+f.water+'oz');
-        if(f.cokes!=null) parts.push('DietCoke:'+f.cokes);
-        if(f.edrinks!=null) parts.push('EnergyDrinks:'+f.edrinks);
-        if(f.sleep!=null) parts.push('Sleep:'+f.sleep+'/100');
-        if(f.bowel) parts.push('BM:'+f.bowel);
-        if(f.exercise) parts.push('Ex:'+f.exercise);
-        if(e.raw) parts.push('Note:'+e.raw.slice(0,80));
-        if(parts.length) p.push('    '+e.d+': '+parts.join(' | '));
-      });
-    }
-    const bpLog=(H.bp||[]).slice(-5);
-    if(bpLog.length) p.push('  BP: '+bpLog.map(x=>x.d+(x.tod?' '+x.tod:'')+' '+x.sys+'/'+x.dia+(x.pulse?' p'+x.pulse:'')).join(' | '));
-    const meds=(H.meds||[]).map(m=>m.name+(m.dose?' '+m.dose:'')).join(', ');
-    const supps=(H.supps||[]).map(s=>s.name).join(', ');
-    if(meds) p.push('  Meds: '+meds);
-    if(supps) p.push('  Supps: '+supps);
+    p.push('HEALTH: Medication '+(_g.med||'GLP-1')+(_g.dose?' '+_g.dose:'')+(_g.lastDose?' last dose '+_g.lastDose:'')+' | Weight '+(lw?lw.w+' lbs ('+lw.d+')':(_w.start||'?')+' lbs start')+' | Goal '+(_w.goal||'?')+' lbs');
   }
-
-  // ── ALERTS ──
+  // Tickets
+  if(cI&&cI.mtdProfit!=null) p.push('TICKETS: MTD profit $'+Math.round(cI.mtdProfit||0)+' | YTD $'+Math.round(cI.ytdProfit||0)+' | Open listings '+(cI.openListings||0));
+  // Alerts
   const alts=((S&&S.alerts)||[]).filter(a=>a.status==='Open'&&!a._inboxAlert);
-  if(alts.length) p.push('OPEN ALERTS ('+alts.length+'): '+alts.slice(0,8).map(a=>a.title+(a.action?' → '+a.action.slice(0,60):'')).join(' || '));
-
-  p.push('\nRules: Randy Dang is money Sonny OWES (debt to pay, not a receivable). Base cash flow on FIRE plan. Answer directly using the data above — never say you cannot see something that appears in this context.');
+  if(alts.length) p.push('ALERTS ('+alts.length+'): '+alts.slice(0,6).map(a=>a.title).join(' | '));
+  // Bills
+  const bills=JSON.parse(localStorage.getItem('kcc_recbills')||'[]');
+  if(bills.length) p.push('RECURRING BILLS: '+bills.map(b=>b.name+' $'+b.amount+' on '+b.day+'th').join(' | '));
+  p.push('\nNote: Randy Dang is money Sonny OWES — it is a debt Sonny must pay, NOT a receivable.\nAnswer concisely. If something is not in the data, say you don\'t have that detail.');
   return p.join('\n');
 }
-
 const _KIKO_AV='data:image/png;base64,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';
 function kccAdd(txt,cls){
   const m=document.getElementById('kcc-msgs');

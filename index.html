@@ -3959,7 +3959,7 @@ function hBPLog(bp){
   return '<div style="display:flex;flex-direction:column;gap:2px">'+bp.slice(-10).reverse().map((x,i)=>{
     const cat=hBPcat(x.sys,x.dia);
     return '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:5px 0;border-bottom:1px solid var(--brd2)">'
-      +'<span style="color:var(--mut)">'+x.d+'</span>'
+      +'<span style="color:var(--mut)">'+x.d+(x.tod?' <span style="font-size:9px;color:var(--txt2)">'+x.tod+'</span>':'')+'</span>'
       +'<span style="display:flex;align-items:center;gap:10px"><span style="font-family:\'JetBrains Mono\',monospace;color:var(--txt2)">'+x.sys+'/'+x.dia+(x.pulse?' <span style="color:var(--mut)">♥'+x.pulse+'</span>':'')+'</span>'
       +'<span style="font-size:8px;font-weight:700;color:'+cat.c+';min-width:54px;text-align:right">'+cat.l+'</span>'
       +'<span onclick="hDelBP('+(bp.length-1-i)+')" style="color:var(--mut2);cursor:pointer">×</span></span></div>';

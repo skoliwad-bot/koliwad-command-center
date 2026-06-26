@@ -248,12 +248,6 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 .mf select option{background:var(--surf);}
 .mbtns{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
 
-
-/* ── FINANCIALS ── */
-.fin-mo{font-size:9px;padding:3px 9px;border:1px solid var(--brd2);background:none;color:var(--mut);cursor:pointer;font-family:inherit;}
-.fin-mo.on{background:var(--surf2);color:var(--grn);border-color:var(--grn);}
-.fin-mo-future{font-size:9px;padding:3px 9px;border:1px solid var(--brd2);background:none;color:var(--mut2);opacity:0.4;font-family:inherit;}
-.fin-rev-row{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--brd);flex-wrap:wrap;}
 /* ── BRIEFING ── */
 #brief{display:none;background:#e8e8e8;}
 #brief.on{display:block;padding:20px;min-height:100vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
@@ -573,7 +567,7 @@ const FB_KEYS = [
   'kcc_payplans','kcc_recbills','kcc_playbook_checks','kcc_cc_import','kcc_cc_paid','kcc_manbills',
   'kcc_fire_actuals','kcc_inbox','kcc_emails','kcc_calnames',
   'kcc_fp_phases','kcc_portfolio','kcc_tradelogs',
-  'kcc_bills','kcc_firelab_last','kcc_gtc','kcc_tkr','kcc_vb_bills','kcc_fl_actlatest','kcc_fl_actseries','kcc_pfchk','kcc_health','kcc_heloc_checks','kcc_budget','kcc_txns','kcc_cat_rules'
+  'kcc_bills','kcc_firelab_last','kcc_gtc','kcc_tkr','kcc_vb_bills','kcc_fl_actlatest','kcc_fl_actseries','kcc_pfchk','kcc_health','kcc_heloc_checks','kcc_budget'
 ];
 
 async function fbSave(key, value) {
@@ -1090,7 +1084,6 @@ localStorage.setItem = function(key, value) {
             <div class="ps" id="budget-last-import">2026 Budget — plan vs actuals · import from the main ⬆ importer</div>
           </div>
           <div style="display:flex;gap:8px;align-items:center;">
-            <label style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border:1px solid var(--grn);color:var(--grn);cursor:pointer;">⬆ Import CSV<input type="file" accept=".csv" multiple onchange="[...this.files].forEach(f=>importTxnFile(f))" style="display:none"></label>
             <button class="aibtn" onclick="runAI('budget')">✦ AI Analysis</button>
           </div>
         </div>
@@ -2025,789 +2018,6 @@ function setM(m){
   if(!isC){ renderBrief(); window.scrollTo(0,0); }
 }
 
-// ══════════════════════════════════════════════════════════════
-// KCC FINANCIALS — Transaction Engine + Full Page
-// ══════════════════════════════════════════════════════════════
-
-// ── CATEGORY TAXONOMY (from Budget Planner) ──────────────────
-const KCC_CATS = {
-  'INCOME':           ['Paychecks','Rental Income','Parents Gift','Tax Refund','Other / Uncategorized'],
-  'AUTO & TRANSPORT': ['Auto Payment','Gas & Charge','Auto Maintenance','Parking & Tolls','Taxi & Ride Shares','Auto Insurance','Auto Registration'],
-  'HOUSING':          ['Mortgage','Property Tax','Home Improvement','Gardener','Home Insurance','Pool Maintenance','Pest Control'],
-  'BILLS & UTILITIES':['Trash','Water','Gas & Electric','Internet','Phone'],
-  'FOOD & DINING':    ['Groceries','Eating Out','Other / Uncategorized'],
-  'ENTERTAINMENT':    ['Travel & Vacation','Subscriptions','Other'],
-  'SHOPPING':         ['Misc Shopping','Clothing','Make Up','Amazon'],
-  'FAMILY':           ['Nanny','Kids Activities','School','Baseball','Disneyland','Dodgers','Kids Cash','Dance','Tennis'],
-  'FINANCIAL':        ['Loans','Life Insurance','Other / Uncategorized'],
-  'HEALTH & WELLNESS':['Pharmacy','Dentist','Fitness','Healthcare'],
-  'RENTAL PROPERTY':  ['Paulette Mortgage','Paulette Insurance','Paulette Property Tax'],
-  'BUSINESS':         ['Other / Uncategorized'],
-  'TRANSFER':         ['Internal Transfer'],   // internal moves — excluded from budget
-};
-
-// flat list for dropdowns
-const CAT_FLAT = Object.entries(KCC_CATS).flatMap(([g,subs])=>subs.map(s=>({group:g,name:s,id:g+'::'+s})));
-
-// ── DEFAULT CATEGORIZATION RULES ─────────────────────────────
-const DEFAULT_RULES = [
-  // Housing
-  {pat:/newrez|shellpoint|mortgage|paulette mort/i, group:'HOUSING',       sub:'Mortgage'},
-  {pat:/paulette.*mortgage|transfer.*06-50.*paulette/i, group:'RENTAL PROPERTY', sub:'Paulette Mortgage'},
-  {pat:/gardener|landscap/i,  group:'HOUSING',       sub:'Gardener'},
-  {pat:/pool/i,               group:'HOUSING',       sub:'Pool Maintenance'},
-  {pat:/pest/i,               group:'HOUSING',       sub:'Pest Control'},
-  {pat:/home.*improve|hardware|home depot|lowes/i, group:'HOUSING', sub:'Home Improvement'},
-  {pat:/farmers ins|state farm|home.*insur/i, group:'HOUSING', sub:'Home Insurance'},
-  {pat:/property tax|county tax/i, group:'HOUSING', sub:'Property Tax'},
-  // Auto
-  {pat:/tesla finance|auto.*payment|car.*payment/i, group:'AUTO & TRANSPORT', sub:'Auto Payment'},
-  {pat:/chevron|shell|arco|76 gas|circle k|exxon|mobil|costco.*gas/i, group:'AUTO & TRANSPORT', sub:'Gas & Charge'},
-  {pat:/jiffy|oil change|tire|auto.*maint|firestone|pep boys/i, group:'AUTO & TRANSPORT', sub:'Auto Maintenance'},
-  {pat:/dmv|auto.*reg/i,      group:'AUTO & TRANSPORT', sub:'Auto Registration'},
-  {pat:/parking|toll|fastrak/i, group:'AUTO & TRANSPORT', sub:'Parking & Tolls'},
-  {pat:/uber|lyft|taxi|ride share/i, group:'AUTO & TRANSPORT', sub:'Taxi & Ride Shares'},
-  {pat:/auto.*insur|aaa.*insur/i, group:'AUTO & TRANSPORT', sub:'Auto Insurance'},
-  // Utilities / Bills
-  {pat:/trash|recycle|waste/i, group:'BILLS & UTILITIES', sub:'Trash'},
-  {pat:/water|pasadena water/i, group:'BILLS & UTILITIES', sub:'Water'},
-  {pat:/gas.*electric|sce|socal gas|edison|pge/i, group:'BILLS & UTILITIES', sub:'Gas & Electric'},
-  {pat:/internet|comcast|spectrum|at&t.*internet|xfinity/i, group:'BILLS & UTILITIES', sub:'Internet'},
-  {pat:/at&t|verizon|t-mobile|phone|sprint/i, group:'BILLS & UTILITIES', sub:'Phone'},
-  // Food
-  {pat:/costco|trader joe|whole food|ralphs|vons|pavilion|sprout|aldi|target.*grocer|walmart.*grocer|smart final/i, group:'FOOD & DINING', sub:'Groceries'},
-  {pat:/restaurant|mcdonald|starbucks|chipotle|doordash|grubhub|ubereats|chick-fil|pizza|sushi|cafe|diner|grill|kitchen/i, group:'FOOD & DINING', sub:'Eating Out'},
-  // Shopping
-  {pat:/amazon/i,             group:'SHOPPING', sub:'Amazon'},
-  {pat:/zara|h&m|gap|old navy|nordstrom|macy|clothing|apparel/i, group:'SHOPPING', sub:'Clothing'},
-  {pat:/sephora|ulta|makeup|cosmetic/i, group:'SHOPPING', sub:'Make Up'},
-  // Entertainment
-  {pat:/netflix|spotify|hulu|disney.*plus|apple.*tv|hbo|prime.*video|youtube.*premium/i, group:'ENTERTAINMENT', sub:'Subscriptions'},
-  {pat:/hotel|airbnb|flight|airline|expedia|booking|travel|southwest|united|delta/i, group:'ENTERTAINMENT', sub:'Travel & Vacation'},
-  {pat:/disneyland|disney/i,  group:'FAMILY', sub:'Disneyland'},
-  {pat:/dodger/i,             group:'FAMILY', sub:'Dodgers'},
-  // Family
-  {pat:/nanny|daycare|childcare/i, group:'FAMILY', sub:'Nanny'},
-  {pat:/baseball|sports.*acad|diamond|bat|glove|varsity.*team/i, group:'FAMILY', sub:'Baseball'},
-  {pat:/dance|ballet/i,       group:'FAMILY', sub:'Dance'},
-  {pat:/tennis/i,             group:'FAMILY', sub:'Tennis'},
-  {pat:/school|tuition|univ|academy/i, group:'FAMILY', sub:'School'},
-  // Financial
-  {pat:/lightstream|loan.*pmt|loan.*pay/i, group:'FINANCIAL', sub:'Loans'},
-  {pat:/life.*insur|guardian|metlife/i, group:'FINANCIAL', sub:'Life Insurance'},
-  {pat:/capital one.*payment|citi.*payment/i, group:'TRANSFER', sub:'Internal Transfer'},
-  {pat:/transfer|heloc|loan.*draft.*to/i, group:'TRANSFER', sub:'Internal Transfer'},
-  // Health
-  {pat:/pharmacy|cvs|walgreen|rite aid|rx\b/i, group:'HEALTH & WELLNESS', sub:'Pharmacy'},
-  {pat:/dentist|dental/i,     group:'HEALTH & WELLNESS', sub:'Dentist'},
-  {pat:/gym|fitness|planet fitness|equinox|peloton/i, group:'HEALTH & WELLNESS', sub:'Fitness'},
-  {pat:/doctor|hospital|clinic|medical|health|kaiser/i, group:'HEALTH & WELLNESS', sub:'Healthcare'},
-  // Hollywood Forever (cemetery/event)
-  {pat:/hollywood foreve/i,   group:'ENTERTAINMENT', sub:'Other'},
-  // Venmo (usually family/personal)
-  {pat:/venmo/i,              group:'FAMILY', sub:'Kids Cash'},
-  // Apple Cash (personal)
-  {pat:/apple cash/i,         group:'FAMILY', sub:'Kids Cash'},
-];
-
-function autoCategorizeTxn(desc, memo, txnType){
-  const search = (memo||desc||'').toLowerCase()+' '+(desc||'').toLowerCase();
-  // User-saved rules first
-  const saved = JSON.parse(localStorage.getItem('kcc_cat_rules')||'[]');
-  for(const r of saved){
-    if(new RegExp(r.pat,'i').test(search)) return {group:r.group,sub:r.sub};
-  }
-  // Transfers (by transaction type)
-  if(/transfer/i.test(txnType)||/^(transfer|loan payment credit|dividend)$/i.test(txnType)) return {group:'TRANSFER',sub:'Internal Transfer'};
-  // Default rules
-  for(const r of DEFAULT_RULES){
-    if(r.pat.test(search)) return {group:r.group,sub:r.sub};
-  }
-  return null;
-}
-
-// ── PARSERS ──────────────────────────────────────────────────
-function parseTxnCSV(text, filename){
-  const lines = text.replace(/\r/g,'').split('\n').filter(l=>l.trim());
-  const account = detectAccount(text, filename);
-  const txns = [];
-
-  if(account === 'capital_one'){
-    // Transaction Date,Posted Date,Card No.,Description,Category,Debit,Credit
-    const rows = parseCSVLines(lines);
-    const hi = rows.findIndex(r=>r[0]==='Transaction Date');
-    for(let i=hi+1;i<rows.length;i++){
-      const r=rows[i]; if(!r[0]||!r[3]) continue;
-      const debit=parseFloat(r[5]||0), credit=parseFloat(r[6]||0);
-      const amount = credit>0 ? credit : -debit;
-      const cat = autoCategorizeTxn(r[3],'',r[4]);
-      txns.push({id:mkId('co',r[0],r[3],amount), date:normDate(r[0]), account:'Capital One CC', desc:r[3], memo:r[4]||'', amount, group:cat?.group||null, sub:cat?.sub||null, reviewed:!!cat});
-    }
-  } else if(account === 'citi'){
-    // Status,Date,Description,Debit,Credit
-    const rows = parseCSVLines(lines);
-    const hi = rows.findIndex(r=>r[0]==='Status');
-    for(let i=hi+1;i<rows.length;i++){
-      const r=rows[i]; if(!r[1]) continue;
-      const debit=parseFloat(r[3]||0), credit=parseFloat(r[4]||0);
-      const amount = credit>0 ? credit : -debit;
-      const cat = autoCategorizeTxn(r[2],'','');
-      txns.push({id:mkId('ci',r[1],r[2],amount), date:normDate(r[1]), account:'Citi Checking', desc:r[2], memo:'', amount, group:cat?.group||null, sub:cat?.sub||null, reviewed:!!cat});
-    }
-  } else if(account === 'cefcu_savings'){
-    // Transaction Type,Date,Description,Memo,Amount,Balance,Check Number
-    const rows = parseCSVLines(lines);
-    const hi = rows.findIndex(r=>r[0]==='Transaction Type');
-    for(let i=hi+1;i<rows.length;i++){
-      const r=rows[i]; if(!r[1]) continue;
-      const amount=parseFloat(r[4]||0);
-      const cat = autoCategorizeTxn(r[2],r[3],r[0]);
-      txns.push({id:mkId('cs',r[1],r[3]||r[2],amount), date:normDate(r[1]), account:'CEFCU Savings', desc:r[3]||r[2], memo:r[2]||'', amount, group:cat?.group||null, sub:cat?.sub||null, reviewed:!!cat});
-    }
-  } else if(account === 'cefcu_heloc'){
-    // Transaction Type,Date,Description,Memo,Amount,Balance,Principal,Interest
-    const rows = parseCSVLines(lines);
-    const hi = rows.findIndex(r=>r[0]==='Transaction Type');
-    for(let i=hi+1;i<rows.length;i++){
-      const r=rows[i]; if(!r[1]) continue;
-      const amount=parseFloat(r[4]||0);
-      const isLoanDraft = /loan.?draft/i.test(r[0]+' '+r[2]+' '+r[3]);
-      const isTransfer  = /transfer/i.test(r[0]+' '+r[2]);
-      const isPayment   = /payment/i.test(r[0]+' '+r[2]);
-      let cat = null;
-      if(isTransfer||isPayment){ cat={group:'TRANSFER',sub:'Internal Transfer'}; }
-      else if(isLoanDraft){ cat = autoCategorizeTxn(r[3]||r[2],'',r[0]); }
-      else { cat = autoCategorizeTxn(r[2],r[3],r[0]); }
-      txns.push({id:mkId('ch',r[1],r[3]||r[2],amount), date:normDate(r[1]), account:'CEFCU HELOC', desc:r[3]||r[2]||r[0], memo:r[2]||'', amount, txnType:r[0], group:cat?.group||null, sub:cat?.sub||null, reviewed:!!cat});
-    }
-  }
-  return txns;
-}
-
-function detectAccount(text, filename){
-  if(/Account Type: Savings/i.test(text)||/REGULAR SHARE/i.test(text)) return 'cefcu_savings';
-  if(/Account Type: Line of Credit/i.test(text)||/HELOC/i.test(text)) return 'cefcu_heloc';
-  if(/Transaction Date,Posted Date,Card No/i.test(text)) return 'capital_one';
-  if(/^Status,Date,Description/m.test(text)||/CHK_/i.test(filename||'')) return 'citi';
-  return null;
-}
-
-function parseCSVLines(lines){
-  return lines.map(l=>{
-    const r=[];let cur='',inQ=false;
-    for(const c of l){if(c==='"'){inQ=!inQ;}else if(c===','&&!inQ){r.push(cur.trim());cur='';}else{cur+=c;}}
-    r.push(cur.trim());return r;
-  });
-}
-
-function normDate(s){
-  if(!s) return '';
-  const m1=/^(\d{4})-(\d{2})-(\d{2})/.exec(s);
-  if(m1) return s.slice(0,10);
-  const m2=/^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(s);
-  if(m2) return m2[3]+'-'+m2[1].padStart(2,'0')+'-'+m2[2].padStart(2,'0');
-  return s;
-}
-
-function mkId(prefix,date,desc,amount){
-  return prefix+'-'+normDate(date)+'-'+(desc||'').slice(0,20).replace(/\W/g,'')+'-'+Math.abs(amount).toFixed(0);
-}
-
-// ── TRANSACTION STORE ────────────────────────────────────────
-function txnLoad(){ return JSON.parse(localStorage.getItem('kcc_txns')||'{"txns":[],"lastImport":null}'); }
-function txnSave(store){ localStorage.setItem('kcc_txns', JSON.stringify(store)); }
-
-function txnImport(newTxns){
-  const store = txnLoad();
-  const existing = new Set(store.txns.map(t=>t.id));
-  let added=0;
-  for(const t of newTxns){
-    if(!existing.has(t.id)){ store.txns.push(t); added++; }
-  }
-  store.txns.sort((a,b)=>b.date.localeCompare(a.date));
-  store.lastImport = new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-  txnSave(store);
-  return added;
-}
-
-function txnSetCat(id, group, sub){
-  const store = txnLoad();
-  const t = store.txns.find(t=>t.id===id);
-  if(t){ t.group=group; t.sub=sub; t.reviewed=true; }
-  txnSave(store);
-}
-
-function txnSaveRule(pat, group, sub){
-  const rules = JSON.parse(localStorage.getItem('kcc_cat_rules')||'[]');
-  if(!rules.find(r=>r.pat===pat)){ rules.push({pat,group,sub}); }
-  localStorage.setItem('kcc_cat_rules', JSON.stringify(rules));
-}
-
-// ── AGGREGATION HELPERS ──────────────────────────────────────
-function txnGetMonth(txns, year, month){ // month 1-12
-  const prefix = year+'-'+String(month).padStart(2,'0');
-  return txns.filter(t=>t.date.startsWith(prefix)&&t.group!=='TRANSFER');
-}
-function txnGetYTD(txns, year, thruMonth){
-  return txns.filter(t=>{
-    if(!t.date.startsWith(year)) return false;
-    const mo=parseInt(t.date.slice(5,7));
-    return mo<=thruMonth && t.group!=='TRANSFER';
-  });
-}
-function txnSumBySubcat(txns){
-  const m={};
-  for(const t of txns){
-    if(!t.group||t.group==='TRANSFER') continue;
-    const k=t.group+'::'+t.sub;
-    m[k]=(m[k]||0)+t.amount;
-  }
-  return m;
-}
-
-// ── BUDGET INTEGRATION ───────────────────────────────────────
-// Get plan values for a month from kcc_budget
-function getPlanForMonth(bud, moIdx){ // moIdx 0-11
-  if(!bud||!bud.monthly) return {};
-  // kcc_budget monthly has income/expense by category but simplified
-  // For now use plan from groups; more granular mapping below
-  return {};
-}
-
-// ── IMPORT FILE HANDLER ──────────────────────────────────────
-function importTxnFile(file){
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const text = e.target.result;
-    const account = detectAccount(text, file.name);
-    if(!account){ alert('Unrecognized file format. Upload Capital One, Citi, or CEFCU CSV.'); return; }
-    const txns = parseTxnCSV(text, file.name);
-    const added = txnImport(txns);
-    const uncategorized = txns.filter(t=>!t.group||t.group==='TRANSFER'?false:!t.reviewed).length;
-    alert(`Imported ${added} new transactions from ${accountLabel(account)}.\n${uncategorized} need review.`);
-    if(S.page==='budget') rBudget();
-  };
-  reader.readAsText(file);
-}
-
-function accountLabel(a){ return {capital_one:'Capital One CC',citi:'Citi Checking',cefcu_savings:'CEFCU Savings',cefcu_heloc:'CEFCU HELOC'}[a]||a; }
-
-// ── MAIN FINANCIALS PAGE RENDER ──────────────────────────────
-
-
-
-
-
-
-
-
-
-
-
-
-
-function getPlanVal(bud, grp, sub, selMo, isYtd, closedMos){
-  if(!bud) return 0;
-  const vals = bud.catPlans && bud.catPlans[grp+'::'+sub];
-  if(!vals) return 0;
-  const N=v=>(typeof v==='number'&&isFinite(v))?v:0;
-  if(isYtd) return vals.slice(0,closedMos||6).reduce((s,v)=>s+N(v),0);
-  return N(vals[(selMo||1)-1]);
-}
-
-
-// Pre-populate kcc_txns from Monarch historical data (Jan 2025 – Jun 2026)
-// Called once from the Import tab "Load Monarch History" button
-function loadMonarchHistory(){
-  const CAT_MAP = {
-    'Auto Payment':'AUTO & TRANSPORT::Auto Payment','Gas & Charge':'AUTO & TRANSPORT::Gas & Charge',
-    'Auto Maintenance':'AUTO & TRANSPORT::Auto Maintenance','Parking & Tolls':'AUTO & TRANSPORT::Parking & Tolls',
-    'Auto Inurance':'AUTO & TRANSPORT::Auto Insurance','AAA':'AUTO & TRANSPORT::Auto Registration',
-    'Auto Registration':'AUTO & TRANSPORT::Auto Registration','Mortgage':'HOUSING::Mortgage',
-    'Property Tax':'HOUSING::Property Tax','Home Improvement':'HOUSING::Home Improvement',
-    'Gardener':'HOUSING::Gardener','Home Insurance':'HOUSING::Home Insurance',
-    'Pool Maintenance':'HOUSING::Pool Maintenance','Pest Control':'HOUSING::Pest Control',
-    'Home Security':'HOUSING::Home Improvement','Trash':'BILLS & UTILITIES::Trash',
-    'Water':'BILLS & UTILITIES::Water','Gas & Electric':'BILLS & UTILITIES::Gas & Electric',
-    'Internet':'BILLS & UTILITIES::Internet','Phone':'BILLS & UTILITIES::Phone',
-    'Groceries':'FOOD & DINING::Groceries','Eating Out':'FOOD & DINING::Eating Out',
-    'Coffee Shops':'FOOD & DINING::Eating Out','Travel & Vacation':'ENTERTAINMENT::Travel & Vacation',
-    'Subscriptions':'ENTERTAINMENT::Subscriptions','Financial Tools':'ENTERTAINMENT::Subscriptions',
-    'Other':'ENTERTAINMENT::Other','Misc Shopping':'SHOPPING::Misc Shopping',
-    'Clothing':'SHOPPING::Clothing','Make Up':'SHOPPING::Make Up','Amazon':'SHOPPING::Amazon',
-    'Nanny':'FAMILY::Nanny','Kids Activities':'FAMILY::Kids Activities','School':'FAMILY::School',
-    'Baseball':'FAMILY::Baseball','Dance':'FAMILY::Dance','Tennis':'FAMILY::Tennis',
-    'Kids Cash':'FAMILY::Kids Cash','Loans':'FINANCIAL::Loans','Life Insurance':'FINANCIAL::Life Insurance',
-    'Misc Financial':'FINANCIAL::Other / Uncategorized','Taxes':'FINANCIAL::Other / Uncategorized',
-    'Pharmacy':'HEALTH & WELLNESS::Pharmacy','Dentist':'HEALTH & WELLNESS::Dentist',
-    'Fitness':'HEALTH & WELLNESS::Fitness','Healthcare':'HEALTH & WELLNESS::Healthcare',
-    'Paulette Mortgage':'RENTAL PROPERTY::Paulette Mortgage','Paulette Insurance':'RENTAL PROPERTY::Paulette Insurance',
-    'Paulette Property Tax':'RENTAL PROPERTY::Paulette Property Tax','HELOC':'RENTAL PROPERTY::Paulette Mortgage',
-    'Paychecks':'INCOME::Paychecks','Rental Income':'INCOME::Rental Income',
-    'Parents Gift':'INCOME::Parents Gift','Tax Refund':'INCOME::Tax Refund',
-    'Other Income':'INCOME::Other / Uncategorized',
-  };
-  const SKIP = new Set(['Transfer','Credit Card Payment','Gifts','Postage & Shipping']);
-
-  const RAW = [
-    // ── JAN-JUN 2025 ──
-    {c:'Auto Payment',t:'expense',m:'2025-01',a:1709.1},{c:'Auto Payment',t:'expense',m:'2025-02',a:1298.02},{c:'Auto Payment',t:'expense',m:'2025-03',a:1709.1},{c:'Auto Payment',t:'expense',m:'2025-04',a:1710.96},{c:'Auto Payment',t:'expense',m:'2025-05',a:3712.66},{c:'Auto Payment',t:'expense',m:'2025-06',a:1712.98},
-    {c:'Groceries',t:'expense',m:'2025-01',a:687.98},{c:'Groceries',t:'expense',m:'2025-02',a:680.02},{c:'Groceries',t:'expense',m:'2025-03',a:1043.61},{c:'Groceries',t:'expense',m:'2025-04',a:1263.14},{c:'Groceries',t:'expense',m:'2025-05',a:1206.88},{c:'Groceries',t:'expense',m:'2025-06',a:1300.42},
-    {c:'Misc Shopping',t:'expense',m:'2025-01',a:77.53},{c:'Misc Shopping',t:'expense',m:'2025-02',a:219.26},{c:'Misc Shopping',t:'expense',m:'2025-03',a:197.85},{c:'Misc Shopping',t:'expense',m:'2025-04',a:502.63},{c:'Misc Shopping',t:'expense',m:'2025-05',a:269.37},{c:'Misc Shopping',t:'expense',m:'2025-06',a:198.65},
-    {c:'Mortgage',t:'expense',m:'2025-01',a:10712.62},{c:'Mortgage',t:'expense',m:'2025-02',a:10712.62},{c:'Mortgage',t:'expense',m:'2025-03',a:10712.62},{c:'Mortgage',t:'expense',m:'2025-04',a:10712.62},{c:'Mortgage',t:'expense',m:'2025-05',a:10712.62},{c:'Mortgage',t:'expense',m:'2025-06',a:10712.62},
-    {c:'Nanny',t:'expense',m:'2025-01',a:4327.5},{c:'Nanny',t:'expense',m:'2025-02',a:4075},{c:'Nanny',t:'expense',m:'2025-03',a:4362.5},{c:'Nanny',t:'expense',m:'2025-04',a:3775},{c:'Nanny',t:'expense',m:'2025-05',a:4387.5},{c:'Nanny',t:'expense',m:'2025-06',a:4187},
-    {c:'Paulette Mortgage',t:'expense',m:'2025-01',a:6649.42},{c:'Paulette Mortgage',t:'expense',m:'2025-02',a:3324.71},{c:'Paulette Mortgage',t:'expense',m:'2025-03',a:6649.42},{c:'Paulette Mortgage',t:'expense',m:'2025-04',a:6649.42},{c:'Paulette Mortgage',t:'expense',m:'2025-05',a:6649.42},{c:'Paulette Mortgage',t:'expense',m:'2025-06',a:6649.42},
-    {c:'Paychecks',t:'income',m:'2025-01',a:22925.19},{c:'Paychecks',t:'income',m:'2025-02',a:16477.92},{c:'Paychecks',t:'income',m:'2025-03',a:14316.32},{c:'Paychecks',t:'income',m:'2025-04',a:14672.5},{c:'Paychecks',t:'income',m:'2025-05',a:14653.99},{c:'Paychecks',t:'income',m:'2025-06',a:14672.5},
-    {c:'Rental Income',t:'income',m:'2025-01',a:12000},{c:'Rental Income',t:'income',m:'2025-02',a:6000},{c:'Rental Income',t:'income',m:'2025-03',a:12000},{c:'Rental Income',t:'income',m:'2025-04',a:12000},{c:'Rental Income',t:'income',m:'2025-05',a:12000},{c:'Rental Income',t:'income',m:'2025-06',a:12000},
-    {c:'Other Income',t:'income',m:'2025-01',a:271.53},{c:'Other Income',t:'income',m:'2025-02',a:263.5},{c:'Other Income',t:'income',m:'2025-03',a:467.78},{c:'Other Income',t:'income',m:'2025-04',a:19.8},{c:'Other Income',t:'income',m:'2025-05',a:525.74},{c:'Other Income',t:'income',m:'2025-06',a:37.88},
-    {c:'Tax Refund',t:'income',m:'2025-03',a:15003},
-    {c:'Pharmacy',t:'expense',m:'2025-01',a:34.36},{c:'Pharmacy',t:'expense',m:'2025-02',a:142.95},{c:'Pharmacy',t:'expense',m:'2025-03',a:59.28},{c:'Pharmacy',t:'expense',m:'2025-04',a:34.62},{c:'Pharmacy',t:'expense',m:'2025-05',a:42.55},{c:'Pharmacy',t:'expense',m:'2025-06',a:9.49},
-    {c:'Trash',t:'expense',m:'2025-02',a:141.6},{c:'Trash',t:'expense',m:'2025-05',a:141.6},{c:'Trash',t:'expense',m:'2025-06',a:4.83},
-    {c:'Travel & Vacation',t:'expense',m:'2025-02',a:83.25},{c:'Travel & Vacation',t:'expense',m:'2025-03',a:633.63},
-    {c:'Clothing',t:'expense',m:'2025-01',a:188},{c:'Clothing',t:'expense',m:'2025-03',a:48.49},{c:'Clothing',t:'expense',m:'2025-04',a:171.76},{c:'Clothing',t:'expense',m:'2025-05',a:88.4},{c:'Clothing',t:'expense',m:'2025-06',a:1040.73},
-    {c:'Eating Out',t:'expense',m:'2025-01',a:472.13},{c:'Eating Out',t:'expense',m:'2025-02',a:497.45},{c:'Eating Out',t:'expense',m:'2025-03',a:1036.41},{c:'Eating Out',t:'expense',m:'2025-04',a:910.54},{c:'Eating Out',t:'expense',m:'2025-05',a:580.97},{c:'Eating Out',t:'expense',m:'2025-06',a:1590.04},
-    {c:'Gas & Charge',t:'expense',m:'2025-05',a:250},{c:'Gas & Charge',t:'expense',m:'2025-06',a:39.92},
-    {c:'Kids Activities',t:'expense',m:'2025-06',a:337.63},
-    {c:'Loans',t:'expense',m:'2025-01',a:4236.2},{c:'Loans',t:'expense',m:'2025-02',a:1053.25},{c:'Loans',t:'expense',m:'2025-03',a:2106.5},{c:'Loans',t:'expense',m:'2025-04',a:2106.5},{c:'Loans',t:'expense',m:'2025-05',a:2106.5},{c:'Loans',t:'expense',m:'2025-06',a:2106.5},
-    {c:'Paulette Insurance',t:'expense',m:'2025-01',a:2330.8},{c:'Paulette Insurance',t:'expense',m:'2025-03',a:1165.4},
-    {c:'Property Tax',t:'expense',m:'2025-04',a:11133},
-    {c:'Subscriptions',t:'expense',m:'2025-01',a:166.92},{c:'Subscriptions',t:'expense',m:'2025-02',a:169.29},{c:'Subscriptions',t:'expense',m:'2025-03',a:214.03},{c:'Subscriptions',t:'expense',m:'2025-04',a:176.25},{c:'Subscriptions',t:'expense',m:'2025-05',a:206.32},{c:'Subscriptions',t:'expense',m:'2025-06',a:237.25},
-    {c:'Water',t:'expense',m:'2025-01',a:492.4},{c:'Water',t:'expense',m:'2025-03',a:405.76},{c:'Water',t:'expense',m:'2025-04',a:443.24},{c:'Water',t:'expense',m:'2025-06',a:51.72},
-    {c:'Auto Maintenance',t:'expense',m:'2025-01',a:18},{c:'Auto Maintenance',t:'expense',m:'2025-03',a:10},{c:'Auto Maintenance',t:'expense',m:'2025-04',a:10},{c:'Auto Maintenance',t:'expense',m:'2025-05',a:10},{c:'Auto Maintenance',t:'expense',m:'2025-06',a:10},
-    {c:'Fitness',t:'expense',m:'2025-01',a:357},{c:'Fitness',t:'expense',m:'2025-02',a:238},{c:'Fitness',t:'expense',m:'2025-04',a:22},{c:'Fitness',t:'expense',m:'2025-05',a:22},{c:'Fitness',t:'expense',m:'2025-06',a:399},
-    {c:'Gas & Electric',t:'expense',m:'2025-01',a:1497.49},{c:'Gas & Electric',t:'expense',m:'2025-02',a:381.74},{c:'Gas & Electric',t:'expense',m:'2025-03',a:1792.84},{c:'Gas & Electric',t:'expense',m:'2025-04',a:820.55},{c:'Gas & Electric',t:'expense',m:'2025-05',a:838.94},{c:'Gas & Electric',t:'expense',m:'2025-06',a:1045.78},
-    {c:'Home Improvement',t:'expense',m:'2025-03',a:2800},
-    {c:'Make Up',t:'expense',m:'2025-02',a:43},{c:'Make Up',t:'expense',m:'2025-03',a:48.79},{c:'Make Up',t:'expense',m:'2025-04',a:30.06},{c:'Make Up',t:'expense',m:'2025-05',a:91.5},{c:'Make Up',t:'expense',m:'2025-06',a:216.83},
-    {c:'Paulette Property Tax',t:'expense',m:'2025-04',a:1755.16},
-    {c:'School',t:'expense',m:'2025-02',a:37.85},{c:'School',t:'expense',m:'2025-03',a:74.95},{c:'School',t:'expense',m:'2025-04',a:159.12},
-    {c:'Amazon',t:'expense',m:'2025-01',a:806.2},{c:'Amazon',t:'expense',m:'2025-02',a:736.32},{c:'Amazon',t:'expense',m:'2025-03',a:874.48},{c:'Amazon',t:'expense',m:'2025-04',a:2027.65},{c:'Amazon',t:'expense',m:'2025-05',a:1673.68},{c:'Amazon',t:'expense',m:'2025-06',a:912.37},
-    {c:'Baseball',t:'expense',m:'2025-01',a:45.22},{c:'Baseball',t:'expense',m:'2025-03',a:110.24},{c:'Baseball',t:'expense',m:'2025-04',a:177.57},{c:'Baseball',t:'expense',m:'2025-05',a:770},{c:'Baseball',t:'expense',m:'2025-06',a:893.74},
-    {c:'Gardener',t:'expense',m:'2025-01',a:185},{c:'Gardener',t:'expense',m:'2025-02',a:185},{c:'Gardener',t:'expense',m:'2025-03',a:185},{c:'Gardener',t:'expense',m:'2025-04',a:185},{c:'Gardener',t:'expense',m:'2025-05',a:485},{c:'Gardener',t:'expense',m:'2025-06',a:185},
-    {c:'Healthcare',t:'expense',m:'2025-01',a:-14},{c:'Healthcare',t:'expense',m:'2025-02',a:180.96},{c:'Healthcare',t:'expense',m:'2025-03',a:205},{c:'Healthcare',t:'expense',m:'2025-04',a:150.51},{c:'Healthcare',t:'expense',m:'2025-05',a:570.17},
-    {c:'Internet',t:'expense',m:'2025-01',a:61.24},{c:'Internet',t:'expense',m:'2025-02',a:38.62},{c:'Internet',t:'expense',m:'2025-03',a:64.25},{c:'Internet',t:'expense',m:'2025-04',a:64.25},{c:'Internet',t:'expense',m:'2025-05',a:64.25},{c:'Internet',t:'expense',m:'2025-06',a:64.24},
-    {c:'Parking & Tolls',t:'expense',m:'2025-01',a:45},{c:'Parking & Tolls',t:'expense',m:'2025-02',a:4.5},{c:'Parking & Tolls',t:'expense',m:'2025-04',a:102.64},{c:'Parking & Tolls',t:'expense',m:'2025-05',a:6},{c:'Parking & Tolls',t:'expense',m:'2025-06',a:13},
-    {c:'Taxes',t:'expense',m:'2025-01',a:3109.36},{c:'Taxes',t:'expense',m:'2025-04',a:950},
-    {c:'Home Insurance',t:'expense',m:'2025-01',a:-2188.78},{c:'Home Insurance',t:'expense',m:'2025-03',a:1321.34},{c:'Home Insurance',t:'expense',m:'2025-04',a:1321.34},{c:'Home Insurance',t:'expense',m:'2025-05',a:1321.34},{c:'Home Insurance',t:'expense',m:'2025-06',a:1321.34},
-    {c:'Misc Financial',t:'expense',m:'2025-01',a:75},{c:'Misc Financial',t:'expense',m:'2025-02',a:25},{c:'Misc Financial',t:'expense',m:'2025-03',a:50},{c:'Misc Financial',t:'expense',m:'2025-04',a:25},{c:'Misc Financial',t:'expense',m:'2025-05',a:25},
-    {c:'Phone',t:'expense',m:'2025-01',a:356.34},{c:'Phone',t:'expense',m:'2025-02',a:356.99},{c:'Phone',t:'expense',m:'2025-03',a:357.04},{c:'Phone',t:'expense',m:'2025-04',a:357.04},{c:'Phone',t:'expense',m:'2025-05',a:574.93},{c:'Phone',t:'expense',m:'2025-06',a:470.85},
-    {c:'Auto Inurance',t:'expense',m:'2025-01',a:265.1},{c:'Auto Inurance',t:'expense',m:'2025-02',a:265.1},{c:'Auto Inurance',t:'expense',m:'2025-03',a:265.1},{c:'Auto Inurance',t:'expense',m:'2025-04',a:570.01},{c:'Auto Inurance',t:'expense',m:'2025-06',a:423.05},
-    {c:'Pool Maintenance',t:'expense',m:'2025-01',a:775},{c:'Pool Maintenance',t:'expense',m:'2025-02',a:375},{c:'Pool Maintenance',t:'expense',m:'2025-03',a:525},{c:'Pool Maintenance',t:'expense',m:'2025-04',a:550},{c:'Pool Maintenance',t:'expense',m:'2025-05',a:625},{c:'Pool Maintenance',t:'expense',m:'2025-06',a:250},
-    {c:'AAA',t:'expense',m:'2025-01',a:92},
-    {c:'Kids Cash',t:'expense',m:'2025-05',a:126},{c:'Kids Cash',t:'expense',m:'2025-06',a:60},
-    {c:'Pest Control',t:'expense',m:'2025-01',a:55},{c:'Pest Control',t:'expense',m:'2025-02',a:55},{c:'Pest Control',t:'expense',m:'2025-03',a:55},{c:'Pest Control',t:'expense',m:'2025-04',a:330},{c:'Pest Control',t:'expense',m:'2025-05',a:55},{c:'Pest Control',t:'expense',m:'2025-06',a:55},
-    {c:'Dance',t:'expense',m:'2025-01',a:1378.59},{c:'Dance',t:'expense',m:'2025-02',a:1640.17},{c:'Dance',t:'expense',m:'2025-03',a:1769.68},{c:'Dance',t:'expense',m:'2025-04',a:2372.25},{c:'Dance',t:'expense',m:'2025-05',a:756},{c:'Dance',t:'expense',m:'2025-06',a:1689.38},
-    {c:'Home Security',t:'expense',m:'2025-01',a:67.77},{c:'Home Security',t:'expense',m:'2025-02',a:67.77},{c:'Home Security',t:'expense',m:'2025-03',a:167.76},{c:'Home Security',t:'expense',m:'2025-04',a:67.77},{c:'Home Security',t:'expense',m:'2025-05',a:67.77},{c:'Home Security',t:'expense',m:'2025-06',a:67.77},
-    {c:'Tennis',t:'expense',m:'2025-01',a:350},{c:'Tennis',t:'expense',m:'2025-02',a:1018.11},{c:'Tennis',t:'expense',m:'2025-03',a:918.95},{c:'Tennis',t:'expense',m:'2025-04',a:420},{c:'Tennis',t:'expense',m:'2025-05',a:798.53},{c:'Tennis',t:'expense',m:'2025-06',a:385},
-    // ── JUL-DEC 2025 ──
-    {c:'Auto Payment',t:'expense',m:'2025-07',a:2113.5},{c:'Auto Payment',t:'expense',m:'2025-08',a:3761.54},{c:'Auto Payment',t:'expense',m:'2025-09',a:2937.52},{c:'Auto Payment',t:'expense',m:'2025-10',a:2937.52},{c:'Auto Payment',t:'expense',m:'2025-11',a:2937.52},{c:'Auto Payment',t:'expense',m:'2025-12',a:2113.5},
-    {c:'Groceries',t:'expense',m:'2025-07',a:1226.67},{c:'Groceries',t:'expense',m:'2025-08',a:1221.12},{c:'Groceries',t:'expense',m:'2025-09',a:748.53},{c:'Groceries',t:'expense',m:'2025-10',a:1026.15},{c:'Groceries',t:'expense',m:'2025-11',a:718.05},{c:'Groceries',t:'expense',m:'2025-12',a:944.53},
-    {c:'Misc Shopping',t:'expense',m:'2025-07',a:65.42},{c:'Misc Shopping',t:'expense',m:'2025-08',a:316.19},{c:'Misc Shopping',t:'expense',m:'2025-09',a:401.65},{c:'Misc Shopping',t:'expense',m:'2025-10',a:1379.31},{c:'Misc Shopping',t:'expense',m:'2025-11',a:495.65},{c:'Misc Shopping',t:'expense',m:'2025-12',a:333.4},
-    {c:'Mortgage',t:'expense',m:'2025-07',a:10712.62},{c:'Mortgage',t:'expense',m:'2025-08',a:10712.62},{c:'Mortgage',t:'expense',m:'2025-09',a:10712.62},{c:'Mortgage',t:'expense',m:'2025-10',a:10712.62},{c:'Mortgage',t:'expense',m:'2025-11',a:10712.62},{c:'Mortgage',t:'expense',m:'2025-12',a:10712.62},
-    {c:'Nanny',t:'expense',m:'2025-07',a:2775},{c:'Nanny',t:'expense',m:'2025-08',a:3337.5},{c:'Nanny',t:'expense',m:'2025-09',a:4010},{c:'Nanny',t:'expense',m:'2025-10',a:5037.5},{c:'Nanny',t:'expense',m:'2025-11',a:5060},{c:'Nanny',t:'expense',m:'2025-12',a:3625},
-    {c:'Paulette Mortgage',t:'expense',m:'2025-07',a:6649.42},{c:'Paulette Mortgage',t:'expense',m:'2025-08',a:6649.42},{c:'Paulette Mortgage',t:'expense',m:'2025-09',a:6649.42},{c:'Paulette Mortgage',t:'expense',m:'2025-10',a:6649.42},{c:'Paulette Mortgage',t:'expense',m:'2025-11',a:6649.42},{c:'Paulette Mortgage',t:'expense',m:'2025-12',a:6649.42},
-    {c:'Paychecks',t:'income',m:'2025-07',a:14672.49},{c:'Paychecks',t:'income',m:'2025-08',a:23999.65},{c:'Paychecks',t:'income',m:'2025-09',a:15899.33},{c:'Paychecks',t:'income',m:'2025-10',a:15899.34},{c:'Paychecks',t:'income',m:'2025-11',a:15899.32},{c:'Paychecks',t:'income',m:'2025-12',a:15899.33},
-    {c:'Rental Income',t:'income',m:'2025-07',a:12000},{c:'Rental Income',t:'income',m:'2025-08',a:12000},{c:'Rental Income',t:'income',m:'2025-09',a:12000},{c:'Rental Income',t:'income',m:'2025-10',a:12000},{c:'Rental Income',t:'income',m:'2025-11',a:16000},{c:'Rental Income',t:'income',m:'2025-12',a:16000},
-    {c:'Other Income',t:'income',m:'2025-07',a:1048.74},{c:'Other Income',t:'income',m:'2025-08',a:680.45},{c:'Other Income',t:'income',m:'2025-09',a:255.34},{c:'Other Income',t:'income',m:'2025-10',a:-9786.24},{c:'Other Income',t:'income',m:'2025-11',a:805.31},{c:'Other Income',t:'income',m:'2025-12',a:335.68},
-    {c:'Pharmacy',t:'expense',m:'2025-07',a:32.87},{c:'Pharmacy',t:'expense',m:'2025-08',a:10.98},{c:'Pharmacy',t:'expense',m:'2025-09',a:41.04},{c:'Pharmacy',t:'expense',m:'2025-10',a:64.48},{c:'Pharmacy',t:'expense',m:'2025-11',a:-30.57},{c:'Pharmacy',t:'expense',m:'2025-12',a:64.47},
-    {c:'Trash',t:'expense',m:'2025-08',a:146.43},{c:'Trash',t:'expense',m:'2025-11',a:146.43},
-    {c:'Travel & Vacation',t:'expense',m:'2025-08',a:2690.24},{c:'Travel & Vacation',t:'expense',m:'2025-09',a:171.57},{c:'Travel & Vacation',t:'expense',m:'2025-12',a:466.58},
-    {c:'Clothing',t:'expense',m:'2025-07',a:464.27},{c:'Clothing',t:'expense',m:'2025-08',a:256.11},{c:'Clothing',t:'expense',m:'2025-09',a:1585.21},{c:'Clothing',t:'expense',m:'2025-11',a:235.59},{c:'Clothing',t:'expense',m:'2025-12',a:1240.77},
-    {c:'Dentist',t:'expense',m:'2025-12',a:95.2},
-    {c:'Eating Out',t:'expense',m:'2025-07',a:606.15},{c:'Eating Out',t:'expense',m:'2025-08',a:679.94},{c:'Eating Out',t:'expense',m:'2025-09',a:200.42},{c:'Eating Out',t:'expense',m:'2025-10',a:876.95},{c:'Eating Out',t:'expense',m:'2025-11',a:1069.22},{c:'Eating Out',t:'expense',m:'2025-12',a:1261.69},
-    {c:'Gas & Charge',t:'expense',m:'2025-10',a:17.26},{c:'Gas & Charge',t:'expense',m:'2025-12',a:159.99},
-    {c:'Kids Activities',t:'expense',m:'2025-12',a:74.64},
-    {c:'Loans',t:'expense',m:'2025-07',a:2106.5},{c:'Loans',t:'expense',m:'2025-08',a:2106.5},{c:'Loans',t:'expense',m:'2025-09',a:4773.16},{c:'Loans',t:'expense',m:'2025-10',a:4763.16},{c:'Loans',t:'expense',m:'2025-11',a:6484.88},{c:'Loans',t:'expense',m:'2025-12',a:3061.44},
-    {c:'Paulette Insurance',t:'expense',m:'2025-09',a:1098.4},
-    {c:'Property Tax',t:'expense',m:'2025-12',a:11144.22},
-    {c:'Subscriptions',t:'expense',m:'2025-07',a:284.22},{c:'Subscriptions',t:'expense',m:'2025-08',a:359.22},{c:'Subscriptions',t:'expense',m:'2025-09',a:301.2},{c:'Subscriptions',t:'expense',m:'2025-10',a:355.18},{c:'Subscriptions',t:'expense',m:'2025-11',a:467.29},{c:'Subscriptions',t:'expense',m:'2025-12',a:285.8},
-    {c:'Water',t:'expense',m:'2025-07',a:557.32},{c:'Water',t:'expense',m:'2025-09',a:557.32},{c:'Water',t:'expense',m:'2025-12',a:483.48},
-    {c:'Auto Maintenance',t:'expense',m:'2025-07',a:10},{c:'Auto Maintenance',t:'expense',m:'2025-08',a:20},{c:'Auto Maintenance',t:'expense',m:'2025-09',a:20},{c:'Auto Maintenance',t:'expense',m:'2025-10',a:60},{c:'Auto Maintenance',t:'expense',m:'2025-11',a:20},{c:'Auto Maintenance',t:'expense',m:'2025-12',a:194.07},
-    {c:'Coffee Shops',t:'expense',m:'2025-12',a:22.1},
-    {c:'Fitness',t:'expense',m:'2025-07',a:119},{c:'Fitness',t:'expense',m:'2025-09',a:198},{c:'Fitness',t:'expense',m:'2025-10',a:342.3},{c:'Fitness',t:'expense',m:'2025-11',a:338.3},{c:'Fitness',t:'expense',m:'2025-12',a:338.3},
-    {c:'Gas & Electric',t:'expense',m:'2025-07',a:921.53},{c:'Gas & Electric',t:'expense',m:'2025-08',a:953.46},{c:'Gas & Electric',t:'expense',m:'2025-09',a:1173.49},{c:'Gas & Electric',t:'expense',m:'2025-10',a:1170.18},{c:'Gas & Electric',t:'expense',m:'2025-11',a:739.89},{c:'Gas & Electric',t:'expense',m:'2025-12',a:940.65},
-    {c:'Home Improvement',t:'expense',m:'2025-08',a:219.95},{c:'Home Improvement',t:'expense',m:'2025-09',a:1039},{c:'Home Improvement',t:'expense',m:'2025-11',a:2239},{c:'Home Improvement',t:'expense',m:'2025-12',a:850},
-    {c:'Life Insurance',t:'expense',m:'2025-11',a:2470},
-    {c:'Make Up',t:'expense',m:'2025-07',a:32.07},{c:'Make Up',t:'expense',m:'2025-08',a:50.84},{c:'Make Up',t:'expense',m:'2025-09',a:88.31},{c:'Make Up',t:'expense',m:'2025-12',a:47.29},
-    {c:'Paulette Property Tax',t:'expense',m:'2025-12',a:2113.5},
-    {c:'School',t:'expense',m:'2025-08',a:241.3},{c:'School',t:'expense',m:'2025-09',a:118},{c:'School',t:'expense',m:'2025-10',a:3455},{c:'School',t:'expense',m:'2025-11',a:35},{c:'School',t:'expense',m:'2025-12',a:1444},
-    {c:'Amazon',t:'expense',m:'2025-07',a:1503.36},{c:'Amazon',t:'expense',m:'2025-08',a:1424.75},{c:'Amazon',t:'expense',m:'2025-09',a:1784.41},{c:'Amazon',t:'expense',m:'2025-10',a:1786.14},{c:'Amazon',t:'expense',m:'2025-11',a:1310},{c:'Amazon',t:'expense',m:'2025-12',a:2671.51},
-    {c:'Baseball',t:'expense',m:'2025-07',a:109.95},{c:'Baseball',t:'expense',m:'2025-09',a:437.94},{c:'Baseball',t:'expense',m:'2025-10',a:359.46},{c:'Baseball',t:'expense',m:'2025-11',a:260.46},{c:'Baseball',t:'expense',m:'2025-12',a:260.46},
-    {c:'Gardener',t:'expense',m:'2025-07',a:185},{c:'Gardener',t:'expense',m:'2025-08',a:185},{c:'Gardener',t:'expense',m:'2025-10',a:185},{c:'Gardener',t:'expense',m:'2025-12',a:185},
-    {c:'Healthcare',t:'expense',m:'2025-07',a:5},{c:'Healthcare',t:'expense',m:'2025-08',a:76.46},{c:'Healthcare',t:'expense',m:'2025-09',a:770.74},{c:'Healthcare',t:'expense',m:'2025-10',a:238.67},{c:'Healthcare',t:'expense',m:'2025-11',a:140.9},{c:'Healthcare',t:'expense',m:'2025-12',a:455.56},
-    {c:'Internet',t:'expense',m:'2025-07',a:64.25},{c:'Internet',t:'expense',m:'2025-08',a:131.25},{c:'Internet',t:'expense',m:'2025-09',a:76.25},{c:'Internet',t:'expense',m:'2025-10',a:76.25},{c:'Internet',t:'expense',m:'2025-11',a:76.25},{c:'Internet',t:'expense',m:'2025-12',a:76.25},
-    {c:'Parking & Tolls',t:'expense',m:'2025-08',a:42.7},{c:'Parking & Tolls',t:'expense',m:'2025-09',a:17.05},{c:'Parking & Tolls',t:'expense',m:'2025-10',a:13.4},{c:'Parking & Tolls',t:'expense',m:'2025-11',a:29},{c:'Parking & Tolls',t:'expense',m:'2025-12',a:99},
-    {c:'Home Insurance',t:'expense',m:'2025-07',a:1321.34},{c:'Home Insurance',t:'expense',m:'2025-08',a:1321.34},{c:'Home Insurance',t:'expense',m:'2025-09',a:1321.34},{c:'Home Insurance',t:'expense',m:'2025-10',a:1321.34},{c:'Home Insurance',t:'expense',m:'2025-11',a:1321.34},{c:'Home Insurance',t:'expense',m:'2025-12',a:1321.34},
-    {c:'Misc Financial',t:'expense',m:'2025-07',a:25},{c:'Misc Financial',t:'expense',m:'2025-09',a:50},{c:'Misc Financial',t:'expense',m:'2025-10',a:32},{c:'Misc Financial',t:'expense',m:'2025-11',a:474},
-    {c:'Phone',t:'expense',m:'2025-07',a:389.81},{c:'Phone',t:'expense',m:'2025-08',a:402.65},{c:'Phone',t:'expense',m:'2025-09',a:402.65},{c:'Phone',t:'expense',m:'2025-10',a:402.65},{c:'Phone',t:'expense',m:'2025-11',a:404.89},{c:'Phone',t:'expense',m:'2025-12',a:404.89},
-    {c:'Auto Inurance',t:'expense',m:'2025-07',a:533.16},{c:'Auto Inurance',t:'expense',m:'2025-08',a:533.16},{c:'Auto Inurance',t:'expense',m:'2025-09',a:533.16},{c:'Auto Inurance',t:'expense',m:'2025-10',a:1166.64},{c:'Auto Inurance',t:'expense',m:'2025-12',a:630.87},
-    {c:'Financial Tools',t:'expense',m:'2025-07',a:14.99},{c:'Financial Tools',t:'expense',m:'2025-09',a:5},{c:'Financial Tools',t:'expense',m:'2025-10',a:5},{c:'Financial Tools',t:'expense',m:'2025-11',a:5},{c:'Financial Tools',t:'expense',m:'2025-12',a:5},
-    {c:'Pool Maintenance',t:'expense',m:'2025-12',a:0},
-    {c:'Kids Cash',t:'expense',m:'2025-07',a:140},{c:'Kids Cash',t:'expense',m:'2025-10',a:50},{c:'Kids Cash',t:'expense',m:'2025-11',a:20},{c:'Kids Cash',t:'expense',m:'2025-12',a:40},
-    {c:'Pest Control',t:'expense',m:'2025-07',a:55},{c:'Pest Control',t:'expense',m:'2025-08',a:55},{c:'Pest Control',t:'expense',m:'2025-10',a:110},{c:'Pest Control',t:'expense',m:'2025-11',a:55},{c:'Pest Control',t:'expense',m:'2025-12',a:55},
-    {c:'Auto Registration',t:'expense',m:'2025-09',a:619.86},{c:'Auto Registration',t:'expense',m:'2025-11',a:46.9},
-    {c:'Dance',t:'expense',m:'2025-08',a:236.86},{c:'Dance',t:'expense',m:'2025-09',a:1048.86},{c:'Dance',t:'expense',m:'2025-10',a:2794.14},{c:'Dance',t:'expense',m:'2025-11',a:1082.99},{c:'Dance',t:'expense',m:'2025-12',a:2137.55},
-    {c:'Home Security',t:'expense',m:'2025-07',a:67.77},{c:'Home Security',t:'expense',m:'2025-08',a:67.77},{c:'Home Security',t:'expense',m:'2025-09',a:67.77},{c:'Home Security',t:'expense',m:'2025-10',a:67.77},{c:'Home Security',t:'expense',m:'2025-11',a:67.77},{c:'Home Security',t:'expense',m:'2025-12',a:3.33},
-    {c:'Tennis',t:'expense',m:'2025-07',a:770},{c:'Tennis',t:'expense',m:'2025-08',a:455},{c:'Tennis',t:'expense',m:'2025-09',a:490},{c:'Tennis',t:'expense',m:'2025-10',a:140},
-    // ── JAN-JUN 2026 ──
-    {c:'Auto Payment',t:'expense',m:'2026-01',a:2113.5},{c:'Auto Payment',t:'expense',m:'2026-02',a:2937.52},{c:'Auto Payment',t:'expense',m:'2026-03',a:3794.01},{c:'Auto Payment',t:'expense',m:'2026-04',a:4044.01},{c:'Auto Payment',t:'expense',m:'2026-05',a:824.02},{c:'Auto Payment',t:'expense',m:'2026-06',a:0},
-    {c:'Groceries',t:'expense',m:'2026-01',a:720.95},{c:'Groceries',t:'expense',m:'2026-02',a:695.82},{c:'Groceries',t:'expense',m:'2026-03',a:548.54},{c:'Groceries',t:'expense',m:'2026-04',a:778.38},{c:'Groceries',t:'expense',m:'2026-05',a:564.8},{c:'Groceries',t:'expense',m:'2026-06',a:500.37},
-    {c:'Misc Shopping',t:'expense',m:'2026-01',a:176.41},{c:'Misc Shopping',t:'expense',m:'2026-02',a:358.86},{c:'Misc Shopping',t:'expense',m:'2026-03',a:2298.37},{c:'Misc Shopping',t:'expense',m:'2026-04',a:1334.6},{c:'Misc Shopping',t:'expense',m:'2026-05',a:119.64},{c:'Misc Shopping',t:'expense',m:'2026-06',a:1733.07},
-    {c:'Mortgage',t:'expense',m:'2026-01',a:10712.62},{c:'Mortgage',t:'expense',m:'2026-02',a:10712.62},{c:'Mortgage',t:'expense',m:'2026-03',a:0},{c:'Mortgage',t:'expense',m:'2026-04',a:-2164.86},{c:'Mortgage',t:'expense',m:'2026-05',a:23517.99},{c:'Mortgage',t:'expense',m:'2026-06',a:15678.66},
-    {c:'Nanny',t:'expense',m:'2026-01',a:3150},{c:'Nanny',t:'expense',m:'2026-02',a:5140},{c:'Nanny',t:'expense',m:'2026-03',a:3565},{c:'Nanny',t:'expense',m:'2026-04',a:2477.5},{c:'Nanny',t:'expense',m:'2026-05',a:2888},{c:'Nanny',t:'expense',m:'2026-06',a:3925},
-    {c:'Paulette Mortgage',t:'expense',m:'2026-01',a:6649.42},{c:'Paulette Mortgage',t:'expense',m:'2026-02',a:6649.42},{c:'Paulette Mortgage',t:'expense',m:'2026-03',a:9974.13},{c:'Paulette Mortgage',t:'expense',m:'2026-04',a:9974.13},{c:'Paulette Mortgage',t:'expense',m:'2026-05',a:9974.13},{c:'Paulette Mortgage',t:'expense',m:'2026-06',a:6649.42},
-    {c:'Paychecks',t:'income',m:'2026-01',a:22294.59},{c:'Paychecks',t:'income',m:'2026-02',a:14737.14},{c:'Paychecks',t:'income',m:'2026-03',a:14737.12},{c:'Paychecks',t:'income',m:'2026-04',a:14737.14},{c:'Paychecks',t:'income',m:'2026-05',a:14737.14},{c:'Paychecks',t:'income',m:'2026-06',a:14737.15},
-    {c:'Rental Income',t:'income',m:'2026-01',a:16000},{c:'Rental Income',t:'income',m:'2026-02',a:16000},{c:'Rental Income',t:'income',m:'2026-03',a:24480},{c:'Rental Income',t:'income',m:'2026-04',a:24480},{c:'Rental Income',t:'income',m:'2026-05',a:24480},{c:'Rental Income',t:'income',m:'2026-06',a:16320},
-    {c:'Other Income',t:'income',m:'2026-02',a:47.67},{c:'Other Income',t:'income',m:'2026-03',a:60},{c:'Other Income',t:'income',m:'2026-04',a:32.1},{c:'Other Income',t:'income',m:'2026-05',a:18.2},
-    {c:'Pharmacy',t:'expense',m:'2026-01',a:86.88},{c:'Pharmacy',t:'expense',m:'2026-02',a:15},{c:'Pharmacy',t:'expense',m:'2026-03',a:196.77},{c:'Pharmacy',t:'expense',m:'2026-04',a:67.96},{c:'Pharmacy',t:'expense',m:'2026-05',a:139.24},{c:'Pharmacy',t:'expense',m:'2026-06',a:77.63},
-    {c:'Trash',t:'expense',m:'2026-02',a:146.43},
-    {c:'Travel & Vacation',t:'expense',m:'2026-01',a:306.84},{c:'Travel & Vacation',t:'expense',m:'2026-02',a:567.4},{c:'Travel & Vacation',t:'expense',m:'2026-03',a:531.55},{c:'Travel & Vacation',t:'expense',m:'2026-04',a:6287.38},
-    {c:'Clothing',t:'expense',m:'2026-01',a:348.28},{c:'Clothing',t:'expense',m:'2026-02',a:-19.06},{c:'Clothing',t:'expense',m:'2026-03',a:1040.16},{c:'Clothing',t:'expense',m:'2026-04',a:9},{c:'Clothing',t:'expense',m:'2026-05',a:1004.7},{c:'Clothing',t:'expense',m:'2026-06',a:725.39},
-    {c:'Eating Out',t:'expense',m:'2026-01',a:1353.92},{c:'Eating Out',t:'expense',m:'2026-02',a:1173.64},{c:'Eating Out',t:'expense',m:'2026-03',a:1772.2},{c:'Eating Out',t:'expense',m:'2026-04',a:1830.33},{c:'Eating Out',t:'expense',m:'2026-05',a:1541.08},{c:'Eating Out',t:'expense',m:'2026-06',a:1965.3},
-    {c:'Gas & Charge',t:'expense',m:'2026-01',a:302.78},{c:'Gas & Charge',t:'expense',m:'2026-02',a:65.48},{c:'Gas & Charge',t:'expense',m:'2026-03',a:239.87},
-    {c:'Loans',t:'expense',m:'2026-01',a:394.78},{c:'Loans',t:'expense',m:'2026-02',a:394.78},{c:'Loans',t:'expense',m:'2026-03',a:3159.75},{c:'Loans',t:'expense',m:'2026-04',a:3159.75},{c:'Loans',t:'expense',m:'2026-05',a:2303.89},{c:'Loans',t:'expense',m:'2026-06',a:2106.5},
-    {c:'Paulette Insurance',t:'expense',m:'2026-01',a:828.8},{c:'Paulette Insurance',t:'expense',m:'2026-03',a:828.8},
-    {c:'Subscriptions',t:'expense',m:'2026-01',a:351.57},{c:'Subscriptions',t:'expense',m:'2026-02',a:593.26},{c:'Subscriptions',t:'expense',m:'2026-03',a:513.12},{c:'Subscriptions',t:'expense',m:'2026-04',a:708.76},{c:'Subscriptions',t:'expense',m:'2026-05',a:344.8},{c:'Subscriptions',t:'expense',m:'2026-06',a:385.29},
-    {c:'Water',t:'expense',m:'2026-01',a:412.97},{c:'Water',t:'expense',m:'2026-03',a:399.67},{c:'Water',t:'expense',m:'2026-05',a:646.73},
-    {c:'Auto Maintenance',t:'expense',m:'2026-01',a:256.25},{c:'Auto Maintenance',t:'expense',m:'2026-02',a:250},{c:'Auto Maintenance',t:'expense',m:'2026-03',a:130},{c:'Auto Maintenance',t:'expense',m:'2026-04',a:10},{c:'Auto Maintenance',t:'expense',m:'2026-05',a:129.39},{c:'Auto Maintenance',t:'expense',m:'2026-06',a:238.79},
-    {c:'Coffee Shops',t:'expense',m:'2026-03',a:16.62},
-    {c:'Fitness',t:'expense',m:'2026-01',a:457.3},{c:'Fitness',t:'expense',m:'2026-02',a:338.3},{c:'Fitness',t:'expense',m:'2026-03',a:338.3},{c:'Fitness',t:'expense',m:'2026-04',a:455.15},{c:'Fitness',t:'expense',m:'2026-05',a:338.3},
-    {c:'Gas & Electric',t:'expense',m:'2026-01',a:1038.26},{c:'Gas & Electric',t:'expense',m:'2026-02',a:1015.79},{c:'Gas & Electric',t:'expense',m:'2026-03',a:1414.86},{c:'Gas & Electric',t:'expense',m:'2026-04',a:734.44},{c:'Gas & Electric',t:'expense',m:'2026-05',a:1166.32},{c:'Gas & Electric',t:'expense',m:'2026-06',a:816.79},
-    {c:'Home Improvement',t:'expense',m:'2026-04',a:4801.42},{c:'Home Improvement',t:'expense',m:'2026-06',a:384.2},
-    {c:'Make Up',t:'expense',m:'2026-05',a:123.32},
-    {c:'Other',t:'expense',m:'2026-01',a:135},{c:'Other',t:'expense',m:'2026-03',a:75},{c:'Other',t:'expense',m:'2026-06',a:66},
-    {c:'Paulette Property Tax',t:'expense',m:'2026-05',a:2334.9},
-    {c:'School',t:'expense',m:'2026-01',a:946},{c:'School',t:'expense',m:'2026-03',a:128.15},{c:'School',t:'expense',m:'2026-04',a:126.85},{c:'School',t:'expense',m:'2026-05',a:130.36},{c:'School',t:'expense',m:'2026-06',a:10050.08},
-    {c:'Amazon',t:'expense',m:'2026-01',a:1500.77},{c:'Amazon',t:'expense',m:'2026-02',a:2547.13},{c:'Amazon',t:'expense',m:'2026-03',a:2368.09},{c:'Amazon',t:'expense',m:'2026-04',a:3635.49},{c:'Amazon',t:'expense',m:'2026-05',a:2860.58},{c:'Amazon',t:'expense',m:'2026-06',a:2027.03},
-    {c:'Baseball',t:'expense',m:'2026-01',a:338.5},{c:'Baseball',t:'expense',m:'2026-02',a:712.49},{c:'Baseball',t:'expense',m:'2026-03',a:489.33},{c:'Baseball',t:'expense',m:'2026-04',a:312.49},{c:'Baseball',t:'expense',m:'2026-05',a:694.69},{c:'Baseball',t:'expense',m:'2026-06',a:1180},
-    {c:'Gardener',t:'expense',m:'2026-01',a:185},{c:'Gardener',t:'expense',m:'2026-02',a:185},{c:'Gardener',t:'expense',m:'2026-03',a:185},{c:'Gardener',t:'expense',m:'2026-04',a:185},{c:'Gardener',t:'expense',m:'2026-06',a:250},
-    {c:'Healthcare',t:'expense',m:'2026-01',a:333.68},{c:'Healthcare',t:'expense',m:'2026-02',a:941.22},{c:'Healthcare',t:'expense',m:'2026-03',a:633.46},{c:'Healthcare',t:'expense',m:'2026-04',a:685.4},{c:'Healthcare',t:'expense',m:'2026-05',a:804.03},{c:'Healthcare',t:'expense',m:'2026-06',a:212.63},
-    {c:'Internet',t:'expense',m:'2026-01',a:76.25},{c:'Internet',t:'expense',m:'2026-02',a:81.25},{c:'Internet',t:'expense',m:'2026-03',a:126.46},{c:'Internet',t:'expense',m:'2026-04',a:61.25},{c:'Internet',t:'expense',m:'2026-05',a:162.28},
-    {c:'Parents Gift',t:'income',m:'2026-05',a:0},
-    {c:'Parking & Tolls',t:'expense',m:'2026-02',a:16},{c:'Parking & Tolls',t:'expense',m:'2026-03',a:10},{c:'Parking & Tolls',t:'expense',m:'2026-05',a:23},{c:'Parking & Tolls',t:'expense',m:'2026-06',a:6},
-    {c:'Home Insurance',t:'expense',m:'2026-02',a:1499.66},{c:'Home Insurance',t:'expense',m:'2026-03',a:2249.46},{c:'Home Insurance',t:'expense',m:'2026-04',a:2249.46},{c:'Home Insurance',t:'expense',m:'2026-05',a:1499.64},{c:'Home Insurance',t:'expense',m:'2026-06',a:1499.64},
-    {c:'Misc Financial',t:'expense',m:'2026-03',a:100},{c:'Misc Financial',t:'expense',m:'2026-04',a:27.5},
-    {c:'Phone',t:'expense',m:'2026-01',a:442.41},{c:'Phone',t:'expense',m:'2026-02',a:452.23},{c:'Phone',t:'expense',m:'2026-03',a:406.91},{c:'Phone',t:'expense',m:'2026-04',a:2547.72},{c:'Phone',t:'expense',m:'2026-05',a:-877.71},{c:'Phone',t:'expense',m:'2026-06',a:509.2},
-    {c:'Auto Inurance',t:'expense',m:'2026-01',a:630.87},{c:'Auto Inurance',t:'expense',m:'2026-02',a:630.87},{c:'Auto Inurance',t:'expense',m:'2026-03',a:630.87},{c:'Auto Inurance',t:'expense',m:'2026-04',a:1261.02},{c:'Auto Inurance',t:'expense',m:'2026-05',a:-128.33},{c:'Auto Inurance',t:'expense',m:'2026-06',a:651.23},
-    {c:'Pool Maintenance',t:'expense',m:'2026-01',a:1166.51},{c:'Pool Maintenance',t:'expense',m:'2026-02',a:240},{c:'Pool Maintenance',t:'expense',m:'2026-04',a:599.09},{c:'Pool Maintenance',t:'expense',m:'2026-05',a:240},
-    {c:'AAA',t:'expense',m:'2026-01',a:92},
-    {c:'Kids Cash',t:'expense',m:'2026-01',a:80},{c:'Kids Cash',t:'expense',m:'2026-02',a:40},{c:'Kids Cash',t:'expense',m:'2026-03',a:155},{c:'Kids Cash',t:'expense',m:'2026-04',a:20},{c:'Kids Cash',t:'expense',m:'2026-05',a:74.97},{c:'Kids Cash',t:'expense',m:'2026-06',a:339.97},
-    {c:'Pest Control',t:'expense',m:'2026-01',a:55},{c:'Pest Control',t:'expense',m:'2026-02',a:65},{c:'Pest Control',t:'expense',m:'2026-03',a:65},{c:'Pest Control',t:'expense',m:'2026-04',a:65},{c:'Pest Control',t:'expense',m:'2026-05',a:65},
-    {c:'Dance',t:'expense',m:'2026-01',a:1920.11},{c:'Dance',t:'expense',m:'2026-02',a:1224.49},{c:'Dance',t:'expense',m:'2026-03',a:3348.99},{c:'Dance',t:'expense',m:'2026-04',a:1116.49},{c:'Dance',t:'expense',m:'2026-05',a:825.01},{c:'Dance',t:'expense',m:'2026-06',a:2113.29},
-    {c:'Tennis',t:'expense',m:'2026-02',a:350},
-    {c:'Dentist',t:'expense',m:'2026-01',a:0},
-    {c:'Kids Activities',t:'expense',m:'2026-06',a:165.99},
-    {c:'Gifts',t:'expense',m:'2026-03',a:26.24},{c:'Gifts',t:'expense',m:'2026-04',a:12},
-    {c:'HELOC',t:'expense',m:'2026-06',a:0},
-  ];
-
-  const txns = [];
-  for(const row of RAW){
-    if(SKIP.has(row.c)) continue;
-    const mapped = CAT_MAP[row.c];
-    if(!mapped) continue;
-    const amt = parseFloat(row.a);
-    if(amt === 0) continue;
-    const [group,sub] = mapped.split('::');
-    const isInc = row.t === 'income';
-    const amount = isInc ? Math.abs(amt) : -Math.abs(amt);
-    const date = row.m+'-15';
-    const id = 'monarch-'+row.m+'-'+row.c.replace(/[\s&\/]/g,'').slice(0,12).toLowerCase();
-    txns.push({id,date,account:'Monarch (historical)',desc:row.c,memo:'Monarch import',amount,group,sub,reviewed:true,source:'monarch'});
-  }
-
-  // Merge into store
-  const store = txnLoad();
-  const existing = new Set(store.txns.map(t=>t.id));
-  let added=0;
-  for(const t of txns){
-    if(!existing.has(t.id)){store.txns.push(t);added++;}
-  }
-  store.txns.sort((a,b)=>b.date.localeCompare(a.date));
-  store.lastImport='Monarch 2025–2026 ('+added+' records)';
-  txnSave(store);
-  alert('Loaded '+added+' Monarch historical records (Jan 2025 – Jun 2026).\nCategory-level actuals from your Monarch account — pre-categorized and ready.');
-  if(S.page==='budget') rBudget();
-}
-
-
-// ── FINANCIALS RENDER ──────────────────────────────────────────
-function rBudget(){
-  const bc = document.getElementById('budget-content');
-  if(!bc) return;
-  const bud = JSON.parse(localStorage.getItem('kcc_budget')||'null');
-  const store = txnLoad();
-  const txns = store.txns||[];
-  const now = new Date();
-  const yr = now.getFullYear().toString();
-  const curMo = now.getMonth()+1;
-  const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const closedMos = bud ? (bud.monthsClosed||0) : 0;
-  const f$ = n => '$'+Math.round(Math.abs(n||0)).toLocaleString();
-  const col = n => n>=0?'var(--grn)':'var(--red)';
-  const sgn = n => n>0?'+':n<0?'-':'';
-
-  // default period
-  if(typeof S._finMo==='undefined') S._finMo = closedMos||curMo;
-  const selMo = S._finMo;
-  const isYtd = selMo==='ytd';
-  const moNum = isYtd ? null : parseInt(selMo);
-  const selLabel = isYtd ? 'YTD '+yr+' (Jan\u2013'+MON[(closedMos||curMo)-1]+')' : MON[moNum-1]+' '+yr+(moNum===curMo&&moNum>closedMos?' (MTD)':'');
-
-  // period buttons
-  let moBtns = '';
-  for(let m=1;m<=12;m++){
-    const isClosed = m<=closedMos;
-    const isCur = m===curMo;
-    const hasData = isClosed||isCur;
-    const label = MON[m-1]+(isCur&&!isClosed?' MTD':'');
-    if(hasData){
-      moBtns += '<button class="fin-mo'+(selMo===m?' on':'')+'" onclick="setFinMo('+m+')">'+label+'</button>';
-    } else {
-      moBtns += '<button class="fin-mo-future" disabled>'+label+'</button>';
-    }
-  }
-  moBtns += '<button class="fin-mo'+(isYtd?' on':'')+'" onclick="setFinMo(\'ytd\')" style="margin-left:8px">YTD</button>';
-
-  // actuals from transactions
-  const selTxns = isYtd ? txnGetYTD(txns,yr,closedMos||curMo) : txnGetMonth(txns,yr,moNum);
-  const sumCat = txnSumBySubcat(selTxns);
-  const actInc = selTxns.filter(t=>t.group==='INCOME').reduce((s,t)=>s+t.amount,0);
-  const actExp = Math.abs(selTxns.filter(t=>t.group!=='INCOME'&&t.group!=='TRANSFER').reduce((s,t)=>s+t.amount,0));
-  const actNet = actInc-actExp;
-
-  // plan values
-  let planInc=0, planExp=0;
-  if(bud){
-    if(isYtd){ planInc=bud.ytdIncome||0; planExp=bud.ytdExpenses||0; }
-    else {
-      const mrow = bud.monthly&&bud.monthly[moNum-1];
-      if(mrow){ planInc=mrow.income||0; planExp=mrow.expense||0; }
-      else if(bud.projIncome){ planInc=bud.projIncome/12; planExp=bud.projExpenses/12; }
-    }
-  }
-  const planNet = planInc-planExp;
-  const uncatCount = txns.filter(t=>!t.reviewed&&t.group!=='TRANSFER').length;
-
-  // ── KPI CARDS ──
-  const cards =
-    '<div class="g4" style="margin-bottom:14px">'+
-      kpiCard('📈', selLabel+' \u2014 Income', f$(actInc), 'g',
-        planInc ? (sgn(actInc-planInc)+f$(actInc-planInc)+' vs plan '+f$(planInc)) : '', actInc>=planInc?'g':'r')+
-      kpiCard('💸', selLabel+' \u2014 Expenses', f$(actExp), 'r',
-        planExp ? (sgn(actExp-planExp)+f$(actExp-planExp)+' vs plan '+f$(planExp)) : '', actExp<=planExp?'g':'r')+
-      kpiCard('\u2696', selLabel+' \u2014 Net', (actNet>=0?'+':'')+f$(actNet), actNet>=0?'g':'r',
-        planNet ? (sgn(actNet-planNet)+f$(actNet-planNet)+' vs plan') : '', actNet>=planNet?'g':'r')+
-      kpiCard('📊', 'Savings Rate', (actInc>0?Math.round(actNet/actInc*100):0)+'%', actInc>0&&actNet/actInc>=0?'g':'r', 'income kept', '')+
-    '</div>';
-
-  // ── BVA BARS ──
-  const mx = Math.max(actInc, actExp, planInc||1, planExp||1, 1);
-  const pct = v => Math.min(90, Math.round(Math.abs(v)/mx*90));
-
-  const bvaBar = function(label, value, pctW, bgColor, valueColor, deltaStr) {
-    return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">'+
-      '<span style="font-size:10px;color:var(--mut);width:100px;text-align:right;flex-shrink:0">'+label+'</span>'+
-      '<div style="flex:1;height:12px;background:var(--brd2);border-radius:2px;overflow:hidden;">'+
-        '<div style="height:100%;width:'+pctW+'%;background:'+bgColor+';border-radius:2px;"></div>'+
-      '</div>'+
-      '<span style="font-size:11px;font-weight:700;color:'+valueColor+';width:110px;flex-shrink:0">'+
-        value+(deltaStr?'<span style="font-size:9px;margin-left:4px;opacity:.8"> '+deltaStr+'</span>':'')+
-      '</span>'+
-    '</div>';
-  };
-
-  const bvaBars = planInc || planExp ? (
-    '<div style="background:var(--surf2);border:1px solid var(--brd2);padding:12px 14px;margin-bottom:12px;">'+
-    '<div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);margin-bottom:10px;">Cash flow \u2014 '+selLabel+'</div>'+
-    bvaBar('Income', f$(actInc), pct(actInc), 'var(--grn)', 'var(--grn)',
-      planInc ? (sgn(actInc-planInc)+f$(actInc-planInc)) : '') +
-    bvaBar('Income plan', f$(planInc), pct(planInc), '#2a4a2a', 'var(--mut)', '') +
-    '<div style="height:6px"></div>'+
-    bvaBar('Expenses', f$(actExp), pct(actExp), 'var(--red)', 'var(--red)',
-      planExp ? (sgn(actExp-planExp)+f$(actExp-planExp)) : '') +
-    bvaBar('Expense plan', f$(planExp), pct(planExp), '#4a2a2a', 'var(--mut)', '') +
-    '<div style="height:1px;background:var(--brd2);margin:8px 0"></div>'+
-    '<div style="text-align:right;font-size:12px;">Net: <strong style="color:'+col(actNet)+'">'+(actNet>=0?'+':'')+f$(actNet)+'</strong>'+
-      (planNet?'<span style="font-size:10px;color:var(--mut)"> vs plan '+(actNet>=planNet?'+':'')+f$(actNet-planNet)+'</span>':'')+
-    '</div>'+
-    '</div>'
-  ) : '<div style="padding:20px;text-align:center;color:var(--mut);font-size:11px;">Import Budget Planner to see plan vs actual comparison</div>';
-
-  // ── CATEGORIES TABLE (CSS Grid, no table element) ──
-  const COL_W = '100px';
-  const gridHeader =
-    '<div style="display:grid;grid-template-columns:1fr '+COL_W+' '+COL_W+' '+COL_W+';gap:0;border-bottom:1px solid var(--brd);padding:5px 8px;background:var(--surf);">'+
-      '<span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut)">Category</span>'+
-      '<span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);text-align:right">Plan</span>'+
-      '<span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);text-align:right">Actual</span>'+
-      '<span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);text-align:right">Remaining</span>'+
-    '</div>';
-
-  let catRows = '';
-  Object.entries(KCC_CATS).forEach(function(entry){
-    const grp = entry[0], subs = entry[1];
-    if(grp==='TRANSFER') return;
-    const isInc = grp==='INCOME';
-    let gPlan=0, gAct=0;
-    subs.forEach(function(sub){
-      const k=grp+'::'+sub;
-      const act=sumCat[k]||0;
-      const plan=getPlanVal(bud,grp,sub,moNum,isYtd,closedMos);
-      gPlan+=plan; gAct+=isInc?act:Math.abs(act);
-    });
-    const gRem = isInc?(gAct-gPlan):(gPlan-gAct);
-    const gOver = gRem<0;
-    catRows +=
-      '<div style="display:grid;grid-template-columns:1fr '+COL_W+' '+COL_W+' '+COL_W+';gap:0;padding:6px 8px;background:var(--surf2);border-bottom:0.5px solid var(--brd);font-weight:700;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'block\':\'none\'">'+
-        '<span style="color:'+(gOver?'var(--red)':'var(--txt)')+'">'+(gOver?'\u26a0 ':'')+grp+'</span>'+
-        '<span style="text-align:right;color:var(--txt2)">'+f$(gPlan)+'</span>'+
-        '<span style="text-align:right;color:'+(isInc?'var(--grn)':'var(--txt)')+'">'+f$(gAct)+'</span>'+
-        '<span style="text-align:right;color:'+(gRem>=0?'var(--grn)':'var(--red)')+'">'+(gRem>=0?'+':'-')+f$(Math.abs(gRem))+'</span>'+
-      '</div>'+
-      '<div>'; // subcats container (shown by default)
-    subs.forEach(function(sub){
-      const k=grp+'::'+sub;
-      const actRaw=sumCat[k]||0;
-      const act=isInc?actRaw:Math.abs(actRaw);
-      const plan=getPlanVal(bud,grp,sub,moNum,isYtd,closedMos);
-      const rem=isInc?(act-plan):(plan-act);
-      catRows +=
-        '<div style="display:grid;grid-template-columns:1fr '+COL_W+' '+COL_W+' '+COL_W+';gap:0;padding:5px 8px 5px 20px;border-bottom:0.5px solid var(--brd);">'+
-          '<span style="color:var(--txt2)">'+sub+'</span>'+
-          '<span style="text-align:right;color:var(--mut)">'+f$(plan)+'</span>'+
-          '<span style="text-align:right;color:'+(act>0?'var(--txt2)':'var(--mut)')+'">'+f$(act)+'</span>'+
-          '<span style="text-align:right;color:'+(rem>=0?'var(--grn)':'var(--red)')+'">'+(rem>=0?'+':'-')+f$(Math.abs(rem))+'</span>'+
-        '</div>';
-    });
-    catRows += '</div>';
-  });
-
-  // ── TRANSACTION REVIEW ──
-  const uncat = txns.filter(t=>!t.reviewed&&t.group!=='TRANSFER').slice(0,30);
-  const catOpts = Object.entries(KCC_CATS).filter(function(e){return e[0]!=='TRANSFER';}).map(function(e){
-    return '<optgroup label="'+e[0]+'">'+e[1].map(function(s){return '<option value="'+e[0]+'::'+s+'">'+s+'</option>';}).join('')+'</optgroup>';
-  }).join('');
-  const reviewRows = uncat.length===0
-    ? '<div class="empty" style="padding:20px;text-align:center">All transactions categorized \u2713</div>'
-    : uncat.map(function(t){
-        return '<div class="fin-rev-row">'+
-          '<span style="font-size:10px;color:var(--mut);flex-shrink:0">'+t.date+'</span>'+
-          '<span style="font-size:9px;color:var(--mut);flex-shrink:0">['+t.account+']</span>'+
-          '<span style="flex:1;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t.desc)+'</span>'+
-          '<span style="font-size:12px;font-weight:700;flex-shrink:0;color:'+(t.amount<0?'var(--red)':'var(--grn)')+'">'+(t.amount>=0?'+':'')+f$(t.amount)+'</span>'+
-          '<select onchange="finCatTxn(\''+t.id+'\',this.value)" style="font-size:10px;padding:2px;background:var(--surf);border:1px solid var(--brd2);color:var(--txt)">'+
-            '<option value="">\u2014 categorize \u2014</option>'+catOpts+
-            '<option value="TRANSFER::Internal Transfer">Transfer (skip)</option>'+
-          '</select>'+
-        '</div>';
-      }).join('');
-
-  // ── IMPORT TAB ──
-  const importAccounts = ['Capital One CC','Citi Checking','CEFCU Savings','CEFCU HELOC'].map(function(a){
-    const cnt=txns.filter(function(t){return t.account===a;}).length;
-    const last=txns.filter(function(t){return t.account===a;})[0];
-    return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--brd);font-size:11px;">'+
-      '<span>'+a+'</span><span style="color:var(--mut)">'+cnt+' txns'+( last?' \u00b7 latest '+last.date:'')+'</span></div>';
-  }).join('');
-
-  // ── ASSEMBLE ──
-  const srcNote = txns.length>0
-    ? txns.length+' transactions \u00b7 last import '+(store.lastImport||'\u2014')
-    : (bud?'Budget Planner \u00b7 '+closedMos+' months closed':'No data \u2014 use Import tab');
-  const importEl = document.getElementById('budget-last-import');
-  if(importEl) importEl.textContent = srcNote;
-
-  bc.innerHTML =
-    '<div style="margin-bottom:12px">'+
-      '<div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);margin-bottom:6px">Period</div>'+
-      '<div style="display:flex;gap:4px;flex-wrap:wrap">'+moBtns+'</div>'+
-    '</div>'+
-    '<div class="ftab" style="margin-bottom:12px">'+
-      '<button id="fintb1" onclick="setFinTab(\'bva\')" class="on">Budget vs Actual</button>'+
-      '<button id="fintb2" onclick="setFinTab(\'cats\')">Categories</button>'+
-      '<button id="fintb3" onclick="setFinTab(\'txns\')">Transactions'+(uncatCount>0?' <span style="background:var(--red);color:#fff;font-size:9px;padding:1px 5px;border-radius:20px">'+uncatCount+'</span>':'')+' </button>'+
-      '<button id="fintb4" onclick="setFinTab(\'import\')">Import \u2b06</button>'+
-    '</div>'+
-    '<div id="fin-bva">'+cards+bvaBars+'</div>'+
-    '<div id="fin-cats" style="display:none">'+gridHeader+catRows+'</div>'+
-    '<div id="fin-txns" style="display:none">'+
-      (uncatCount>0?'<div style="padding:8px 12px;border:1px solid var(--amb);background:rgba(212,160,48,.08);margin-bottom:10px;font-size:11px;color:var(--amb)">\u26a0 '+uncatCount+' transactions need categorization</div>':'')+
-      reviewRows+
-    '</div>'+
-    '<div id="fin-import" style="display:none">'+
-      '<div style="border:1.5px dashed var(--brd2);padding:24px;text-align:center;margin-bottom:14px;">'+
-        '<div style="font-size:24px;margin-bottom:8px">\u2b06</div>'+
-        '<div style="font-size:13px;font-weight:700;margin-bottom:6px">Import transactions</div>'+
-        '<div style="font-size:11px;color:var(--mut);margin-bottom:14px">Capital One CSV \u00b7 Citi CSV \u00b7 CEFCU Savings CSV \u00b7 CEFCU HELOC CSV</div>'+
-        '<label style="cursor:pointer;padding:8px 20px;border:1px solid var(--grn);color:var(--grn);font-size:11px;font-weight:700;letter-spacing:1px">'+
-          'Choose file<input type="file" accept=".csv" multiple onchange="[...this.files].forEach(f=>importTxnFile(f))" style="display:none">'+
-        '</label>'+
-        '<button onclick="loadMonarchHistory()" style="margin-top:10px;padding:8px 20px;border:1px solid var(--blu);color:var(--blu);background:none;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;font-family:inherit;display:block;width:100%;">\u2193 Load Monarch History (Jan 2025 \u2013 Jun 2026)</button>'+
-      '</div>'+
-      '<div style="border:1px solid var(--brd);padding:12px 14px;">'+
-        '<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Accounts</div>'+
-        importAccounts+
-      '</div>'+
-    '</div>';
-
-  setFinTab(S._finTab||'bva', true);
-}
-
-function kpiCard(icon, label, val, valCls, sub, subCls){
-  return '<div class="sp"><span class="spi">'+icon+'</span><div>'+
-    '<span class="spl">'+label+'</span>'+
-    '<span class="spv '+valCls+'">'+val+'</span>'+
-    (sub?'<span class="spl" style="color:var(--'+(subCls||'mut')+')">'+sub+'</span>':'')+
-  '</div></div>';
-}
-
-function setFinMo(mo){
-  S._finMo = (mo==='ytd') ? 'ytd' : parseInt(mo);
-  rBudget();
-}
-
-function setFinTab(id, silent){
-  S._finTab=id;
-  ['bva','cats','txns','import'].forEach(function(t,i){
-    const el=document.getElementById('fin-'+t);
-    const btn=document.getElementById('fintb'+(i+1));
-    if(el) el.style.display=t===id?'':'none';
-    if(btn) btn.classList.toggle('on',t===id);
-  });
-}
-
-function finCatTxn(id, val){
-  if(!val) return;
-  const parts=val.split('::'); const group=parts[0], sub=parts[1];
-  txnSetCat(id,group,sub);
-  const store=txnLoad();
-  const t=store.txns.find(function(x){return x.id===id;});
-  if(t){
-    const pat=escapeRegex((t.desc||'').split(' ').slice(0,3).join(' ').trim());
-    if(pat) txnSaveRule(pat,group,sub);
-  }
-  rBudget();
-}
-
-function remCell(actual,plan,isIncome){
-  const rem=isIncome?(actual-plan):(plan-actual);
-  const f$=function(n){return '$'+Math.round(Math.abs(n)).toLocaleString();};
-  if(rem>0) return '<td style="text-align:right;color:var(--grn)">+'+f$(rem)+'</td>';
-  if(rem<0) return '<td style="text-align:right;color:var(--red)">-'+f$(Math.abs(rem))+'</td>';
-  return '<td style="text-align:right;color:var(--mut)">$0</td>';
-}
-
-function getPlanVal(bud,grp,sub,selMo,isYtd,closedMos){
-  if(!bud) return 0;
-  const vals=bud.catPlans&&bud.catPlans[grp+'::'+sub];
-  if(!vals) return 0;
-  function N(v){return (typeof v==='number'&&isFinite(v))?v:0;}
-  if(isYtd) return vals.slice(0,closedMos||6).reduce(function(s,v){return s+N(v);},0);
-  return N(vals[(selMo||1)-1]);
-}
-
-
 // ── NAV ──────────────────────────────────────────────────────
 function nav(pg){
   S.page=pg;
@@ -3527,30 +2737,230 @@ function rFin(){
 
 // ══ 2026 BUDGET PLANNER → FINANCIALS PAGE ════════════════════
 function parseBudgetPlanner(wb){
-  const J=sn=>wb.Sheets[sn]?XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1}):[];
-  const N=v=>(typeof v==='number'&&isFinite(v))?v:(typeof v==='string'&&v.trim()!==''&&!isNaN(+v)?+v:null);
-  const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const sum=arr=>arr.reduce((s,v)=>{const n=N(v);return n!=null?s+n:s;},0);
-  const planRows=J('Plan');
-  let incomeRows=[],expRows=[],currentGroup='',inIncome=false,inExp=false;
-  planRows.forEach(r=>{const lbl=(r[0]||'').trim();if(!lbl)return;if(lbl==='INCOME'){inIncome=true;return;}if(/^[A-Z][A-Z &]+$/.test(lbl)&&lbl!=='INCOME'&&!lbl.startsWith('Total')&&!lbl.startsWith('NET')){inIncome=false;inExp=true;currentGroup=lbl;return;}if(lbl.startsWith('Total ')||lbl.startsWith('TOTAL ')||lbl.includes('Income − Expenses')||lbl.includes('Income - Expenses'))return;const vals=r.slice(1,13).map(N);if(inIncome&&vals.some(v=>v!=null))incomeRows.push({name:lbl,vals});else if(inExp&&vals.some(v=>v!=null))expRows.push({name:lbl,group:currentGroup,vals});});
-  const catPlans={};incomeRows.forEach(r=>{catPlans['INCOME::'+r.name]=r.vals;});expRows.forEach(r=>{catPlans[r.group+'::'+r.name]=r.vals;});
-  const actRows=J('Actuals');
-  let actIncRows=[],actExpRows=[],actGroup='',actInInc=false,actInExp=false;
-  actRows.forEach((r,i)=>{if(i<2)return;const lbl=(r[0]||'').trim();if(!lbl)return;if(lbl==='INCOME'){actInInc=true;return;}if(/^[A-Z][A-Z &]+$/.test(lbl)&&lbl!=='INCOME'&&!lbl.startsWith('Total')&&!lbl.startsWith('NET')){actInInc=false;actInExp=true;actGroup=lbl;return;}if(lbl.startsWith('Total ')||lbl.startsWith('TOTAL ')||lbl.includes('Income − Expenses')||lbl.includes('Income - Expenses'))return;const vals=r.slice(1,13).map(N);if(actInInc&&vals.some(v=>v!=null))actIncRows.push({name:lbl,vals});else if(actInExp&&vals.some(v=>v!=null))actExpRows.push({name:lbl,group:actGroup,vals});});
-  let monthsClosed=0;if(actIncRows.length){const first=actIncRows.find(r=>r.vals.some(v=>v!=null));if(first)monthsClosed=first.vals.filter(v=>v!=null).length;}
-  const ytdIncome=sum(actIncRows.flatMap(r=>r.vals.slice(0,monthsClosed)));const ytdExpenses=sum(actExpRows.flatMap(r=>r.vals.slice(0,monthsClosed)));
-  const catActuals={};actIncRows.forEach(r=>{catActuals['INCOME::'+r.name]=r.vals;});actExpRows.forEach(r=>{catActuals[r.group+'::'+r.name]=r.vals;});
-  const fcstIncome=ytdIncome+sum(incomeRows.flatMap(r=>r.vals.slice(monthsClosed)));const fcstExpenses=ytdExpenses+sum(expRows.flatMap(r=>r.vals.slice(monthsClosed)));
-  const monthly=MON.map((mo,mi)=>{const inc=sum(incomeRows.map(r=>N(r.vals[mi])||0));const exp=sum(expRows.map(r=>N(r.vals[mi])||0));return{mo,income:inc,expense:exp,net:inc-exp};});
-  const swings=[];actExpRows.forEach(r=>{const planRow=expRows.find(p=>p.name===r.name&&p.group===r.group);if(!planRow)return;const act=sum(r.vals.slice(0,monthsClosed));const plan=sum(planRow.vals.slice(0,monthsClosed));const varD=act-plan;if(Math.abs(varD)<1)return;swings.push({cat:r.name,group:r.group,plan,fcst:act,varD,impact:varD<0?Math.abs(varD):-Math.abs(varD),varP:plan?varD/plan:0});});swings.sort((a,b)=>Math.abs(b.varD)-Math.abs(a.varD));
-  const groupMap={};expRows.forEach(r=>{if(!groupMap[r.group])groupMap[r.group]={name:r.group,plan:0,proj:0};groupMap[r.group].plan+=sum(r.vals);});
-  let prevMonth=null;if(monthsClosed>=1){const mo=monthsClosed-1;const actInc=sum(actIncRows.map(r=>N(r.vals[mo])||0));const actExp=sum(actExpRows.map(r=>N(r.vals[mo])||0));const planInc=sum(incomeRows.map(r=>N(r.vals[mo])||0));const planExp=sum(expRows.map(r=>N(r.vals[mo])||0));const cats=[];actExpRows.forEach(r=>{const planRow=expRows.find(p=>p.name===r.name&&p.group===r.group);if(!planRow)return;const act=N(r.vals[mo])||0,plan=N(planRow.vals[mo])||0;cats.push({cat:r.name,group:r.group,plan,actual:act,varD:act-plan,fav:act<=plan});});cats.sort((a,b)=>Math.abs(b.varD)-Math.abs(a.varD));prevMonth={idx:monthsClosed,name:MON[mo],income:{plan:planInc,actual:actInc,varD:actInc-planInc},expenses:{plan:planExp,actual:actExp,varD:actExp-planExp},net:{plan:planInc-planExp,actual:actInc-actExp,varD:(actInc-actExp)-(planInc-planExp)},swings:cats.slice(0,10)};}
-  const data={importTime:new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),projIncome:fcstIncome,projExpenses:fcstExpenses,projNet:fcstIncome-fcstExpenses,netVsPlan:fcstIncome-fcstExpenses-(sum(incomeRows.flatMap(r=>r.vals))-sum(expRows.flatMap(r=>r.vals))),ytdIncome,ytdExpenses,ytdNet:ytdIncome-ytdExpenses,monthsClosed,catPlans,catActuals,groups:Object.values(groupMap),monthly,swings:swings.slice(0,12),prevMonth,favorable:0,unfavorable:0,netVar:0};
-  localStorage.setItem('kcc_budget',JSON.stringify(data));S.budget=data;if(S.page==='budget')rBudget();return data;
+  const J = sn => wb.Sheets[sn] ? XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1}) : [];
+  const N = v => (typeof v==='number' && isFinite(v)) ? v
+               : (typeof v==='string' && v.trim()!=='' && !isNaN(+v) ? +v : null);
+  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const find = (rows,test) => rows.findIndex(test);
+
+  const dash = J('Dashboard');
+
+  // Full-year blended top line: header row then values row
+  let projIncome=null, projExpenses=null, projNet=null, netVsPlan=null;
+  const hdr = find(dash, r => String(r&&r[0]||'').toUpperCase().includes('PROJECTED INCOME'));
+  if(hdr>=0 && dash[hdr+1]){ const v=dash[hdr+1]; projIncome=N(v[0]); projExpenses=N(v[2]); projNet=N(v[4]); netVsPlan=N(v[6]); }
+
+  // YTD actuals (closed months)
+  const ytdVal = pfx => { const i=find(dash, r=>String(r&&r[0]||'').toLowerCase().startsWith(pfx)); if(i<0) return null; const r=dash[i]; for(let c=r.length-1;c>=1;c--){ const n=N(r[c]); if(n!==null) return n; } return null; };
+  const ytdIncome    = ytdVal('income (ytd');
+  const ytdExpenses  = ytdVal('expenses (ytd');
+  const ytdNet       = ytdVal('net (ytd');
+  const monthsClosed = ytdVal('months marked');
+
+  // Expense groups + monthly Income/Expense/Net (right-side cols of same table)
+  const groups=[], monthly=[];
+  const gHdr = find(dash, r => String(r&&r[0]||'').toUpperCase()==='EXPENSE GROUP');
+  if(gHdr>=0){
+    for(let i=gHdr+1;i<dash.length;i++){
+      const r=dash[i]; if(!r) continue;
+      const name=r[0];
+      if(typeof name==='string' && name.trim() && N(r[1])!==null && !name.toUpperCase().startsWith('TOTAL')){
+        groups.push({name, plan:N(r[1]), proj:N(r[2]), varD:N(r[3]), varP:N(r[4])});
+      }
+      const mo=r[7];
+      if(typeof mo==='string' && MON.includes(mo)) monthly.push({mo, income:N(r[8])||0, expense:N(r[9])||0, net:N(r[10])||0});
+    }
+  }
+
+  // Plan vs Forecast annual lines
+  const pvfRows = J('Plan vs Forecast');
+  const pvfLine = label => { const i=find(pvfRows, r=>String(r&&r[0]||'').trim().toLowerCase()===label && N(r[1])!==null && N(r[2])!==null); if(i<0) return null; const r=pvfRows[i]; return {plan:N(r[1]), fcst:N(r[2]), varD:N(r[3]), varP:N(r[4])}; };
+  const pvf = { income:pvfLine('income'), expenses:pvfLine('expenses'), net:pvfLine('net') };
+
+  // Monthly Plan vs Forecast (fcst = actual for closed months)
+  const monthlyPVF=[];
+  const mHdr = find(pvfRows, r=>String(r&&r[0]||'').trim()==='Month');
+  if(mHdr>=0){ for(let i=mHdr+1;i<pvfRows.length;i++){ const r=pvfRows[i]; if(!r||!MON.includes(String(r[0]||'').trim())) break;
+    monthlyPVF.push({mo:String(r[0]).trim(), planInc:N(r[1]), fcstInc:N(r[2]), planExp:N(r[3]), fcstExp:N(r[4]), planNet:N(r[5]), fcstNet:N(r[6])}); } }
+
+  // Latest closed month — per-category actual vs plan (from Plan + Actuals sheets)
+  const catMap = rows => { const out=[]; let section='';
+    for(const r of rows){ const name=r&&r[0];
+      if(typeof name!=='string' || !name.trim()) continue;
+      const hasNum = r.slice(1,13).some(x=>N(x)!==null);
+      if(!hasNum){ const t=name.trim(); if(t.toUpperCase()===t && !t.toUpperCase().startsWith('TOTAL') && t.toUpperCase()!=='CATEGORY') section=t; continue; }
+      const up=name.trim().toUpperCase(); if(up.startsWith('TOTAL')||up.startsWith('NET ')||up.startsWith('NET(')||up==='CATEGORY') continue;
+      out.push({name:name.trim(), group:section, vals:r.slice(1,13).map(N)}); }
+    return out; };
+  let prevMonth=null;
+  const mc = monthsClosed;
+  if(mc && mc>=1 && mc<=12){
+    const pMap=catMap(J('Plan')), aMap=catMap(J('Actuals'));
+    const aByName={}; aMap.forEach(x=>{ aByName[x.name]=x; });
+    const cats=[];
+    pMap.forEach(p=>{ const a=aByName[p.name]; if(!a) return;
+      const plan=p.vals[mc-1], actual=a.vals[mc-1];
+      if(plan==null && actual==null) return;
+      const isInc = (p.group||'').toUpperCase()==='INCOME';
+      const varD=(actual||0)-(plan||0);
+      cats.push({cat:p.name, group:p.group, isInc, plan:plan||0, actual:actual||0, varD, fav: isInc ? varD>=0 : varD<=0}); });
+    const pm = monthlyPVF[mc-1]||{};
+    prevMonth = {
+      idx:mc, name:MON[mc-1],
+      income:  {plan:pm.planInc, actual:pm.fcstInc, varD:(pm.fcstInc||0)-(pm.planInc||0)},
+      expenses:{plan:pm.planExp, actual:pm.fcstExp, varD:(pm.fcstExp||0)-(pm.planExp||0)},
+      net:     {plan:pm.planNet, actual:pm.fcstNet, varD:(pm.fcstNet||0)-(pm.planNet||0)},
+      swings: cats.sort((x,y)=>Math.abs(y.varD)-Math.abs(x.varD)).slice(0,10)
+    };
+  }
+
+  // Variance Analysis: favorable / unfavorable totals + largest swings
+  const varRows = J('Variance Analysis');
+  let favorable=null, unfavorable=null, netVar=null;
+  const fHdr = find(varRows, r=>String(r&&r[0]||'').trim().toUpperCase().startsWith('FAVORABLE'));
+  if(fHdr>=0 && varRows[fHdr+1]){ const v=varRows[fHdr+1]; favorable=N(v[0]); unfavorable=N(v[2]); netVar=N(v[4]); }
+  const swings=[];
+  const sHdr = find(varRows, r=>String(r&&r[0]||'').toLowerCase()==='rank');
+  if(sHdr>=0){ for(let i=sHdr+1;i<varRows.length;i++){ const r=varRows[i]; if(!r||N(r[0])===null) break; swings.push({rank:N(r[0]), cat:r[1], group:r[2], plan:N(r[3]), fcst:N(r[4]), varD:N(r[5]), impact:N(r[6]), varP:N(r[7])}); } }
+
+  const data = {
+    importTime:new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
+    projIncome, projExpenses, projNet, netVsPlan,
+    ytdIncome, ytdExpenses, ytdNet, monthsClosed,
+    pvf, groups, monthly, monthlyPVF, prevMonth, favorable, unfavorable, netVar, swings:swings.slice(0,12)
+  };
+  localStorage.setItem('kcc_budget', JSON.stringify(data));
+  S.budget = data;
+  if(S.page==='budget') rBudget();
+  return data;
 }
 
+function rBudget(){
+  const root = document.getElementById('budget-content');
+  if(!root) return;
+  const raw = localStorage.getItem('kcc_budget');
+  if(!raw){ root.innerHTML='<div class="empty">Import the 2026 Budget Planner (main ⬆ importer) to populate.</div>'; return; }
+  let b; try{ b=JSON.parse(raw); }catch(e){ return; }
+  const lbl = document.getElementById('budget-last-import');
+  if(lbl && b.importTime) lbl.textContent='Last imported: '+b.importTime;
 
+  const $   = n => n!=null ? '$'+Math.round(Math.abs(n)).toLocaleString() : '—';
+  const sg  = n => (n||0)>=0?'+':'-';
+  const colS= n => (n||0)>=0?'var(--grn)':'var(--red)';
+  const pct = n => n!=null ? ((n>=0?'+':'')+(n*100).toFixed(1)+'%') : '—';
+  const card=(label,val,sub,color)=>`<div style="border:1px solid var(--brd);background:var(--surf);padding:14px 16px;"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">${label}</span><span style="font-size:23px;font-weight:700;color:${color||'var(--txt)'};display:block;margin-top:6px">${val}</span>${sub?`<span style="font-size:9px;color:var(--mut)">${sub}</span>`:''}</div>`;
+
+  // Row 1 — full-year blended
+  const row1 = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px;">
+    ${card('Projected Income',$(b.projIncome),'full-year, blended','var(--grn)')}
+    ${card('Projected Expenses',$(b.projExpenses),'full-year, blended','var(--red)')}
+    ${card('Projected Net',sg(b.projNet)+$(b.projNet),'income − expenses',colS(b.projNet))}
+    ${card('Net vs Plan',sg(b.netVsPlan)+$(b.netVsPlan),'favorable if positive',colS(b.netVsPlan))}
+  </div>`;
+
+  // Row 2 — YTD actuals
+  const row2 = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;">
+    ${card('Income (YTD actual)',$(b.ytdIncome),(b.monthsClosed!=null?b.monthsClosed+' closed months':''),'var(--grn)')}
+    ${card('Expenses (YTD actual)',$(b.ytdExpenses),'closed months only','var(--red)')}
+    ${card('Net (YTD actual)',sg(b.ytdNet)+$(b.ytdNet),'closed months only',colS(b.ytdNet))}
+    ${card('Months Closed',(b.monthsClosed!=null?b.monthsClosed:'—'),'marked Actual','var(--txt)')}
+  </div>`;
+
+  // Plan vs Forecast table (favorable: income/net +, expenses −)
+  const pvfRow=(name,o,goodWhenPositive)=>{ if(!o) return ''; const good = goodWhenPositive ? (o.varD>=0) : (o.varD<=0); const vc = good?'var(--grn)':'var(--red)';
+    return `<tr><td style="padding:7px 12px;border-top:1px solid var(--brd);font-weight:600">${name}</td>
+      <td style="padding:7px 12px;border-top:1px solid var(--brd);text-align:right;color:var(--mut2)">${$(o.plan)}</td>
+      <td style="padding:7px 12px;border-top:1px solid var(--brd);text-align:right;font-weight:700">${$(o.fcst)}</td>
+      <td style="padding:7px 12px;border-top:1px solid var(--brd);text-align:right;color:${vc}">${sg(o.varD)}${$(o.varD)}</td>
+      <td style="padding:7px 12px;border-top:1px solid var(--brd);text-align:right;color:${vc}">${pct(o.varP)}</td></tr>`; };
+  const pvf = `<div style="border:1px solid var(--brd);background:var(--surf);margin-bottom:16px;">
+    <div style="padding:9px 16px;border-bottom:1px solid var(--brd);background:#0f110f;"><span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--blu);">📊 Plan vs Forecast (annual)</span></div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <thead><tr style="color:var(--mut);font-size:8px;letter-spacing:1px;text-transform:uppercase;">
+        <th style="padding:7px 12px;text-align:left"></th><th style="padding:7px 12px;text-align:right">Plan</th><th style="padding:7px 12px;text-align:right">Forecast</th><th style="padding:7px 12px;text-align:right">Variance $</th><th style="padding:7px 12px;text-align:right">Var %</th></tr></thead>
+      <tbody>${pvfRow('Income',b.pvf&&b.pvf.income,true)}${pvfRow('Expenses',b.pvf&&b.pvf.expenses,false)}${pvfRow('Net',b.pvf&&b.pvf.net,true)}</tbody>
+    </table></div>`;
+
+  // Monthly net mini-bars
+  let bars='';
+  if(b.monthly && b.monthly.length){
+    const mx = Math.max(1, ...b.monthly.map(m=>Math.abs(m.net||0)));
+    bars = `<div style="border:1px solid var(--brd);background:var(--surf);margin-bottom:16px;padding:12px 16px;">
+      <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);display:block;margin-bottom:10px;">Monthly Net (forecast)</span>
+      <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px;align-items:end;height:84px;">
+        ${b.monthly.map(m=>{const h=Math.max(3,Math.round(Math.abs(m.net||0)/mx*64));const c=(m.net||0)>=0?'var(--grn)':'var(--red)';return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;"><div title="${m.mo}: ${sg(m.net)}${$(m.net)}" style="width:100%;height:${h}px;background:${c};opacity:.85;"></div></div>`;}).join('')}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px;margin-top:5px;">${b.monthly.map(m=>`<span style="font-size:8px;color:var(--mut2);text-align:center">${m.mo[0]}</span>`).join('')}</div>
+    </div>`;
+  }
+
+  // Largest swings vs plan
+  let swings='';
+  if(b.swings && b.swings.length){
+    const rows = b.swings.map(s=>{ const ic = (s.impact||0)>=0?'var(--grn)':'var(--red)';
+      return `<tr><td style="padding:6px 12px;border-top:1px solid var(--brd);"><span style="font-weight:600">${esc(String(s.cat||''))}</span> <span style="color:var(--mut2);font-size:10px">${esc(String(s.group||''))}</span></td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right;color:var(--mut2)">${$(s.plan)}</td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right">${$(s.fcst)}</td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right;color:${colS(s.varD)}">${sg(s.varD)}${$(s.varD)}</td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right;color:${ic};font-weight:700">${(s.impact||0)>=0?'▲ favorable':'▼ unfavorable'}</td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right;color:var(--mut2)">${pct(s.varP)}</td></tr>`; }).join('');
+    swings = `<div style="border:1px solid var(--brd);background:var(--surf);margin-bottom:16px;">
+      <div style="padding:9px 16px;border-bottom:1px solid var(--brd);background:#0f110f;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--amb);">⚖ Largest Swings vs Plan</span>
+        <span style="font-size:10px;color:var(--mut)">Favorable ${$(b.favorable)} · Unfavorable ${$(b.unfavorable)} · Net ${sg(b.netVar)}${$(b.netVar)}</span></div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="color:var(--mut);font-size:8px;letter-spacing:1px;text-transform:uppercase;">
+          <th style="padding:7px 12px;text-align:left">Category</th><th style="padding:7px 12px;text-align:right">Plan</th><th style="padding:7px 12px;text-align:right">Forecast</th><th style="padding:7px 12px;text-align:right">Var $</th><th style="padding:7px 12px;text-align:right">Impact</th><th style="padding:7px 12px;text-align:right">Var %</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>`;
+  }
+
+  // Expense groups
+  let groups='';
+  if(b.groups && b.groups.length){
+    const rows = b.groups.map(g=>{ const vc=(g.varD||0)<=0?'var(--grn)':'var(--red)';
+      return `<tr><td style="padding:6px 12px;border-top:1px solid var(--brd);font-weight:600">${esc(String(g.name||''))}</td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right;color:var(--mut2)">${$(g.plan)}</td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right">${$(g.proj)}</td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right;color:${vc}">${sg(g.varD)}${$(g.varD)}</td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right;color:${vc}">${pct(g.varP)}</td></tr>`; }).join('');
+    groups = `<div style="border:1px solid var(--brd);background:var(--surf);">
+      <div style="padding:9px 16px;border-bottom:1px solid var(--brd);background:#0f110f;"><span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut);">📂 Expense Groups — Plan vs Projected</span></div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="color:var(--mut);font-size:8px;letter-spacing:1px;text-transform:uppercase;">
+          <th style="padding:7px 12px;text-align:left">Group</th><th style="padding:7px 12px;text-align:right">Annual Plan</th><th style="padding:7px 12px;text-align:right">Projected</th><th style="padding:7px 12px;text-align:right">Var $</th><th style="padding:7px 12px;text-align:right">Var %</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>`;
+  }
+
+  // Last closed month — actual vs plan
+  let prev='';
+  if(!b.prevMonth && (b.monthsClosed!=null)){
+    prev = `<div style="border:1px dashed var(--brd2);background:var(--surf);margin-bottom:16px;padding:12px 16px;color:var(--mut);font-size:11px;">📅 Last-closed-month variance isn't in this saved import. Re-import the 2026 Budget Planner (main ⬆ importer) to populate it.</div>`;
+  }
+  if(b.prevMonth && b.prevMonth.name){
+    const p=b.prevMonth;
+    const tile=(label,o,goodPos)=>{ const good=goodPos?((o.varD||0)>=0):((o.varD||0)<=0); const c=good?'var(--grn)':'var(--red)';
+      const val = goodPos===null ? (sg(o.actual)+$(o.actual)) : $(o.actual);
+      return `<div style="padding:12px 16px;border-right:1px solid var(--brd)"><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);display:block">${label}</span><span style="font-size:21px;font-weight:700;display:block;margin-top:5px">${val}</span><span style="font-size:10px;color:${c}">${sg(o.varD)}${$(o.varD)} vs plan</span></div>`; };
+    const swRows = (p.swings||[]).map(s=>{ const c=s.fav?'var(--grn)':'var(--red)';
+      return `<tr><td style="padding:6px 12px;border-top:1px solid var(--brd)"><span style="font-weight:600">${esc(String(s.cat||''))}</span> <span style="color:var(--mut2);font-size:10px">${esc(String(s.group||''))}</span></td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right;color:var(--mut2)">${$(s.plan)}</td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right">${$(s.actual)}</td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right;color:${c}">${sg(s.varD)}${$(s.varD)}</td>
+        <td style="padding:6px 12px;border-top:1px solid var(--brd);text-align:right;color:${c};font-weight:700">${s.fav?'▲':'▼'}</td></tr>`; }).join('');
+    prev = `<div style="border:1px solid var(--brd);background:var(--surf);margin-bottom:16px;">
+      <div style="padding:9px 16px;border-bottom:1px solid var(--brd);background:#0f110f;"><span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--grn);">📅 Last Closed Month — ${p.name} 2026 · actual vs plan</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--brd)">
+        ${tile('Income',p.income,true)}${tile('Expenses',p.expenses,false)}${tile('Net',p.net,null)}
+      </div>
+      ${swRows?`<table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="color:var(--mut);font-size:8px;letter-spacing:1px;text-transform:uppercase;">
+          <th style="padding:7px 12px;text-align:left">Category (${p.name})</th><th style="padding:7px 12px;text-align:right">Plan</th><th style="padding:7px 12px;text-align:right">Actual</th><th style="padding:7px 12px;text-align:right">Var $</th><th style="padding:7px 12px;text-align:right"></th></tr></thead>
+        <tbody>${swRows}</tbody></table>`:''}
+    </div>`;
+  }
+
+  root.innerHTML = row1 + row2 + prev + pvf + bars + swings + groups;
+}
 
 function rFire(){
   const fire=S.fire, goals=S.fireg;
@@ -4537,7 +3947,7 @@ function hBPCard(H){
     +'<input id="h-bp-d" type="date" value="'+hToday()+'">'
     +'<input id="h-bp-s" type="number" placeholder="SYS" style="width:80px">'
     +'<input id="h-bp-di" type="number" placeholder="DIA" style="width:80px">'
-    +'<input id="h-bp-p" type="number" placeholder="pulse" style="width:80px">'
+    +'<input id="h-bp-p" type="number" placeholder="pulse" style="width:80px">'+'<select id="h-bp-tod" style="width:70px;background:var(--surf);border:1px solid var(--brd2);color:var(--txt);font-family:inherit;font-size:11px;padding:3px"><option value="">—</option><option value="AM">AM</option><option value="PM">PM</option></select>'
     +'<button class="btn" onclick="hAddBP()">+ Log</button></div>'
     +hBPLog(bp)
     +'<div style="font-size:8px;color:var(--mut2);margin-top:10px;font-style:italic">AHA categories. Not a diagnosis — discuss with your doctor.</div>'
@@ -4588,7 +3998,7 @@ function hEditRxForm(key,i){ const H=hGet(); const isMed=(key==='meds'); const c
   const rec={name:name.trim(),dose:dose.trim(),sched:sched.trim(),purpose:purpose.trim()}; if(isMed) rec.by=by.trim();
   if(i!=null) H[key][i]=rec; else H[key].push(rec); hSave(); rHealth(); }
 function hDelRx(key,i){ const H=hGet(); if(confirm('Remove this entry?')){ H[key].splice(i,1); hSave(); rHealth(); } }
-function hAddBP(){ const d=el('h-bp-d').value, sys=hNum(el('h-bp-s').value), dia=hNum(el('h-bp-di').value), pulse=hNum(el('h-bp-p').value); if(!d||sys==null||dia==null){alert('Enter date, systolic and diastolic');return;} const H=hGet(); H.bp=H.bp||[]; H.bp.push({d,sys,dia,pulse:pulse||null}); hSave(); rHealth(); }
+function hAddBP(){ const d=el('h-bp-d').value, sys=hNum(el('h-bp-s').value), dia=hNum(el('h-bp-di').value), pulse=hNum(el('h-bp-p').value), tod=el('h-bp-tod').value||null; if(!d||sys==null||dia==null){alert('Enter date, systolic and diastolic');return;} const H=hGet(); H.bp=H.bp||[]; H.bp.push({d,sys,dia,pulse:pulse||null,tod}); hSave(); rHealth(); }
 function hDelBP(i){ const H=hGet(); H.bp.splice(i,1); hSave(); rHealth(); }
 function fpAddTask(pid){ fpOpenTaskForm(pid,null); }
 function fpOpenTaskForm(pid,tid){

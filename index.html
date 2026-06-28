@@ -7700,6 +7700,13 @@ function flParseWorkbook(wb, fname) {
   });
 
   // Extract key dashboard values by scanning all cells
+  const safetyVerdict = (()=>{
+    for(const r of drows){
+      const v = r[1]||r[0];
+      if(typeof v==='string' && (v.includes("YOU'RE SAFE")||v.includes("YOU ARE SAFE")||v.includes("CAUTION")||v.includes("AT RISK")||v.includes("WARNING")||v.includes("DEPLETED"))) return v.trim();
+    }
+    return null;
+  })();
   const dv = {};
   drows.forEach(r => {
     for(let i=0;i<r.length;i++) {

@@ -1115,7 +1115,7 @@ localStorage.setItem = function(key, value) {
           <div class="sp" id="fsp4"><span class="spi">🎯</span><div><span class="spl">FIRE %</span><span class="spv" id="fsv4">—</span></div></div>
         </div>
         <!-- Key asset balances -->
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;" id="fire-asset-row">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;" id="fire-asset-row">
           <div style="border:1px solid var(--brd);background:var(--surf);padding:12px 16px;">
             <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);display:block;">HF Balance</span>
             <span id="fire-hf" style="font-size:20px;font-weight:700;display:block;margin-top:4px;color:#4a7ab8;">—</span>
@@ -1130,6 +1130,11 @@ localStorage.setItem = function(key, value) {
             <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);display:block;">HELOC Balance</span>
             <span id="fire-heloc" style="font-size:20px;font-weight:700;display:block;margin-top:4px;color:var(--red);">—</span>
             <span style="font-size:9px;color:var(--mut)">$750K max · 6.5%</span>
+          </div>
+          <div style="border:1px solid var(--brd);background:var(--surf);padding:12px 16px;">
+            <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);display:block;">Available $$</span>
+            <span id="fire-avail" style="font-size:20px;font-weight:700;display:block;margin-top:4px;color:var(--grn);">—</span>
+            <span style="font-size:9px;color:var(--mut)">HELOC available credit</span>
           </div>
         </div>
         <div class="card">
@@ -3050,8 +3055,14 @@ function rFire(){
     setBox('fsv2', al.income,   null);         // Current Income
     setBox('fire-hf',   al.hf,   null);
     setBox('fire-tiaa', al.tiaa, null);
-    setBox('fa-heloc',  al.heloc, n=>'-'+$$(Math.abs(n)), true);
+    setBox('fire-heloc', al.heloc, n=>'-'+$$(Math.abs(n)), true);
     setGapBox(al.income, al.expenses);
+    // Available $$ — HELOC available credit from VB fins data
+    const avEl = document.getElementById('fire-avail');
+    if(avEl && typeof S!=='undefined' && S.fins && S.fins.available!=null){
+      avEl.textContent = '$'+Math.round(S.fins.available).toLocaleString();
+      avEl.style.color = 'var(--grn)';
+    }
   }
   renderActVsProj();
   setTimeout(renderActVsProj, 200);
@@ -3947,7 +3958,7 @@ function hBPCard(H){
     +'<input id="h-bp-d" type="date" value="'+hToday()+'">'
     +'<input id="h-bp-s" type="number" placeholder="SYS" style="width:80px">'
     +'<input id="h-bp-di" type="number" placeholder="DIA" style="width:80px">'
-    +'<input id="h-bp-p" type="number" placeholder="pulse" style="width:80px">'+'<select id="h-bp-tod" style="width:70px;background:var(--surf);border:1px solid var(--brd2);color:var(--txt);font-family:inherit;font-size:11px;padding:3px"><option value="">—</option><option value="AM">AM</option><option value="PM">PM</option></select>'
+    +'<input id="h-bp-p" type="number" placeholder="pulse" style="width:80px">'
     +'<button class="btn" onclick="hAddBP()">+ Log</button></div>'
     +hBPLog(bp)
     +'<div style="font-size:8px;color:var(--mut2);margin-top:10px;font-style:italic">AHA categories. Not a diagnosis — discuss with your doctor.</div>'
@@ -3959,7 +3970,7 @@ function hBPLog(bp){
   return '<div style="display:flex;flex-direction:column;gap:2px">'+bp.slice(-10).reverse().map((x,i)=>{
     const cat=hBPcat(x.sys,x.dia);
     return '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:5px 0;border-bottom:1px solid var(--brd2)">'
-      +'<span style="color:var(--mut)">'+x.d+(x.tod?' <span style="font-size:9px;color:var(--txt2)">'+x.tod+'</span>':'')+'</span>'
+      +'<span style="color:var(--mut)">'+x.d+'</span>'
       +'<span style="display:flex;align-items:center;gap:10px"><span style="font-family:\'JetBrains Mono\',monospace;color:var(--txt2)">'+x.sys+'/'+x.dia+(x.pulse?' <span style="color:var(--mut)">♥'+x.pulse+'</span>':'')+'</span>'
       +'<span style="font-size:8px;font-weight:700;color:'+cat.c+';min-width:54px;text-align:right">'+cat.l+'</span>'
       +'<span onclick="hDelBP('+(bp.length-1-i)+')" style="color:var(--mut2);cursor:pointer">×</span></span></div>';
@@ -3998,7 +4009,7 @@ function hEditRxForm(key,i){ const H=hGet(); const isMed=(key==='meds'); const c
   const rec={name:name.trim(),dose:dose.trim(),sched:sched.trim(),purpose:purpose.trim()}; if(isMed) rec.by=by.trim();
   if(i!=null) H[key][i]=rec; else H[key].push(rec); hSave(); rHealth(); }
 function hDelRx(key,i){ const H=hGet(); if(confirm('Remove this entry?')){ H[key].splice(i,1); hSave(); rHealth(); } }
-function hAddBP(){ const d=el('h-bp-d').value, sys=hNum(el('h-bp-s').value), dia=hNum(el('h-bp-di').value), pulse=hNum(el('h-bp-p').value), tod=el('h-bp-tod').value||null; if(!d||sys==null||dia==null){alert('Enter date, systolic and diastolic');return;} const H=hGet(); H.bp=H.bp||[]; H.bp.push({d,sys,dia,pulse:pulse||null,tod}); hSave(); rHealth(); }
+function hAddBP(){ const d=el('h-bp-d').value, sys=hNum(el('h-bp-s').value), dia=hNum(el('h-bp-di').value), pulse=hNum(el('h-bp-p').value); if(!d||sys==null||dia==null){alert('Enter date, systolic and diastolic');return;} const H=hGet(); H.bp=H.bp||[]; H.bp.push({d,sys,dia,pulse:pulse||null}); hSave(); rHealth(); }
 function hDelBP(i){ const H=hGet(); H.bp.splice(i,1); hSave(); rHealth(); }
 function fpAddTask(pid){ fpOpenTaskForm(pid,null); }
 function fpOpenTaskForm(pid,tid){

@@ -5515,6 +5515,7 @@ function stel(id,val,style){const e=el(id);if(e){e.textContent=val;if(style)e.st
 // ══ VELOCITY BANKING EXCEL IMPORT ═══════════════════════════
 function importVBExcel(evt) {
   const file = evt.target.files[0];
+  evt.target.value = '';
   if(!file) return;
   const lbl = document.getElementById('vb-last-import');
   if(lbl) lbl.textContent = 'Reading ' + file.name + '…';
@@ -5884,6 +5885,7 @@ function importVBExcel(evt) {
 
 function importTicketExcel(evt) {
   const file = evt.target.files[0];
+  evt.target.value = '';
   if(!file) return;
   const st = document.getElementById('tk-status');
   if(st) st.textContent = 'Reading…';
@@ -7644,6 +7646,7 @@ try{ const _as=JSON.parse(localStorage.getItem('kcc_fl_actseries')||'null'); if(
 // ── IMPORT ───────────────────────────────────────────────────
 function flImport(evt) {
   const file = evt.target.files[0];
+  evt.target.value = '';   // reset so same file can be re-imported
   if(!file) return;
   if(document.getElementById('fl-import-status')) document.getElementById('fl-import-status').textContent = 'Reading ' + file.name + '…';
   const reader = new FileReader();

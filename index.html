@@ -1134,7 +1134,7 @@ localStorage.setItem = function(key, value) {
           <div style="border:1px solid var(--brd);background:var(--surf);padding:12px 16px;">
             <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);display:block;">Available $$</span>
             <span id="fire-avail" style="font-size:20px;font-weight:700;display:block;margin-top:4px;color:var(--grn);">—</span>
-            <span style="font-size:9px;color:var(--mut)">HELOC available credit</span>
+            <span style="font-size:9px;color:var(--mut)">FIRE Lab col U (actual)</span>
           </div>
         </div>
         <div class="card">
@@ -3056,13 +3056,15 @@ function rFire(){
     setBox('fire-hf',   al.hf,   null);
     setBox('fire-tiaa', al.tiaa, null);
     setBox('fire-heloc', al.heloc, n=>'-'+$$(Math.abs(n)), true);
-    setGapBox(al.income, al.expenses);
-    // Available $$ — HELOC available credit from VB fins data
-    const avEl = document.getElementById('fire-avail');
-    if(avEl && typeof S!=='undefined' && S.fins && S.fins.available!=null){
-      avEl.textContent = '$'+Math.round(S.fins.available).toLocaleString();
-      avEl.style.color = 'var(--grn)';
+    // Available $$ from FIRE Lab col U, fallback to VB
+    const avEl=document.getElementById('fire-avail');
+    if(avEl){
+      if(al.available&&al.available.actual!=null){ setBox('fire-avail',al.available,null); }
+      else if(typeof S!=='undefined'&&S.fins&&S.fins.available!=null){
+        avEl.textContent='$'+Math.round(S.fins.available).toLocaleString(); avEl.style.color='var(--grn)';
+      }
     }
+    setGapBox(al.income, al.expenses);
   }
   renderActVsProj();
   setTimeout(renderActVsProj, 200);

@@ -711,20 +711,16 @@ localStorage.setItem = function(key, value) {
 };
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
 <script>
 (function(){
-  var KEY='kcc_labc', VER='kcc_labc_prepop_v1';
-  if(localStorage.getItem(VER)) return; // already prepopulated
-  var existing=JSON.parse(localStorage.getItem(KEY)||'{}');
-  var preset=['la1','la22','la24','la25','la26','la9','la27'];
-  var changed=false;
-  preset.forEach(function(id){ if(!existing[id]){existing[id]=true;changed=true;} });
-  if(changed) localStorage.setItem(KEY,JSON.stringify(existing));
+  var KEY='kcc_labc',VER='kcc_labc_prepop_v1';
+  if(localStorage.getItem(VER))return;
+  var d=JSON.parse(localStorage.getItem(KEY)||'{}');
+  ['la1','la9','la22','la24','la25','la26','la27'].forEach(function(id){if(!d[id])d[id]=true;});
+  localStorage.setItem(KEY,JSON.stringify(d));
   localStorage.setItem(VER,'1');
 })();
-</script>
-</head>
+</script></head>
 <body>
 
 <!-- SETUP -->

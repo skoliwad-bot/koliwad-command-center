@@ -33,7 +33,6 @@ body.light{
   --blu:#1a3d6e;--orn:#c04010;--prp:#4c1d95;
   --pp:#111111;--pi:#f4f4f4;--pr:#8b1a1a;--ps:#1a4a2a;--pa:#6a4a00;--prl:#1a1a6a;--pf:#1a3050;
 }
-/* ── LIGHT MODE — AC Platform Aesthetic ── */
 body.light .top{background:#111111 !important;border-bottom:none !important;box-shadow:none !important;}
 body.light .top *{color:#ffffff !important;}
 body.light .top .btn{background:transparent !important;border-color:#555 !important;color:#ccc !important;}
@@ -590,7 +589,7 @@ const FB_KEYS = [
   'kcc_payplans','kcc_recbills','kcc_playbook_checks','kcc_cc_import','kcc_cc_paid','kcc_manbills',
   'kcc_fire_actuals','kcc_inbox','kcc_emails','kcc_calnames',
   'kcc_fp_phases','kcc_portfolio','kcc_tradelogs',
-  'kcc_bills','kcc_firelab_last','kcc_gtc','kcc_tkr','kcc_vb_bills','kcc_fl_actlatest','kcc_fl_actseries','kcc_pfchk','kcc_health','kcc_heloc_checks','kcc_budget','kcc_txns','kcc_cat_rules','kcc_biz_ac','kcc_txns','kcc_cat_rules'
+  'kcc_bills','kcc_firelab_last','kcc_gtc','kcc_tkr','kcc_vb_bills','kcc_fl_actlatest','kcc_fl_actseries','kcc_pfchk','kcc_health','kcc_heloc_checks','kcc_budget','kcc_txns','kcc_cat_rules','kcc_biz_ac','kcc_labc','kcc_txns','kcc_cat_rules'
 ];
 
 async function fbSave(key, value) {
@@ -712,6 +711,19 @@ localStorage.setItem = function(key, value) {
 };
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+(function(){
+  var KEY='kcc_labc', VER='kcc_labc_prepop_v1';
+  if(localStorage.getItem(VER)) return; // already prepopulated
+  var existing=JSON.parse(localStorage.getItem(KEY)||'{}');
+  var preset=['la1','la22','la24','la25','la26','la9','la27'];
+  var changed=false;
+  preset.forEach(function(id){ if(!existing[id]){existing[id]=true;changed=true;} });
+  if(changed) localStorage.setItem(KEY,JSON.stringify(existing));
+  localStorage.setItem(VER,'1');
+})();
+</script>
 </head>
 <body>
 
@@ -4968,119 +4980,6 @@ function rFireGoals(){
 }
 
 // ── BUSINESS ─────────────────────────────────────────────────
-function rBiz(){
-  const z=S.tz;
-  if(z&&el('tz1')){el('tz1').textContent=f$(z.rev);el('tz2').textContent=z.mem||'—';el('tz3').textContent=z.cap?z.cap+'%':'—';el('tz4').textContent=z.pas||'—';}
-  setBizTab(S._bizTab||'ac',true);
-}
-
-function setBizTab(id,silent){
-  S._bizTab=id;
-  var tabs=['ac','swybc'];
-  for(var ti=0;ti<tabs.length;ti++){
-    var t=tabs[ti];
-    var e2=document.getElementById('biz-'+t);
-    var btn=document.getElementById('biztb'+(ti+1));
-    if(e2) e2.style.display=(t===id)?'':'none';
-    if(btn) btn.classList.toggle('on',t===id);
-  }
-  if(id==='ac') rBizAC();
-  else rBizSWYBC();
-}
-
-var AC_WS=[
-  {id:'legal',label:'Legal Foundation',icon:'⚖️',items:[
-    {id:'l1',t:'File Athletic Capital LLC — CA SOS',p:'CRITICAL',nb:'Jul 2026'},
-    {id:'l2',t:'Obtain EIN from IRS',p:'CRITICAL',nb:'Jul 2026'},
-    {id:'l3',t:'Open dedicated AC business checking account',p:'CRITICAL',nb:'Jul 2026'},
-    {id:'l4',t:'Purchase ThriveCart + connect Stripe',p:'CRITICAL',nb:'Jul 2026'},
-    {id:'l5',t:'Set up AC Zoho Books instance',p:'HIGH',nb:'Jul 2026'},
-    {id:'l6',t:'Terms of Service live before cart opens',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'l7',t:'Privacy Policy live — CCPA compliant',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'l8',t:'All 4 AC disclaimers on landing page',p:'HIGH',nb:'Aug 2026'},
-    {id:'l9',t:'30-day guarantee conditions documented',p:'HIGH',nb:'Aug 2026'},
-    {id:'l10',t:'USPTO trademark search — Athletic Capital',p:'MEDIUM',nb:'Aug 2026'},
-    {id:'l11',t:'Open Coogan trust account — Kyrin',p:'CRITICAL',nb:'Jul 2026'},
-    {id:'l12',t:'Open Coogan trust account — Kyleigh',p:'CRITICAL',nb:'Jul 2026'},
-    {id:'l13',t:'Attorney drafts Kyrin ambassador agreement',p:'CRITICAL',nb:'Jul 2026'},
-    {id:'l14',t:'Attorney drafts Kyleigh ambassador agreement',p:'CRITICAL',nb:'Jul 2026'},
-    {id:'l15',t:'CIF Southern Section disclosure filed for Kyrin',p:'CRITICAL',nb:'Jul 2026'},
-    {id:'l16',t:'Kyleigh studio contract reviewed',p:'CRITICAL',nb:'Jul 2026'},
-    {id:'l17',t:'CPA briefed — AC digital + subscription income',p:'HIGH',nb:'Jul 2026'}
-  ]},
-  {id:'build',label:'Product Build',icon:'🏗️',items:[
-    {id:'b1',t:'Sales landing page built and live',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'b2',t:'NIL Readiness Checklist — interactive HTML',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'b3',t:'Sports Spend Audit Template — interactive HTML',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'b4',t:'Sports Family Tax Guide — interactive HTML',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'b5',t:'NIL Roadmap by Sport & Age — interactive HTML',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'b6',t:'Recruiting Financial Intelligence Guide',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'b7',t:'ThriveCart checkout configured ($997 Blueprint)',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'b8',t:'6-email onboarding sequence in Klaviyo/Kit',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'b9',t:'Scout offer page built ($297/mo)',p:'HIGH',nb:'Sep 2026'},
-    {id:'b10',t:'Circle.so community workspace set up',p:'HIGH',nb:'Sep 2026'},
-    {id:'b11',t:'Performing Arts Blueprint page drafted',p:'MEDIUM',nb:'Oct 2026'},
-    {id:'b12',t:'Run Blueprint tools on Koliwad family',p:'HIGH',nb:'Aug 2026'}
-  ]},
-  {id:'seed',label:'Seed — First $10K',icon:'🌱',items:[
-    {id:'s1',t:'Social handles secured @athleticcapital',p:'HIGH',nb:'Aug 2026'},
-    {id:'s2',t:'Personal outreach to 50 sports families',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'s3',t:'Founding Member pricing live ($697)',p:'HIGH',nb:'Aug 2026'},
-    {id:'s4',t:'First newsletter issue sent',p:'HIGH',nb:'Sep 2026'},
-    {id:'s5',t:'Book first Spotlight athlete',p:'HIGH',nb:'Sep 2026'},
-    {id:'s6',t:'Collect 3-5 written testimonials',p:'HIGH',nb:'Sep 2026'},
-    {id:'s7',t:'Brief and hire e-marketer',p:'CRITICAL',nb:'Sep 2026'},
-    {id:'s8',t:'Social pro hired — kids accounts deal signed',p:'HIGH',nb:'Aug 2026'},
-    {id:'s9',t:'Kyrin Instagram + TikTok launched',p:'HIGH',nb:'Aug 2026'},
-    {id:'s10',t:'Kyleigh TikTok + Instagram launched',p:'HIGH',nb:'Aug 2026'},
-    {id:'s11',t:'Kylo Instagram started — archive phase',p:'MEDIUM',nb:'Sep 2026'}
-  ]},
-  {id:'scale',label:'Scale — $20K/Month',icon:'📈',items:[
-    {id:'sc1',t:'E-marketer launches first ad campaign',p:'CRITICAL',nb:'Sep 2026'},
-    {id:'sc2',t:'First monthly Spotlight call',p:'CRITICAL',nb:'Oct 2026'},
-    {id:'sc3',t:'YouTube channel launched',p:'HIGH',nb:'Oct 2026'},
-    {id:'sc4',t:'Weekly newsletter cadence established',p:'CRITICAL',nb:'Sep 2026'},
-    {id:'sc5',t:'First accountability review with Scout members',p:'HIGH',nb:'Oct 2026'},
-    {id:'sc6',t:'A/B test 3 ad hooks, double down on winner',p:'HIGH',nb:'Oct 2026'},
-    {id:'sc7',t:'Performing Arts Blueprint funnel launches',p:'MEDIUM',nb:'Nov 2026'},
-    {id:'sc8',t:'DFY Social pilot — 2-3 Scout accounts',p:'HIGH',nb:'Nov 2026'},
-    {id:'sc9',t:'VA job post live for DFY Social',p:'HIGH',nb:'Oct 2026'},
-    {id:'sc10',t:'67+ active Scout members at $297/mo',p:'CRITICAL',nb:'Dec 2026'}
-  ]},
-  {id:'partner',label:'Partner Phase',icon:'🤝',items:[
-    {id:'p1',t:'75-100 active Scout members',p:'CRITICAL',nb:'Jan 2027'},
-    {id:'p2',t:'$18-22K/month for 3+ months',p:'CRITICAL',nb:'Feb 2027'},
-    {id:'p3',t:'1,000+ newsletter subscribers',p:'CRITICAL',nb:'Jan 2027'},
-    {id:'p4',t:'6+ Spotlight calls completed',p:'CRITICAL',nb:'Jan 2027'},
-    {id:'p5',t:'3-5 DFY Social pilot clients running',p:'CRITICAL',nb:'Jan 2027'},
-    {id:'p6',t:'SCWYBC university partner conversations',p:'HIGH',nb:'Dec 2026'},
-    {id:'p7',t:'University Partner waitlist announced',p:'HIGH',nb:'Feb 2027'},
-    {id:'p8',t:'Call Brandon — thriving trigger green',p:'CRITICAL',nb:'Feb 2027'},
-    {id:'p9',t:'Call Andrew — Dodgers network',p:'CRITICAL',nb:'Feb 2027'}
-  ]}
-];
-
-function acLoad(){return JSON.parse(localStorage.getItem('kcc_biz_ac')||'{}');}
-function acSave(d){localStorage.setItem('kcc_biz_ac',JSON.stringify(d));try{fbSaveAll();}catch(e){}}
-function acToggle(id){
-  var d=acLoad();d[id]=!d[id];acSave(d);
-  var el2=document.getElementById('ac-'+id);
-  if(el2) el2.classList.toggle('done',d[id]);
-  for(var wi=0;wi<AC_WS.length;wi++){
-    var ws=AC_WS[wi];
-    var found=false;
-    for(var ii=0;ii<ws.items.length;ii++){if(ws.items[ii].id===id){found=true;break;}}
-    if(found){
-      var tot=ws.items.length,done=0;
-      for(var ji=0;ji<ws.items.length;ji++){if(d[ws.items[ji].id])done++;}
-      var pEl=document.getElementById('ws-pct-'+ws.id);
-      var bEl=document.getElementById('ws-bar-'+ws.id);
-      if(pEl)pEl.textContent=done+'/'+tot;
-      if(bEl)bEl.style.width=Math.round(done/tot*100)+'%';
-    }
-  }
-}
-
 var LABC_ITEMS=[
   {id:'la1',cat:'BEFORE YOU TRAVEL',p:'CRITICAL',t:'Do NOT unsubscribe from Big League Edge marketing emails',nb:'IMMEDIATE'},
   {id:'la2',cat:'BEFORE YOU TRAVEL',p:'CRITICAL',t:'Start full hydration regimen NOW — 6-8 glasses water/day',nb:'IMMEDIATE'},
@@ -5246,6 +5145,119 @@ function buildLabcHtml(){
 }
 
 
+function rBiz(){
+  const z=S.tz;
+  if(z&&el('tz1')){el('tz1').textContent=f$(z.rev);el('tz2').textContent=z.mem||'—';el('tz3').textContent=z.cap?z.cap+'%':'—';el('tz4').textContent=z.pas||'—';}
+  setBizTab(S._bizTab||'ac',true);
+}
+
+function setBizTab(id,silent){
+  S._bizTab=id;
+  var tabs=['ac','swybc'];
+  for(var ti=0;ti<tabs.length;ti++){
+    var t=tabs[ti];
+    var e2=document.getElementById('biz-'+t);
+    var btn=document.getElementById('biztb'+(ti+1));
+    if(e2) e2.style.display=(t===id)?'':'none';
+    if(btn) btn.classList.toggle('on',t===id);
+  }
+  if(id==='ac') rBizAC();
+  else rBizSWYBC();
+}
+
+var AC_WS=[
+  {id:'legal',label:'Legal Foundation',icon:'⚖️',items:[
+    {id:'l1',t:'File Athletic Capital LLC — CA SOS',p:'CRITICAL',nb:'Jul 2026'},
+    {id:'l2',t:'Obtain EIN from IRS',p:'CRITICAL',nb:'Jul 2026'},
+    {id:'l3',t:'Open dedicated AC business checking account',p:'CRITICAL',nb:'Jul 2026'},
+    {id:'l4',t:'Purchase ThriveCart + connect Stripe',p:'CRITICAL',nb:'Jul 2026'},
+    {id:'l5',t:'Set up AC Zoho Books instance',p:'HIGH',nb:'Jul 2026'},
+    {id:'l6',t:'Terms of Service live before cart opens',p:'CRITICAL',nb:'Aug 2026'},
+    {id:'l7',t:'Privacy Policy live — CCPA compliant',p:'CRITICAL',nb:'Aug 2026'},
+    {id:'l8',t:'All 4 AC disclaimers on landing page',p:'HIGH',nb:'Aug 2026'},
+    {id:'l9',t:'30-day guarantee conditions documented',p:'HIGH',nb:'Aug 2026'},
+    {id:'l10',t:'USPTO trademark search — Athletic Capital',p:'MEDIUM',nb:'Aug 2026'},
+    {id:'l11',t:'Open Coogan trust account — Kyrin',p:'CRITICAL',nb:'Jul 2026'},
+    {id:'l12',t:'Open Coogan trust account — Kyleigh',p:'CRITICAL',nb:'Jul 2026'},
+    {id:'l13',t:'Attorney drafts Kyrin ambassador agreement',p:'CRITICAL',nb:'Jul 2026'},
+    {id:'l14',t:'Attorney drafts Kyleigh ambassador agreement',p:'CRITICAL',nb:'Jul 2026'},
+    {id:'l15',t:'CIF Southern Section disclosure filed for Kyrin',p:'CRITICAL',nb:'Jul 2026'},
+    {id:'l16',t:'Kyleigh studio contract reviewed',p:'CRITICAL',nb:'Jul 2026'},
+    {id:'l17',t:'CPA briefed — AC digital + subscription income',p:'HIGH',nb:'Jul 2026'}
+  ]},
+  {id:'build',label:'Product Build',icon:'🏗️',items:[
+    {id:'b1',t:'Sales landing page built and live',p:'CRITICAL',nb:'Aug 2026'},
+    {id:'b2',t:'NIL Readiness Checklist — interactive HTML',p:'CRITICAL',nb:'Aug 2026'},
+    {id:'b3',t:'Sports Spend Audit Template — interactive HTML',p:'CRITICAL',nb:'Aug 2026'},
+    {id:'b4',t:'Sports Family Tax Guide — interactive HTML',p:'CRITICAL',nb:'Aug 2026'},
+    {id:'b5',t:'NIL Roadmap by Sport & Age — interactive HTML',p:'CRITICAL',nb:'Aug 2026'},
+    {id:'b6',t:'Recruiting Financial Intelligence Guide',p:'CRITICAL',nb:'Aug 2026'},
+    {id:'b7',t:'ThriveCart checkout configured ($997 Blueprint)',p:'CRITICAL',nb:'Aug 2026'},
+    {id:'b8',t:'6-email onboarding sequence in Klaviyo/Kit',p:'CRITICAL',nb:'Aug 2026'},
+    {id:'b9',t:'Scout offer page built ($297/mo)',p:'HIGH',nb:'Sep 2026'},
+    {id:'b10',t:'Circle.so community workspace set up',p:'HIGH',nb:'Sep 2026'},
+    {id:'b11',t:'Performing Arts Blueprint page drafted',p:'MEDIUM',nb:'Oct 2026'},
+    {id:'b12',t:'Run Blueprint tools on Koliwad family',p:'HIGH',nb:'Aug 2026'}
+  ]},
+  {id:'seed',label:'Seed — First $10K',icon:'🌱',items:[
+    {id:'s1',t:'Social handles secured @athleticcapital',p:'HIGH',nb:'Aug 2026'},
+    {id:'s2',t:'Personal outreach to 50 sports families',p:'CRITICAL',nb:'Aug 2026'},
+    {id:'s3',t:'Founding Member pricing live ($697)',p:'HIGH',nb:'Aug 2026'},
+    {id:'s4',t:'First newsletter issue sent',p:'HIGH',nb:'Sep 2026'},
+    {id:'s5',t:'Book first Spotlight athlete',p:'HIGH',nb:'Sep 2026'},
+    {id:'s6',t:'Collect 3-5 written testimonials',p:'HIGH',nb:'Sep 2026'},
+    {id:'s7',t:'Brief and hire e-marketer',p:'CRITICAL',nb:'Sep 2026'},
+    {id:'s8',t:'Social pro hired — kids accounts deal signed',p:'HIGH',nb:'Aug 2026'},
+    {id:'s9',t:'Kyrin Instagram + TikTok launched',p:'HIGH',nb:'Aug 2026'},
+    {id:'s10',t:'Kyleigh TikTok + Instagram launched',p:'HIGH',nb:'Aug 2026'},
+    {id:'s11',t:'Kylo Instagram started — archive phase',p:'MEDIUM',nb:'Sep 2026'}
+  ]},
+  {id:'scale',label:'Scale — $20K/Month',icon:'📈',items:[
+    {id:'sc1',t:'E-marketer launches first ad campaign',p:'CRITICAL',nb:'Sep 2026'},
+    {id:'sc2',t:'First monthly Spotlight call',p:'CRITICAL',nb:'Oct 2026'},
+    {id:'sc3',t:'YouTube channel launched',p:'HIGH',nb:'Oct 2026'},
+    {id:'sc4',t:'Weekly newsletter cadence established',p:'CRITICAL',nb:'Sep 2026'},
+    {id:'sc5',t:'First accountability review with Scout members',p:'HIGH',nb:'Oct 2026'},
+    {id:'sc6',t:'A/B test 3 ad hooks, double down on winner',p:'HIGH',nb:'Oct 2026'},
+    {id:'sc7',t:'Performing Arts Blueprint funnel launches',p:'MEDIUM',nb:'Nov 2026'},
+    {id:'sc8',t:'DFY Social pilot — 2-3 Scout accounts',p:'HIGH',nb:'Nov 2026'},
+    {id:'sc9',t:'VA job post live for DFY Social',p:'HIGH',nb:'Oct 2026'},
+    {id:'sc10',t:'67+ active Scout members at $297/mo',p:'CRITICAL',nb:'Dec 2026'}
+  ]},
+  {id:'partner',label:'Partner Phase',icon:'🤝',items:[
+    {id:'p1',t:'75-100 active Scout members',p:'CRITICAL',nb:'Jan 2027'},
+    {id:'p2',t:'$18-22K/month for 3+ months',p:'CRITICAL',nb:'Feb 2027'},
+    {id:'p3',t:'1,000+ newsletter subscribers',p:'CRITICAL',nb:'Jan 2027'},
+    {id:'p4',t:'6+ Spotlight calls completed',p:'CRITICAL',nb:'Jan 2027'},
+    {id:'p5',t:'3-5 DFY Social pilot clients running',p:'CRITICAL',nb:'Jan 2027'},
+    {id:'p6',t:'SCWYBC university partner conversations',p:'HIGH',nb:'Dec 2026'},
+    {id:'p7',t:'University Partner waitlist announced',p:'HIGH',nb:'Feb 2027'},
+    {id:'p8',t:'Call Brandon — thriving trigger green',p:'CRITICAL',nb:'Feb 2027'},
+    {id:'p9',t:'Call Andrew — Dodgers network',p:'CRITICAL',nb:'Feb 2027'}
+  ]}
+];
+
+function acLoad(){return JSON.parse(localStorage.getItem('kcc_biz_ac')||'{}');}
+function acSave(d){localStorage.setItem('kcc_biz_ac',JSON.stringify(d));try{fbSaveAll();}catch(e){}}
+function acToggle(id){
+  var d=acLoad();d[id]=!d[id];acSave(d);
+  var el2=document.getElementById('ac-'+id);
+  if(el2) el2.classList.toggle('done',d[id]);
+  for(var wi=0;wi<AC_WS.length;wi++){
+    var ws=AC_WS[wi];
+    var found=false;
+    for(var ii=0;ii<ws.items.length;ii++){if(ws.items[ii].id===id){found=true;break;}}
+    if(found){
+      var tot=ws.items.length,done=0;
+      for(var ji=0;ji<ws.items.length;ji++){if(d[ws.items[ji].id])done++;}
+      var pEl=document.getElementById('ws-pct-'+ws.id);
+      var bEl=document.getElementById('ws-bar-'+ws.id);
+      if(pEl)pEl.textContent=done+'/'+tot;
+      if(bEl)bEl.style.width=Math.round(done/tot*100)+'%';
+    }
+  }
+}
+
 function rBizAC(){
   var acData=acLoad();
   var tripDays=Math.ceil((new Date('2026-08-08')-new Date())/(1000*60*60*24));
@@ -5280,7 +5292,16 @@ function rBizAC(){
   }
   html+='</div>';
 
-  html+=buildLabcHtml();
+  // LABC strip
+  var tc=tripDays<=14?'var(--red)':tripDays<=30?'var(--amb)':'var(--grn)';
+  html+='<div style="border:1px solid var(--brd);background:var(--surf);padding:12px 14px;margin-bottom:14px;">';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;">';
+  html+='<div><div style="font-size:12px;font-weight:700">✈️ Kyrin — USA-LABC Dominican Republic</div>';
+  html+='<div style="font-size:9px;color:var(--mut);margin-top:3px">Aug 8–15, 2026 · LAX → SDQ · Coral Costa Caribe, Juan Dolio</div></div>';
+  html+='<div style="text-align:right"><div style="font-size:22px;font-weight:700;color:'+tc+'">'+(tripDays>0?tripDays+'d':'LIVE')+'</div>';
+  html+='<div style="font-size:8px;color:var(--mut)">until departure</div></div></div>';
+  html+='<div style="font-size:9px;color:var(--mut);margin-top:8px">Track full 68-item checklist in LABC section below Ambassador Pipeline</div>';
+  html+='</div>';
 
   // Ambassador pipeline
   html+='<div style="border:1px solid var(--brd);background:var(--surf);padding:12px 14px;">';

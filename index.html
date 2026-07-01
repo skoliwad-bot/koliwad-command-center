@@ -5158,8 +5158,8 @@ function rBizAC(){
     wsHtml+='<div class="ws-card"><div class="ws-head"><span>'+ws.icon+' '+ws.label+'</span><span class="ws-pct" id="ws-pct-'+ws.id+'">'+done+'/'+tot+'</span></div>'+
       '<div class="ws-bar"><div class="ws-fill" id="ws-bar-'+ws.id+'" style="width:'+pct+'%"></div></div>'+
       ws.items.map(it=>{const chk=acData[it.id]||false,col=it.p==='CRITICAL'?'var(--red)':it.p==='HIGH'?'var(--amb)':'var(--mut)';
-        return '<div class="ws-item'+(chk?' done':'')+'" id="ac-'+it.id+'" onclick="acToggle(''+it.id+'')">'+
-          '<input type="checkbox" '+(chk?'checked':'')+' onclick="event.stopPropagation();acToggle(''+it.id+'')">'+
+        return '<div class="ws-item'+(chk?' done':'')+'" id="ac-'+it.id+'" data-id="'+it.id+'" onclick="acToggle(this.dataset.id)">'+
+          '<input type="checkbox" '+(chk?'checked':'')+' data-id="'+it.id+'" onclick="event.stopPropagation();acToggle(this.dataset.id)">'+
           '<span style="color:var(--mut);font-size:9px;white-space:nowrap;flex-shrink:0;width:52px">'+it.nb+'</span>'+
           '<span style="color:'+(chk?'var(--mut)':col)+'">'+it.t+'</span></div>';
       }).join('')+'</div>';
@@ -5179,8 +5179,8 @@ function rBizAC(){
   if(urgentOpen.length){
     labcHtml+='<div style="background:var(--rdim);border:1px solid var(--rbrd);padding:8px 10px;margin-bottom:10px;">'+
     '<div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);margin-bottom:4px">Open Critical Items</div>'+
-    urgentOpen.map(i=>'<div class="labc-item'+(labcData[i.id]?' done':'')+'" id="labc-'+i.id+'" onclick="labcToggle(''+i.id+'')">'+
-      '<input type="checkbox" '+(labcData[i.id]?'checked':'')+' onclick="event.stopPropagation();labcToggle(''+i.id+'')">'+
+    urgentOpen.map(i=>'<div class="labc-item'+(labcData[i.id]?' done':'')+'" id="labc-'+i.id+'" data-id="'+i.id+'" onclick="labcToggle(this.dataset.id)">'+
+      '<input type="checkbox" '+(labcData[i.id]?'checked':'')+' data-id="'+i.id+'" onclick="event.stopPropagation();labcToggle(this.dataset.id)">'+
       '<span style="font-size:8px;font-weight:700;color:var(--red);flex-shrink:0;width:60px">'+i.nb+'</span>'+
       '<span class="labc-txt">'+i.t+'</span></div>').join('')+'</div>';
   }
@@ -5189,8 +5189,8 @@ function rBizAC(){
     labcHtml+='<div class="labc-cat">'+cat+'</div>';
     LABC_ITEMS.filter(i=>i.cat===cat).forEach(i=>{
       const col=i.p==='CRITICAL'?'var(--red)':i.p==='HIGH'?'var(--amb)':'var(--mut)';
-      labcHtml+='<div class="labc-item'+(labcData[i.id]?' done':'')+'" id="labc-'+i.id+'" onclick="labcToggle(''+i.id+'')">'+
-        '<input type="checkbox" '+(labcData[i.id]?'checked':'')+' onclick="event.stopPropagation();labcToggle(''+i.id+'')">'+
+      labcHtml+='<div class="labc-item'+(labcData[i.id]?' done':'')+'" id="labc-'+i.id+'" data-id="'+i.id+'" onclick="labcToggle(this.dataset.id)">'+
+        '<input type="checkbox" '+(labcData[i.id]?'checked':'')+' data-id="'+i.id+'" onclick="event.stopPropagation();labcToggle(this.dataset.id)">'+
         '<span style="font-size:8px;font-weight:700;color:'+(labcData[i.id]?'var(--mut)':col)+';flex-shrink:0;width:55px">'+i.nb+'</span>'+
         '<span class="labc-txt" style="color:'+(labcData[i.id]?'var(--mut)':'var(--txt2)')+'">'+i.t+'</span></div>';
     });

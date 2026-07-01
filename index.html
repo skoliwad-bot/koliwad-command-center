@@ -254,6 +254,23 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 .fin-mo.on{background:var(--surf2);color:var(--grn);border-color:var(--grn);}
 .fin-mo-future{font-size:9px;padding:3px 9px;border:1px solid var(--brd2);background:none;color:var(--mut2);opacity:0.4;font-family:inherit;}
 .fin-rev-row{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--brd);flex-wrap:wrap;}
+
+/* ── BUSINESS ── */
+.ws-card{border:1px solid var(--brd);background:var(--surf);padding:12px 14px;position:relative;}
+.ws-head{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
+.ws-pct{font-size:11px;font-weight:700;}
+.ws-bar{height:3px;background:var(--brd2);border-radius:2px;margin:6px 0 8px;}
+.ws-fill{height:100%;border-radius:2px;background:var(--grn);transition:width .3s;}
+.ws-item{display:flex;align-items:flex-start;gap:6px;padding:3px 0;border-bottom:0.5px solid var(--brd);font-size:11px;cursor:pointer;}
+.ws-item:last-child{border-bottom:none;}
+.ws-item input[type=checkbox]{margin-top:2px;flex-shrink:0;cursor:pointer;}
+.ws-item.done span{color:var(--mut);text-decoration:line-through;}
+.labc-cat{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);padding:6px 0 3px;margin-top:4px;}
+.labc-item{display:flex;align-items:flex-start;gap:6px;padding:4px 0;border-bottom:0.5px solid var(--brd);font-size:10px;cursor:pointer;}
+.labc-item.done span.labc-txt{color:var(--mut);text-decoration:line-through;}
+.labc-crit{color:var(--red);font-size:8px;font-weight:700;flex-shrink:0;width:50px;}
+.labc-high{color:var(--amb);font-size:8px;font-weight:700;flex-shrink:0;width:50px;}
+.labc-med{color:var(--mut);font-size:8px;font-weight:700;flex-shrink:0;width:50px;}
 /* ── BRIEFING ── */
 #brief{display:none;background:#e8e8e8;}
 #brief.on{display:block;padding:20px;min-height:100vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
@@ -573,7 +590,7 @@ const FB_KEYS = [
   'kcc_payplans','kcc_recbills','kcc_playbook_checks','kcc_cc_import','kcc_cc_paid','kcc_manbills',
   'kcc_fire_actuals','kcc_inbox','kcc_emails','kcc_calnames',
   'kcc_fp_phases','kcc_portfolio','kcc_tradelogs',
-  'kcc_bills','kcc_firelab_last','kcc_gtc','kcc_tkr','kcc_vb_bills','kcc_fl_actlatest','kcc_fl_actseries','kcc_pfchk','kcc_health','kcc_heloc_checks','kcc_budget','kcc_txns','kcc_cat_rules'
+  'kcc_bills','kcc_firelab_last','kcc_gtc','kcc_tkr','kcc_vb_bills','kcc_fl_actlatest','kcc_fl_actseries','kcc_pfchk','kcc_health','kcc_heloc_checks','kcc_budget','kcc_txns','kcc_cat_rules','kcc_biz_ac','kcc_labc'
 ];
 
 async function fbSave(key, value) {
@@ -1269,60 +1286,24 @@ localStorage.setItem = function(key, value) {
 </div>
 
       <!-- BUSINESS -->
-      <div class="page" id="p-business">
-        <div class="ph"><div><div class="pt">Business</div><div class="ps">Throwzone · Athletic Capital · SWYBC</div></div></div>
-        <div class="g2">
-          <!-- THROWZONE -->
-          <div class="card">
-            <div class="ch"><span class="ct o">⚾ Throwzone</span><button class="btn" onclick="om('tz')">Update KPIs</button></div>
-            <div class="row"><div style="flex:1"><div class="rtl">Monthly Revenue</div></div><span id="tz1" style="font-size:14px;font-weight:700;color:var(--grn)">—</span></div>
-            <div class="row"><div style="flex:1"><div class="rtl">Active Members</div></div><span id="tz2" style="font-size:14px;font-weight:700;color:var(--txt)">—</span></div>
-            <div class="row"><div style="flex:1"><div class="rtl">Capacity Utilization</div></div><span id="tz3" style="font-size:14px;font-weight:700;color:var(--amb)">—</span></div>
-            <div class="row"><div style="flex:1"><div class="rtl">Pasadena Status</div></div><span id="tz4" style="font-size:12px;font-weight:700;color:var(--mut)">—</span></div>
-          </div>
-          <!-- ATHLETIC CAPITAL -->
-          <div class="card">
-            <div class="ch"><span class="ct b">⚡ Athletic Capital</span><a href="https://skoliwad-bot.github.io/ac-platform" target="_blank" style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mut);text-decoration:none;border:1px solid var(--brd2);padding:3px 8px;">↗ OS</a></div>
-            <div class="row hi"><div style="flex:1"><div class="rtl">5 Blueprint HTML Tools</div></div><span style="font-size:9px;font-weight:700;color:var(--red);letter-spacing:1px">PENDING</span></div>
-            <div class="row hi"><div style="flex:1"><div class="rtl">Performing Arts Landing Page</div></div><span style="font-size:9px;font-weight:700;color:var(--red);letter-spacing:1px">PENDING</span></div>
-            <div class="row hi"><div style="flex:1"><div class="rtl">E-Marketer Job Post</div></div><span style="font-size:9px;font-weight:700;color:var(--red);letter-spacing:1px">PENDING</span></div>
-            <div class="row mi"><div style="flex:1"><div class="rtl">AC Zoho Books Instance</div></div><span style="font-size:9px;font-weight:700;color:var(--amb);letter-spacing:1px">PENDING</span></div>
-            <div class="row mi"><div style="flex:1"><div class="rtl">FIRE Model → AC as Primary Income</div></div><span style="font-size:9px;font-weight:700;color:var(--amb);letter-spacing:1px">PENDING</span></div>
-            <div class="row"><div style="flex:1"><div class="rtl" style="color:var(--mut);font-size:11px">Kyrin · USA-LABC DR Trip Aug 8–15</div></div><span style="font-size:9px;color:var(--mut)">Ambassador Pipeline</span></div>
+            <div class="page" id="p-business">
+        <div class="ph">
+          <div><div class="pt">Business</div><div class="ps" id="biz-sub">Athletic Capital · SWYBC</div></div>
+          <div style="display:flex;gap:6px">
+            <a href="https://skoliwad-bot.github.io/ac-platform" target="_blank" class="btn" style="text-decoration:none">↗ AC OS</a>
           </div>
         </div>
-        <!-- SWYBC — full width below -->
-        <div class="card" style="margin-bottom:12px">
-          <div class="ch"><span class="ct g">⚾ SWYBC — SoCal World Youth Baseball Classic</span><a href="https://skoliwad-bot.github.io/swybc" target="_blank" style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mut);text-decoration:none;border:1px solid var(--brd2);padding:3px 8px;">↗ SITE</a></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0">
-            <div class="row hi"><div style="flex:1"><div class="rtl">SoCal D1 Facility — Lock Date</div></div><span style="font-size:9px;font-weight:700;color:var(--red);letter-spacing:1px">TBD</span></div>
-            <div class="row hi"><div style="flex:1"><div class="rtl">Team Invitations (8×3 divisions)</div></div><span style="font-size:9px;font-weight:700;color:var(--red);letter-spacing:1px">NOT SENT</span></div>
-            <div class="row hi"><div style="flex:1"><div class="rtl">Sponsor Outreach — Phase 1</div></div><span style="font-size:9px;font-weight:700;color:var(--red);letter-spacing:1px">NOT STARTED</span></div>
-            <div class="row mi"><div style="flex:1"><div class="rtl">Player Profile Application System</div></div><span style="font-size:9px;font-weight:700;color:var(--amb);letter-spacing:1px">PENDING</span></div>
-            <div class="row mi"><div style="flex:1"><div class="rtl">Brandon / Andrew — Equity Convos</div></div><span style="font-size:9px;font-weight:700;color:var(--amb);letter-spacing:1px">JUL/AUG</span></div>
-            <div class="row"><div style="flex:1"><div class="rtl">Christmas Classic — Dec 26–29, 2026</div></div><span id="swybc-days" style="font-size:13px;font-weight:700;color:var(--grn)">—</span></div>
-          </div>
-          <div style="padding:8px 16px;border-top:1px solid var(--brd);display:flex;gap:24px;align-items:center">
-            <div style="font-size:8px;color:var(--mut);letter-spacing:1px;text-transform:uppercase">Gross Target</div><div style="font-size:13px;font-weight:700;color:var(--txt)">$458K</div>
-            <div style="font-size:8px;color:var(--mut);letter-spacing:1px;text-transform:uppercase">Pre-Tax Net</div><div style="font-size:13px;font-weight:700;color:var(--grn)">$272K</div>
-            <div style="font-size:8px;color:var(--mut);letter-spacing:1px;text-transform:uppercase">Divisions</div><div style="font-size:13px;font-weight:700;color:var(--txt)">14U · 16U · 18U</div>
-            <div style="font-size:8px;color:var(--mut);letter-spacing:1px;text-transform:uppercase">Teams/Div</div><div style="font-size:13px;font-weight:700;color:var(--txt)">8</div>
-            <div style="font-size:8px;color:var(--mut);letter-spacing:1px;text-transform:uppercase">Fee/Player</div><div style="font-size:13px;font-weight:700;color:var(--txt)">$400</div>
-          </div>
+        <!-- TAB NAV -->
+        <div class="ftab" style="margin-bottom:14px">
+          <button id="biztb1" onclick="setBizTab('ac')" class="on">⚡ Athletic Capital</button>
+          <button id="biztb2" onclick="setBizTab('swybc')">⚾ SWYBC</button>
         </div>
-        <script>
-        (function(){
-          var el=document.getElementById('swybc-days');
-          if(!el)return;
-          var now=new Date();
-          var event=new Date('2026-12-26');
-          var diff=Math.ceil((event-now)/(1000*60*60*24));
-          el.textContent=diff>0?diff+'d away':'LIVE';
-        })();
-        </script>
+        <div id="biz-ac"></div>
+        <div id="biz-swybc" style="display:none"></div>
       </div>
 
       <!-- EXEC -->
+<!-- EXEC -->
       <div class="page" id="p-exec">
         <div class="ph"><div><div class="pt">Exec Summary</div><div class="ps" id="execMon">—</div></div>
           <div style="display:flex;gap:6px">
@@ -4993,6 +4974,356 @@ function rFireGoals(){
 
 // ── BUSINESS ─────────────────────────────────────────────────
 function rBiz(){
+  const z=S.tz;
+  if(z&&document.getElementById('tz1')){el('tz1').textContent=f$(z.rev);el('tz2').textContent=z.mem||'—';el('tz3').textContent=z.cap?z.cap+'%':'—';el('tz4').textContent=z.pas||'—';}
+  setBizTab(S._bizTab||'ac', true);
+}
+
+function setBizTab(id, silent){
+  S._bizTab=id;
+  ['ac','swybc'].forEach((t,i)=>{
+    const el2=document.getElementById('biz-'+t);
+    const btn=document.getElementById('biztb'+(i+1));
+    if(el2) el2.style.display=t===id?'':'none';
+    if(btn) btn.classList.toggle('on',t===id);
+  });
+  if(id==='ac') rBizAC();
+  else rBizSWYBC();
+}
+
+// ── AC workstream data ────────────────────────────────────────────────────────
+const AC_WS = [
+  { id:'legal', label:'Legal Foundation', icon:'⚖️', items:[
+    {id:'l1', t:'File Athletic Capital LLC — CA SOS', p:'CRITICAL'},
+    {id:'l2', t:'Obtain EIN from IRS (online, instant)', p:'CRITICAL'},
+    {id:'l3', t:'Open dedicated AC business checking account', p:'CRITICAL'},
+    {id:'l4', t:'Purchase ThriveCart + connect Stripe to AC bank', p:'CRITICAL'},
+    {id:'l5', t:'Set up AC Zoho Books instance', p:'HIGH'},
+    {id:'l6', t:'Terms of Service live before cart opens', p:'CRITICAL'},
+    {id:'l7', t:'Privacy Policy live — CCPA compliant (Termageddon)', p:'CRITICAL'},
+    {id:'l8', t:'All 4 AC disclaimers on landing page + Blueprint tools', p:'HIGH'},
+    {id:'l9', t:'30-day guarantee conditions documented in writing', p:'HIGH'},
+    {id:'l10', t:'USPTO trademark search — "Athletic Capital"', p:'MEDIUM'},
+    {id:'l11', t:'Open Coogan trust account — Kyrin', p:'CRITICAL'},
+    {id:'l12', t:'Open Coogan trust account — Kyleigh', p:'CRITICAL'},
+    {id:'l13', t:'Attorney drafts Kyrin ambassador agreement (minor contract)', p:'CRITICAL'},
+    {id:'l14', t:'Attorney drafts Kyleigh ambassador agreement (minor contract)', p:'CRITICAL'},
+    {id:'l15', t:'CIF Southern Section disclosure filed for Kyrin', p:'CRITICAL'},
+    {id:'l16', t:'Kyleigh studio contract reviewed — exclusivity conflict check', p:'CRITICAL'},
+    {id:'l17', t:'CPA briefed — AC digital product + subscription income', p:'HIGH'},
+  ]},
+  { id:'build', label:'Product Build', icon:'🏗️', items:[
+    {id:'b1', t:'Sales landing page built and live (athleticcapital.com)', p:'CRITICAL'},
+    {id:'b2', t:'NIL Readiness Checklist (47-point) — interactive HTML', p:'CRITICAL'},
+    {id:'b3', t:'Sports Spend Audit Template — interactive HTML', p:'CRITICAL'},
+    {id:'b4', t:'Sports Family Tax Guide — interactive HTML', p:'CRITICAL'},
+    {id:'b5', t:'NIL Roadmap by Sport & Age — interactive HTML', p:'CRITICAL'},
+    {id:'b6', t:'Recruiting Financial Intelligence Guide — interactive HTML', p:'CRITICAL'},
+    {id:'b7', t:'ThriveCart checkout configured ($997 Blueprint)', p:'CRITICAL'},
+    {id:'b8', t:'6-email onboarding sequence loaded in Klaviyo/Kit', p:'CRITICAL'},
+    {id:'b9', t:'Scout offer page built ($297/mo subscription)', p:'HIGH'},
+    {id:'b10', t:'Circle.so community workspace set up', p:'HIGH'},
+    {id:'b11', t:'Performing Arts Blueprint landing page copy drafted', p:'MEDIUM'},
+    {id:'b12', t:'Run Blueprint tools on Koliwad family — internal POC', p:'HIGH'},
+  ]},
+  { id:'seed', label:'Seed — First $10K', icon:'🌱', items:[
+    {id:'s1', t:'Social handles secured @athleticcapital all platforms', p:'HIGH'},
+    {id:'s2', t:'Personal outreach to 50 sports families in network', p:'CRITICAL'},
+    {id:'s3', t:'Founding Member pricing live ($697 — save $300, locked for life)', p:'HIGH'},
+    {id:'s4', t:'First newsletter issue sent to founding buyers', p:'HIGH'},
+    {id:'s5', t:'Book first Spotlight athlete (network reach-out)', p:'HIGH'},
+    {id:'s6', t:'Collect 3–5 written testimonials from early buyers', p:'HIGH'},
+    {id:'s7', t:'Brief and hire e-marketer (rev share or retainer)', p:'CRITICAL'},
+    {id:'s8', t:'Social pro hired — kids\' accounts deal signed', p:'HIGH'},
+    {id:'s9', t:'Kyrin Instagram + TikTok accounts launched', p:'HIGH'},
+    {id:'s10', t:'Kyleigh TikTok + Instagram launched', p:'HIGH'},
+    {id:'s11', t:'Kylo Instagram started — parent managed, archive phase', p:'MEDIUM'},
+  ]},
+  { id:'scale', label:'Scale — $20K/Month', icon:'📈', items:[
+    {id:'sc1', t:'E-marketer launches first ad campaign ($3K budget)', p:'CRITICAL'},
+    {id:'sc2', t:'First monthly Spotlight call (hosted, recorded, repurposed)', p:'CRITICAL'},
+    {id:'sc3', t:'YouTube channel launched with first call recording', p:'HIGH'},
+    {id:'sc4', t:'Weekly newsletter cadence established and consistent', p:'CRITICAL'},
+    {id:'sc5', t:'First accountability review session with Scout members', p:'HIGH'},
+    {id:'sc6', t:'A/B test 3 ad hooks, double down on winner', p:'HIGH'},
+    {id:'sc7', t:'Performing Arts Blueprint funnel launches (Pinterest ads)', p:'MEDIUM'},
+    {id:'sc8', t:'DFY Social pilot — 2–3 Scout member athlete accounts', p:'HIGH'},
+    {id:'sc9', t:'VA job post live on Contra/Upwork for DFY Social', p:'HIGH'},
+    {id:'sc10', t:'67+ active Scout members at $297/mo', p:'CRITICAL'},
+  ]},
+  { id:'partner', label:'Partner Phase', icon:'🤝', items:[
+    {id:'p1', t:'75–100 active Scout members at $297/mo', p:'CRITICAL'},
+    {id:'p2', t:'$18–22K/month consistent for 3+ consecutive months', p:'CRITICAL'},
+    {id:'p3', t:'1,000+ newsletter subscribers (free + paid)', p:'CRITICAL'},
+    {id:'p4', t:'6+ Spotlight calls completed and recorded', p:'CRITICAL'},
+    {id:'p5', t:'3–5 DFY Social pilot clients running smoothly', p:'CRITICAL'},
+    {id:'p6', t:'SCWYBC university partner conversations started', p:'HIGH'},
+    {id:'p7', t:'University Partner waitlist announced to Scout community', p:'HIGH'},
+    {id:'p8', t:'Call Brandon — "thriving trigger" dashboard green', p:'CRITICAL'},
+    {id:'p9', t:'Call Andrew — Dodgers network for University Partner tier', p:'CRITICAL'},
+  ]},
+];
+
+// LABC checklist
+const LABC_ITEMS = [
+  {id:'la1',cat:'BEFORE YOU TRAVEL',p:'CRITICAL',t:'Do NOT unsubscribe from Big League Edge marketing emails',nb:'IMMEDIATE'},
+  {id:'la2',cat:'BEFORE YOU TRAVEL',p:'CRITICAL',t:'Start full hydration regimen NOW — 6-8 glasses water/day, every single day',nb:'IMMEDIATE'},
+  {id:'la3',cat:'BEFORE YOU TRAVEL',p:'CRITICAL',t:'Start sun-conditioning NOW: outdoors 2+ hrs/day, 12-4 PM, every day for 5 weeks',nb:'IMMEDIATE'},
+  {id:'la4',cat:'BEFORE YOU TRAVEL',p:'HIGH',t:'Build cardio base: 20-30 min running every other day, min 3x/week for 5 weeks',nb:'IMMEDIATE'},
+  {id:'la5',cat:'BEFORE YOU TRAVEL',p:'CRITICAL',t:'Confirm all monthly payments current — full balance $3,740 due June 15',nb:'Jun 15'},
+  {id:'la6',cat:'BEFORE YOU TRAVEL',p:'HIGH',t:'Submit 2x2 passport-size headshot of Kyrin to BLE — no sunglasses',nb:'Jun 15'},
+  {id:'la7',cat:'BEFORE YOU TRAVEL',p:'HIGH',t:'Check medical insurance covers overseas treatment in DR',nb:'Jun 30'},
+  {id:'la8',cat:'BEFORE YOU TRAVEL',p:'HIGH',t:'Purchase trip and/or medical travel insurance (Allianz, Travel Guard)',nb:'Jun 30'},
+  {id:'la9',cat:'BEFORE YOU TRAVEL',p:'CRITICAL',t:'Email flight itinerary to Janine@bigleagueedge.com once flights booked',nb:'Once booked'},
+  {id:'la10',cat:'BEFORE YOU TRAVEL',p:'CRITICAL',t:'Have passports ready + 2 photocopies each — verify not expiring before Aug 15',nb:'Jul 15'},
+  {id:'la11',cat:'BEFORE YOU TRAVEL',p:'HIGH',t:'Use raw electrolyte packets (Costco-style) in water daily — NOT Gatorade',nb:'Jul 15'},
+  {id:'la12',cat:'BEFORE YOU TRAVEL',p:'MEDIUM',t:'Pack lightweight casual clothing + banquet outfit (collared shirt, khaki)',nb:'Jul 15'},
+  {id:'la13',cat:'BEFORE YOU TRAVEL',p:'MEDIUM',t:'Pack small umbrella (shade) + Ziploc bags (buffet food for field days)',nb:'Jul 15'},
+  {id:'la14',cat:'BEFORE YOU TRAVEL',p:'MEDIUM',t:'Pack snacks: nuts, granola bars, energy bars, jerky + refillable water bottle',nb:'Jul 15'},
+  {id:'la15',cat:'BEFORE YOU TRAVEL',p:'MEDIUM',t:'Pack sunscreen, anti-diarrheal, electrolytes, battery, seat pad, cooling towels',nb:'Jul 15'},
+  {id:'la16',cat:'BEFORE YOU TRAVEL',p:'LOW',t:'Bring small USD bills + candies/trinkets for locals + donations bag (≤50 lbs)',nb:'Jul 15'},
+  {id:'la17',cat:'BEFORE YOU TRAVEL',p:'LOW',t:'Inquire about beach room upgrade — email Janine@bigleagueedge.com (+$280 total)',nb:'Jul 15'},
+  {id:'la18',cat:'BEFORE YOU TRAVEL',p:'HIGH',t:'Download WhatsApp and keep notifications ON before departure',nb:'Jul 31'},
+  {id:'la19',cat:'BEFORE YOU TRAVEL',p:'CRITICAL',t:'Complete Dominican Republic E-Ticket at eticket.migracion.gob.do',nb:'Aug 1'},
+  {id:'la20',cat:'BEFORE YOU TRAVEL',p:'HIGH',t:'Contact mobile carrier — confirm international service and data plan for DR',nb:'Aug 1'},
+  {id:'la21',cat:'BEFORE YOU TRAVEL',p:'HIGH',t:'Notify credit card companies of DR travel dates',nb:'Aug 1'},
+  {id:'la22',cat:'PAYMENT AND ADMIN',p:'CRITICAL',t:'Monthly payments $588/month due by 10th each month Feb–June 2026',nb:'Monthly'},
+  {id:'la23',cat:'PAYMENT AND ADMIN',p:'HIGH',t:'Confirm emergency contact: Steve Nakanishi 949-562-3824',nb:'Jun 1'},
+  {id:'la24',cat:'PAYMENT AND ADMIN',p:'CRITICAL',t:'Full balance $3,740 paid off by June 15 — no exceptions, no refunds',nb:'Jun 15'},
+  {id:'la25',cat:'PAYMENT AND ADMIN',p:'HIGH',t:'Payment: check or cashier check ONLY — no credit cards, Venmo, PayPal',nb:'Jun 15'},
+  {id:'la26',cat:'PAYMENT AND ADMIN',p:'MEDIUM',t:'If adding travelers, must be done by June 15 (hotel room occupancy)',nb:'Jun 15'},
+  {id:'la27',cat:'13U UNIFORM AND EQUIPMENT',p:'CRITICAL',t:'Purchase: navy blue helmet, navy blue belt, navy blue socks, white baseball pants',nb:'Jul 15'},
+  {id:'la28',cat:'13U UNIFORM AND EQUIPMENT',p:'HIGH',t:'Full uniform in carry-on: hat, jersey (tucked), belt, turf shoes — required to board bus',nb:'Jul 15'},
+  {id:'la29',cat:'13U UNIFORM AND EQUIPMENT',p:'HIGH',t:'Pack pine tar, eye black, personal rosin bag (pitchers) — teams do NOT supply',nb:'Jul 15'},
+  {id:'la30',cat:'13U UNIFORM AND EQUIPMENT',p:'MEDIUM',t:'Banquet outfit: collared shirt, khaki shorts or pants, sandals/shoes (no slides)',nb:'Jul 15'},
+  {id:'la31',cat:'13U UNIFORM AND EQUIPMENT',p:'CRITICAL',t:'Confirm bat is maximum -8 drop; metal cleats packed (13U only)',nb:'Jul 31'},
+  {id:'la32',cat:'TRAVEL DAY',p:'CRITICAL',t:'Save E-Ticket QR code on phone + screenshot + printed paper copy',nb:'Jul 15'},
+  {id:'la33',cat:'TRAVEL DAY',p:'HIGH',t:'Pack baseball glove, turf shoes, hat and full uniform in carry-on',nb:'Jul 15'},
+  {id:'la34',cat:'TRAVEL DAY',p:'HIGH',t:'Pack bat (-8 max drop), metal cleats, helmet in checked luggage',nb:'Jul 15'},
+  {id:'la35',cat:'TRAVEL DAY',p:'HIGH',t:'Pack all personal medications from home',nb:'Jul 15'},
+  {id:'la36',cat:'TRAVEL DAY',p:'CRITICAL',t:'Depart LAX evening Aug 8 to arrive SDQ by Aug 9 (west coast = overnight flight)',nb:'Aug 8'},
+  {id:'la37',cat:'TRAVEL DAY',p:'CRITICAL',t:'Arrive SDQ between 7:00 AM–10:00 PM EST on Aug 9 to use LABC shuttle',nb:'Aug 8'},
+  {id:'la38',cat:'TRAVEL DAY',p:'CRITICAL',t:'Keep E-Ticket QR code accessible on phone + printed backup',nb:'Aug 8'},
+  {id:'la39',cat:'TRAVEL DAY',p:'CRITICAL',t:'WARNING: Very late Aug 8 arrival = taxi + extra hotel night; no waiting for late arrivals',nb:'Aug 8'},
+  {id:'la40',cat:'CHECK-IN',p:'CRITICAL',t:'Check in at LABC CONFERENCE ROOM — NOT the hotel front desk',nb:'Aug 9'},
+  {id:'la41',cat:'CHECK-IN',p:'CRITICAL',t:'Bring passport photocopy; keep LABC wristband ON entire trip — never remove',nb:'Aug 9'},
+  {id:'la42',cat:'CHECK-IN',p:'CRITICAL',t:'Room checklist with bellman: A/C cold, toilet flushes, hot water, safe works',nb:'Aug 9'},
+  {id:'la43',cat:'IN-ROOM',p:'CRITICAL',t:'Do NOT drink water from any sink — even at resort; bottled/filtered water only',nb:'Ongoing'},
+  {id:'la44',cat:'IN-ROOM',p:'HIGH',t:'Do NOT eat food from outside vendors/street carts — resort buffet only',nb:'Ongoing'},
+  {id:'la45',cat:'IN-ROOM',p:'MEDIUM',t:'Do not leave valuables in room; use in-room safe for passport + cash',nb:'Ongoing'},
+  {id:'la46',cat:'PRACTICE AND GOODWILL',p:'CRITICAL',t:'Bring ALL gear to 7:30 AM meeting — board buses immediately after; NO exceptions',nb:'Aug 10'},
+  {id:'la47',cat:'PRACTICE AND GOODWILL',p:'CRITICAL',t:'Get breakfast VERY early — buffet lines extremely long (550+ people)',nb:'Aug 10'},
+  {id:'la48',cat:'PRACTICE AND GOODWILL',p:'CRITICAL',t:'Get on the bus signed 13U ONLY — wrong bus = wrong complex, arrive late',nb:'Aug 10'},
+  {id:'la49',cat:'PRACTICE AND GOODWILL',p:'CRITICAL',t:'Goodwill games = official Game 1 — treat as real tournament; counts toward record',nb:'Aug 10'},
+  {id:'la50',cat:'PRACTICE AND GOODWILL',p:'CRITICAL',t:'Players-only meeting 7:30 PM (jersey, hat, shorts, turfs) — roster assignments made',nb:'Aug 10'},
+  {id:'la51',cat:'PRACTICE AND GOODWILL',p:'CRITICAL',t:'Practice = PROVING GROUND — hustle, eye contact, fully engaged every drill',nb:'Aug 10'},
+  {id:'la52',cat:'TOURNAMENT DAYS',p:'CRITICAL',t:'Board CORRECT rostered team bus — 15-20 min early; bus departs on time',nb:'Aug 11'},
+  {id:'la53',cat:'TOURNAMENT DAYS',p:'CRITICAL',t:'No player leaves resort unaccompanied by an adult — no exceptions',nb:'Aug 11'},
+  {id:'la54',cat:'TOURNAMENT DAYS',p:'HIGH',t:'Keep athlete fueled: electrolytes + snacks between games; no greasy food game day',nb:'Aug 11'},
+  {id:'la55',cat:'TOURNAMENT DAYS',p:'HIGH',t:'Re-apply sunscreen every 2 hours during games — DR sun is extreme',nb:'Aug 11'},
+  {id:'la56',cat:'TOURNAMENT DAYS',p:'MEDIUM',t:'Use cooling towels and shade during between-inning breaks',nb:'Aug 11'},
+  {id:'la57',cat:'AWARDS BANQUET',p:'HIGH',t:'Banquet attire required: collared shirt, khaki shorts/pants — no athletic shorts',nb:'Aug 14'},
+  {id:'la58',cat:'DEPARTURE',p:'CRITICAL',t:'Check message board the NIGHT BEFORE (Aug 14) for airport shuttle departure time',nb:'Aug 15'},
+  {id:'la59',cat:'DEPARTURE',p:'CRITICAL',t:'Have E-Ticket QR code ready (phone + printed backup) for SDQ departure',nb:'Aug 15'},
+  {id:'la60',cat:'DEPARTURE',p:'HIGH',t:'Check out of room and leave key at front desk before shuttle departure',nb:'Aug 15'},
+  {id:'la61',cat:'HEALTH AND SAFETY',p:'CRITICAL',t:'If athlete feels ill: report to LABC staff immediately — do not wait',nb:'Ongoing'},
+  {id:'la62',cat:'HEALTH AND SAFETY',p:'HIGH',t:'Know emergency contact: Steve Nakanishi 949-562-3824 (non-traveling)',nb:'Ongoing'},
+  {id:'la63',cat:'HEALTH AND SAFETY',p:'HIGH',t:'Monitor for heat exhaustion signs: excessive sweating, dizziness, nausea',nb:'Ongoing'},
+  {id:'la64',cat:'SOCIAL MEDIA',p:'CRITICAL',t:'Do NOT use "Team USA" or "USA Baseball" in any posts — legally copyrighted',nb:'Ongoing'},
+  {id:'la65',cat:'SOCIAL MEDIA',t:'Tag @bigleagueedge + use #LABC2026 in posts about trip',p:'HIGH',nb:'Ongoing'},
+  {id:'la66',cat:'SOCIAL MEDIA',p:'MEDIUM',t:'Document journey for AC ambassador content — film training, games, team moments',nb:'Ongoing'},
+  {id:'la67',cat:'CONTACTS',p:'HIGH',t:'Janine (LABC): janine@bigleagueedge.com | WhatsApp for trip updates',nb:'Save now'},
+  {id:'la68',cat:'CONTACTS',p:'HIGH',t:'Steve Nakanishi (emergency): 949-562-3824',nb:'Save now'},
+];
+
+function labcLoad(){ return JSON.parse(localStorage.getItem('kcc_labc')||'{}'); }
+function labcSave(d){ localStorage.setItem('kcc_labc',JSON.stringify(d)); try{fbSaveAll();}catch(e){} }
+function labcToggle(id){
+  const d=labcLoad(); d[id]=!d[id]; labcSave(d);
+  const el2=document.getElementById('labc-'+id);
+  if(el2) el2.classList.toggle('done',d[id]);
+  // Update progress
+  const done=LABC_ITEMS.filter(i=>d[i.id]).length;
+  const tot=LABC_ITEMS.length;
+  const pEl=document.getElementById('labc-prog-txt');
+  const bEl=document.getElementById('labc-prog-bar');
+  if(pEl) pEl.textContent=done+'/'+tot+' done';
+  if(bEl) bEl.style.width=Math.round(done/tot*100)+'%';
+}
+
+function acLoad(){ return JSON.parse(localStorage.getItem('kcc_biz_ac')||'{}'); }
+function acSave(d){ localStorage.setItem('kcc_biz_ac',JSON.stringify(d)); try{fbSaveAll();}catch(e){} }
+function acToggle(id){
+  const d=acLoad(); d[id]=!d[id]; acSave(d);
+  const el2=document.getElementById('ac-'+id);
+  if(el2) el2.classList.toggle('done',d[id]);
+  // Refresh progress bar for this workstream
+  AC_WS.forEach(ws=>{
+    if(ws.items.find(i=>i.id===id)){
+      const tot=ws.items.length;
+      const done=ws.items.filter(i=>d[i.id]).length;
+      const pEl=document.getElementById('ws-pct-'+ws.id);
+      const bEl=document.getElementById('ws-bar-'+ws.id);
+      if(pEl) pEl.textContent=done+'/'+tot;
+      if(bEl) bEl.style.width=Math.round(done/tot*100)+'%';
+    }
+  });
+}
+
+function rBizAC(){
+  const acData=acLoad();
+  const labcData=labcLoad();
+  const tripDays=Math.ceil((new Date('2026-08-08')-new Date())/(1000*60*60*24));
+  const labcDone=LABC_ITEMS.filter(i=>labcData[i.id]).length;
+  const labcTot=LABC_ITEMS.length;
+
+  // Revenue target tracker
+  const revenueHtml='<div style="background:var(--surf);border:1px solid var(--brd);padding:12px 14px;margin-bottom:14px;">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'+
+    '<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut)">Revenue Target</div>'+
+    '<div style="font-size:11px;color:var(--mut)"><span style="font-weight:700;font-size:16px;color:var(--txt)">$0</span> / $20K/mo</div>'+
+    '</div>'+
+    '<div style="height:4px;background:var(--brd2);border-radius:2px;"><div style="height:100%;width:0%;background:var(--grn);border-radius:2px;"></div></div>'+
+    '<div style="display:flex;gap:16px;margin-top:8px;font-size:10px;color:var(--mut)">'+
+    '<span>Scout @ $297 → 67 members = $19.9K</span>'+
+    '<span>Blueprint @ $997 → 5/mo = $5K</span>'+
+    '<span>Break-even: Month 4</span>'+
+    '</div></div>';
+
+  // Workstreams grid
+  let wsHtml='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">';
+  AC_WS.forEach(ws=>{
+    const tot=ws.items.length;
+    const done=ws.items.filter(i=>acData[i.id]).length;
+    const pct=Math.round(done/tot*100);
+    const openCrit=ws.items.filter(i=>!acData[i.id]&&i.p==='CRITICAL');
+    wsHtml+='<div class="ws-card">'+
+      '<div class="ws-head"><span>'+ws.icon+' '+ws.label+'</span>'+
+      '<span class="ws-pct" id="ws-pct-'+ws.id+'">'+done+'/'+tot+'</span></div>'+
+      '<div class="ws-bar"><div class="ws-fill" id="ws-bar-'+ws.id+'" style="width:'+pct+'%"></div></div>'+
+      ws.items.map(it=>{
+        const chk=acData[it.id]||false;
+        const col=it.p==='CRITICAL'?'var(--red)':it.p==='HIGH'?'var(--amb)':'var(--mut)';
+        return '<div class="ws-item'+(chk?' done':'')+'" id="ac-'+it.id+'" onclick="acToggle(\''+it.id+'\')">'+
+          '<input type="checkbox" '+(chk?'checked':'')+' onclick="event.stopPropagation();acToggle(\''+it.id+'\')">'+
+          '<span style="color:'+(chk?'var(--mut)':col)+'">'+it.t+'</span></div>';
+      }).join('')+
+    '</div>';
+  });
+  wsHtml+='</div>';
+
+  // LABC sub-section
+  const labcCats=[...new Set(LABC_ITEMS.map(i=>i.cat))];
+  let labcHtml='<div style="border:1px solid var(--brd);background:var(--surf);padding:12px 14px;margin-bottom:14px;">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'+
+    '<div>'+
+      '<span style="font-size:12px;font-weight:700;color:var(--txt)">✈️ Kyrin — USA-LABC Dominican Republic</span>'+
+      '<span style="font-size:10px;color:var(--mut);margin-left:10px">Aug 8–15, 2026 · LAX → SDQ · Coral Costa Caribe, Juan Dolio</span>'+
+    '</div>'+
+    '<div style="text-align:right">'+
+      '<div style="font-size:18px;font-weight:700;color:'+(tripDays<=14?'var(--red)':tripDays<=30?'var(--amb)':'var(--grn)')+'">'+
+        (tripDays>0?tripDays+'d':'LIVE')+
+      '</div>'+
+      '<div style="font-size:8px;color:var(--mut)">until departure</div>'+
+    '</div>'+
+    '</div>'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">'+
+    '<div style="flex:1;height:4px;background:var(--brd2);border-radius:2px;">'+
+      '<div id="labc-prog-bar" style="height:100%;border-radius:2px;background:var(--grn);width:'+Math.round(labcDone/labcTot*100)+'%"></div>'+
+    '</div>'+
+    '<span id="labc-prog-txt" style="font-size:10px;color:var(--mut);flex-shrink:0">'+labcDone+'/'+labcTot+' done</span>'+
+    '</div>';
+
+  // Surface overdue/urgent CRITICAL items
+  const urgentOpen=LABC_ITEMS.filter(i=>!labcData[i.id]&&i.p==='CRITICAL').slice(0,5);
+  if(urgentOpen.length){
+    labcHtml+='<div style="background:rgba(208,64,64,0.06);border:1px solid rgba(208,64,64,0.3);padding:8px 10px;margin-bottom:10px;">'+
+    '<div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);margin-bottom:4px">Open Critical Items</div>'+
+    urgentOpen.map(i=>'<div class="labc-item'+(labcData[i.id]?' done':'')+'" id="labc-'+i.id+'" onclick="labcToggle(\''+i.id+'\')">'+
+      '<input type="checkbox" '+(labcData[i.id]?'checked':'')+' onclick="event.stopPropagation();labcToggle(\''+i.id+'\')">'+
+      '<span class="labc-crit">'+i.nb+'</span>'+
+      '<span class="labc-txt">'+i.t+'</span></div>').join('')+
+    '</div>';
+  }
+
+  // Full checklist by category (collapsed)
+  labcHtml+='<details style="margin-top:4px"><summary style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);cursor:pointer;padding:4px 0">Full Checklist ('+labcTot+' items)</summary><div style="margin-top:8px">';
+  labcCats.forEach(cat=>{
+    const catItems=LABC_ITEMS.filter(i=>i.cat===cat);
+    labcHtml+='<div class="labc-cat">'+cat+'</div>';
+    catItems.forEach(i=>{
+      const col=i.p==='CRITICAL'?'var(--red)':i.p==='HIGH'?'var(--amb)':'var(--mut)';
+      labcHtml+='<div class="labc-item'+(labcData[i.id]?' done':'')+'" id="labc-'+i.id+'" onclick="labcToggle(\''+i.id+'\')">'+
+        '<input type="checkbox" '+(labcData[i.id]?'checked':'')+' onclick="event.stopPropagation();labcToggle(\''+i.id+'\')">'+
+        '<span style="font-size:8px;font-weight:700;color:'+(labcData[i.id]?'var(--mut)':col)+';flex-shrink:0;width:50px">'+i.nb+'</span>'+
+        '<span class="labc-txt" style="color:'+(labcData[i.id]?'var(--mut)':'var(--txt2)')+'">'+i.t+'</span></div>';
+    });
+  });
+  labcHtml+='</div></details></div>';
+
+  // Ambassador pipeline sub-note
+  const ambassadorHtml='<div style="border:1px solid var(--brd);background:var(--surf);padding:12px 14px;margin-bottom:14px;">'+
+    '<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Ambassador Pipeline</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">'+
+      '<div style="border:1px solid var(--brd2);padding:8px;border-radius:2px;">'+
+        '<div style="font-size:10px;font-weight:700;color:var(--grn)">⚾ Kyrin · 13U</div>'+
+        '<div style="font-size:9px;color:var(--mut);margin-top:3px">Pitcher / SS / Batter</div>'+
+        '<div style="font-size:9px;color:var(--mut)">LABC DR Trip → NIL Case Study</div>'+
+        '<div style="font-size:8px;color:var(--red);margin-top:4px;font-weight:700">Legal gates: CIF disclosure, Coogan, agreement</div>'+
+      '</div>'+
+      '<div style="border:1px solid var(--brd2);padding:8px;border-radius:2px;">'+
+        '<div style="font-size:10px;font-weight:700;color:var(--blu)">💃 Kyleigh · Freshman</div>'+
+        '<div style="font-size:9px;color:var(--mut);margin-top:3px">Company Dance · HS Cheer</div>'+
+        '<div style="font-size:9px;color:var(--mut)">Performing Arts Blueprint POC</div>'+
+        '<div style="font-size:8px;color:var(--red);margin-top:4px;font-weight:700">Legal gates: studio contract review, Coogan</div>'+
+      '</div>'+
+      '<div style="border:1px solid var(--brd2);padding:8px;border-radius:2px;">'+
+        '<div style="font-size:10px;font-weight:700;color:var(--txt2)">⚾ Kylo · Age 8</div>'+
+        '<div style="font-size:9px;color:var(--mut);margin-top:3px">Archive building only</div>'+
+        '<div style="font-size:9px;color:var(--mut)">Parent managed · 1-2x/week</div>'+
+        '<div style="font-size:8px;color:var(--mut);margin-top:4px">No monetization · no LLC yet</div>'+
+      '</div>'+
+    '</div></div>';
+
+  document.getElementById('biz-ac').innerHTML=revenueHtml+wsHtml+labcHtml+ambassadorHtml;
+}
+
+function rBizSWYBC(){
+  const tripDays=Math.ceil((new Date('2026-12-26')-new Date())/(1000*60*60*24));
+  const kpis=[['Gross Target','$458K','txt'],['Pre-Tax Net','$272K','grn'],['Divisions','14U·16U·18U','txt'],['Teams/Div','8','txt'],['Fee/Player','$400','txt']];
+  const actions=[
+    ['CRITICAL','SoCal D1 Facility — Lock Date','TBD','red'],
+    ['CRITICAL','Team Invitations (8 × 3 divisions)','NOT SENT','red'],
+    ['CRITICAL','Sponsor Outreach — Phase 1','NOT STARTED','red'],
+    ['HIGH','Player Profile Application System','PENDING','amb'],
+    ['HIGH','Brandon / Andrew — Equity Convos','JUL/AUG','amb'],
+    ['HIGH','University Partner conversations via SWYBC','NOT STARTED','amb'],
+  ];
+  const h='<div style="border:1px solid var(--brd);background:var(--surf);padding:12px 14px;margin-bottom:14px;">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'+
+      '<div>'+
+        '<div style="font-size:14px;font-weight:700;color:var(--txt)">⚾ SoCal World Youth Baseball Classic</div>'+
+        '<div style="font-size:10px;color:var(--mut);margin-top:2px">Dec 26–29, 2026 · Christmas Classic</div>'+
+      '</div>'+
+      '<div style="text-align:right;">'+
+        '<div style="font-size:28px;font-weight:700;color:var(--grn)">'+tripDays+'d</div>'+
+        '<div style="font-size:8px;color:var(--mut)">until Dec 26</div>'+
+      '</div>'+
+    '</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0;border:1px solid var(--brd);margin-bottom:12px;">'+
+      kpis.map(function(r){return '<div style="padding:10px 12px;border-right:1px solid var(--brd);"><div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut)">'+r[0]+'</div><div style="font-size:14px;font-weight:700;color:var(--'+r[2]+')">'+r[1]+'</div></div>';}).join('')+
+    '</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">'+
+      actions.map(function(r){return '<div style="border:1px solid var(--brd2);padding:8px 10px;"><div style="font-size:8px;font-weight:700;color:var(--'+r[3]+');letter-spacing:1px">'+r[0]+'</div><div style="font-size:11px;color:var(--txt2);margin:3px 0">'+r[1]+'</div><div style="font-size:9px;font-weight:700;color:var(--'+r[3]+')">'+r[2]+'</div></div>';}).join('')+
+    '</div>'+
+    '<div style="margin-top:10px;padding:8px 10px;background:rgba(74,156,92,0.05);border:1px solid rgba(74,156,92,0.2);font-size:10px;color:var(--mut)">'+
+      '↗ <a href="https://skoliwad-bot.github.io/swybc" target="_blank" style="color:var(--grn)">swybc site</a> · '+
+      'AC Partner Phase trigger: 75+ Scout members → Brandon/Andrew equity convos activate'+
+    '</div>'+
+  '</div>';
+  document.getElementById('biz-swybc').innerHTML=h;
+}
+function rBiz_OLD_TZ(){
   const z=S.tz;
   if(z){el('tz1').textContent=f$(z.rev);el('tz2').textContent=z.mem||'—';el('tz3').textContent=z.cap?z.cap+'%':'—';el('tz4').textContent=z.pas||'—';}
 }

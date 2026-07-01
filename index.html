@@ -25,70 +25,77 @@
   --pp:#f5efe0;--pi:#2c2416;--pr:#8b3a2a;--ps:#4a6741;--pa:#b8882a;--prl:#c8bfa8;--pf:#9a8e78;
 }
 body.light{
-  --bg:#f6f8fc;--surf:#ffffff;--surf2:#eef1f7;--brd:#dce3ee;--brd2:#c8d2e5;
-  --txt:#0d1b2e;--txt2:#1c334d;--mut:#526880;--mut2:#8099b4;
-  --red:#d92b45;--rdim:rgba(217,43,69,0.07);--rbrd:rgba(217,43,69,0.28);
-  --grn:#0a9e52;--gdim:rgba(10,158,82,0.07);--gbrd:rgba(10,158,82,0.28);
-  --amb:#c97c05;--adim:rgba(201,124,5,0.07);--abrd:rgba(201,124,5,0.28);
-  --blu:#0278c0;--orn:#d14810;--prp:#6d28d9;
-  --pp:#0d1b2e;--pi:#eef1f7;--pr:#b01c38;--ps:#065a42;--pa:#7a3e08;--prl:#3730a3;--pf:#1a3658;
+  --bg:#e8e8e8;--surf:#ffffff;--surf2:#f2f2f2;--brd:#dddddd;--brd2:#cccccc;
+  --txt:#0a0a0a;--txt2:#2a2a2a;--mut:#888888;--mut2:#bbbbbb;
+  --red:#e8302a;--rdim:rgba(232,48,42,0.06);--rbrd:rgba(232,48,42,0.25);
+  --grn:#1a7a3a;--gdim:rgba(26,122,58,0.06);--gbrd:rgba(26,122,58,0.25);
+  --amb:#b07800;--adim:rgba(176,120,0,0.06);--abrd:rgba(176,120,0,0.25);
+  --blu:#1a4fd6;--orn:#c04010;--prp:#4c1d95;
+  --pp:#0a0a0a;--pi:#f2f2f2;--pr:#8b0000;--ps:#1a4a2a;--pa:#6a4a00;--prl:#1a1a6a;--pf:#1a3050;
 }
-/* ── LIGHT MODE SURFACE & CARD OVERRIDES ── */
-body.light .card{box-shadow:0 1px 8px rgba(13,27,46,0.07),0 0 0 1px rgba(13,27,46,0.04);border-color:transparent;border-radius:6px;overflow:hidden;}
-body.light .ch{background:var(--surf2);border-bottom:1px solid var(--brd);}
-body.light .row{border-bottom-color:var(--brd);}
-
-/* Active nav — teal instead of red */
-body.light .ni.on{background:rgba(2,120,192,0.10);border-left-color:#0278c0;}
-body.light .ni.on .ico{color:#0278c0;}
-body.light .top{background:#ffffff;border-bottom:1px solid var(--brd);box-shadow:0 1px 4px rgba(13,27,46,0.05);}
-body.light .sidebar{background:#f6f8fc;border-right:1px solid var(--brd);}
-
-/* Badge color-coding */
-body.light .b.bm{background:#d92b45;color:#fff;}
-body.light .b.bs{background:#0278c0;color:#fff;}
-body.light .b.bc{background:#6d28d9;color:#fff;}
-
-/* Card header accent lines by card type */
-body.light .ch:has(.ct.r){border-left:3px solid #d92b45;}
-body.light .ch:has(.ct.g){border-left:3px solid #0a9e52;}
-body.light .ch:has(.ct.b){border-left:3px solid #0278c0;}
-body.light .ch:has(.ct.a){border-left:3px solid #c97c05;}
-body.light .ch:has(.ct.m){border-left:3px solid #6d28d9;}
-
-/* Buttons in light mode */
-body.light .btn{background:#ffffff;border:1px solid var(--brd2);color:var(--txt2);}
-body.light .btn:hover{background:var(--surf2);border-color:#0278c0;color:#0278c0;}
-body.light .aibtn{background:linear-gradient(135deg,#3d2272,#1e1040);color:#c8b0ff;border:1px solid #5c3dba;}
-
-/* Inputs & selects */
-body.light #p-health input,body.light #p-health select{background:var(--surf);border-color:var(--brd2);color:var(--txt);}
-body.light input,body.light select,body.light textarea{background:var(--surf);border-color:var(--brd2);color:var(--txt);}
-
-/* Page title slightly smaller tracking for light mode readability */
-body.light .pt{letter-spacing:0.5px;color:#0d1b2e;}
-
-/* AI block in light mode */
-body.light .ai-block{background:#f0f4ff;border:1px solid #c5d1f0;}
-body.light .ai-text{color:#1c334d;}
-
-/* Pills (FIRE dashboard) in light mode */
-body.light .pill{background:#ffffff;border:1px solid var(--brd);box-shadow:0 1px 4px rgba(13,27,46,0.06);}
-body.light .pill .pill-val.g{color:#0a9e52;}
-body.light .pill .pill-val.r{color:#d92b45;}
-body.light .pill .pill-val.b{color:#0278c0;}
-body.light .pill .pill-val.a{color:#c97c05;}
-
-/* Kiko chat panel in light mode */
-body.light #kcc-panel{background:#ffffff;border-left:1px solid var(--brd);}
-body.light #kcc-ph{background:linear-gradient(135deg,#1e1040,#3d2272);}
-body.light #kcc-bar{background:#f6f8fc;border-top:1px solid var(--brd);}
-body.light #kcc-q{background:#ffffff;border-color:var(--brd2);color:var(--txt);}
-body.light #kcc-msgs{background:#f6f8fc;}
-body.light .kcc-b.kcc-a{background:#ffffff;border-color:var(--brd);color:#0d1b2e;}
-body.light .kcc-b.kcc-u{background:rgba(2,120,192,0.10);border-color:rgba(2,120,192,0.30);color:#0d1b2e;}
-body.light #kcc-fab{box-shadow:0 4px 20px rgba(13,27,46,0.18);}
-body.light #kcc-ctx-lbl{color:#8099b4;}
+/* ── LIGHT MODE — AC Platform Aesthetic ── */
+body.light .top{background:#111111 !important;border-bottom:none !important;box-shadow:none !important;}
+body.light .top *{color:#ffffff !important;}
+body.light .top .btn{background:transparent !important;border-color:#555 !important;color:#ccc !important;}
+body.light .sidebar{background:#efefef;border-right:1px solid #d5d5d5;}
+body.light .ni{color:#555555;border-left-color:transparent;}
+body.light .ni:hover{background:rgba(0,0,0,0.04);}
+body.light .ni.on{background:#ffffff;border-left-color:#e8302a;color:#0a0a0a;}
+body.light .ni.on .ico,body.light .ni.on .nlbl{color:#0a0a0a !important;}
+body.light .nlbl{color:#666666;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;}
+body.light .card{background:#ffffff;border:1px solid #dddddd;border-radius:0 !important;box-shadow:none !important;}
+body.light .ch{background:#ffffff;border-bottom:1px solid #e8e8e8;}
+body.light .ch:has(.ct.r){border-left:2px solid #e8302a;}
+body.light .ch:has(.ct.g){border-left:2px solid #1a7a3a;}
+body.light .ch:has(.ct.b){border-left:2px solid #1a4fd6;}
+body.light .ch:has(.ct.a){border-left:2px solid #b07800;}
+body.light .ch:has(.ct.m){border-left:2px solid #4c1d95;}
+body.light .ct{font-size:9px;letter-spacing:2px;text-transform:uppercase;font-weight:700;}
+body.light .row{border-bottom:1px solid #ebebeb;}
+body.light .row:hover{background:#f8f8f8;}
+body.light .ph{background:#ffffff;border-bottom:1px solid #e0e0e0;}
+body.light .pt{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#0a0a0a;font-weight:700;}
+body.light .ps{font-size:9px;color:#888888;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;}
+body.light .ftab button{background:transparent;border:none;border-bottom:2px solid transparent;color:#888;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:8px 14px;font-family:inherit;cursor:pointer;}
+body.light .ftab button.on{color:#0a0a0a;border-bottom-color:#e8302a;background:transparent;}
+body.light .ftab{border-bottom:1px solid #dddddd;margin-bottom:16px;}
+body.light .btn{background:#ffffff;border:1px solid #cccccc;color:#2a2a2a;font-size:9px;letter-spacing:1px;text-transform:uppercase;border-radius:0;}
+body.light .btn:hover{background:#111111;color:#ffffff;border-color:#111111;}
+body.light .aibtn{background:#111111;color:#ffffff;border:none;font-size:9px;letter-spacing:1px;text-transform:uppercase;border-radius:0;}
+body.light input,body.light select,body.light textarea{background:#ffffff;border:1px solid #cccccc;color:#0a0a0a;border-radius:0;font-family:inherit;}
+body.light input:focus,body.light select:focus{border-color:#111111;outline:none;}
+body.light .pill{background:#ffffff;border:1px solid #dddddd !important;box-shadow:none !important;border-radius:0 !important;}
+body.light .pill .pill-val.g{color:#1a7a3a;}
+body.light .pill .pill-val.r{color:#e8302a;}
+body.light .pill .pill-val.b{color:#1a4fd6;}
+body.light .pill .pill-val.a{color:#b07800;}
+body.light .sp{background:#ffffff;border:1px solid #dddddd;border-radius:0;}
+body.light .spv.g{color:#1a7a3a;}
+body.light .spv.r{color:#e8302a;}
+body.light .spv.b{color:#1a4fd6;}
+body.light .spl{color:#888888;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;}
+body.light .ai-block{background:#f8f8f8;border:1px solid #dddddd;}
+body.light .ai-text{color:#2a2a2a;}
+body.light #kcc-panel{background:#ffffff;border-left:1px solid #dddddd;}
+body.light #kcc-ph{background:#111111;}
+body.light #kcc-bar{background:#f2f2f2;border-top:1px solid #dddddd;}
+body.light #kcc-q{background:#ffffff;border-color:#cccccc;color:#0a0a0a;}
+body.light #kcc-msgs{background:#f2f2f2;}
+body.light .kcc-b.kcc-a{background:#ffffff;border-color:#dddddd;color:#0a0a0a;}
+body.light .kcc-b.kcc-u{background:#f0f0f0;border-color:#cccccc;color:#0a0a0a;}
+body.light #kcc-fab{background:#111111;color:#ffffff;box-shadow:0 4px 16px rgba(0,0,0,0.18);}
+body.light #kcc-ctx-lbl{color:#888888;}
+body.light .b.bm{background:#e8302a;color:#fff;}
+body.light .b.bs{background:#1a4fd6;color:#fff;}
+body.light .b.bc{background:#4c1d95;color:#fff;}
+body.light .fin-mo{border-color:#cccccc;color:#888888;border-radius:0;}
+body.light .fin-mo.on{background:#111111;color:#ffffff;border-color:#111111;}
+body.light .fin-mo-future{border-color:#e5e5e5;color:#cccccc;border-radius:0;}
+body.light .ws-card{border-color:#dddddd;border-radius:0;}
+body.light .ws-bar{background:#e8e8e8;}
+body.light .ws-fill{background:#1a7a3a;}
+body.light .ws-item{border-bottom-color:#ebebeb;}
+body.light #fire-asset-row>div{border-color:#dddddd;border-radius:0;}
 html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:var(--txt);font-family:'JetBrains Mono',monospace;overflow:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);}
 
 /* ── SETUP ── */
@@ -4967,7 +4974,6 @@ function rBiz(){
   if(z&&el('tz1')){el('tz1').textContent=f$(z.rev);el('tz2').textContent=z.mem||'—';el('tz3').textContent=z.cap?z.cap+'%':'—';el('tz4').textContent=z.pas||'—';}
   setBizTab(S._bizTab||'ac',true);
 }
-
 function setBizTab(id,silent){
   S._bizTab=id;
   var tabs=['ac','swybc'];
@@ -4981,33 +4987,32 @@ function setBizTab(id,silent){
   if(id==='ac') rBizAC();
   else rBizSWYBC();
 }
-
 var AC_WS=[
-  {id:'legal',label:'Legal Foundation',icon:'⚖️',items:[
-    {id:'l1',t:'File Athletic Capital LLC — CA SOS',p:'CRITICAL',nb:'Jul 2026'},
+  {id:'legal',label:'Legal Foundation',icon:'\u2696\ufe0f',items:[
+    {id:'l1',t:'File Athletic Capital LLC \u2014 CA SOS',p:'CRITICAL',nb:'Jul 2026'},
     {id:'l2',t:'Obtain EIN from IRS',p:'CRITICAL',nb:'Jul 2026'},
     {id:'l3',t:'Open dedicated AC business checking account',p:'CRITICAL',nb:'Jul 2026'},
     {id:'l4',t:'Purchase ThriveCart + connect Stripe',p:'CRITICAL',nb:'Jul 2026'},
     {id:'l5',t:'Set up AC Zoho Books instance',p:'HIGH',nb:'Jul 2026'},
     {id:'l6',t:'Terms of Service live before cart opens',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'l7',t:'Privacy Policy live — CCPA compliant',p:'CRITICAL',nb:'Aug 2026'},
+    {id:'l7',t:'Privacy Policy live \u2014 CCPA compliant',p:'CRITICAL',nb:'Aug 2026'},
     {id:'l8',t:'All 4 AC disclaimers on landing page',p:'HIGH',nb:'Aug 2026'},
     {id:'l9',t:'30-day guarantee conditions documented',p:'HIGH',nb:'Aug 2026'},
-    {id:'l10',t:'USPTO trademark search — Athletic Capital',p:'MEDIUM',nb:'Aug 2026'},
-    {id:'l11',t:'Open Coogan trust account — Kyrin',p:'CRITICAL',nb:'Jul 2026'},
-    {id:'l12',t:'Open Coogan trust account — Kyleigh',p:'CRITICAL',nb:'Jul 2026'},
+    {id:'l10',t:'USPTO trademark search \u2014 Athletic Capital',p:'MEDIUM',nb:'Aug 2026'},
+    {id:'l11',t:'Open Coogan trust account \u2014 Kyrin',p:'CRITICAL',nb:'Jul 2026'},
+    {id:'l12',t:'Open Coogan trust account \u2014 Kyleigh',p:'CRITICAL',nb:'Jul 2026'},
     {id:'l13',t:'Attorney drafts Kyrin ambassador agreement',p:'CRITICAL',nb:'Jul 2026'},
     {id:'l14',t:'Attorney drafts Kyleigh ambassador agreement',p:'CRITICAL',nb:'Jul 2026'},
     {id:'l15',t:'CIF Southern Section disclosure filed for Kyrin',p:'CRITICAL',nb:'Jul 2026'},
     {id:'l16',t:'Kyleigh studio contract reviewed',p:'CRITICAL',nb:'Jul 2026'},
-    {id:'l17',t:'CPA briefed — AC digital + subscription income',p:'HIGH',nb:'Jul 2026'}
+    {id:'l17',t:'CPA briefed \u2014 AC digital + subscription income',p:'HIGH',nb:'Jul 2026'}
   ]},
-  {id:'build',label:'Product Build',icon:'🏗️',items:[
+  {id:'build',label:'Product Build',icon:'\U0001f3d7\ufe0f',items:[
     {id:'b1',t:'Sales landing page built and live',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'b2',t:'NIL Readiness Checklist — interactive HTML',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'b3',t:'Sports Spend Audit Template — interactive HTML',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'b4',t:'Sports Family Tax Guide — interactive HTML',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'b5',t:'NIL Roadmap by Sport & Age — interactive HTML',p:'CRITICAL',nb:'Aug 2026'},
+    {id:'b2',t:'NIL Readiness Checklist \u2014 interactive HTML',p:'CRITICAL',nb:'Aug 2026'},
+    {id:'b3',t:'Sports Spend Audit Template \u2014 interactive HTML',p:'CRITICAL',nb:'Aug 2026'},
+    {id:'b4',t:'Sports Family Tax Guide \u2014 interactive HTML',p:'CRITICAL',nb:'Aug 2026'},
+    {id:'b5',t:'NIL Roadmap by Sport & Age \u2014 interactive HTML',p:'CRITICAL',nb:'Aug 2026'},
     {id:'b6',t:'Recruiting Financial Intelligence Guide',p:'CRITICAL',nb:'Aug 2026'},
     {id:'b7',t:'ThriveCart checkout configured ($997 Blueprint)',p:'CRITICAL',nb:'Aug 2026'},
     {id:'b8',t:'6-email onboarding sequence in Klaviyo/Kit',p:'CRITICAL',nb:'Aug 2026'},
@@ -5016,7 +5021,7 @@ var AC_WS=[
     {id:'b11',t:'Performing Arts Blueprint page drafted',p:'MEDIUM',nb:'Oct 2026'},
     {id:'b12',t:'Run Blueprint tools on Koliwad family',p:'HIGH',nb:'Aug 2026'}
   ]},
-  {id:'seed',label:'Seed — First $10K',icon:'🌱',items:[
+  {id:'seed',label:'Seed \u2014 First $10K',icon:'\U0001f331',items:[
     {id:'s1',t:'Social handles secured @athleticcapital',p:'HIGH',nb:'Aug 2026'},
     {id:'s2',t:'Personal outreach to 50 sports families',p:'CRITICAL',nb:'Aug 2026'},
     {id:'s3',t:'Founding Member pricing live ($697)',p:'HIGH',nb:'Aug 2026'},
@@ -5024,12 +5029,12 @@ var AC_WS=[
     {id:'s5',t:'Book first Spotlight athlete',p:'HIGH',nb:'Sep 2026'},
     {id:'s6',t:'Collect 3-5 written testimonials',p:'HIGH',nb:'Sep 2026'},
     {id:'s7',t:'Brief and hire e-marketer',p:'CRITICAL',nb:'Sep 2026'},
-    {id:'s8',t:'Social pro hired — kids accounts deal signed',p:'HIGH',nb:'Aug 2026'},
+    {id:'s8',t:'Social pro hired \u2014 kids accounts deal signed',p:'HIGH',nb:'Aug 2026'},
     {id:'s9',t:'Kyrin Instagram + TikTok launched',p:'HIGH',nb:'Aug 2026'},
     {id:'s10',t:'Kyleigh TikTok + Instagram launched',p:'HIGH',nb:'Aug 2026'},
-    {id:'s11',t:'Kylo Instagram started — archive phase',p:'MEDIUM',nb:'Sep 2026'}
+    {id:'s11',t:'Kylo Instagram started \u2014 archive phase',p:'MEDIUM',nb:'Sep 2026'}
   ]},
-  {id:'scale',label:'Scale — $20K/Month',icon:'📈',items:[
+  {id:'scale',label:'Scale \u2014 $20K/Month',icon:'\U0001f4c8',items:[
     {id:'sc1',t:'E-marketer launches first ad campaign',p:'CRITICAL',nb:'Sep 2026'},
     {id:'sc2',t:'First monthly Spotlight call',p:'CRITICAL',nb:'Oct 2026'},
     {id:'sc3',t:'YouTube channel launched',p:'HIGH',nb:'Oct 2026'},
@@ -5037,11 +5042,11 @@ var AC_WS=[
     {id:'sc5',t:'First accountability review with Scout members',p:'HIGH',nb:'Oct 2026'},
     {id:'sc6',t:'A/B test 3 ad hooks, double down on winner',p:'HIGH',nb:'Oct 2026'},
     {id:'sc7',t:'Performing Arts Blueprint funnel launches',p:'MEDIUM',nb:'Nov 2026'},
-    {id:'sc8',t:'DFY Social pilot — 2-3 Scout accounts',p:'HIGH',nb:'Nov 2026'},
+    {id:'sc8',t:'DFY Social pilot \u2014 2-3 Scout accounts',p:'HIGH',nb:'Nov 2026'},
     {id:'sc9',t:'VA job post live for DFY Social',p:'HIGH',nb:'Oct 2026'},
     {id:'sc10',t:'67+ active Scout members at $297/mo',p:'CRITICAL',nb:'Dec 2026'}
   ]},
-  {id:'partner',label:'Partner Phase',icon:'🤝',items:[
+  {id:'partner',label:'Partner Phase',icon:'\U0001f91d',items:[
     {id:'p1',t:'75-100 active Scout members',p:'CRITICAL',nb:'Jan 2027'},
     {id:'p2',t:'$18-22K/month for 3+ months',p:'CRITICAL',nb:'Feb 2027'},
     {id:'p3',t:'1,000+ newsletter subscribers',p:'CRITICAL',nb:'Jan 2027'},
@@ -5049,11 +5054,10 @@ var AC_WS=[
     {id:'p5',t:'3-5 DFY Social pilot clients running',p:'CRITICAL',nb:'Jan 2027'},
     {id:'p6',t:'SCWYBC university partner conversations',p:'HIGH',nb:'Dec 2026'},
     {id:'p7',t:'University Partner waitlist announced',p:'HIGH',nb:'Feb 2027'},
-    {id:'p8',t:'Call Brandon — thriving trigger green',p:'CRITICAL',nb:'Feb 2027'},
-    {id:'p9',t:'Call Andrew — Dodgers network',p:'CRITICAL',nb:'Feb 2027'}
+    {id:'p8',t:'Call Brandon \u2014 thriving trigger green',p:'CRITICAL',nb:'Feb 2027'},
+    {id:'p9',t:'Call Andrew \u2014 Dodgers network',p:'CRITICAL',nb:'Feb 2027'}
   ]}
 ];
-
 function acLoad(){return JSON.parse(localStorage.getItem('kcc_biz_ac')||'{}');}
 function acSave(d){localStorage.setItem('kcc_biz_ac',JSON.stringify(d));try{fbSaveAll();}catch(e){}}
 function acToggle(id){
@@ -5061,20 +5065,17 @@ function acToggle(id){
   var el2=document.getElementById('ac-'+id);
   if(el2) el2.classList.toggle('done',d[id]);
   for(var wi=0;wi<AC_WS.length;wi++){
-    var ws=AC_WS[wi];
-    var found=false;
+    var ws=AC_WS[wi],found=false;
     for(var ii=0;ii<ws.items.length;ii++){if(ws.items[ii].id===id){found=true;break;}}
     if(found){
       var tot=ws.items.length,done=0;
       for(var ji=0;ji<ws.items.length;ji++){if(d[ws.items[ji].id])done++;}
-      var pEl=document.getElementById('ws-pct-'+ws.id);
-      var bEl=document.getElementById('ws-bar-'+ws.id);
+      var pEl=document.getElementById('ws-pct-'+ws.id),bEl=document.getElementById('ws-bar-'+ws.id);
       if(pEl)pEl.textContent=done+'/'+tot;
       if(bEl)bEl.style.width=Math.round(done/tot*100)+'%';
     }
   }
 }
-
 function rBizAC(){
   var acData=acLoad();
   var html='<div style="background:var(--surf);border:1px solid var(--brd);padding:12px 14px;margin-bottom:14px;">';
@@ -5082,20 +5083,17 @@ function rBizAC(){
   html+='<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut)">Revenue Target</div>';
   html+='<div><span style="font-weight:700;font-size:16px">$0</span><span style="font-size:11px;color:var(--mut)"> / $20K/mo</span></div></div>';
   html+='<div style="height:4px;background:var(--brd2);"><div style="height:100%;width:0%;background:var(--grn);"></div></div>';
-  html+='<div style="font-size:9px;color:var(--mut);margin-top:6px">Scout @$297 → 67 members = $19.9K &nbsp;·&nbsp; Blueprint @$997 → 5/mo = $5K &nbsp;·&nbsp; Break-even: Month 4</div>';
+  html+='<div style="font-size:9px;color:var(--mut);margin-top:6px">Scout @$297 \u2192 67 members = $19.9K \u00b7 Blueprint @$997 \u2192 5/mo = $5K \u00b7 Break-even: Month 4</div>';
   html+='</div>';
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">';
   for(var wi=0;wi<AC_WS.length;wi++){
-    var ws=AC_WS[wi];
-    var tot=ws.items.length,done=0;
+    var ws=AC_WS[wi],tot=ws.items.length,done=0;
     for(var ii=0;ii<ws.items.length;ii++){if(acData[ws.items[ii].id])done++;}
-    var pct=Math.round(done/tot*100);
     html+='<div class="ws-card">';
     html+='<div class="ws-head"><span>'+ws.icon+' '+ws.label+'</span><span class="ws-pct" id="ws-pct-'+ws.id+'">'+done+'/'+tot+'</span></div>';
-    html+='<div class="ws-bar"><div class="ws-fill" id="ws-bar-'+ws.id+'" style="width:'+pct+'%"></div></div>';
+    html+='<div class="ws-bar"><div class="ws-fill" id="ws-bar-'+ws.id+'" style="width:'+Math.round(done/tot*100)+'%"></div></div>';
     for(var ji=0;ji<ws.items.length;ji++){
-      var it=ws.items[ji];
-      var chk=acData[it.id]||false;
+      var it=ws.items[ji],chk=acData[it.id]||false;
       var col=it.p==='CRITICAL'?'var(--red)':it.p==='HIGH'?'var(--amb)':'var(--mut)';
       html+='<div class="ws-item'+(chk?' done':'')+'" id="ac-'+it.id+'" data-id="'+it.id+'" onclick="acToggle(this.dataset.id)">';
       html+='<input type="checkbox"'+(chk?' checked':'')+' data-id="'+it.id+'" onclick="event.stopPropagation();acToggle(this.dataset.id)">';
@@ -5109,53 +5107,26 @@ function rBizAC(){
   html+='<div style="border:1px solid var(--brd);background:var(--surf);padding:12px 14px;">';
   html+='<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Ambassador Pipeline</div>';
   html+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">';
-  html+='<div style="border:1px solid var(--brd2);padding:8px;">';
-  html+='<div style="font-size:10px;font-weight:700;color:var(--grn)">⚾ Kyrin · 13U</div>';
-  html+='<div style="font-size:9px;color:var(--mut)">Pitcher / SS / Batter</div>';
-  html+='<div style="font-size:9px;color:var(--mut)">LABC DR Trip → NIL Case Study</div>';
-  html+='<div style="font-size:8px;color:var(--red);font-weight:700;margin-top:4px">Legal: CIF, Coogan, agreement</div></div>';
-  html+='<div style="border:1px solid var(--brd2);padding:8px;">';
-  html+='<div style="font-size:10px;font-weight:700;color:var(--blu)">💃 Kyleigh · Freshman</div>';
-  html+='<div style="font-size:9px;color:var(--mut)">Performing Arts Blueprint POC</div>';
-  html+='<div style="font-size:8px;color:var(--red);font-weight:700;margin-top:4px">Legal: studio contract, Coogan</div></div>';
-  html+='<div style="border:1px solid var(--brd2);padding:8px;">';
-  html+='<div style="font-size:10px;font-weight:700;color:var(--txt2)">⚾ Kylo · Age 8</div>';
-  html+='<div style="font-size:9px;color:var(--mut)">Archive building only · parent managed</div>';
-  html+='<div style="font-size:8px;color:var(--mut);margin-top:4px">No monetization · no LLC yet</div></div>';
+  html+='<div style="border:1px solid var(--brd2);padding:8px;"><div style="font-size:10px;font-weight:700;color:var(--grn)">\u26be Kyrin \u00b7 13U</div><div style="font-size:9px;color:var(--mut)">LABC DR Trip \u2192 NIL Case Study</div><div style="font-size:8px;color:var(--red);font-weight:700;margin-top:4px">Legal: CIF, Coogan, agreement</div></div>';
+  html+='<div style="border:1px solid var(--brd2);padding:8px;"><div style="font-size:10px;font-weight:700;color:var(--blu)">\U0001f483 Kyleigh \u00b7 Freshman</div><div style="font-size:9px;color:var(--mut)">Performing Arts Blueprint POC</div><div style="font-size:8px;color:var(--red);font-weight:700;margin-top:4px">Legal: studio contract, Coogan</div></div>';
+  html+='<div style="border:1px solid var(--brd2);padding:8px;"><div style="font-size:10px;font-weight:700;color:var(--txt2)">\u26be Kylo \u00b7 Age 8</div><div style="font-size:9px;color:var(--mut)">Archive building only \u00b7 parent managed</div><div style="font-size:8px;color:var(--mut);margin-top:4px">No monetization \u00b7 no LLC yet</div></div>';
   html+='</div></div>';
   document.getElementById('biz-ac').innerHTML=html;
 }
-
 function rBizSWYBC(){
   var tripDays=Math.ceil((new Date('2026-12-26')-new Date())/(1000*60*60*24));
   var html='<div style="border:1px solid var(--brd);background:var(--surf);padding:12px 14px;">';
   html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">';
-  html+='<div><div style="font-size:14px;font-weight:700">⚾ SoCal World Youth Baseball Classic</div>';
-  html+='<div style="font-size:10px;color:var(--mut);margin-top:2px">Dec 26–29, 2026 · Christmas Classic</div></div>';
-  html+='<div style="text-align:right"><div style="font-size:28px;font-weight:700;color:var(--grn)">'+tripDays+'d</div>';
-  html+='<div style="font-size:8px;color:var(--mut)">until Dec 26</div></div></div>';
-  var kpis=[['Gross Target','$458K','txt'],['Pre-Tax Net','$272K','grn'],['Divisions','14U·16U·18U','txt'],['Teams/Div','8','txt'],['Fee/Player','$400','txt']];
+  html+='<div><div style="font-size:14px;font-weight:700">\u26be SoCal World Youth Baseball Classic</div><div style="font-size:10px;color:var(--mut);margin-top:2px">Dec 26\u201329, 2026 \u00b7 Christmas Classic</div></div>';
+  html+='<div style="text-align:right"><div style="font-size:28px;font-weight:700;color:var(--grn)">'+tripDays+'d</div><div style="font-size:8px;color:var(--mut)">until Dec 26</div></div></div>';
+  var kpis=[['Gross Target','$458K','txt'],['Pre-Tax Net','$272K','grn'],['Divisions','14U\u00b716U\u00b718U','txt'],['Teams/Div','8','txt'],['Fee/Player','$400','txt']];
   html+='<div style="display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--brd);margin-bottom:12px;">';
-  for(var ki=0;ki<kpis.length;ki++){
-    html+='<div style="padding:10px 12px;border-right:1px solid var(--brd);">';
-    html+='<div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut)">'+kpis[ki][0]+'</div>';
-    html+='<div style="font-size:14px;font-weight:700;color:var(--'+kpis[ki][2]+')">'+kpis[ki][1]+'</div></div>';
-  }
-  html+='</div>';
-  var actions=[['CRITICAL','SoCal D1 Facility — Lock Date','TBD','red'],['CRITICAL','Team Invitations (8×3 divisions)','NOT SENT','red'],['CRITICAL','Sponsor Outreach — Phase 1','NOT STARTED','red'],['HIGH','Player Profile Application System','PENDING','amb'],['HIGH','Brandon / Andrew — Equity Convos','JUL/AUG','amb'],['HIGH','University Partner conversations','NOT STARTED','amb']];
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">';
-  for(var ai=0;ai<actions.length;ai++){
-    var a=actions[ai];
-    html+='<div style="border:1px solid var(--brd2);padding:8px 10px;">';
-    html+='<div style="font-size:8px;font-weight:700;color:var(--'+a[3]+');letter-spacing:1px">'+a[0]+'</div>';
-    html+='<div style="font-size:11px;color:var(--txt2);margin:3px 0">'+a[1]+'</div>';
-    html+='<div style="font-size:9px;font-weight:700;color:var(--'+a[3]+')">'+a[2]+'</div></div>';
-  }
-  html+='</div>';
-  html+='<div style="margin-top:10px;padding:8px;background:var(--gdim);border:1px solid var(--gbrd);font-size:10px;color:var(--mut)">';
-  html+='↗ <a href="https://skoliwad-bot.github.io/swybc" target="_blank" style="color:var(--grn)">swybc site</a>';
-  html+=' · AC Partner Phase trigger: 75+ Scout members → Brandon/Andrew equity convos</div>';
-  html+='</div>';
+  for(var ki=0;ki<kpis.length;ki++){html+='<div style="padding:10px 12px;border-right:1px solid var(--brd);"><div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut)">'+kpis[ki][0]+'</div><div style="font-size:14px;font-weight:700;color:var(--'+kpis[ki][2]+')">'+kpis[ki][1]+'</div></div>';}
+  html+='</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">';
+  var actions=[['CRITICAL','SoCal D1 Facility \u2014 Lock Date','TBD','red'],['CRITICAL','Team Invitations (8\xd73 divisions)','NOT SENT','red'],['CRITICAL','Sponsor Outreach \u2014 Phase 1','NOT STARTED','red'],['HIGH','Player Profile Application System','PENDING','amb'],['HIGH','Brandon / Andrew \u2014 Equity Convos','JUL/AUG','amb'],['HIGH','University Partner conversations','NOT STARTED','amb']];
+  for(var ai=0;ai<actions.length;ai++){var a=actions[ai];html+='<div style="border:1px solid var(--brd2);padding:8px 10px;"><div style="font-size:8px;font-weight:700;color:var(--'+a[3]+');letter-spacing:1px">'+a[0]+'</div><div style="font-size:11px;color:var(--txt2);margin:3px 0">'+a[1]+'</div><div style="font-size:9px;font-weight:700;color:var(--'+a[3]+')">'+a[2]+'</div></div>';}
+  html+='</div><div style="margin-top:10px;padding:8px;background:var(--gdim);border:1px solid var(--gbrd);font-size:10px;color:var(--mut)">';
+  html+='\u2197 <a href="https://skoliwad-bot.github.io/swybc" target="_blank" style="color:var(--grn)">swybc site</a> \u00b7 AC Partner Phase trigger: 75+ Scout members \u2192 Brandon/Andrew equity convos</div></div>';
   document.getElementById('biz-swybc').innerHTML=html;
 }
 

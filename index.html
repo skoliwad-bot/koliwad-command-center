@@ -2858,124 +2858,57 @@ function loadGSI(){
 }
 
 
-// ── GOOGLE TASKS PUSH ─────────────────────────────────────────────────
 async function pushToGoogleTasks(btn) {
-  if(!gsiToken){alert('Connect Google first (click Launch and sign in)');return;}
-  const orig=btn?btn.textContent:'';
+  if(!AT){alert('Connect Google first');return;}
+  var orig=btn?btn.textContent:'';
   if(btn){btn.textContent='Pushing...';btn.disabled=true;}
   try {
-    // 1. Get all task lists
-    const listsRes = await fetch('https://tasks.googleapis.com/tasks/v1/users/@me/lists?maxResults=100',
-      {headers:{Authorization:'Bearer '+gsiToken}});
-    const listsData = await listsRes.json();
-    const lists = listsData.items||[];
-
-    // Find Athletic Capital and SWYBC lists
-    var acList = lists.find(function(l){return l.title==='Athletic Capital';});
-    var swybcList = lists.find(function(l){return l.title==='SWYBC';});
-    if(!acList){alert('Could not find "Athletic Capital" task list in Google Tasks.\nPlease create it first.');if(btn){btn.textContent=orig;btn.disabled=false;}return;}
-    if(!swybcList){alert('Could not find "SWYBC" task list in Google Tasks.\nPlease create it first.');if(btn){btn.textContent=orig;btn.disabled=false;}return;}
-
-    var pushed=0, updated=0;
-
-    // 2. Push AC workstream items (CRITICAL + HIGH only, not done)
-    if(typeof AC_WS !== 'undefined') {
-      // Get existing tasks in AC list (for dedup)
-      const acTasksRes = await fetch('https://tasks.googleapis.com/tasks/v1/lists/'+acList.id+'/tasks?maxResults=100&showCompleted=true',
-        {headers:{Authorization:'Bearer '+gsiToken}});
-      const acTasksData = await acTasksRes.json();
-      const acExisting = acTasksData.items||[];
-      const acData = acLoad ? acLoad() : {};
-
-      for(var wi=0;wi<AC_WS.length;wi++){
-        var ws=AC_WS[wi];
-        for(var ii=0;ii<ws.items.length;ii++){
-          var it=ws.items[ii];
-          if(it.p!=='CRITICAL'&&it.p!=='HIGH') continue;  // skip MEDIUM/LOW
-          var isDone=acData[it.id]||false;
-          var kccId='[kcc:'+it.id+']';
-          var existing=acExisting.find(function(t){return t.notes&&t.notes.indexOf(kccId)>=0;});
-          var title='['+it.p+'] '+it.t+' ('+it.nb+') — '+ws.label;
-
-          // Parse due date from nb (e.g. "Jul 2026" → "2026-07-01T00:00:00.000Z")
-          var due=null;
-          var nbMatch=it.nb.match(/(\w+)\s+(\d{4})/);
-          if(nbMatch){
-            var months={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};
-            var m=months[nbMatch[1]];
-            if(m) due=nbMatch[2]+'-'+m+'-01T00:00:00.000Z';
-          }
-
-          var taskBody={title:title,notes:kccId,status:isDone?'completed':'needsAction'};
-          if(due) taskBody.due=due;
-
-          if(existing){
-            // Update existing
-            await fetch('https://tasks.googleapis.com/tasks/v1/lists/'+acList.id+'/tasks/'+existing.id,
-              {method:'PATCH',headers:{Authorization:'Bearer '+gsiToken,'Content-Type':'application/json'},
-               body:JSON.stringify(taskBody)});
-            updated++;
-          } else if(!isDone) {
-            // Only create new tasks for items not yet done
-            await fetch('https://tasks.googleapis.com/tasks/v1/lists/'+acList.id+'/tasks',
-              {method:'POST',headers:{Authorization:'Bearer '+gsiToken,'Content-Type':'application/json'},
-               body:JSON.stringify(taskBody)});
-            pushed++;
-          }
+    var hdrs={'Authorization':'Bearer '+AT,'Content-Type':'application/json'};
+    var hdrsGet={'Authorization':'Bearer '+AT};
+    var r=await fetch('https://tasks.googleapis.com/tasks/v1/users/@me/lists?maxResults=100',{headers:hdrsGet});
+    var lists=(await r.json()).items||[];
+    var acList=null,swybcList=null;
+    for(var li=0;li<lists.length;li++){if(lists[li].title==='Athletic Capital')acList=lists[li];if(lists[li].title==='SWYBC')swybcList=lists[li];}
+    if(!acList){alert('No "Athletic Capital" list found in Google Tasks');if(btn){btn.textContent=orig;btn.disabled=false;}return;}
+    if(!swybcList){alert('No "SWYBC" list found in Google Tasks');if(btn){btn.textContent=orig;btn.disabled=false;}return;}
+    var pushed=0,updated=0;
+    function parseDue(nb){var months={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};var m=nb.match(/([A-Z][a-z]+)\s+(\d{4})/);if(m&&months[m[1]])return m[2]+'-'+months[m[1]]+'-01T00:00:00.000Z';return null;}
+    function findExisting(list,kccId){for(var i=0;i<list.length;i++){if(list[i].notes&&list[i].notes.indexOf(kccId)>=0)return list[i];}return null;}
+    async function upsert(listId,existing,body){
+      if(existing){await fetch('https://tasks.googleapis.com/tasks/v1/lists/'+listId+'/tasks/'+existing.id,{method:'PATCH',headers:hdrs,body:JSON.stringify(body)});updated++;}
+      else{await fetch('https://tasks.googleapis.com/tasks/v1/lists/'+listId+'/tasks',{method:'POST',headers:hdrs,body:JSON.stringify(body)});pushed++;}
+    }
+    // AC items
+    if(typeof AC_WS!=='undefined'){
+      var acEx=(await(await fetch('https://tasks.googleapis.com/tasks/v1/lists/'+acList.id+'/tasks?maxResults=100&showCompleted=true',{headers:hdrsGet})).json()).items||[];
+      var acData=typeof acLoad==='function'?acLoad():{};
+      for(var wi=0;wi<AC_WS.length;wi++){var ws=AC_WS[wi];
+        for(var ii=0;ii<ws.items.length;ii++){var it=ws.items[ii];
+          if(it.p!=='CRITICAL'&&it.p!=='HIGH')continue;
+          var kid='[kcc:'+it.id+']';
+          var body={title:'['+it.p+'] '+it.t+' ('+it.nb+') — '+ws.label,notes:kid,status:(acData[it.id]?'completed':'needsAction')};
+          var due=parseDue(it.nb);if(due)body.due=due;
+          var ex=findExisting(acEx,kid);
+          if(ex||!acData[it.id])await upsert(acList.id,ex,body);
         }
       }
     }
-
-    // 3. Push SWYBC actions
-    const swybcTasksRes = await fetch('https://tasks.googleapis.com/tasks/v1/lists/'+swybcList.id+'/tasks?maxResults=100&showCompleted=true',
-      {headers:{Authorization:'Bearer '+gsiToken}});
-    const swybcTasksData = await swybcTasksRes.json();
-    const swybcExisting = swybcTasksData.items||[];
-
-    var swybcActions=[
-      {id:'sw1',t:'SoCal D1 Facility \u2014 Lock Date',p:'CRITICAL',nb:'ASAP'},
-      {id:'sw2',t:'Team Invitations (8\xd73 divisions)',p:'CRITICAL',nb:'ASAP'},
-      {id:'sw3',t:'Sponsor Outreach \u2014 Phase 1',p:'CRITICAL',nb:'Aug 2026'},
-      {id:'sw4',t:'Player Profile Application System',p:'HIGH',nb:'Sep 2026'},
-      {id:'sw5',t:'Brandon / Andrew \u2014 Equity Convos',p:'HIGH',nb:'Jul 2026'},
-      {id:'sw6',t:'University Partner conversations',p:'HIGH',nb:'Dec 2026'}
-    ];
-    for(var si=0;si<swybcActions.length;si++){
-      var a=swybcActions[si];
-      var kccId='[kcc:'+a.id+']';
-      var existing=swybcExisting.find(function(t){return t.notes&&t.notes.indexOf(kccId)>=0;});
-      var title='['+a.p+'] '+a.t+' ('+a.nb+')';
-      var taskBody={title:title,notes:kccId,status:'needsAction'};
-      var nbMatch=a.nb.match(/(\w+)\s+(\d{4})/);
-      if(nbMatch){var months={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};var m=months[nbMatch[1]];if(m)taskBody.due=nbMatch[2]+'-'+m+'-01T00:00:00.000Z';}
-      if(existing){
-        await fetch('https://tasks.googleapis.com/tasks/v1/lists/'+swybcList.id+'/tasks/'+existing.id,
-          {method:'PATCH',headers:{Authorization:'Bearer '+gsiToken,'Content-Type':'application/json'},body:JSON.stringify(taskBody)});
-        updated++;
-      } else {
-        await fetch('https://tasks.googleapis.com/tasks/v1/lists/'+swybcList.id+'/tasks',
-          {method:'POST',headers:{Authorization:'Bearer '+gsiToken,'Content-Type':'application/json'},body:JSON.stringify(taskBody)});
-        pushed++;
-      }
+    // SWYBC items
+    var swEx=(await(await fetch('https://tasks.googleapis.com/tasks/v1/lists/'+swybcList.id+'/tasks?maxResults=100&showCompleted=true',{headers:hdrsGet})).json()).items||[];
+    var swItems=[{id:'sw1',t:'SoCal D1 Facility — Lock Date',p:'CRITICAL',nb:'ASAP'},{id:'sw2',t:'Team Invitations (8x3 divisions)',p:'CRITICAL',nb:'ASAP'},{id:'sw3',t:'Sponsor Outreach — Phase 1',p:'CRITICAL',nb:'Aug 2026'},{id:'sw4',t:'Player Profile Application System',p:'HIGH',nb:'Sep 2026'},{id:'sw5',t:'Brandon / Andrew — Equity Convos',p:'HIGH',nb:'Jul 2026'},{id:'sw6',t:'University Partner conversations',p:'HIGH',nb:'Dec 2026'}];
+    for(var si=0;si<swItems.length;si++){var a=swItems[si];
+      var kid='[kcc:'+a.id+']';
+      var body={title:'['+a.p+'] '+a.t+' ('+a.nb+')',notes:kid,status:'needsAction'};
+      var due=parseDue(a.nb);if(due)body.due=due;
+      await upsert(swybcList.id,findExisting(swEx,kid),body);
     }
-
-    // 4. Refresh KCC Tasks from Google
-    if(typeof loadTasks==='function') await loadTasks();
-
-    var msg=pushed+' tasks pushed, '+updated+' updated';
-    if(btn){btn.textContent='\u2713 Done';setTimeout(function(){btn.textContent=orig;btn.disabled=false;},2000);}
-    console.log('Google Tasks push:',msg);
-    // Show brief toast
-    var t=document.createElement('div');
-    t.textContent=msg+' to Google Tasks';
-    t.style.cssText='position:fixed;bottom:70px;right:20px;background:#111;color:#fff;padding:8px 14px;font-size:11px;font-family:inherit;z-index:9999;border-radius:2px';
+    if(typeof loadTasks==='function')await loadTasks();
+    var msg=pushed+' pushed, '+updated+' updated';
+    if(btn){btn.textContent='✓ Done';setTimeout(function(){btn.textContent=orig;btn.disabled=false;},2500);}
+    var t=document.createElement('div');t.textContent=msg+' to Google Tasks';
+    t.style.cssText='position:fixed;bottom:70px;right:20px;background:#111;color:#fff;padding:8px 14px;font-size:11px;font-family:inherit;z-index:9999;';
     document.body.appendChild(t);setTimeout(function(){t.remove();},3000);
-
-  } catch(err) {
-    console.error('pushToGoogleTasks error:',err);
-    alert('Error pushing to Google Tasks: '+err.message);
-    if(btn){btn.textContent=orig;btn.disabled=false;}
-  }
+  }catch(err){console.error('pushToGoogleTasks:',err);alert('Error: '+err.message);if(btn){btn.textContent=orig;btn.disabled=false;}}
 }
 
 function doSync(){
@@ -5084,22 +5017,14 @@ function rFireGoals(){
 
 // ── BUSINESS ─────────────────────────────────────────────────
 function rBiz(){
-  var z=S.tz;
-  if(z&&el('tz1')){el('tz1').textContent=f$(z.rev);el('tz2').textContent=z.mem||'—';el('tz3').textContent=z.cap?z.cap+'%':'—';el('tz4').textContent=z.pas||'—';}
+  var z=S.tz;if(z&&el('tz1')){el('tz1').textContent=f$(z.rev);el('tz2').textContent=z.mem||'—';el('tz3').textContent=z.cap?z.cap+'%':'—';el('tz4').textContent=z.pas||'—';}
   setBizTab(S._bizTab||'ac',true);
 }
 function setBizTab(id,silent){
   S._bizTab=id;
   var tabs=['ac','swybc'];
-  for(var ti=0;ti<tabs.length;ti++){
-    var t=tabs[ti];
-    var e2=document.getElementById('biz-'+t);
-    var btn=document.getElementById('biztb'+(ti+1));
-    if(e2) e2.style.display=(t===id)?'':'none';
-    if(btn) btn.classList.toggle('on',t===id);
-  }
-  if(id==='ac') rBizAC();
-  else rBizSWYBC();
+  for(var ti=0;ti<tabs.length;ti++){var t=tabs[ti];var e2=document.getElementById('biz-'+t);var btn=document.getElementById('biztb'+(ti+1));if(e2)e2.style.display=(t===id)?'':'none';if(btn)btn.classList.toggle('on',t===id);}
+  if(id==='ac')rBizAC();else rBizSWYBC();
 }
 var AC_WS=[
   {id:'legal',label:'Legal Foundation',icon:'⚖️',items:[
@@ -5176,68 +5101,58 @@ function acLoad(){return JSON.parse(localStorage.getItem('kcc_biz_ac')||'{}');}
 function acSave(d){localStorage.setItem('kcc_biz_ac',JSON.stringify(d));try{fbSaveAll();}catch(e){}}
 function acToggle(id){
   var d=acLoad();d[id]=!d[id];acSave(d);
-  var el2=document.getElementById('ac-'+id);
-  if(el2) el2.classList.toggle('done',d[id]);
-  for(var wi=0;wi<AC_WS.length;wi++){
-    var ws=AC_WS[wi],found=false;
-    for(var ii=0;ii<ws.items.length;ii++){if(ws.items[ii].id===id){found=true;break;}}
-    if(found){
-      var tot=ws.items.length,done=0;
-      for(var ji=0;ji<ws.items.length;ji++){if(d[ws.items[ji].id])done++;}
+  var el2=document.getElementById('ac-'+id);if(el2)el2.classList.toggle('done',d[id]);
+  for(var wi=0;wi<AC_WS.length;wi++){var ws=AC_WS[wi],found=false;for(var ii=0;ii<ws.items.length;ii++){if(ws.items[ii].id===id){found=true;break;}}
+    if(found){var tot=ws.items.length,dn=0;for(var ji=0;ji<ws.items.length;ji++){if(d[ws.items[ji].id])dn++;}
       var pEl=document.getElementById('ws-pct-'+ws.id),bEl=document.getElementById('ws-bar-'+ws.id);
-      if(pEl)pEl.textContent=done+'/'+tot;
-      if(bEl)bEl.style.width=Math.round(done/tot*100)+'%';
-    }
-  }
+      if(pEl)pEl.textContent=dn+'/'+tot;if(bEl)bEl.style.width=Math.round(dn/tot*100)+'%';}}
 }
 function rBizAC(){
   var acData=acLoad();
-  var html='<div style="background:var(--surf);border:1px solid var(--brd);padding:12px 14px;margin-bottom:14px;">';
-  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
-  html+='<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut)">Revenue Target</div>';
-  html+='<div><span style="font-weight:700;font-size:16px">$0</span><span style="font-size:11px;color:var(--mut)"> / $20K/mo</span></div></div>';
-  html+='<div style="height:4px;background:var(--brd2);"><div style="height:100%;width:0%;background:var(--grn);"></div></div>';
-  html+='<div style="font-size:9px;color:var(--mut);margin-top:6px">Scout @$297 → 67 members = $19.9K · Blueprint @$997 → 5/mo = $5K · Break-even: Month 4</div></div>';
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">';
+  var h='<div style="background:var(--surf);border:1px solid var(--brd);padding:12px 14px;margin-bottom:14px;">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut)">Revenue Target</div>';
+  h+='<div><span style="font-weight:700;font-size:16px">$0</span><span style="font-size:11px;color:var(--mut)"> / $20K/mo</span></div></div>';
+  h+='<div style="height:4px;background:var(--brd2);"><div style="height:100%;width:0%;background:var(--grn);"></div></div>';
+  h+='<div style="font-size:9px;color:var(--mut);margin-top:6px">Scout @$297 → 67 members = $19.9K · Blueprint @$997 → 5/mo = $5K · Break-even: Month 4</div></div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">';
   for(var wi=0;wi<AC_WS.length;wi++){
-    var ws=AC_WS[wi],tot=ws.items.length,done=0;
-    for(var ii=0;ii<ws.items.length;ii++){if(acData[ws.items[ii].id])done++;}
-    html+='<div class="ws-card"><div class="ws-head"><span>'+ws.icon+' '+ws.label+'</span><span class="ws-pct" id="ws-pct-'+ws.id+'">'+done+'/'+tot+'</span></div>';
-    html+='<div class="ws-bar"><div class="ws-fill" id="ws-bar-'+ws.id+'" style="width:'+Math.round(done/tot*100)+'%"></div></div>';
+    var ws=AC_WS[wi],tot=ws.items.length,dn=0;
+    for(var ii=0;ii<ws.items.length;ii++){if(acData[ws.items[ii].id])dn++;}
+    h+='<div class="ws-card"><div class="ws-head"><span>'+ws.icon+' '+ws.label+'</span><span class="ws-pct" id="ws-pct-'+ws.id+'">'+dn+'/'+tot+'</span></div>';
+    h+='<div class="ws-bar"><div class="ws-fill" id="ws-bar-'+ws.id+'" style="width:'+Math.round(dn/tot*100)+'%"></div></div>';
     for(var ji=0;ji<ws.items.length;ji++){
       var it=ws.items[ji],chk=acData[it.id]||false;
       var col=it.p==='CRITICAL'?'var(--red)':it.p==='HIGH'?'var(--amb)':'var(--mut)';
-      html+='<div class="ws-item'+(chk?' done':'')+'" id="ac-'+it.id+'" data-id="'+it.id+'" onclick="acToggle(this.dataset.id)">';
-      html+='<input type="checkbox"'+(chk?' checked':'')+' data-id="'+it.id+'" onclick="event.stopPropagation();acToggle(this.dataset.id)">';
-      html+='<span style="color:var(--mut);font-size:9px;white-space:nowrap;flex-shrink:0;width:52px">'+it.nb+'</span>';
-      html+='<span style="color:'+(chk?'var(--mut)':col)+'">'+it.t+'</span></div>';
+      h+='<div class="ws-item'+(chk?' done':'')+'" id="ac-'+it.id+'" data-id="'+it.id+'" onclick="acToggle(this.dataset.id)">';
+      h+='<input type="checkbox"'+(chk?' checked':'')+' data-id="'+it.id+'" onclick="event.stopPropagation();acToggle(this.dataset.id)">';
+      h+='<span style="color:var(--mut);font-size:9px;white-space:nowrap;flex-shrink:0;width:52px">'+it.nb+'</span>';
+      h+='<span style="color:'+(chk?'var(--mut)':col)+'">'+it.t+'</span></div>';
     }
-    html+='</div>';
+    h+='</div>';
   }
-  html+='</div>';
-  html+='<div style="border:1px solid var(--brd);background:var(--surf);padding:12px 14px;">';
-  html+='<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Ambassador Pipeline</div>';
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">';
-  html+='<div style="border:1px solid var(--brd2);padding:8px;"><div style="font-size:10px;font-weight:700;color:var(--grn)">⚾ Kyrin · 13U</div><div style="font-size:9px;color:var(--mut)">LABC DR Trip → NIL Case Study</div><div style="font-size:8px;color:var(--red);font-weight:700;margin-top:4px">Legal: CIF, Coogan, agreement</div></div>';
-  html+='<div style="border:1px solid var(--brd2);padding:8px;"><div style="font-size:10px;font-weight:700;color:var(--blu)">💃 Kyleigh · Freshman</div><div style="font-size:9px;color:var(--mut)">Performing Arts Blueprint POC</div><div style="font-size:8px;color:var(--red);font-weight:700;margin-top:4px">Legal: studio contract, Coogan</div></div>';
-  html+='<div style="border:1px solid var(--brd2);padding:8px;"><div style="font-size:10px;font-weight:700;color:var(--txt2)">⚾ Kylo · Age 8</div><div style="font-size:9px;color:var(--mut)">Archive building only · parent managed</div><div style="font-size:8px;color:var(--mut);margin-top:4px">No monetization · no LLC yet</div></div>';
-  html+='</div></div>';
-  document.getElementById('biz-ac').innerHTML=html;
+  h+='</div>';
+  h+='<div style="border:1px solid var(--brd);background:var(--surf);padding:12px 14px;">';
+  h+='<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Ambassador Pipeline</div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">';
+  h+='<div style="border:1px solid var(--brd2);padding:8px;"><div style="font-size:10px;font-weight:700;color:var(--grn)">⚾ Kyrin · 13U</div><div style="font-size:9px;color:var(--mut)">LABC DR Trip → NIL Case Study</div><div style="font-size:8px;color:var(--red);font-weight:700;margin-top:4px">Legal: CIF, Coogan, agreement</div></div>';
+  h+='<div style="border:1px solid var(--brd2);padding:8px;"><div style="font-size:10px;font-weight:700;color:var(--blu)">💃 Kyleigh · Freshman</div><div style="font-size:9px;color:var(--mut)">Performing Arts Blueprint POC</div><div style="font-size:8px;color:var(--red);font-weight:700;margin-top:4px">Legal: studio contract, Coogan</div></div>';
+  h+='<div style="border:1px solid var(--brd2);padding:8px;"><div style="font-size:10px;font-weight:700;color:var(--txt2)">⚾ Kylo · Age 8</div><div style="font-size:9px;color:var(--mut)">Archive only · parent managed</div><div style="font-size:8px;color:var(--mut);margin-top:4px">No monetization · no LLC yet</div></div>';
+  h+='</div></div>';
+  document.getElementById('biz-ac').innerHTML=h;
 }
 function rBizSWYBC(){
-  var tripDays=Math.ceil((new Date('2026-12-26')-new Date())/(1000*60*60*24));
-  var html='<div style="border:1px solid var(--brd);background:var(--surf);padding:12px 14px;">';
-  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">';
-  html+='<div><div style="font-size:14px;font-weight:700">⚾ SoCal World Youth Baseball Classic</div><div style="font-size:10px;color:var(--mut);margin-top:2px">Dec 26–29, 2026 · Christmas Classic</div></div>';
-  html+='<div style="text-align:right"><div style="font-size:28px;font-weight:700;color:var(--grn)">'+tripDays+'d</div><div style="font-size:8px;color:var(--mut)">until Dec 26</div></div></div>';
+  var td=Math.ceil((new Date('2026-12-26')-new Date())/(1000*60*60*24));
+  var h='<div style="border:1px solid var(--brd);background:var(--surf);padding:12px 14px;">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><div><div style="font-size:14px;font-weight:700">⚾ SoCal World Youth Baseball Classic</div><div style="font-size:10px;color:var(--mut);margin-top:2px">Dec 26–29, 2026 · Christmas Classic</div></div>';
+  h+='<div style="text-align:right"><div style="font-size:28px;font-weight:700;color:var(--grn)">'+td+'d</div><div style="font-size:8px;color:var(--mut)">until Dec 26</div></div></div>';
   var kpis=[['Gross Target','$458K','txt'],['Pre-Tax Net','$272K','grn'],['Divisions','14U·16U·18U','txt'],['Teams/Div','8','txt'],['Fee/Player','$400','txt']];
-  html+='<div style="display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--brd);margin-bottom:12px;">';
-  for(var ki=0;ki<kpis.length;ki++){html+='<div style="padding:10px 12px;border-right:1px solid var(--brd);"><div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut)">'+kpis[ki][0]+'</div><div style="font-size:14px;font-weight:700;color:var(--'+kpis[ki][2]+')">'+kpis[ki][1]+'</div></div>';}
-  html+='</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">';
+  h+='<div style="display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--brd);margin-bottom:12px;">';
+  for(var ki=0;ki<kpis.length;ki++){h+='<div style="padding:10px 12px;border-right:1px solid var(--brd);"><div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut)">'+kpis[ki][0]+'</div><div style="font-size:14px;font-weight:700;color:var(--'+kpis[ki][2]+')">'+kpis[ki][1]+'</div></div>';}
+  h+='</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">';
   var actions=[['CRITICAL','SoCal D1 Facility — Lock Date','TBD','red'],['CRITICAL','Team Invitations (8×3 divisions)','NOT SENT','red'],['CRITICAL','Sponsor Outreach — Phase 1','NOT STARTED','red'],['HIGH','Player Profile Application System','PENDING','amb'],['HIGH','Brandon / Andrew — Equity Convos','JUL/AUG','amb'],['HIGH','University Partner conversations','NOT STARTED','amb']];
-  for(var ai=0;ai<actions.length;ai++){var a=actions[ai];html+='<div style="border:1px solid var(--brd2);padding:8px 10px;"><div style="font-size:8px;font-weight:700;color:var(--'+a[3]+');letter-spacing:1px">'+a[0]+'</div><div style="font-size:11px;color:var(--txt2);margin:3px 0">'+a[1]+'</div><div style="font-size:9px;font-weight:700;color:var(--'+a[3]+')">'+a[2]+'</div></div>';}
-  html+='</div><div style="margin-top:10px;padding:8px;background:var(--gdim);border:1px solid var(--gbrd);font-size:10px;color:var(--mut)">↗ <a href="https://skoliwad-bot.github.io/swybc" target="_blank" style="color:var(--grn)">swybc site</a> · AC Partner Phase trigger: 75+ Scout members → Brandon/Andrew equity convos</div></div>';
-  document.getElementById('biz-swybc').innerHTML=html;
+  for(var ai=0;ai<actions.length;ai++){var a=actions[ai];h+='<div style="border:1px solid var(--brd2);padding:8px 10px;"><div style="font-size:8px;font-weight:700;color:var(--'+a[3]+');letter-spacing:1px">'+a[0]+'</div><div style="font-size:11px;color:var(--txt2);margin:3px 0">'+a[1]+'</div><div style="font-size:9px;font-weight:700;color:var(--'+a[3]+')">'+a[2]+'</div></div>';}
+  h+='</div><div style="margin-top:10px;padding:8px;background:var(--gdim);border:1px solid var(--gbrd);font-size:10px;color:var(--mut)">↗ <a href="https://skoliwad-bot.github.io/swybc" target="_blank" style="color:var(--grn)">swybc site</a> · AC Partner Phase trigger: 75+ Scout members → Brandon/Andrew equity convos</div></div>';
+  document.getElementById('biz-swybc').innerHTML=h;
 }
 
 

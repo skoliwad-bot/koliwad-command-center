@@ -25,157 +25,82 @@
   --pp:#f5efe0;--pi:#2c2416;--pr:#8b3a2a;--ps:#4a6741;--pa:#b8882a;--prl:#c8bfa8;--pf:#9a8e78;
 }
 body.light{
-  --bg:#e8e8e8;
-  --surf:#ffffff;
-  --surf2:#f5f5f5;
-  --brd:#e0e0e0;
-  --brd2:#cccccc;
-  --txt:#0d0d0d;
-  --txt2:#2a2a2a;
-  --mut:#666666;
-  --mut2:#999999;
-  --red:#e8302a;
-  --rdim:rgba(232,48,42,0.05);
-  --rbrd:rgba(232,48,42,0.3);
-  --grn:#1a7a3a;
-  --gdim:rgba(26,122,58,0.05);
-  --gbrd:rgba(26,122,58,0.3);
-  --amb:#b06000;
-  --adim:rgba(176,96,0,0.05);
-  --abrd:rgba(176,96,0,0.3);
-  --blu:#1a4fd6;
-  --orn:#c04010;
-  --prp:#4c1d95;
+  --bg:#e8e8e8;--surf:#ffffff;--surf2:#f5f5f5;--brd:#e0e0e0;--brd2:#cccccc;
+  --txt:#0d0d0d;--txt2:#2a2a2a;--mut:#666666;--mut2:#999999;
+  --red:#e8302a;--rdim:rgba(232,48,42,0.05);--rbrd:rgba(232,48,42,0.3);
+  --grn:#1a7a3a;--gdim:rgba(26,122,58,0.05);--gbrd:rgba(26,122,58,0.3);
+  --amb:#b06000;--adim:rgba(176,96,0,0.05);--abrd:rgba(176,96,0,0.3);
+  --blu:#1a4fd6;--orn:#c04010;--prp:#4c1d95;
   --pp:#0d0d0d;--pi:#f5f5f5;--pr:#8b0000;--ps:#1a4a2a;--pa:#6a4000;--prl:#1a1a6a;--pf:#1a3050;
 }
+/* ── LIGHT MODE — AC Platform ── */
+body.light .top{background:#111111 !important;border-bottom:none !important;box-shadow:none !important;}
+body.light .top *{color:#ffffff !important;}
+body.light .top .btn{background:transparent !important;border:1px solid #444 !important;color:#ccc !important;}
+body.light .tbtn{background:transparent !important;border:1px solid #444 !important;color:#ccc !important;font-size:9px;letter-spacing:1px;text-transform:uppercase;border-radius:2px !important;}
+body.light .tbtn:hover{background:#ffffff !important;color:#111111 !important;}
+body.light .sidebar{background:#f8f8f8;border-right:1px solid #e0e0e0;}
+body.light .ni{color:#555555;border-left:2px solid transparent;}
+body.light .ni:hover{background:rgba(0,0,0,0.04);color:#0d0d0d;}
+body.light .ni.on{background:#ffffff;border-left-color:#e8302a;color:#0d0d0d;}
+body.light .ni.on .ico{color:#e8302a !important;}
+body.light .ni.on .nlbl{color:#0d0d0d !important;font-weight:600;}
+body.light .nlbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#666666;}
+body.light .card{background:#ffffff;border:1px solid #e0e0e0;border-radius:0 !important;box-shadow:none !important;}
+body.light .ch{background:#ffffff;border-bottom:1px solid #e8e8e8;}
+body.light .ch:has(.ct.r){border-left:3px solid #e8302a;}
+body.light .ch:has(.ct.g){border-left:3px solid #1a7a3a;}
+body.light .ch:has(.ct.b){border-left:3px solid #1a4fd6;}
+body.light .ch:has(.ct.a){border-left:3px solid #b06000;}
+body.light .ch:has(.ct.m){border-left:3px solid #4c1d95;}
+body.light .ct{font-size:8px;letter-spacing:2px;text-transform:uppercase;font-weight:700;}
+body.light .row{border-bottom:1px solid #f0f0f0;}
+body.light .row:hover{background:#fafafa;}
+body.light .ph{background:#ffffff;border-bottom:1px solid #e8e8e8;}
+body.light .pt{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#0d0d0d;font-weight:700;}
+body.light .ps{font-size:9px;color:#888888;letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+body.light .ftab{border-bottom:1px solid #e0e0e0;margin-bottom:16px;}
+body.light .ftab button{background:transparent;border:none;border-bottom:2px solid transparent;color:#888888;font-size:8px;letter-spacing:2px;text-transform:uppercase;padding:8px 16px;font-family:inherit;cursor:pointer;margin-bottom:-1px;}
+body.light .ftab button.on{color:#0d0d0d;border-bottom-color:#e8302a;font-weight:600;}
+body.light .ftab button:hover{color:#0d0d0d;}
+body.light .btn{background:#ffffff;border:1px solid #d0d0d0;color:#2a2a2a;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;border-radius:2px;}
+body.light .btn:hover{background:#0d0d0d;color:#ffffff;border-color:#0d0d0d;}
+body.light .aibtn{background:#0d0d0d;color:#ffffff;border:none;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;border-radius:2px;}
+body.light input,body.light select,body.light textarea{background:#ffffff;border:1px solid #d0d0d0;color:#0d0d0d;border-radius:2px;font-family:inherit;}
+body.light input:focus,body.light select:focus{border-color:#1a4fd6;outline:none;}
+body.light .pill{background:#ffffff;border:1px solid #e0e0e0 !important;box-shadow:none !important;border-radius:0 !important;}
+body.light .pill-val.g{color:#1a7a3a;}
+body.light .pill-val.r{color:#e8302a;}
+body.light .pill-val.b{color:#1a4fd6;}
+body.light .pill-val.a{color:#b06000;}
+body.light .sp{background:#ffffff;border:1px solid #e0e0e0;border-radius:0;}
+body.light .spv.g{color:#1a7a3a;}
+body.light .spv.r{color:#e8302a;}
+body.light .spv.b{color:#1a4fd6;}
+body.light .spl{color:#888888;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;}
+body.light .b.bm{background:#e8302a;color:#fff;border-radius:2px;}
+body.light .b.bs{background:#1a4fd6;color:#fff;border-radius:2px;}
+body.light .b.bc{background:#4c1d95;color:#fff;border-radius:2px;}
+body.light .ai-block{background:#f8f8f8;border:1px solid #e0e0e0;border-left:3px solid #1a4fd6;}
+body.light .ai-text{color:#2a2a2a;}
+body.light .fin-mo{border:1px solid #d0d0d0;background:transparent;color:#666666;border-radius:2px;font-size:8px;}
+body.light .fin-mo.on{background:#0d0d0d;color:#ffffff;border-color:#0d0d0d;}
+body.light .fin-mo-future{border:1px solid #ebebeb;color:#bbbbbb;border-radius:2px;}
+body.light .ws-card{border:1px solid #e0e0e0;background:#ffffff;border-radius:0;}
+body.light .ws-bar{background:#ebebeb;}
+body.light .ws-fill{background:#1a7a3a;}
+body.light .ws-item{border-bottom-color:#f0f0f0;}
+body.light #fire-asset-row>div{border:1px solid #e0e0e0;border-radius:0;}
+body.light #kcc-panel{background:#ffffff;border-left:1px solid #e0e0e0;}
+body.light #kcc-ph{background:#111111;}
+body.light #kcc-bar{background:#f8f8f8;border-top:1px solid #e0e0e0;}
+body.light #kcc-q{background:#ffffff;border:1px solid #d0d0d0;color:#0d0d0d;border-radius:2px;}
+body.light #kcc-msgs{background:#f8f8f8;}
+body.light .kcc-b.kcc-a{background:#ffffff;border:1px solid #e0e0e0;color:#0d0d0d;border-radius:2px;}
+body.light .kcc-b.kcc-u{background:#f0f0f0;border:1px solid #e0e0e0;color:#0d0d0d;border-radius:2px;}
+body.light #kcc-fab{background:#111111;color:#ffffff;box-shadow:0 4px 20px rgba(0,0,0,0.2);}
+body.light #kcc-ctx-lbl{color:#888888;}
 
-/* ── LIGHT MODE ── AC Platform Design Language ── */
-
-/* Page shell */
-body.light{ background:var(--bg); color:var(--txt); }
-
-/* Top nav — black bar, white text */
-body.light .top{ background:#111111 !important; border-bottom:none !important; box-shadow:none !important; }
-body.light .top *{ color:#ffffff !important; }
-body.light .top .btn{ background:transparent !important; border:1px solid #444 !important; color:#cccccc !important; border-radius:2px !important; }
-body.light .top .btn:hover{ background:#ffffff !important; color:#111111 !important; }
-body.light .top .aibtn{ background:#e8302a !important; color:#ffffff !important; border:none !important; border-radius:2px !important; }
-body.light .tbtn{ background:transparent !important; border:1px solid #444 !important; color:#cccccc !important; font-size:9px; letter-spacing:1px; text-transform:uppercase; padding:4px 10px; border-radius:2px !important; }
-body.light .tbtn:hover{ background:#ffffff !important; color:#111111 !important; }
-
-/* Sidebar */
-body.light .sidebar{ background:#f8f8f8; border-right:1px solid #e0e0e0; }
-body.light .ni{ color:#555555; border-left:2px solid transparent; padding-left:14px; }
-body.light .ni:hover{ background:rgba(0,0,0,0.04); color:#0d0d0d; }
-body.light .ni.on{ background:#ffffff; border-left-color:#e8302a; color:#0d0d0d; box-shadow:inset 0 0 0 0; }
-body.light .ni.on .ico{ color:#e8302a !important; }
-body.light .ni.on .nlbl{ color:#0d0d0d !important; font-weight:600; }
-body.light .nlbl{ font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:#666666; }
-
-/* Cards — white, 1px border, no radius, no shadow */
-body.light .card{ background:#ffffff; border:1px solid #e0e0e0; border-radius:0 !important; box-shadow:none !important; }
-body.light .ch{ background:#ffffff; border-bottom:1px solid #e8e8e8; padding:10px 14px; }
-body.light .ch:has(.ct.r){ border-left:3px solid #e8302a; }
-body.light .ch:has(.ct.g){ border-left:3px solid #1a7a3a; }
-body.light .ch:has(.ct.b){ border-left:3px solid #1a4fd6; }
-body.light .ch:has(.ct.a){ border-left:3px solid #b06000; }
-body.light .ch:has(.ct.m){ border-left:3px solid #4c1d95; }
-body.light .ct{ font-size:8px; letter-spacing:2px; text-transform:uppercase; font-weight:700; color:var(--txt2); }
-body.light .row{ border-bottom:1px solid #f0f0f0; }
-body.light .row:hover{ background:#fafafa; }
-
-/* Page headers */
-body.light .ph{ background:#ffffff; border-bottom:1px solid #e8e8e8; padding:14px 20px; }
-body.light .pt{ font-size:9px; letter-spacing:3px; text-transform:uppercase; color:#0d0d0d; font-weight:700; }
-body.light .ps{ font-size:9px; color:#888888; letter-spacing:1px; text-transform:uppercase; margin-top:2px; }
-
-/* Tabs */
-body.light .ftab{ border-bottom:1px solid #e0e0e0; margin-bottom:16px; }
-body.light .ftab button{ background:transparent; border:none; border-bottom:2px solid transparent; color:#888888; font-size:8px; letter-spacing:2px; text-transform:uppercase; padding:8px 16px; font-family:inherit; cursor:pointer; margin-bottom:-1px; }
-body.light .ftab button.on{ color:#0d0d0d; border-bottom-color:#e8302a; font-weight:600; }
-body.light .ftab button:hover{ color:#0d0d0d; }
-
-/* Buttons */
-body.light .btn{ background:#ffffff; border:1px solid #d0d0d0; color:#2a2a2a; font-size:8px; letter-spacing:1.5px; text-transform:uppercase; border-radius:2px; padding:5px 12px; }
-body.light .btn:hover{ background:#0d0d0d; color:#ffffff; border-color:#0d0d0d; }
-body.light .aibtn{ background:#0d0d0d; color:#ffffff; border:none; font-size:8px; letter-spacing:1.5px; text-transform:uppercase; border-radius:2px; }
-body.light .aibtn:hover{ background:#333333; }
-
-/* Inputs */
-body.light input,body.light select,body.light textarea{ background:#ffffff; border:1px solid #d0d0d0; color:#0d0d0d; border-radius:2px; font-family:inherit; }
-body.light input:focus,body.light select:focus{ border-color:#1a4fd6; outline:none; box-shadow:0 0 0 2px rgba(26,79,214,0.1); }
-
-/* Metric pills — FIRE path KPI boxes */
-body.light .pill{ background:#ffffff; border:1px solid #e0e0e0 !important; box-shadow:none !important; border-radius:0 !important; }
-body.light .pill:has(.pill-val.r){ border-left:3px solid #e8302a !important; }
-body.light .pill:has(.pill-val.g){ border-left:3px solid #1a7a3a !important; }
-body.light .pill:has(.pill-val.b){ border-left:3px solid #1a4fd6 !important; }
-body.light .pill:has(.pill-val.a){ border-left:3px solid #b06000 !important; }
-body.light .pill-val.g{ color:#1a7a3a; }
-body.light .pill-val.r{ color:#e8302a; }
-body.light .pill-val.b{ color:#1a4fd6; }
-body.light .pill-val.a{ color:#b06000; }
-
-/* sp cards */
-body.light .sp{ background:#ffffff; border:1px solid #e0e0e0; border-radius:0; }
-body.light .sp:has(.spv.r){ border-left:3px solid #e8302a; }
-body.light .sp:has(.spv.g){ border-left:3px solid #1a7a3a; }
-body.light .spv.g{ color:#1a7a3a; }
-body.light .spv.r{ color:#e8302a; }
-body.light .spv.b{ color:#1a4fd6; }
-body.light .spl{ color:#888888; font-size:8px; letter-spacing:1.5px; text-transform:uppercase; }
-
-/* Badges */
-body.light .b.bm{ background:#e8302a; color:#fff; border-radius:2px; }
-body.light .b.bs{ background:#1a4fd6; color:#fff; border-radius:2px; }
-body.light .b.bc{ background:#4c1d95; color:#fff; border-radius:2px; }
-
-/* AI block */
-body.light .ai-block{ background:#f8f8f8; border:1px solid #e0e0e0; border-left:3px solid #1a4fd6; }
-body.light .ai-text{ color:#2a2a2a; }
-
-/* Priority labels */
-body.light .rtl{ font-size:8px; letter-spacing:2px; text-transform:uppercase; color:#888888; }
-
-/* Financials period buttons */
-body.light .fin-mo{ border:1px solid #d0d0d0; background:transparent; color:#666666; border-radius:2px; font-size:8px; letter-spacing:1px; }
-body.light .fin-mo.on{ background:#0d0d0d; color:#ffffff; border-color:#0d0d0d; }
-body.light .fin-mo-future{ border:1px solid #ebebeb; color:#bbbbbb; border-radius:2px; }
-
-/* Business workstream cards */
-body.light .ws-card{ border:1px solid #e0e0e0; background:#ffffff; border-radius:0; }
-body.light .ws-bar{ background:#ebebeb; }
-body.light .ws-fill{ background:#1a7a3a; }
-body.light .ws-item{ border-bottom-color:#f0f0f0; }
-
-/* FIRE path asset boxes */
-body.light #fire-asset-row>div{ border:1px solid #e0e0e0; border-radius:0; }
-
-/* Kiko chat */
-body.light #kcc-panel{ background:#ffffff; border-left:1px solid #e0e0e0; }
-body.light #kcc-ph{ background:#111111; }
-body.light #kcc-bar{ background:#f8f8f8; border-top:1px solid #e0e0e0; }
-body.light #kcc-q{ background:#ffffff; border:1px solid #d0d0d0; color:#0d0d0d; border-radius:2px; }
-body.light #kcc-msgs{ background:#f8f8f8; }
-body.light .kcc-b.kcc-a{ background:#ffffff; border:1px solid #e0e0e0; color:#0d0d0d; border-radius:2px; }
-body.light .kcc-b.kcc-u{ background:#f0f0f0; border:1px solid #e0e0e0; color:#0d0d0d; border-radius:2px; }
-body.light #kcc-fab{ background:#111111; color:#ffffff; box-shadow:0 4px 20px rgba(0,0,0,0.2); border-radius:28px; }
-body.light #kcc-ctx-lbl{ color:#888888; }
-
-/* Task rows */
-body.light .trow{ border-bottom:1px solid #f0f0f0; }
-body.light .trow:hover{ background:#fafafa; }
-
-/* Alert rows */
-body.light .arow{ border-bottom:1px solid #f0f0f0; }
-
-/* MoSCoW tags */
-body.light .must-tag{ background:#e8302a; color:#fff; border-radius:2px; font-size:7px; letter-spacing:1px; padding:1px 5px; }
-body.light .should-tag{ background:#1a4fd6; color:#fff; border-radius:2px; font-size:7px; letter-spacing:1px; padding:1px 5px; }
-body.light .could-tag{ background:#888888; color:#fff; border-radius:2px; font-size:7px; letter-spacing:1px; padding:1px 5px; }
-
-/* Section dividers */
-body.light hr{ border-color:#e8e8e8; }
 html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:var(--txt);font-family:'JetBrains Mono',monospace;overflow:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);}
 
 /* ── SETUP ── */
@@ -1820,55 +1745,68 @@ localStorage.setItem = function(key, value) {
       </div>
       <div class="br-fire-note" id="br-fire-note"></div>
 
-      <!-- TASKS + SCHEDULE -->
-      <div class="br-2col">
+      <!-- MAIN 2-COL: LEFT = info, RIGHT = write space -->
+      <div style="display:grid;grid-template-columns:1fr 0.72fr;gap:18px;margin-top:10px;">
 
+        <!-- LEFT: all pre-populated content -->
         <div>
+
           <div class="br-sec" style="margin-top:0"><span class="br-sec-dot"></span><span class="br-sec-label">Priority Tasks</span><span class="br-sec-line"></span></div>
           <div id="bMIT"></div>
-        </div>
 
-        <div>
-          <div class="br-sec" style="margin-top:0"><span class="br-sec-dot" style="background:#4a7ab8"></span><span class="br-sec-label">Today's Schedule</span><span class="br-sec-line"></span></div>
+          <div class="br-sec"><span class="br-sec-dot" style="background:#4a7ab8"></span><span class="br-sec-label">Today's Schedule</span><span class="br-sec-line"></span></div>
           <div id="bCAL"></div>
-          <div style="margin-top:10px">
-            <div class="br-sec"><span class="br-sec-dot" style="background:#905000"></span><span class="br-sec-label">Key Deadlines</span><span class="br-sec-line"></span></div>
-            <div id="bDL"></div>
+
+          <div class="br-sec"><span class="br-sec-dot" style="background:#905000"></span><span class="br-sec-label">Key Deadlines</span><span class="br-sec-line"></span></div>
+          <div id="bDL"></div>
+
+          <div class="br-sec"><span class="br-sec-dot" style="background:#157030"></span><span class="br-sec-label">Daily Playbook</span><span class="br-sec-line"></span></div>
+          <div id="bPB"></div>
+
+          <div class="br-sec"><span class="br-sec-dot" style="background:#555"></span><span class="br-sec-label">Portfolio</span><span class="br-sec-line"></span></div>
+          <div id="bPF"></div>
+
+          <div id="br-alerts-wrap" style="margin-top:10px;">
+            <div class="br-sec"><span class="br-sec-dot"></span><span class="br-sec-label">Open Alerts</span><span class="br-sec-line"></span></div>
+            <div id="bAlerts"></div>
           </div>
-          <div style="margin-top:10px">
-            <div class="br-sec"><span class="br-sec-dot" style="background:#157030"></span><span class="br-sec-label">Daily Playbook</span><span class="br-sec-line"></span></div>
-            <div id="bPB"></div>
-          </div>
-          <div style="margin-top:10px">
-            <div class="br-sec"><span class="br-sec-dot" style="background:#555"></span><span class="br-sec-label">Portfolio</span><span class="br-sec-line"></span></div>
-            <div id="bPF"></div>
-          </div>
+
         </div>
 
-      </div>
+        <!-- RIGHT: write space — Notes (large), Waiting On, Tomorrow -->
+        <div style="display:flex;flex-direction:column;gap:10px;">
 
-      <!-- ALERTS — always rendered, hidden by CSS when empty -->
-      <div id="br-alerts-wrap" style="margin-bottom:10px;">
-        <div class="br-sec"><span class="br-sec-dot"></span><span class="br-sec-label">Open Alerts</span><span class="br-sec-line"></span></div>
-        <div id="bAlerts"></div>
-      </div>
+          <!-- NOTES — largest box, ~50% of right column height -->
+          <div style="flex:2;">
+            <div class="br-sec" style="margin-top:0"><span class="br-sec-dot" style="background:#999"></span><span class="br-sec-label">Notes</span><span class="br-sec-line"></span></div>
+            <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
+            <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
+            <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
+            <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
+          </div>
 
-      <!-- NOTES -->
-      <div class="br-sec" style="break-after:avoid"><span class="br-sec-dot" style="background:#999"></span><span class="br-sec-label">Notes</span><span class="br-sec-line"></span></div>
-      <div style="break-inside:avoid">
-        <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
-        <div class="br-line"></div>
-      </div>
+          <!-- WAITING ON -->
+          <div style="flex:1;">
+            <div class="br-box">
+              <div class="br-box-hdr">⏳ Waiting On</div>
+              <div class="br-line"></div><div class="br-line"></div>
+              <div class="br-line"></div><div class="br-line"></div>
+              <div class="br-line"></div>
+            </div>
+          </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px;break-inside:avoid;">
-        <div class="br-box">
-          <div class="br-box-hdr">⏳ Waiting On</div>
-          <div class="br-line"></div><div class="br-line"></div>
+          <!-- TOMORROW -->
+          <div style="flex:1;">
+            <div class="br-box">
+              <div class="br-box-hdr">🌅 Tomorrow</div>
+              <div class="br-line"></div><div class="br-line"></div>
+              <div class="br-line"></div><div class="br-line"></div>
+              <div class="br-line"></div>
+            </div>
+          </div>
+
         </div>
-        <div class="br-box">
-          <div class="br-box-hdr">🌅 Tomorrow</div>
-          <div class="br-line"></div><div class="br-line"></div>
-        </div>
+
       </div>
 
     </div>
@@ -2947,7 +2885,7 @@ function loadGSI(){
 
 async function pushToGoogleTasks(btn) {
   if(!AT){
-    if(!window._tc){alert('Connect Google first — sign in via Launch.');return;}
+    if(!window._tc){alert('Connect Google first.');return;}
     window._tc._pushPending=btn;
     window._tc.requestAccessToken({prompt:''});
     return;

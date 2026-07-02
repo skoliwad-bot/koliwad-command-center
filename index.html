@@ -2851,7 +2851,7 @@ function loadGSI(){
   s.onload=()=>{
     window._tc=google.accounts.oauth2.initTokenClient({
       client_id:CFG.id, scope:SCOPES,
-      callback:(r)=>{ if(!r.error){AT=r.access_token;fetchAll();}else{setSY('Error: '+r.error,false);} }
+      callback:(r)=>{ if(!r.error){AT=r.access_token;fetchAll();if(window._tc&&window._tc._pushPending){var b=window._tc._pushPending;window._tc._pushPending=null;pushToGoogleTasks(b);}}else{setSY('Error: '+r.error,false);} }
     });
   };
   document.head.appendChild(s);
@@ -2859,7 +2859,13 @@ function loadGSI(){
 
 
 async function pushToGoogleTasks(btn) {
-  if(!AT){alert('Connect Google first');return;}
+  if(!AT){
+    // No token yet — request one then retry
+    if(!window._tc){alert('Connect Google first — click Launch and sign in.');return;}
+    window._tc._pushPending=btn;
+    window._tc.requestAccessToken({prompt:''});
+    return;
+  }
   var orig=btn?btn.textContent:'';
   if(btn){btn.textContent='Pushing...';btn.disabled=true;}
   try {

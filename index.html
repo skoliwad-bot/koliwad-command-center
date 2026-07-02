@@ -62,7 +62,6 @@ body.light .ps{font-size:9px;color:#888888;letter-spacing:1px;text-transform:upp
 body.light .ftab{border-bottom:1px solid #e0e0e0;margin-bottom:16px;}
 body.light .ftab button{background:transparent;border:none;border-bottom:2px solid transparent;color:#888888;font-size:8px;letter-spacing:2px;text-transform:uppercase;padding:8px 16px;font-family:inherit;cursor:pointer;margin-bottom:-1px;}
 body.light .ftab button.on{color:#0d0d0d;border-bottom-color:#e8302a;font-weight:600;}
-body.light .ftab button:hover{color:#0d0d0d;}
 body.light .btn{background:#ffffff;border:1px solid #d0d0d0;color:#2a2a2a;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;border-radius:2px;}
 body.light .btn:hover{background:#0d0d0d;color:#ffffff;border-color:#0d0d0d;}
 body.light .aibtn{background:#0d0d0d;color:#ffffff;border:none;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;border-radius:2px;}
@@ -83,7 +82,7 @@ body.light .b.bs{background:#1a4fd6;color:#fff;border-radius:2px;}
 body.light .b.bc{background:#4c1d95;color:#fff;border-radius:2px;}
 body.light .ai-block{background:#f8f8f8;border:1px solid #e0e0e0;border-left:3px solid #1a4fd6;}
 body.light .ai-text{color:#2a2a2a;}
-body.light .fin-mo{border:1px solid #d0d0d0;background:transparent;color:#666666;border-radius:2px;font-size:8px;}
+body.light .fin-mo{border:1px solid #d0d0d0;background:transparent;color:#666666;border-radius:2px;}
 body.light .fin-mo.on{background:#0d0d0d;color:#ffffff;border-color:#0d0d0d;}
 body.light .fin-mo-future{border:1px solid #ebebeb;color:#bbbbbb;border-radius:2px;}
 body.light .ws-card{border:1px solid #e0e0e0;background:#ffffff;border-radius:0;}
@@ -266,6 +265,13 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
 .fin-mo.on{background:var(--surf2);color:var(--grn);border-color:var(--grn);}
 .fin-mo-future{font-size:9px;padding:3px 9px;border:1px solid var(--brd2);background:none;color:var(--mut2);opacity:0.4;font-family:inherit;}
 .fin-rev-row{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--brd);flex-wrap:wrap;}
+
+/* ── BRIEF 2-COL BODY LAYOUT ── */
+.br-main-cols{display:grid;grid-template-columns:1fr 0.7fr;gap:16px;margin-top:10px;}
+.br-right-col{display:flex;flex-direction:column;gap:8px;}
+.br-notes-box{flex:2 1 auto;}
+.br-wt-box{flex:1 1 auto;}
+.br-tm-box{flex:1 1 auto;}
 
 /* ── BUSINESS ── */
 .ws-card{border:1px solid var(--brd);background:var(--surf);padding:12px 14px;border-radius:0;}
@@ -458,6 +464,12 @@ html,body{height:100%;height:-webkit-fill-available;background:var(--bg);color:v
   .br-t,.br-ev,.br-dl,.br-pb,.br-alert{break-inside:avoid;}
   .br-sec{break-after:avoid;}
   #br-alerts-wrap{break-inside:avoid;}
+  .br-main-cols{display:grid !important;grid-template-columns:1fr 0.7fr !important;gap:12px !important;margin-top:8px !important;}
+  .br-right-col{display:flex !important;flex-direction:column !important;gap:6px !important;}
+  .br-notes-box{flex:2 1 auto !important;}
+  .br-wt-box{flex:1 1 auto !important;}
+  .br-tm-box{flex:1 1 auto !important;}
+  .br-main-cols,.br-right-col,.br-notes-box,.br-wt-box,.br-tm-box{break-inside:avoid;}
 }
 
 .ai-block{border:1px solid #3a2a5a;background:linear-gradient(135deg,#0e0a1a,#160e22);padding:12px 16px;margin-bottom:12px;display:none;}
@@ -749,7 +761,7 @@ localStorage.setItem = function(key, value) {
     </div>
     <div class="tr">
       <span class="tst" id="tst" title="BUILD scroll-v2">Not synced</span>
-      <button class="tbtn" id="sbtn" onclick="doSync()">↻ Sync</button><button class="tbtn" onclick="pushToGoogleTasks(this)" title="Push AC + SWYBC open items to Google Tasks">✓→ Tasks</button>
+      <button class="tbtn" id="sbtn" onclick="doSync()">↻ Sync</button><button class="tbtn" onclick="pushToGoogleTasks(this)">✓→ Tasks</button>
       <label class="tbtn" title="Import all Excel files at once" style="cursor:pointer;">
         ⬆ Import Excel
         <input type="file" accept=".xlsx,.xls" multiple onchange="importAllExcel(event)" style="display:none">
@@ -1293,14 +1305,9 @@ localStorage.setItem = function(key, value) {
 
       <!-- BUSINESS -->
             <div class="page" id="p-business">
-        <div class="ph"><div><div class="pt">Business</div><div class="ps">Athletic Capital · SWYBC</div></div>
-          <div style="display:flex;gap:6px"><a href="https://skoliwad-bot.github.io/ac-platform" target="_blank" class="btn" style="text-decoration:none">↗ AC OS</a></div></div>
-        <div class="ftab" style="margin-bottom:14px">
-          <button id="biztb1" onclick="setBizTab('ac')" class="on">⚡ Athletic Capital</button>
-          <button id="biztb2" onclick="setBizTab('swybc')">⚾ SWYBC</button>
-        </div>
-        <div id="biz-ac"></div>
-        <div id="biz-swybc" style="display:none"></div>
+        <div class="ph"><div><div class="pt">Business</div><div class="ps">Athletic Capital · SWYBC</div></div><div style="display:flex;gap:6px"><a href="https://skoliwad-bot.github.io/ac-platform" target="_blank" class="btn" style="text-decoration:none">↗ AC OS</a></div></div>
+        <div class="ftab" style="margin-bottom:14px"><button id="biztb1" onclick="setBizTab('ac')" class="on">⚡ Athletic Capital</button><button id="biztb2" onclick="setBizTab('swybc')">⚾ SWYBC</button></div>
+        <div id="biz-ac"></div><div id="biz-swybc" style="display:none"></div>
       </div>
 
       <!-- EXEC -->
@@ -1733,7 +1740,7 @@ localStorage.setItem = function(key, value) {
 
     <div class="br-body">
 
-      <!-- FIRE -->
+      <!-- FIRE SNAPSHOT -->
       <div class="br-sec" style="margin-top:0"><span class="br-sec-dot"></span><span class="br-sec-label">FIRE Snapshot</span><span class="br-sec-line"></span><span class="br-sec-note" id="br-fire-src"></span></div>
       <div class="br-fire">
         <div class="br-fc hi"><span class="br-fc-l">Available $$</span><span class="br-fc-v g" id="bf1">—</span></div>
@@ -1745,12 +1752,11 @@ localStorage.setItem = function(key, value) {
       </div>
       <div class="br-fire-note" id="br-fire-note"></div>
 
-      <!-- MAIN 2-COL: LEFT = info, RIGHT = write space -->
-      <div style="display:grid;grid-template-columns:1fr 0.72fr;gap:18px;margin-top:10px;">
+      <!-- TWO COLUMNS -->
+      <div class="br-main-cols">
 
-        <!-- LEFT: all pre-populated content -->
+        <!-- LEFT: pre-populated data -->
         <div>
-
           <div class="br-sec" style="margin-top:0"><span class="br-sec-dot"></span><span class="br-sec-label">Priority Tasks</span><span class="br-sec-line"></span></div>
           <div id="bMIT"></div>
 
@@ -1766,18 +1772,17 @@ localStorage.setItem = function(key, value) {
           <div class="br-sec"><span class="br-sec-dot" style="background:#555"></span><span class="br-sec-label">Portfolio</span><span class="br-sec-line"></span></div>
           <div id="bPF"></div>
 
-          <div id="br-alerts-wrap" style="margin-top:10px;">
+          <div id="br-alerts-wrap" style="margin-top:8px;">
             <div class="br-sec"><span class="br-sec-dot"></span><span class="br-sec-label">Open Alerts</span><span class="br-sec-line"></span></div>
             <div id="bAlerts"></div>
           </div>
-
         </div>
 
-        <!-- RIGHT: write space — Notes (large), Waiting On, Tomorrow -->
-        <div style="display:flex;flex-direction:column;gap:10px;">
+        <!-- RIGHT: write space -->
+        <div class="br-right-col">
 
-          <!-- NOTES — largest box, ~50% of right column height -->
-          <div style="flex:2;">
+          <!-- NOTES — largest, ~half the column -->
+          <div class="br-notes-box">
             <div class="br-sec" style="margin-top:0"><span class="br-sec-dot" style="background:#999"></span><span class="br-sec-label">Notes</span><span class="br-sec-line"></span></div>
             <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
             <div class="br-line"></div><div class="br-line"></div><div class="br-line"></div>
@@ -1786,7 +1791,7 @@ localStorage.setItem = function(key, value) {
           </div>
 
           <!-- WAITING ON -->
-          <div style="flex:1;">
+          <div class="br-wt-box">
             <div class="br-box">
               <div class="br-box-hdr">⏳ Waiting On</div>
               <div class="br-line"></div><div class="br-line"></div>
@@ -1796,7 +1801,7 @@ localStorage.setItem = function(key, value) {
           </div>
 
           <!-- TOMORROW -->
-          <div style="flex:1;">
+          <div class="br-tm-box">
             <div class="br-box">
               <div class="br-box-hdr">🌅 Tomorrow</div>
               <div class="br-line"></div><div class="br-line"></div>
@@ -1806,10 +1811,7 @@ localStorage.setItem = function(key, value) {
           </div>
 
         </div>
-
       </div>
-
-    </div>
 
     <div class="br-foot">
       <span>Koliwad Command Center · Family as a Business</span>
@@ -2884,19 +2886,11 @@ function loadGSI(){
 
 
 async function pushToGoogleTasks(btn) {
-  if(!AT){
-    if(!window._tc){alert('Connect Google first.');return;}
-    window._tc._pushPending=btn;
-    window._tc.requestAccessToken({prompt:''});
-    return;
-  }
-  var orig=btn?btn.textContent:'';
-  if(btn){btn.textContent='Pushing...';btn.disabled=true;}
+  if(!AT){if(!window._tc){alert('Connect Google first.');return;}window._tc._pushPending=btn;window._tc.requestAccessToken({prompt:''});return;}
+  var orig=btn?btn.textContent:'';if(btn){btn.textContent='Pushing...';btn.disabled=true;}
   try {
-    var hdrs={'Authorization':'Bearer '+AT,'Content-Type':'application/json'};
-    var hg={'Authorization':'Bearer '+AT};
-    var r=await fetch('https://tasks.googleapis.com/tasks/v1/users/@me/lists?maxResults=100',{headers:hg});
-    var lists=(await r.json()).items||[];
+    var hdrs={'Authorization':'Bearer '+AT,'Content-Type':'application/json'},hg={'Authorization':'Bearer '+AT};
+    var lists=((await(await fetch('https://tasks.googleapis.com/tasks/v1/users/@me/lists?maxResults=100',{headers:hg})).json()).items)||[];
     var acList=null,swybcList=null;
     for(var li=0;li<lists.length;li++){if(lists[li].title==='Athletic Capital')acList=lists[li];if(lists[li].title==='SWYBC')swybcList=lists[li];}
     if(!acList){alert('No "Athletic Capital" list in Google Tasks');if(btn){btn.textContent=orig;btn.disabled=false;}return;}
@@ -2906,28 +2900,17 @@ async function pushToGoogleTasks(btn) {
     function findEx(list,kid){for(var i=0;i<list.length;i++){if(list[i].notes&&list[i].notes.indexOf(kid)>=0)return list[i];}return null;}
     async function upsert(lid,ex,body){if(ex){await fetch('https://tasks.googleapis.com/tasks/v1/lists/'+lid+'/tasks/'+ex.id,{method:'PATCH',headers:hdrs,body:JSON.stringify(body)});updated++;}else{await fetch('https://tasks.googleapis.com/tasks/v1/lists/'+lid+'/tasks',{method:'POST',headers:hdrs,body:JSON.stringify(body)});pushed++;}}
     if(typeof AC_WS!=='undefined'){
-      var acEx=(await(await fetch('https://tasks.googleapis.com/tasks/v1/lists/'+acList.id+'/tasks?maxResults=100&showCompleted=true',{headers:hg})).json()).items||[];
+      var acEx=((await(await fetch('https://tasks.googleapis.com/tasks/v1/lists/'+acList.id+'/tasks?maxResults=100&showCompleted=true',{headers:hg})).json()).items)||[];
       var acData=typeof acLoad==='function'?acLoad():{};
-      for(var wi=0;wi<AC_WS.length;wi++){var ws=AC_WS[wi];
-        for(var ii=0;ii<ws.items.length;ii++){var it=ws.items[ii];
-          if(it.p!=='CRITICAL'&&it.p!=='HIGH')continue;
-          var kid='[kcc:'+it.id+']';
-          var body={title:'['+it.p+'] '+it.t+' ('+it.nb+') — '+ws.label,notes:kid,status:(acData[it.id]?'completed':'needsAction')};
-          var due=parseDue(it.nb);if(due)body.due=due;
-          await upsert(acList.id,findEx(acEx,kid),body);
-        }
-      }
+      for(var wi=0;wi<AC_WS.length;wi++){var ws=AC_WS[wi];for(var ii=0;ii<ws.items.length;ii++){var it=ws.items[ii];if(it.p!=='CRITICAL'&&it.p!=='HIGH')continue;var kid='[kcc:'+it.id+']';var body={title:'['+it.p+'] '+it.t+' ('+it.nb+') — '+ws.label,notes:kid,status:(acData[it.id]?'completed':'needsAction')};var due=parseDue(it.nb);if(due)body.due=due;await upsert(acList.id,findEx(acEx,kid),body);}}
     }
-    var swEx=(await(await fetch('https://tasks.googleapis.com/tasks/v1/lists/'+swybcList.id+'/tasks?maxResults=100&showCompleted=true',{headers:hg})).json()).items||[];
-    var swItems=[{id:'sw1',t:'SoCal D1 Facility — Lock Date',p:'CRITICAL',nb:'ASAP'},{id:'sw2',t:'Team Invitations (8x3 divisions)',p:'CRITICAL',nb:'ASAP'},{id:'sw3',t:'Sponsor Outreach — Phase 1',p:'CRITICAL',nb:'Aug 2026'},{id:'sw4',t:'Player Profile Application System',p:'HIGH',nb:'Sep 2026'},{id:'sw5',t:'Brandon / Andrew — Equity Convos',p:'HIGH',nb:'Jul 2026'},{id:'sw6',t:'University Partner conversations',p:'HIGH',nb:'Dec 2026'}];
+    var swEx=((await(await fetch('https://tasks.googleapis.com/tasks/v1/lists/'+swybcList.id+'/tasks?maxResults=100&showCompleted=true',{headers:hg})).json()).items)||[];
+    var swItems=[{id:'sw1',t:'SoCal D1 Facility — Lock Date',p:'CRITICAL',nb:'ASAP'},{id:'sw2',t:'Team Invitations',p:'CRITICAL',nb:'ASAP'},{id:'sw3',t:'Sponsor Outreach — Phase 1',p:'CRITICAL',nb:'Aug 2026'},{id:'sw4',t:'Player Profile System',p:'HIGH',nb:'Sep 2026'},{id:'sw5',t:'Brandon / Andrew — Equity Convos',p:'HIGH',nb:'Jul 2026'},{id:'sw6',t:'University Partner conversations',p:'HIGH',nb:'Dec 2026'}];
     for(var si=0;si<swItems.length;si++){var a=swItems[si];var kid='[kcc:'+a.id+']';var body={title:'['+a.p+'] '+a.t+' ('+a.nb+')',notes:kid,status:'needsAction'};var due=parseDue(a.nb);if(due)body.due=due;await upsert(swybcList.id,findEx(swEx,kid),body);}
     if(typeof loadTasks==='function')await loadTasks();
-    var msg=pushed+' pushed, '+updated+' updated';
     if(btn){btn.textContent='✓ Done';setTimeout(function(){btn.textContent=orig;btn.disabled=false;},2500);}
-    var t=document.createElement('div');t.textContent=msg+' to Google Tasks';
-    t.style.cssText='position:fixed;bottom:70px;right:20px;background:#111;color:#fff;padding:8px 14px;font-size:11px;font-family:inherit;z-index:9999;border-radius:2px;';
-    document.body.appendChild(t);setTimeout(function(){t.remove();},3000);
-  }catch(err){console.error('pushToGoogleTasks:',err);alert('Error: '+err.message);if(btn){btn.textContent=orig;btn.disabled=false;}}
+    var t=document.createElement('div');t.textContent=pushed+' pushed, '+updated+' updated to Google Tasks';t.style.cssText='position:fixed;bottom:70px;right:20px;background:#111;color:#fff;padding:8px 14px;font-size:11px;font-family:inherit;z-index:9999;border-radius:2px;';document.body.appendChild(t);setTimeout(function(){t.remove();},3000);
+  }catch(err){console.error('push:',err);alert('Error: '+err.message);if(btn){btn.textContent=orig;btn.disabled=false;}}
 }
 
 function doSync(){
@@ -5035,144 +5018,14 @@ function rFireGoals(){
 }
 
 // ── BUSINESS ─────────────────────────────────────────────────
-function rBiz(){
-  var z=S.tz;if(z&&el('tz1')){el('tz1').textContent=f$(z.rev);el('tz2').textContent=z.mem||'—';el('tz3').textContent=z.cap?z.cap+'%':'—';el('tz4').textContent=z.pas||'—';}
-  setBizTab(S._bizTab||'ac',true);
-}
-function setBizTab(id,silent){
-  S._bizTab=id;
-  var tabs=['ac','swybc'];
-  for(var ti=0;ti<tabs.length;ti++){var t=tabs[ti];var e2=document.getElementById('biz-'+t);var btn=document.getElementById('biztb'+(ti+1));if(e2)e2.style.display=(t===id)?'':'none';if(btn)btn.classList.toggle('on',t===id);}
-  if(id==='ac')rBizAC();else rBizSWYBC();
-}
-var AC_WS=[
-  {id:'legal',label:'Legal Foundation',icon:'⚖️',items:[
-    {id:'l1',t:'File Athletic Capital LLC — CA SOS',p:'CRITICAL',nb:'Jul 2026'},
-    {id:'l2',t:'Obtain EIN from IRS',p:'CRITICAL',nb:'Jul 2026'},
-    {id:'l3',t:'Open dedicated AC business checking account',p:'CRITICAL',nb:'Jul 2026'},
-    {id:'l4',t:'Purchase ThriveCart + connect Stripe',p:'CRITICAL',nb:'Jul 2026'},
-    {id:'l5',t:'Set up AC Zoho Books instance',p:'HIGH',nb:'Jul 2026'},
-    {id:'l6',t:'Terms of Service live before cart opens',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'l7',t:'Privacy Policy live — CCPA compliant',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'l8',t:'All 4 AC disclaimers on landing page',p:'HIGH',nb:'Aug 2026'},
-    {id:'l9',t:'30-day guarantee conditions documented',p:'HIGH',nb:'Aug 2026'},
-    {id:'l10',t:'USPTO trademark search — Athletic Capital',p:'MEDIUM',nb:'Aug 2026'},
-    {id:'l11',t:'Open Coogan trust account — Kyrin',p:'CRITICAL',nb:'Jul 2026'},
-    {id:'l12',t:'Open Coogan trust account — Kyleigh',p:'CRITICAL',nb:'Jul 2026'},
-    {id:'l13',t:'Attorney drafts Kyrin ambassador agreement',p:'CRITICAL',nb:'Jul 2026'},
-    {id:'l14',t:'Attorney drafts Kyleigh ambassador agreement',p:'CRITICAL',nb:'Jul 2026'},
-    {id:'l15',t:'CIF Southern Section disclosure filed for Kyrin',p:'CRITICAL',nb:'Jul 2026'},
-    {id:'l16',t:'Kyleigh studio contract reviewed',p:'CRITICAL',nb:'Jul 2026'},
-    {id:'l17',t:'CPA briefed — AC digital + subscription income',p:'HIGH',nb:'Jul 2026'}
-  ]},
-  {id:'build',label:'Product Build',icon:'🏗️',items:[
-    {id:'b1',t:'Sales landing page built and live',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'b2',t:'NIL Readiness Checklist — interactive HTML',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'b3',t:'Sports Spend Audit Template — interactive HTML',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'b4',t:'Sports Family Tax Guide — interactive HTML',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'b5',t:'NIL Roadmap by Sport & Age — interactive HTML',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'b6',t:'Recruiting Financial Intelligence Guide',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'b7',t:'ThriveCart checkout configured ($997 Blueprint)',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'b8',t:'6-email onboarding sequence in Klaviyo/Kit',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'b9',t:'Scout offer page built ($297/mo)',p:'HIGH',nb:'Sep 2026'},
-    {id:'b10',t:'Circle.so community workspace set up',p:'HIGH',nb:'Sep 2026'},
-    {id:'b11',t:'Performing Arts Blueprint page drafted',p:'MEDIUM',nb:'Oct 2026'},
-    {id:'b12',t:'Run Blueprint tools on Koliwad family',p:'HIGH',nb:'Aug 2026'}
-  ]},
-  {id:'seed',label:'Seed — First $10K',icon:'🌱',items:[
-    {id:'s1',t:'Social handles secured @athleticcapital',p:'HIGH',nb:'Aug 2026'},
-    {id:'s2',t:'Personal outreach to 50 sports families',p:'CRITICAL',nb:'Aug 2026'},
-    {id:'s3',t:'Founding Member pricing live ($697)',p:'HIGH',nb:'Aug 2026'},
-    {id:'s4',t:'First newsletter issue sent',p:'HIGH',nb:'Sep 2026'},
-    {id:'s5',t:'Book first Spotlight athlete',p:'HIGH',nb:'Sep 2026'},
-    {id:'s6',t:'Collect 3-5 written testimonials',p:'HIGH',nb:'Sep 2026'},
-    {id:'s7',t:'Brief and hire e-marketer',p:'CRITICAL',nb:'Sep 2026'},
-    {id:'s8',t:'Social pro hired — kids accounts deal signed',p:'HIGH',nb:'Aug 2026'},
-    {id:'s9',t:'Kyrin Instagram + TikTok launched',p:'HIGH',nb:'Aug 2026'},
-    {id:'s10',t:'Kyleigh TikTok + Instagram launched',p:'HIGH',nb:'Aug 2026'},
-    {id:'s11',t:'Kylo Instagram started — archive phase',p:'MEDIUM',nb:'Sep 2026'}
-  ]},
-  {id:'scale',label:'Scale — $20K/Month',icon:'📈',items:[
-    {id:'sc1',t:'E-marketer launches first ad campaign',p:'CRITICAL',nb:'Sep 2026'},
-    {id:'sc2',t:'First monthly Spotlight call',p:'CRITICAL',nb:'Oct 2026'},
-    {id:'sc3',t:'YouTube channel launched',p:'HIGH',nb:'Oct 2026'},
-    {id:'sc4',t:'Weekly newsletter cadence established',p:'CRITICAL',nb:'Sep 2026'},
-    {id:'sc5',t:'First accountability review with Scout members',p:'HIGH',nb:'Oct 2026'},
-    {id:'sc6',t:'A/B test 3 ad hooks, double down on winner',p:'HIGH',nb:'Oct 2026'},
-    {id:'sc7',t:'Performing Arts Blueprint funnel launches',p:'MEDIUM',nb:'Nov 2026'},
-    {id:'sc8',t:'DFY Social pilot — 2-3 Scout accounts',p:'HIGH',nb:'Nov 2026'},
-    {id:'sc9',t:'VA job post live for DFY Social',p:'HIGH',nb:'Oct 2026'},
-    {id:'sc10',t:'67+ active Scout members at $297/mo',p:'CRITICAL',nb:'Dec 2026'}
-  ]},
-  {id:'partner',label:'Partner Phase',icon:'🤝',items:[
-    {id:'p1',t:'75-100 active Scout members',p:'CRITICAL',nb:'Jan 2027'},
-    {id:'p2',t:'$18-22K/month for 3+ months',p:'CRITICAL',nb:'Feb 2027'},
-    {id:'p3',t:'1,000+ newsletter subscribers',p:'CRITICAL',nb:'Jan 2027'},
-    {id:'p4',t:'6+ Spotlight calls completed',p:'CRITICAL',nb:'Jan 2027'},
-    {id:'p5',t:'3-5 DFY Social pilot clients running',p:'CRITICAL',nb:'Jan 2027'},
-    {id:'p6',t:'SCWYBC university partner conversations',p:'HIGH',nb:'Dec 2026'},
-    {id:'p7',t:'University Partner waitlist announced',p:'HIGH',nb:'Feb 2027'},
-    {id:'p8',t:'Call Brandon — thriving trigger green',p:'CRITICAL',nb:'Feb 2027'},
-    {id:'p9',t:'Call Andrew — Dodgers network',p:'CRITICAL',nb:'Feb 2027'}
-  ]}
-];
+function rBiz(){var z=S.tz;if(z&&el('tz1')){el('tz1').textContent=f$(z.rev);el('tz2').textContent=z.mem||'—';el('tz3').textContent=z.cap?z.cap+'%':'—';el('tz4').textContent=z.pas||'—';}setBizTab(S._bizTab||'ac',true);}
+function setBizTab(id,silent){S._bizTab=id;var tabs=['ac','swybc'];for(var ti=0;ti<tabs.length;ti++){var t=tabs[ti];var e2=document.getElementById('biz-'+t);var btn=document.getElementById('biztb'+(ti+1));if(e2)e2.style.display=(t===id)?'':'none';if(btn)btn.classList.toggle('on',t===id);}if(id==='ac')rBizAC();else rBizSWYBC();}
+var AC_WS=[{id:'legal',label:'Legal Foundation',icon:'⚖️',items:[{id:'l1',t:'File Athletic Capital LLC — CA SOS',p:'CRITICAL',nb:'Jul 2026'},{id:'l2',t:'Obtain EIN from IRS',p:'CRITICAL',nb:'Jul 2026'},{id:'l3',t:'Open dedicated AC business checking account',p:'CRITICAL',nb:'Jul 2026'},{id:'l4',t:'Purchase ThriveCart + connect Stripe',p:'CRITICAL',nb:'Jul 2026'},{id:'l5',t:'Set up AC Zoho Books instance',p:'HIGH',nb:'Jul 2026'},{id:'l6',t:'Terms of Service live before cart opens',p:'CRITICAL',nb:'Aug 2026'},{id:'l7',t:'Privacy Policy live — CCPA compliant',p:'CRITICAL',nb:'Aug 2026'},{id:'l8',t:'All 4 AC disclaimers on landing page',p:'HIGH',nb:'Aug 2026'},{id:'l9',t:'30-day guarantee conditions documented',p:'HIGH',nb:'Aug 2026'},{id:'l10',t:'USPTO trademark search',p:'MEDIUM',nb:'Aug 2026'},{id:'l11',t:'Open Coogan trust account — Kyrin',p:'CRITICAL',nb:'Jul 2026'},{id:'l12',t:'Open Coogan trust account — Kyleigh',p:'CRITICAL',nb:'Jul 2026'},{id:'l13',t:'Attorney drafts Kyrin ambassador agreement',p:'CRITICAL',nb:'Jul 2026'},{id:'l14',t:'Attorney drafts Kyleigh ambassador agreement',p:'CRITICAL',nb:'Jul 2026'},{id:'l15',t:'CIF Southern Section disclosure filed for Kyrin',p:'CRITICAL',nb:'Jul 2026'},{id:'l16',t:'Kyleigh studio contract reviewed',p:'CRITICAL',nb:'Jul 2026'},{id:'l17',t:'CPA briefed — AC digital + subscription income',p:'HIGH',nb:'Jul 2026'}]},{id:'build',label:'Product Build',icon:'🏗️',items:[{id:'b1',t:'Sales landing page built and live',p:'CRITICAL',nb:'Aug 2026'},{id:'b2',t:'NIL Readiness Checklist — interactive HTML',p:'CRITICAL',nb:'Aug 2026'},{id:'b3',t:'Sports Spend Audit Template',p:'CRITICAL',nb:'Aug 2026'},{id:'b4',t:'Sports Family Tax Guide',p:'CRITICAL',nb:'Aug 2026'},{id:'b5',t:'NIL Roadmap by Sport & Age',p:'CRITICAL',nb:'Aug 2026'},{id:'b6',t:'Recruiting Financial Intelligence Guide',p:'CRITICAL',nb:'Aug 2026'},{id:'b7',t:'ThriveCart checkout configured ($997 Blueprint)',p:'CRITICAL',nb:'Aug 2026'},{id:'b8',t:'6-email onboarding sequence in Klaviyo/Kit',p:'CRITICAL',nb:'Aug 2026'},{id:'b9',t:'Scout offer page built ($297/mo)',p:'HIGH',nb:'Sep 2026'},{id:'b10',t:'Circle.so community workspace set up',p:'HIGH',nb:'Sep 2026'},{id:'b11',t:'Performing Arts Blueprint page drafted',p:'MEDIUM',nb:'Oct 2026'},{id:'b12',t:'Run Blueprint tools on Koliwad family',p:'HIGH',nb:'Aug 2026'}]},{id:'seed',label:'Seed — First $10K',icon:'🌱',items:[{id:'s1',t:'Social handles secured @athleticcapital',p:'HIGH',nb:'Aug 2026'},{id:'s2',t:'Personal outreach to 50 sports families',p:'CRITICAL',nb:'Aug 2026'},{id:'s3',t:'Founding Member pricing live ($697)',p:'HIGH',nb:'Aug 2026'},{id:'s4',t:'First newsletter issue sent',p:'HIGH',nb:'Sep 2026'},{id:'s5',t:'Book first Spotlight athlete',p:'HIGH',nb:'Sep 2026'},{id:'s6',t:'Collect 3-5 written testimonials',p:'HIGH',nb:'Sep 2026'},{id:'s7',t:'Brief and hire e-marketer',p:'CRITICAL',nb:'Sep 2026'},{id:'s8',t:'Social pro hired — kids accounts deal signed',p:'HIGH',nb:'Aug 2026'},{id:'s9',t:'Kyrin Instagram + TikTok launched',p:'HIGH',nb:'Aug 2026'},{id:'s10',t:'Kyleigh TikTok + Instagram launched',p:'HIGH',nb:'Aug 2026'},{id:'s11',t:'Kylo Instagram started — archive phase',p:'MEDIUM',nb:'Sep 2026'}]},{id:'scale',label:'Scale — $20K/Month',icon:'📈',items:[{id:'sc1',t:'E-marketer launches first ad campaign',p:'CRITICAL',nb:'Sep 2026'},{id:'sc2',t:'First monthly Spotlight call',p:'CRITICAL',nb:'Oct 2026'},{id:'sc3',t:'YouTube channel launched',p:'HIGH',nb:'Oct 2026'},{id:'sc4',t:'Weekly newsletter cadence established',p:'CRITICAL',nb:'Sep 2026'},{id:'sc5',t:'First accountability review with Scout members',p:'HIGH',nb:'Oct 2026'},{id:'sc6',t:'A/B test 3 ad hooks',p:'HIGH',nb:'Oct 2026'},{id:'sc7',t:'Performing Arts Blueprint funnel launches',p:'MEDIUM',nb:'Nov 2026'},{id:'sc8',t:'DFY Social pilot — 2-3 Scout accounts',p:'HIGH',nb:'Nov 2026'},{id:'sc9',t:'VA job post live for DFY Social',p:'HIGH',nb:'Oct 2026'},{id:'sc10',t:'67+ active Scout members at $297/mo',p:'CRITICAL',nb:'Dec 2026'}]},{id:'partner',label:'Partner Phase',icon:'🤝',items:[{id:'p1',t:'75-100 active Scout members',p:'CRITICAL',nb:'Jan 2027'},{id:'p2',t:'$18-22K/month for 3+ months',p:'CRITICAL',nb:'Feb 2027'},{id:'p3',t:'1,000+ newsletter subscribers',p:'CRITICAL',nb:'Jan 2027'},{id:'p4',t:'6+ Spotlight calls completed',p:'CRITICAL',nb:'Jan 2027'},{id:'p5',t:'3-5 DFY Social pilot clients running',p:'CRITICAL',nb:'Jan 2027'},{id:'p6',t:'SCWYBC university partner conversations',p:'HIGH',nb:'Dec 2026'},{id:'p7',t:'University Partner waitlist announced',p:'HIGH',nb:'Feb 2027'},{id:'p8',t:'Call Brandon — thriving trigger green',p:'CRITICAL',nb:'Feb 2027'},{id:'p9',t:'Call Andrew — Dodgers network',p:'CRITICAL',nb:'Feb 2027'}]}];
 function acLoad(){return JSON.parse(localStorage.getItem('kcc_biz_ac')||'{}');}
 function acSave(d){localStorage.setItem('kcc_biz_ac',JSON.stringify(d));try{fbSaveAll();}catch(e){}}
-function acToggle(id){
-  var d=acLoad();d[id]=!d[id];acSave(d);
-  var el2=document.getElementById('ac-'+id);if(el2)el2.classList.toggle('done',d[id]);
-  for(var wi=0;wi<AC_WS.length;wi++){var ws=AC_WS[wi],found=false;for(var ii=0;ii<ws.items.length;ii++){if(ws.items[ii].id===id){found=true;break;}}
-    if(found){var tot=ws.items.length,dn=0;for(var ji=0;ji<ws.items.length;ji++){if(d[ws.items[ji].id])dn++;}
-      var pEl=document.getElementById('ws-pct-'+ws.id),bEl=document.getElementById('ws-bar-'+ws.id);
-      if(pEl)pEl.textContent=dn+'/'+tot;if(bEl)bEl.style.width=Math.round(dn/tot*100)+'%';}}
-}
-function rBizAC(){
-  var acData=acLoad();
-  var h='<div style="background:var(--surf);border:1px solid var(--brd);padding:12px 14px;margin-bottom:14px;">';
-  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut)">Revenue Target</div>';
-  h+='<div><span style="font-weight:700;font-size:16px">$0</span><span style="font-size:11px;color:var(--mut)"> / $20K/mo</span></div></div>';
-  h+='<div style="height:4px;background:var(--brd2);"><div style="height:100%;width:0%;background:var(--grn);"></div></div>';
-  h+='<div style="font-size:9px;color:var(--mut);margin-top:6px">Scout @$297 → 67 members = $19.9K · Blueprint @$997 → 5/mo = $5K · Break-even: Month 4</div></div>';
-  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">';
-  for(var wi=0;wi<AC_WS.length;wi++){
-    var ws=AC_WS[wi],tot=ws.items.length,dn=0;
-    for(var ii=0;ii<ws.items.length;ii++){if(acData[ws.items[ii].id])dn++;}
-    h+='<div class="ws-card"><div class="ws-head"><span>'+ws.icon+' '+ws.label+'</span><span class="ws-pct" id="ws-pct-'+ws.id+'">'+dn+'/'+tot+'</span></div>';
-    h+='<div class="ws-bar"><div class="ws-fill" id="ws-bar-'+ws.id+'" style="width:'+Math.round(dn/tot*100)+'%"></div></div>';
-    for(var ji=0;ji<ws.items.length;ji++){
-      var it=ws.items[ji],chk=acData[it.id]||false;
-      var col=it.p==='CRITICAL'?'var(--red)':it.p==='HIGH'?'var(--amb)':'var(--mut)';
-      h+='<div class="ws-item'+(chk?' done':'')+'" id="ac-'+it.id+'" data-id="'+it.id+'" onclick="acToggle(this.dataset.id)">';
-      h+='<input type="checkbox"'+(chk?' checked':'')+' data-id="'+it.id+'" onclick="event.stopPropagation();acToggle(this.dataset.id)">';
-      h+='<span style="color:var(--mut);font-size:9px;white-space:nowrap;flex-shrink:0;width:52px">'+it.nb+'</span>';
-      h+='<span style="color:'+(chk?'var(--mut)':col)+'">'+it.t+'</span></div>';
-    }
-    h+='</div>';
-  }
-  h+='</div>';
-  h+='<div style="border:1px solid var(--brd);background:var(--surf);padding:12px 14px;">';
-  h+='<div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Ambassador Pipeline</div>';
-  h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">';
-  h+='<div style="border:1px solid var(--brd2);padding:8px;"><div style="font-size:10px;font-weight:700;color:var(--grn)">⚾ Kyrin · 13U</div><div style="font-size:9px;color:var(--mut)">LABC DR Trip → NIL Case Study</div><div style="font-size:8px;color:var(--red);font-weight:700;margin-top:4px">Legal: CIF, Coogan, agreement</div></div>';
-  h+='<div style="border:1px solid var(--brd2);padding:8px;"><div style="font-size:10px;font-weight:700;color:var(--blu)">💃 Kyleigh · Freshman</div><div style="font-size:9px;color:var(--mut)">Performing Arts Blueprint POC</div><div style="font-size:8px;color:var(--red);font-weight:700;margin-top:4px">Legal: studio contract, Coogan</div></div>';
-  h+='<div style="border:1px solid var(--brd2);padding:8px;"><div style="font-size:10px;font-weight:700;color:var(--txt2)">⚾ Kylo · Age 8</div><div style="font-size:9px;color:var(--mut)">Archive only · parent managed</div><div style="font-size:8px;color:var(--mut);margin-top:4px">No monetization · no LLC yet</div></div>';
-  h+='</div></div>';
-  document.getElementById('biz-ac').innerHTML=h;
-}
-function rBizSWYBC(){
-  var td=Math.ceil((new Date('2026-12-26')-new Date())/(1000*60*60*24));
-  var h='<div style="border:1px solid var(--brd);background:var(--surf);padding:12px 14px;">';
-  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><div><div style="font-size:14px;font-weight:700">⚾ SoCal World Youth Baseball Classic</div><div style="font-size:10px;color:var(--mut);margin-top:2px">Dec 26–29, 2026 · Christmas Classic</div></div>';
-  h+='<div style="text-align:right"><div style="font-size:28px;font-weight:700;color:var(--grn)">'+td+'d</div><div style="font-size:8px;color:var(--mut)">until Dec 26</div></div></div>';
-  var kpis=[['Gross Target','$458K','txt'],['Pre-Tax Net','$272K','grn'],['Divisions','14U·16U·18U','txt'],['Teams/Div','8','txt'],['Fee/Player','$400','txt']];
-  h+='<div style="display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--brd);margin-bottom:12px;">';
-  for(var ki=0;ki<kpis.length;ki++){h+='<div style="padding:10px 12px;border-right:1px solid var(--brd);"><div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut)">'+kpis[ki][0]+'</div><div style="font-size:14px;font-weight:700;color:var(--'+kpis[ki][2]+')">'+kpis[ki][1]+'</div></div>';}
-  h+='</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">';
-  var actions=[['CRITICAL','SoCal D1 Facility — Lock Date','TBD','red'],['CRITICAL','Team Invitations (8×3 divisions)','NOT SENT','red'],['CRITICAL','Sponsor Outreach — Phase 1','NOT STARTED','red'],['HIGH','Player Profile Application System','PENDING','amb'],['HIGH','Brandon / Andrew — Equity Convos','JUL/AUG','amb'],['HIGH','University Partner conversations','NOT STARTED','amb']];
-  for(var ai=0;ai<actions.length;ai++){var a=actions[ai];h+='<div style="border:1px solid var(--brd2);padding:8px 10px;"><div style="font-size:8px;font-weight:700;color:var(--'+a[3]+');letter-spacing:1px">'+a[0]+'</div><div style="font-size:11px;color:var(--txt2);margin:3px 0">'+a[1]+'</div><div style="font-size:9px;font-weight:700;color:var(--'+a[3]+')">'+a[2]+'</div></div>';}
-  h+='</div><div style="margin-top:10px;padding:8px;background:var(--gdim);border:1px solid var(--gbrd);font-size:10px;color:var(--mut)">↗ <a href="https://skoliwad-bot.github.io/swybc" target="_blank" style="color:var(--grn)">swybc site</a> · AC Partner Phase trigger: 75+ Scout members → Brandon/Andrew equity convos</div></div>';
-  document.getElementById('biz-swybc').innerHTML=h;
-}
+function acToggle(id){var d=acLoad();d[id]=!d[id];acSave(d);var el2=document.getElementById('ac-'+id);if(el2)el2.classList.toggle('done',d[id]);for(var wi=0;wi<AC_WS.length;wi++){var ws=AC_WS[wi],found=false;for(var ii=0;ii<ws.items.length;ii++){if(ws.items[ii].id===id){found=true;break;}}if(found){var tot=ws.items.length,dn=0;for(var ji=0;ji<ws.items.length;ji++){if(d[ws.items[ji].id])dn++;}var pEl=document.getElementById('ws-pct-'+ws.id),bEl=document.getElementById('ws-bar-'+ws.id);if(pEl)pEl.textContent=dn+'/'+tot;if(bEl)bEl.style.width=Math.round(dn/tot*100)+'%';}}}
+function rBizAC(){var acData=acLoad();var h='<div style="background:var(--surf);border:1px solid var(--brd);padding:12px 14px;margin-bottom:14px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut)">Revenue Target</div><div><span style="font-weight:700;font-size:16px">$0</span><span style="font-size:11px;color:var(--mut)"> / $20K/mo</span></div></div><div style="height:4px;background:var(--brd2);"><div style="height:100%;width:0%;background:var(--grn);"></div></div><div style="font-size:9px;color:var(--mut);margin-top:6px">Scout @$297 → 67 members = $19.9K · Blueprint @$997 → 5/mo = $5K · Break-even: Month 4</div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">';for(var wi=0;wi<AC_WS.length;wi++){var ws=AC_WS[wi],tot=ws.items.length,dn=0;for(var ii=0;ii<ws.items.length;ii++){if(acData[ws.items[ii].id])dn++;}h+='<div class="ws-card"><div class="ws-head"><span>'+ws.icon+' '+ws.label+'</span><span class="ws-pct" id="ws-pct-'+ws.id+'">'+dn+'/'+tot+'</span></div><div class="ws-bar"><div class="ws-fill" id="ws-bar-'+ws.id+'" style="width:'+Math.round(dn/tot*100)+'%"></div></div>';for(var ji=0;ji<ws.items.length;ji++){var it=ws.items[ji],chk=acData[it.id]||false,col=it.p==='CRITICAL'?'var(--red)':it.p==='HIGH'?'var(--amb)':'var(--mut)';h+='<div class="ws-item'+(chk?' done':'')+'" id="ac-'+it.id+'" data-id="'+it.id+'" onclick="acToggle(this.dataset.id)"><input type="checkbox"'+(chk?' checked':'')+' data-id="'+it.id+'" onclick="event.stopPropagation();acToggle(this.dataset.id)"><span style="color:var(--mut);font-size:9px;white-space:nowrap;flex-shrink:0;width:52px">'+it.nb+'</span><span style="color:'+(chk?'var(--mut)':col)+'">'+it.t+'</span></div>';}h+='</div>';}h+='</div><div style="border:1px solid var(--brd);background:var(--surf);padding:12px 14px;"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Ambassador Pipeline</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;"><div style="border:1px solid var(--brd2);padding:8px;"><div style="font-size:10px;font-weight:700;color:var(--grn)">⚾ Kyrin · 13U</div><div style="font-size:9px;color:var(--mut)">LABC DR Trip → NIL Case Study</div><div style="font-size:8px;color:var(--red);font-weight:700;margin-top:4px">Legal: CIF, Coogan, agreement</div></div><div style="border:1px solid var(--brd2);padding:8px;"><div style="font-size:10px;font-weight:700;color:var(--blu)">💃 Kyleigh · Freshman</div><div style="font-size:9px;color:var(--mut)">Performing Arts Blueprint POC</div><div style="font-size:8px;color:var(--red);font-weight:700;margin-top:4px">Legal: studio contract, Coogan</div></div><div style="border:1px solid var(--brd2);padding:8px;"><div style="font-size:10px;font-weight:700;color:var(--txt2)">⚾ Kylo · Age 8</div><div style="font-size:9px;color:var(--mut)">Archive only · parent managed</div></div></div></div>';document.getElementById('biz-ac').innerHTML=h;}
+function rBizSWYBC(){var td=Math.ceil((new Date('2026-12-26')-new Date())/(1000*60*60*24));var h='<div style="border:1px solid var(--brd);background:var(--surf);padding:12px 14px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><div><div style="font-size:14px;font-weight:700">⚾ SoCal World Youth Baseball Classic</div><div style="font-size:10px;color:var(--mut);margin-top:2px">Dec 26–29, 2026</div></div><div style="text-align:right"><div style="font-size:28px;font-weight:700;color:var(--grn)">'+td+'d</div><div style="font-size:8px;color:var(--mut)">until Dec 26</div></div></div><div style="display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--brd);margin-bottom:12px;"><div style="padding:10px 12px;border-right:1px solid var(--brd);"><div style="font-size:8px;text-transform:uppercase;color:var(--mut)">Gross Target</div><div style="font-size:14px;font-weight:700">$458K</div></div><div style="padding:10px 12px;border-right:1px solid var(--brd);"><div style="font-size:8px;text-transform:uppercase;color:var(--mut)">Pre-Tax Net</div><div style="font-size:14px;font-weight:700;color:var(--grn)">$272K</div></div><div style="padding:10px 12px;border-right:1px solid var(--brd);"><div style="font-size:8px;text-transform:uppercase;color:var(--mut)">Divisions</div><div style="font-size:14px;font-weight:700">14U·16U·18U</div></div><div style="padding:10px 12px;border-right:1px solid var(--brd);"><div style="font-size:8px;text-transform:uppercase;color:var(--mut)">Teams/Div</div><div style="font-size:14px;font-weight:700">8</div></div><div style="padding:10px 12px;"><div style="font-size:8px;text-transform:uppercase;color:var(--mut)">Fee/Player</div><div style="font-size:14px;font-weight:700">$400</div></div></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;"><div style="border:1px solid var(--rbrd);padding:8px 10px;"><div style="font-size:8px;font-weight:700;color:var(--red)">CRITICAL</div><div style="font-size:11px;margin:3px 0">Facility — Lock Date</div><div style="font-size:9px;font-weight:700;color:var(--red)">TBD</div></div><div style="border:1px solid var(--rbrd);padding:8px 10px;"><div style="font-size:8px;font-weight:700;color:var(--red)">CRITICAL</div><div style="font-size:11px;margin:3px 0">Team Invitations</div><div style="font-size:9px;font-weight:700;color:var(--red)">NOT SENT</div></div><div style="border:1px solid var(--rbrd);padding:8px 10px;"><div style="font-size:8px;font-weight:700;color:var(--red)">CRITICAL</div><div style="font-size:11px;margin:3px 0">Sponsor Outreach</div><div style="font-size:9px;font-weight:700;color:var(--red)">NOT STARTED</div></div></div></div>';document.getElementById('biz-swybc').innerHTML=h;}
 
 
 // ── EXEC ─────────────────────────────────────────────────────
